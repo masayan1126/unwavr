@@ -25,7 +25,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   return (
     <aside className="hidden md:flex md:flex-col md:w-56 border-r border-black/10 dark:border-white/10 h-[100svh] sticky top-0 p-4 gap-4">
-      <div className="text-sm font-semibold tracking-wide">Tasks Dashboard</div>
+      <div className="text-base md:text-lg font-semibold tracking-wide">unwavr</div>
       <nav className="flex-1 flex flex-col gap-1">
         {navItems.map((item) => {
           const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
@@ -43,7 +43,15 @@ export default function Sidebar() {
           );
         })}
       </nav>
-      <div className="text-[10px] opacity-60">v0.1.0</div>
+      <div className="mt-auto flex flex-col gap-2">
+        <Link
+          href="/unwavr"
+          className="text-[11px] opacity-70 hover:opacity-100 underline underline-offset-4"
+        >
+          プロダクトサイト
+        </Link>
+        <div className="text-[10px] opacity-60">v0.1.0</div>
+      </div>
     </aside>
   );
 }

@@ -25,6 +25,7 @@ export default function Home() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">ダッシュボード</h1>
         <div className="flex items-center gap-4">
+          <Link href="/unwavr" className="text-sm underline opacity-80">プロダクトサイト</Link>
           <span className="text-sm">{new Date().toLocaleDateString()}</span>
           <WeatherWidget variant="large" />
         </div>
