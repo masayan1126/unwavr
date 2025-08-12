@@ -41,6 +41,14 @@ export type PomodoroState = {
   activeTaskId?: string;
 };
 
+export type BgmTrack = {
+  id: string;
+  videoId: string;
+  title: string;
+  url: string;
+  createdAt: number;
+};
+
 export type AppState = {
   tasks: Task[];
   milestones: Milestone[];
@@ -49,10 +57,12 @@ export type AppState = {
   launcherOnboarded: boolean;
   importHistory: ImportHistoryEntry[];
   pomodoro: PomodoroState;
+  bgmTracks: BgmTrack[];
   addTask: (input: Omit<Task, "id" | "createdAt" | "completed" | "completedPomodoros">) => void;
   toggleTask: (taskId: string) => void;
   incrementTaskPomodoro: (taskId: string) => void;
   removeTask: (taskId: string) => void;
+  updateTask: (taskId: string, update: Partial<Omit<Task, "id" | "createdAt">>) => void;
   addMilestone: (input: Omit<Milestone, "id">) => void;
   updateMilestoneProgress: (milestoneId: string, delta: number) => void;
   removeMilestone: (milestoneId: string) => void;
@@ -61,6 +71,7 @@ export type AppState = {
   stopPomodoro: () => void;
   tickPomodoro: () => void;
   resetPomodoro: () => void;
+  setPomodoroSettings: (settings: Partial<Pick<PomodoroState, "workDurationSec" | "shortBreakSec" | "longBreakSec" | "cyclesUntilLongBreak">>) => void;
   tasksForToday: () => Task[];
   backlogTasks: () => Task[];
   weekendOrHolidayTasks: () => Task[];
@@ -74,6 +85,11 @@ export type AppState = {
   addImportHistory: (entry: Omit<ImportHistoryEntry, "id">) => void;
   deleteImportHistory: (id: string) => void;
   clearImportHistory: () => void;
+  addBgmTrack: (input: Omit<BgmTrack, "id" | "createdAt">) => void;
+  removeBgmTrack: (id: string) => void;
+  updateBgmTrack: (id: string, update: Partial<Omit<BgmTrack, "id">>) => void;
+  moveBgmTrack: (fromIdx: number, toIdx: number) => void;
+  clearBgmTracks: () => void;
 };
 
 const defaultPomodoro: PomodoroState = {
@@ -100,6 +116,10 @@ function createHistoryId(): string {
   return `imh_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
 }
 
+function createBgmId(): string {
+  return `bgm_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
+}
+
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
@@ -110,6 +130,7 @@ export const useAppStore = create<AppState>()(
       launcherOnboarded: false,
       importHistory: [],
       pomodoro: defaultPomodoro,
+      bgmTracks: [],
       addTask: (input) =>
         set((state) => ({
           tasks: [
@@ -139,6 +160,10 @@ export const useAppStore = create<AppState>()(
         })),
       removeTask: (taskId) =>
         set((state) => ({ tasks: state.tasks.filter((t) => t.id !== taskId) })),
+      updateTask: (taskId, update) =>
+        set((state) => ({
+          tasks: state.tasks.map((t) => (t.id === taskId ? { ...t, ...update } : t)),
+        })),
       addMilestone: (input) =>
         set((state) => ({
           milestones: [
@@ -216,7 +241,25 @@ export const useAppStore = create<AppState>()(
             pomodoro: { ...s, isBreak: false, isRunning: true, secondsLeft: s.workDurationSec },
           };
         }),
-      resetPomodoro: () => set({ pomodoro: defaultPomodoro }),
+      resetPomodoro: () =>
+        set((state) => ({
+          pomodoro: {
+            ...state.pomodoro,
+            isRunning: false,
+            isBreak: false,
+            secondsLeft: state.pomodoro.workDurationSec,
+            completedWorkSessions: 0,
+          },
+        })),
+      setPomodoroSettings: (settings) =>
+        set((state) => {
+          const next = { ...state.pomodoro, ...settings } as PomodoroState;
+          // タイマー停止中は現在モードのデフォルトに秒を合わせる
+          if (!next.isRunning) {
+            next.secondsLeft = next.isBreak ? next.shortBreakSec : next.workDurationSec;
+          }
+          return { pomodoro: next };
+        }),
       tasksForToday: () => get().tasks.filter((t) => isTaskForToday(t)),
       backlogTasks: () => get().tasks.filter((t) => t.type === "backlog"),
       weekendOrHolidayTasks: () =>
@@ -249,6 +292,20 @@ export const useAppStore = create<AppState>()(
       deleteImportHistory: (id) =>
         set((state) => ({ importHistory: state.importHistory.filter((e) => e.id !== id) })),
       clearImportHistory: () => set({ importHistory: [] }),
+      addBgmTrack: (input) =>
+        set((state) => ({ bgmTracks: [...state.bgmTracks, { ...input, id: createBgmId(), createdAt: Date.now() }] })),
+      removeBgmTrack: (id) => set((state) => ({ bgmTracks: state.bgmTracks.filter((t) => t.id !== id) })),
+      updateBgmTrack: (id, update) =>
+        set((state) => ({ bgmTracks: state.bgmTracks.map((t) => (t.id === id ? { ...t, ...update } : t)) })),
+      moveBgmTrack: (fromIdx, toIdx) =>
+        set((state) => {
+          const list = [...state.bgmTracks];
+          if (fromIdx < 0 || fromIdx >= list.length || toIdx < 0 || toIdx >= list.length) return state;
+          const [item] = list.splice(fromIdx, 1);
+          list.splice(toIdx, 0, item);
+          return { bgmTracks: list };
+        }),
+      clearBgmTracks: () => set({ bgmTracks: [] }),
     }),
     { name: "obsidian-tasks-store" }
   )

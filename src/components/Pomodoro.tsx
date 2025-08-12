@@ -18,6 +18,7 @@ export default function Pomodoro() {
   const stop = useAppStore((st) => st.stopPomodoro);
   const tick = useAppStore((st) => st.tickPomodoro);
   const reset = useAppStore((st) => st.resetPomodoro);
+  const setSettings = useAppStore((st) => st.setPomodoroSettings);
   const activeTaskId = useAppStore((st) => st.pomodoro.activeTaskId);
 
   useEffect(() => {
@@ -59,6 +60,52 @@ export default function Pomodoro() {
           作業: {Math.round(s.workDurationSec / 60)}分 / 休憩: {Math.round(s.shortBreakSec / 60)}分
         </div>
         <div>ロング休憩: {Math.round(s.longBreakSec / 60)}分 / 周期: {s.cyclesUntilLongBreak}</div>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+        <label className="flex items-center justify-between gap-2 border rounded px-2 py-1">
+          <span>作業(分)</span>
+          <input
+            type="number"
+            min={1}
+            max={120}
+            value={Math.round(s.workDurationSec / 60)}
+            onChange={(e) => setSettings({ workDurationSec: Math.max(1, Number(e.target.value)) * 60 })}
+            className="w-16 bg-transparent text-right outline-none"
+          />
+        </label>
+        <label className="flex items-center justify-between gap-2 border rounded px-2 py-1">
+          <span>休憩(分)</span>
+          <input
+            type="number"
+            min={1}
+            max={60}
+            value={Math.round(s.shortBreakSec / 60)}
+            onChange={(e) => setSettings({ shortBreakSec: Math.max(1, Number(e.target.value)) * 60 })}
+            className="w-16 bg-transparent text-right outline-none"
+          />
+        </label>
+        <label className="flex items-center justify-between gap-2 border rounded px-2 py-1">
+          <span>ロング(分)</span>
+          <input
+            type="number"
+            min={1}
+            max={120}
+            value={Math.round(s.longBreakSec / 60)}
+            onChange={(e) => setSettings({ longBreakSec: Math.max(1, Number(e.target.value)) * 60 })}
+            className="w-16 bg-transparent text-right outline-none"
+          />
+        </label>
+        <label className="flex items-center justify-between gap-2 border rounded px-2 py-1">
+          <span>ロング間隔</span>
+          <input
+            type="number"
+            min={1}
+            max={10}
+            value={s.cyclesUntilLongBreak}
+            onChange={(e) => setSettings({ cyclesUntilLongBreak: Math.max(1, Number(e.target.value)) })}
+            className="w-16 bg-transparent text-right outline-none"
+          />
+        </label>
       </div>
     </div>
   );
