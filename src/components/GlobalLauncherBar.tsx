@@ -16,7 +16,7 @@ export default function GlobalLauncherBar() {
   if (shouldHide) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[99999]">
+    <div className="fixed left-1/2 -translate-x-1/2 z-[99999] md:bottom-4 bottom-20 pb-[env(safe-area-inset-bottom)]">
       <div className="pointer-events-auto">
         <div className="flex items-end gap-2">
           <button

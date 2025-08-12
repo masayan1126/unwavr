@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import OnboardingGuide from "@/components/OnboardingGuide";
 import Providers from "@/components/Providers";
 import GlobalLauncherBar from "@/components/GlobalLauncherBar";
+import MobileTabBar from "@/components/MobileTabBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,11 +32,14 @@ export default function RootLayout({
       <body suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>
           <div className="flex min-h-screen">
-            <Sidebar />
-            <main className="flex-1 min-w-0">{children}</main>
+            <div className="hidden md:block">
+              <Sidebar />
+            </div>
+            <main className="flex-1 min-w-0 pb-16 md:pb-0">{children}</main>
           </div>
           <OnboardingGuide />
           <GlobalLauncherBar />
+          <MobileTabBar />
         </Providers>
       </body>
     </html>

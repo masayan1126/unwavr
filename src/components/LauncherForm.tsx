@@ -48,10 +48,10 @@ export default function LauncherForm() {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3 border border-black/10 dark:border-white/10 p-3 rounded-md">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <label className="text-sm">種類</label>
         <select
-          className="border border-black/10 dark:border-white/10 rounded px-2 py-1 bg-transparent"
+          className="border border-black/10 dark:border-white/10 rounded px-2 py-2 bg-transparent text-sm w-full sm:w-auto"
           value={linkType}
           onChange={(e) => setLinkType(e.target.value as any)}
         >
@@ -64,15 +64,15 @@ export default function LauncherForm() {
           </button>
         )}
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <input
-          className="flex-1 border rounded px-2 py-1 bg-transparent border-black/10 dark:border-white/10"
+          className="flex-1 border rounded px-2 py-2 bg-transparent border-black/10 dark:border-white/10 text-sm w-full sm:w-auto"
           placeholder="ラベル (例: YouTube)"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
         />
         <input
-          className="flex-1 border rounded px-2 py-1 bg-transparent border-black/10 dark:border-white/10"
+          className="flex-1 border rounded px-2 py-2 bg-transparent border-black/10 dark:border-white/10 text-sm w-full sm:w-auto"
           placeholder={linkType === "web" ? "URL (https://...)" : "スキーム (例: slack://, obsidian://)"}
           value={url}
           onChange={(e) => setUrl(e.target.value)}
@@ -80,7 +80,7 @@ export default function LauncherForm() {
         {linkType === "app" && (
           <button
             type="button"
-            className="px-2 py-1 rounded border text-xs"
+            className="px-3 py-2 rounded border text-xs w-full sm:w-auto"
             onClick={async () => {
               try {
                 const res = await fetch("/api/launcher/pick");
@@ -96,15 +96,15 @@ export default function LauncherForm() {
       {linkType === "app" && nativePath && (
         <div className="text-[11px] opacity-70">選択されたアプリ: {nativePath}</div>
       )}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <div className="flex items-center gap-2">
           <label className="text-sm">色</label>
           <input type="color" value={color} onChange={(e) => setColor(e.target.value)} />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
           <label className="text-sm">カテゴリ</label>
           <select
-            className="border border-black/10 dark:border-white/10 rounded px-2 py-1 bg-transparent"
+            className="border border-black/10 dark:border-white/10 rounded px-2 py-2 bg-transparent text-sm w-full sm:w-auto"
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
           >
@@ -116,7 +116,7 @@ export default function LauncherForm() {
             ))}
           </select>
           <input
-            className="border border-black/10 dark:border-white/10 rounded px-2 py-1 bg-transparent"
+            className="border border-black/10 dark:border-white/10 rounded px-2 py-2 bg-transparent text-sm w-full sm:flex-1"
             placeholder="新規カテゴリ名 (任意)"
             value={newCategory}
             onChange={(e) => setNewCategory(e.target.value)}
@@ -126,7 +126,7 @@ export default function LauncherForm() {
       </div>
       <IconPicker value={iconName} onChange={setIconName} />
       <div className="flex justify-end">
-        <button className="px-3 py-1 rounded bg-foreground text-background text-sm">追加</button>
+        <button className="px-3 py-2 rounded bg-foreground text-background text-sm w-full sm:w-auto">追加</button>
       </div>
 
       {showHelp && (

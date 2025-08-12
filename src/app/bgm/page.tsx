@@ -60,21 +60,21 @@ export default function BgmPage() {
       <div className="text-sm font-semibold mb-3">作業用BGM（YouTubeプレイリスト）</div>
       <div className="flex flex-col sm:flex-row gap-2 mb-3">
         <input
-          className="flex-1 border rounded px-2 py-1"
+          className="flex-1 border rounded px-2 py-2 text-sm w-full sm:w-auto"
           placeholder="YouTubeのURL または 動画ID"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
         />
         <input
-          className="flex-1 border rounded px-2 py-1"
+          className="flex-1 border rounded px-2 py-2 text-sm w-full sm:w-auto"
           placeholder="タイトル（任意）"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
-        <button className="px-3 py-1 rounded border flex items-center gap-1" onClick={addTrack}>
+        <button className="px-3 py-2 text-sm rounded border flex items-center gap-1 w-full sm:w-auto justify-center" onClick={addTrack}>
           <Plus size={14} /> 追加
         </button>
-        <button className="px-3 py-1 rounded border" onClick={clear}>全クリア</button>
+        <button className="px-3 py-2 text-sm rounded border w-full sm:w-auto" onClick={clear}>全クリア</button>
       </div>
 
       <div className="grid grid-cols-1 gap-2">
@@ -82,7 +82,7 @@ export default function BgmPage() {
           <div className="text-xs opacity-70">プレイリストが空です。URLまたは動画IDを追加してください。</div>
         ) : (
           tracks.map((t) => (
-            <div key={t.id} className="border rounded p-2 flex items-center justify-between gap-2">
+            <div key={t.id} className="border rounded p-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-3 min-w-0">
                 <button className="px-2 py-1 border rounded" onClick={() => play(t.id)} title="再生">
                   <Play size={14} />
@@ -90,7 +90,7 @@ export default function BgmPage() {
                 <img
                   src={`https://img.youtube.com/vi/${t.videoId}/mqdefault.jpg`}
                   alt={t.title}
-                  className="w-16 h-9 object-cover rounded border"
+                  className="w-20 h-12 sm:w-16 sm:h-9 object-cover rounded border"
                   loading="lazy"
                 />
                 <div className="flex flex-col min-w-0">
@@ -98,7 +98,7 @@ export default function BgmPage() {
                   <div className="text-[11px] opacity-60 truncate" title={t.url}>https://youtu.be/{t.videoId}</div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                 <button className="px-2 py-1 border rounded" onClick={() => move(idxOf(t.id), Math.max(0, idxOf(t.id) - 1))}>
                   <ChevronUp size={14} />
                 </button>
