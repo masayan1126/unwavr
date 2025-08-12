@@ -71,7 +71,6 @@ export default function BgmPage() {
     const group = groups.find((g) => g.id === groupId);
     const title = isUngrouped ? "未分類" : group?.name ?? "グループ";
     const list = grouped.get(groupId) ?? [];
-    const grandChildren = isUngrouped ? childrenOf(undefined) : childrenOf(groupId);
     return (
       <div key={groupId ?? "__ungrouped"} className={`border rounded ${dragOverGroupId === (groupId ?? "__ungrouped") ? "ring-2 ring-blue-400/50" : ""}`}
         onDragOver={(e) => {

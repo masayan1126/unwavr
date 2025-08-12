@@ -110,7 +110,8 @@ export default function TaskList({
   useEffect(() => {
     if (!editingTask) return;
     if (typeof window === "undefined") return;
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const w = window as unknown as { SpeechRecognition?: new () => SpeechRecognition; webkitSpeechRecognition?: new () => SpeechRecognition };
+    const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
     if (!SR) return;
     const rec: SpeechRecognition = new SR();
     rec.lang = "ja-JP";
@@ -121,7 +122,7 @@ export default function TaskList({
       if (txt) setFormTitle((prev) => (prev ? prev + " " + txt : txt));
     };
     rec.onend = () => setListening(false);
-    recognitionRef.current = rec as any;
+    recognitionRef.current = rec as unknown as SpeechRecognition & { start: () => void; stop: () => void };
     return () => {
       try { recognitionRef.current?.stop(); } catch {}
       recognitionRef.current = null;

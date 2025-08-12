@@ -21,7 +21,8 @@ export default function TaskForm() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const w = window as unknown as { SpeechRecognition?: new () => SpeechRecognition; webkitSpeechRecognition?: new () => SpeechRecognition };
+    const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
     if (!SR) return;
     const rec: SpeechRecognition = new SR();
     rec.lang = "ja-JP";
@@ -32,7 +33,7 @@ export default function TaskForm() {
       if (txt) setTitle((prev) => (prev ? prev + " " + txt : txt));
     };
     rec.onend = () => setListening(false);
-    recognitionRef.current = rec as any;
+    recognitionRef.current = rec as unknown as SpeechRecognition & { start: () => void; stop: () => void };
   }, []);
 
   const onSubmit = (e: React.FormEvent) => {

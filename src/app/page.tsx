@@ -36,7 +36,7 @@ export default function Home() {
   const scheduledPending = useMemo(() => scheduledForToday.filter((t) => !t.completed), [scheduledForToday]);
   const scheduledDone = useMemo(() => scheduledForToday.filter((t) => t.completed), [scheduledForToday]);
   const backlogPending = useMemo(() => backlogForToday.filter((t) => !t.completed), [backlogForToday]);
-  const backlogDone = useMemo(() => backlogForToday.filter((t) => t.completed), [backlogForToday]);
+  // const backlogDone = useMemo(() => backlogForToday.filter((t) => t.completed), [backlogForToday]);
   const incompleteToday = useMemo(
     () => [ ...(filterDaily ? dailyPending : []), ...(filterScheduled ? scheduledPending : []), ...backlogPending ],
     [dailyPending, scheduledPending, backlogPending, filterDaily, filterScheduled]
