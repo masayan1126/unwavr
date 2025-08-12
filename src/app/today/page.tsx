@@ -28,7 +28,7 @@ export default function TodayPage() {
 
   useEffect(() => {
     if (status !== "authenticated") return;
-    const accessToken = (session as any)?.access_token as string | undefined;
+    const accessToken = (session as unknown as { access_token?: string })?.access_token;
     if (!accessToken) return;
     const timeMin = todayStart.toISOString();
     const timeMax = todayEnd.toISOString();
@@ -59,7 +59,7 @@ export default function TodayPage() {
   }, [events]);
 
   const reload = async () => {
-    const accessToken = (session as any)?.access_token as string | undefined;
+    const accessToken = (session as unknown as { access_token?: string })?.access_token;
     if (!accessToken) return;
     const res = await fetch(`/api/calendar/events?timeMin=${encodeURIComponent(todayStart.toISOString())}&timeMax=${encodeURIComponent(todayEnd.toISOString())}`, {
       headers: { Authorization: `Bearer ${accessToken}` },

@@ -2,8 +2,6 @@
 import { useMemo, useState } from "react";
 import * as Icons from "lucide-react";
 
-type IconName = keyof typeof Icons;
-
 export default function IconPicker({ value, onChange }: { value: string; onChange: (name: string) => void }) {
   const [query, setQuery] = useState("");
   const iconNames = useMemo(() => Object.keys(Icons).filter((k) => /^[A-Z]/.test(k)), []);
@@ -21,7 +19,7 @@ export default function IconPicker({ value, onChange }: { value: string; onChang
       />
       <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-64 overflow-auto">
         {filtered.map((name) => {
-          const Ico = (Icons as any)[name] as React.ComponentType<{ size?: number }>;
+          const Ico = (Icons as Record<string, React.ComponentType<{ size?: number }>>)[name];
           const active = value === name;
           return (
             <button

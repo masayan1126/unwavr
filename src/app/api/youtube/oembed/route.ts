@@ -23,8 +23,9 @@ export async function GET(req: NextRequest) {
       thumbnail_url: data?.thumbnail_url ?? null,
       provider_name: data?.provider_name ?? null,
     });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "unknown error" }, { status: 500 });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

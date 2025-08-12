@@ -62,7 +62,7 @@ export default function CalendarPage() {
 
   useEffect(() => {
     if (status !== "authenticated") return;
-    const accessToken = (session as any)?.access_token as string | undefined;
+    const accessToken = (session as unknown as { access_token?: string })?.access_token;
     if (!accessToken) return;
     const timeMin = monthStart.toISOString();
     const timeMax = monthEnd.toISOString();
@@ -93,7 +93,7 @@ export default function CalendarPage() {
   }, [events]);
 
   const create = async () => {
-    const accessToken = (session as any)?.access_token as string | undefined;
+    const accessToken = (session as unknown as { access_token?: string })?.access_token;
     if (!accessToken) return;
     const startIso = startInput ? new Date(startInput).toISOString() : new Date().toISOString();
     const endIso = endInput
@@ -185,7 +185,7 @@ export default function CalendarPage() {
     if (!selectedDate) return;
     if (dialogMode === "create") {
       {
-        const accessToken = (session as any)?.access_token as string | undefined;
+        const accessToken = (session as unknown as { access_token?: string })?.access_token;
         if (!accessToken) return;
         const startIso = formStart ? new Date(formStart).toISOString() : new Date().toISOString();
         const endIso = formEnd
@@ -211,7 +211,7 @@ export default function CalendarPage() {
       }
     } else {
       if (editingEvent?.id) {
-        const accessToken = (session as any)?.access_token as string | undefined;
+        const accessToken = (session as unknown as { access_token?: string })?.access_token;
         if (!accessToken) return;
         // 簡易更新（削除→作成）
         await fetch(`/api/calendar/events/${editingEvent.id}`, {
@@ -319,7 +319,7 @@ export default function CalendarPage() {
                 try {
                   const payload = JSON.parse(data) as { id: string; start?: string; end?: string };
                   if (!payload.id) return;
-                  const accessToken = (session as any)?.access_token as string | undefined;
+                  const accessToken = (session as unknown as { access_token?: string })?.access_token;
                   if (!accessToken) return;
 
                   // compute duration from original event if possible

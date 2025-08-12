@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { execFile, exec } from "node:child_process";
+import { exec } from "node:child_process";
 import { promisify } from "node:util";
 
 export const runtime = "nodejs";
@@ -33,8 +33,9 @@ if ($ofd.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { Write-Outpu
       return NextResponse.json({ path });
     }
     return NextResponse.json({ error: "unsupported platform" }, { status: 501 });
-  } catch (e: any) {
-    return NextResponse.json({ error: String(e?.message ?? e) }, { status: 500 });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

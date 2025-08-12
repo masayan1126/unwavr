@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Sun, Cloud, CloudSun, CloudRain, CloudDrizzle, CloudSnow, CloudLightning, CloudFog } from "lucide-react";
 
@@ -55,7 +55,7 @@ export default function WeatherPage() {
             tMin: data?.daily?.temperature_2m_min?.[i],
           }));
           setDaily(days);
-        } catch (e: any) {
+        } catch {
           setErr("天気の取得に失敗しました");
         } finally {
           setLoading(false);

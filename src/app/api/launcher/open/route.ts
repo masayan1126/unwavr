@@ -8,7 +8,7 @@ const execAsync = promisify(exec);
 
 export async function POST(req: Request) {
   try {
-    const { path } = await req.json();
+    const { path } = (await req.json()) as { path?: string };
     if (!path || typeof path !== "string") {
       return NextResponse.json({ error: "missing path" }, { status: 400 });
     }
@@ -24,8 +24,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true });
     }
     return NextResponse.json({ error: "unsupported platform" }, { status: 501 });
-  } catch (e: any) {
-    return NextResponse.json({ error: String(e?.message ?? e) }, { status: 500 });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

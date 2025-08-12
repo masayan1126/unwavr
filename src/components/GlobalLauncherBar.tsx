@@ -33,7 +33,7 @@ export default function GlobalLauncherBar() {
                   <div className="text-[11px] opacity-70 px-2">ランチャーにショートカットを追加してください</div>
                 ) : (
                   visibleShortcuts.map((sc) => {
-                    const Ico = (Icons as any)[sc.iconName] as React.ComponentType<{ size?: number }>;
+                    const Ico = (Icons as Record<string, React.ComponentType<{ size?: number }>>)[sc.iconName];
                     const style: React.CSSProperties = {
                       backgroundColor: `${sc.color ?? "#0ea5e9"}20`,
                       borderColor: sc.color ?? "#0ea5e9",

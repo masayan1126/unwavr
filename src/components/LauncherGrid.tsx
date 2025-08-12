@@ -80,8 +80,8 @@ export default function LauncherGrid() {
     for (const s of shortcuts) {
       if (s.categoryId) {
         const key = s.categoryId;
-        if (!map.has(key)) map.set(key, [] as any);
-        (map.get(key) as any).push(s);
+        if (!map.has(key)) map.set(key, [] as typeof shortcuts);
+        (map.get(key) as typeof shortcuts).push(s);
       } else {
         rest.push(s);
       }
@@ -122,7 +122,7 @@ export default function LauncherGrid() {
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {list.map((sc) => {
-                const Ico = (Icons as any)[sc.iconName] as React.ComponentType<{ size?: number }>;
+                const Ico = (Icons as Record<string, React.ComponentType<{ size?: number }>>)[sc.iconName];
                 const style = { backgroundColor: `${sc.color ?? "#0ea5e9"}20`, borderColor: sc.color ?? "#0ea5e9" } as React.CSSProperties;
                 return (
                   sc.kind === "web" ? (
@@ -248,7 +248,7 @@ export default function LauncherGrid() {
             <div className="text-sm opacity-70 col-span-full">ショートカットがありません。下のフォームから追加してください。</div>
           ) : (
             groups.rest.map((sc) => {
-              const Ico = (Icons as any)[sc.iconName] as React.ComponentType<{ size?: number }>;
+                const Ico = (Icons as Record<string, React.ComponentType<{ size?: number }>>)[sc.iconName];
               const style = { backgroundColor: `${sc.color ?? "#0ea5e9"}20`, borderColor: sc.color ?? "#0ea5e9" } as React.CSSProperties;
               return (
                 sc.kind === "web" ? (

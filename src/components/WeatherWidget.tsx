@@ -50,7 +50,7 @@ export default function WeatherWidget({ variant = "small" }: WeatherWidgetProps)
           const temp = data?.current?.temperature_2m;
           const code = data?.current?.weather_code;
           setState({ loading: false, temperatureC: typeof temp === "number" ? temp : undefined, weatherCode: code });
-        } catch (e: any) {
+        } catch {
           if (!canceled) setState({ loading: false, error: "天気の取得に失敗しました" });
         }
       },

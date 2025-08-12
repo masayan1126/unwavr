@@ -124,7 +124,7 @@ export default function LauncherOnboarding({ onClose }: { onClose?: () => void }
               </div>
               <div className="flex flex-col gap-1">
                 {items.map((t) => {
-                  const Ico = (Icons as any)[t.iconName] as React.ComponentType<{ size?: number }>;
+                  const Ico = (Icons as Record<string, React.ComponentType<{ size?: number }>>)[t.iconName];
                   return (
                     <label key={t.label} className="flex items-center gap-2 text-sm">
                       <input type="checkbox" checked={Boolean(selected[t.label])} onChange={() => toggle(t.label)} />
