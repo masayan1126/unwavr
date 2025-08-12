@@ -1,7 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Sun, Cloud, CloudSun, CloudRain, CloudDrizzle, CloudSnow, CloudLightning, CloudFog, type LucideIcon } from "lucide-react";
+import { useWeather } from "@/hooks/useWeather";
 
 type WeatherState = {
   loading: boolean;
@@ -30,39 +31,7 @@ function codeToWeather(
 type WeatherWidgetProps = { variant?: "small" | "large" };
 
 export default function WeatherWidget({ variant = "small" }: WeatherWidgetProps) {
-  const [state, setState] = useState<WeatherState>({ loading: true });
-
-  useEffect(() => {
-    let canceled = false;
-    if (!navigator.geolocation) {
-      setState({ loading: false, error: "位置情報が利用できません" });
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const lat = pos.coords.latitude;
-          const lon = pos.coords.longitude;
-          const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`;
-          const res = await fetch(url, { cache: "no-store" });
-          const data = await res.json();
-          if (canceled) return;
-          const temp = data?.current?.temperature_2m;
-          const code = data?.current?.weather_code;
-          setState({ loading: false, temperatureC: typeof temp === "number" ? temp : undefined, weatherCode: code });
-        } catch {
-          if (!canceled) setState({ loading: false, error: "天気の取得に失敗しました" });
-        }
-      },
-      () => {
-        setState({ loading: false, error: "位置情報の許可が必要です" });
-      },
-      { enableHighAccuracy: false, timeout: 10000 }
-    );
-    return () => {
-      canceled = true;
-    };
-  }, []);
+  const state = useWeather();
 
   if (state.loading) {
     return <div className="text-xs opacity-70">天気取得中...</div>;

@@ -1,48 +1,27 @@
 "use client";
 import Link from "next/link";
-import { useMemo, useState } from "react";
 import TaskList from "@/components/TaskList";
-import { useAppStore } from "@/lib/store";
-import { isTaskForToday } from "@/lib/types";
+import { useTodayTasks } from "@/hooks/useTodayTasks";
 import WeatherWidget from "@/components/WeatherWidget";
 import { Plus, Target, Timer, Rocket, Upload, Filter as FilterIcon } from "lucide-react";
 
 export default function Home() {
-  const tasks = useAppStore((s) => s.tasks);
-  const [showIncomplete, setShowIncomplete] = useState(true);
-  const [showCompleted, setShowCompleted] = useState(true);
-  const [filterDaily, setFilterDaily] = useState(true);
-  const [filterScheduled, setFilterScheduled] = useState(true);
-  const [filterOpen, setFilterOpen] = useState(false);
-  const tasksForToday = useMemo(() => tasks.filter((t) => {
-    if (t.type === "backlog") {
-      const d = new Date();
-      const todayUtc = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
-      return (t.plannedDates ?? []).includes(todayUtc);
-    }
-    return isTaskForToday(t);
-  }), [tasks]);
-  const isDailyDoneToday = (dailyDoneDates?: number[]) => {
-    const d = new Date();
-    d.setUTCHours(0, 0, 0, 0);
-    const today = d.getTime();
-    return Boolean(dailyDoneDates && dailyDoneDates.includes(today));
-  };
-  const dailyForToday = useMemo(() => tasksForToday.filter((t) => t.type === "daily"), [tasksForToday]);
-  const scheduledForToday = useMemo(() => tasksForToday.filter((t) => t.type === "scheduled"), [tasksForToday]);
-  const backlogForToday = useMemo(() => tasksForToday.filter((t) => t.type === "backlog"), [tasksForToday]);
-  const dailyPending = useMemo(() => dailyForToday.filter((t) => !isDailyDoneToday(t.dailyDoneDates)), [dailyForToday]);
-  const dailyDone = useMemo(() => dailyForToday.filter((t) => isDailyDoneToday(t.dailyDoneDates)), [dailyForToday]);
-  const scheduledPending = useMemo(() => scheduledForToday.filter((t) => !t.completed), [scheduledForToday]);
-  const scheduledDone = useMemo(() => scheduledForToday.filter((t) => t.completed), [scheduledForToday]);
-  const backlogPending = useMemo(() => backlogForToday.filter((t) => !t.completed), [backlogForToday]);
-  // const backlogDone = useMemo(() => backlogForToday.filter((t) => t.completed), [backlogForToday]);
-  const incompleteToday = useMemo(
-    () => [ ...(filterDaily ? dailyPending : []), ...(filterScheduled ? scheduledPending : []), ...backlogPending ],
-    [dailyPending, scheduledPending, backlogPending, filterDaily, filterScheduled]
-  );
-  const dailyDoneFiltered = useMemo(() => (filterDaily ? dailyDone : []), [dailyDone, filterDaily]);
-  const scheduledDoneFiltered = useMemo(() => (filterScheduled ? scheduledDone : []), [scheduledDone, filterScheduled]);
+  const {
+    incompleteToday,
+    dailyDoneFiltered,
+    scheduledDoneFiltered,
+    filterOpen,
+    setFilterOpen,
+    showIncomplete,
+    setShowIncomplete,
+    showCompleted,
+    setShowCompleted,
+    filterDaily,
+    setFilterDaily,
+    filterScheduled,
+    setFilterScheduled,
+    resetFilters,
+  } = useTodayTasks();
   return (
     <div className="min-h-screen p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-8">
       <div className="flex items-center justify-between">
@@ -117,12 +96,7 @@ export default function Home() {
                     <button
                       type="button"
                       className="px-2 py-1 rounded border text-xs"
-                      onClick={() => {
-                        setShowIncomplete(true);
-                        setShowCompleted(true);
-                        setFilterDaily(true);
-                        setFilterScheduled(true);
-                      }}
+                    onClick={resetFilters}
                     >リセット</button>
                     <button type="button" className="px-2 py-1 rounded bg-foreground text-background text-xs" onClick={() => setFilterOpen(false)}>閉じる</button>
                   </div>

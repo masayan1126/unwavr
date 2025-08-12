@@ -1,6 +1,5 @@
 "use client";
-import { useEffect } from "react";
-import { useAppStore } from "@/lib/store";
+import { usePomodoro } from "@/hooks/usePomodoro";
 
 function format(sec: number): string {
   const m = Math.floor(sec / 60)
@@ -13,19 +12,8 @@ function format(sec: number): string {
 }
 
 export default function Pomodoro() {
-  const s = useAppStore((st) => st.pomodoro);
-  const start = useAppStore((st) => st.startPomodoro);
-  const stop = useAppStore((st) => st.stopPomodoro);
-  const tick = useAppStore((st) => st.tickPomodoro);
-  const reset = useAppStore((st) => st.resetPomodoro);
-  const setSettings = useAppStore((st) => st.setPomodoroSettings);
-  const activeTaskId = useAppStore((st) => st.pomodoro.activeTaskId);
-
-  useEffect(() => {
-    if (!s.isRunning) return;
-    const id = setInterval(() => tick(), 1000);
-    return () => clearInterval(id);
-  }, [s.isRunning, tick]);
+  const { s, start, stop, reset, setSettings } = usePomodoro();
+  const activeTaskId = s.activeTaskId;
 
   return (
     <div className="border border-black/10 dark:border-white/10 rounded-md p-3">

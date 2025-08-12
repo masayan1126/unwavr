@@ -1,53 +1,19 @@
 "use client";
 import { useState } from "react";
-import { useAppStore } from "@/lib/store";
+import { useLauncherForm } from "@/hooks/useLauncher";
 import IconPicker from "@/components/IconPicker";
 
 export default function LauncherForm() {
-  const add = useAppStore((s) => s.addLauncherShortcut);
-  const categories = useAppStore((s) => s.launcherCategories);
-  const addCategory = useAppStore((s) => s.addLauncherCategory);
-  const [label, setLabel] = useState("");
-  const [url, setUrl] = useState("");
-  const [iconName, setIconName] = useState("Globe");
-  const [color, setColor] = useState("#0ea5e9");
-  const [categoryId, setCategoryId] = useState<string>("");
-  const [newCategory, setNewCategory] = useState<string>("");
-  const [linkType, setLinkType] = useState<"web" | "app">("web");
-  const [showHelp, setShowHelp] = useState(false);
-  const [nativePath, setNativePath] = useState("");
-
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!label.trim() || !url.trim()) return;
-    const cid = categoryId || undefined;
-    if (!cid && newCategory.trim()) {
-      const name = newCategory.trim();
-      const col = color;
-      addCategory({ name, color: col });
-      // 最新のカテゴリIDを使いたいが、persistの非同期性を考慮し、ここでは未設定のままにし後で編集できるようにする
-    }
-    add({
-      label: label.trim(),
-      url: url.trim(),
-      iconName,
-      color,
-      categoryId: cid,
-      kind: linkType,
-      nativePath: nativePath || undefined,
-    });
-    setLabel("");
-    setUrl("");
-    setIconName("Globe");
-    setColor("#0ea5e9");
-    setCategoryId("");
-    setNewCategory("");
-    setLinkType("web");
-    setNativePath("");
-  };
+  const {
+    categories,
+    label, setLabel, url, setUrl, iconName, setIconName, color, setColor,
+    categoryId, setCategoryId, newCategory, setNewCategory, linkType, setLinkType,
+    showHelp, setShowHelp, nativePath,
+    submit, pickNativeApp,
+  } = useLauncherForm();
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-3 border border-black/10 dark:border-white/10 p-3 rounded-md">
+    <form onSubmit={submit} className="flex flex-col gap-3 border border-black/10 dark:border-white/10 p-3 rounded-md">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <label className="text-sm">種類</label>
         <select
@@ -78,19 +44,7 @@ export default function LauncherForm() {
           onChange={(e) => setUrl(e.target.value)}
         />
         {linkType === "app" && (
-          <button
-            type="button"
-            className="px-3 py-2 rounded border text-xs w-full sm:w-auto"
-            onClick={async () => {
-              try {
-                const res = await fetch("/api/launcher/pick");
-                const data = await res.json();
-                if (data?.path) setNativePath(data.path);
-              } catch {
-                // ignore
-              }
-            }}
-          >
+          <button type="button" className="px-3 py-2 rounded border text-xs w-full sm:w-auto" onClick={pickNativeApp}>
             アプリ登録
           </button>
         )}

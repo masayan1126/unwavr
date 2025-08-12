@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { Scheduled, TaskType } from "@/lib/types";
 import { useAppStore } from "@/lib/store";
 
@@ -17,23 +18,13 @@ export default function TaskForm() {
   const [plannedDateInput, setPlannedDateInput] = useState<string>("");
   const [plannedDates, setPlannedDates] = useState<number[]>([]);
   const [listening, setListening] = useState(false);
-  const recognitionRef = useRef<null | (SpeechRecognition & { start: () => void; stop: () => void })>(null);
+  const { toggle: toggleSpeech, supported } = useSpeechRecognition({
+    onResult: (txt) => setTitle((prev) => (prev ? prev + " " + txt : txt)),
+    lang: "ja-JP",
+  });
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const w = window as unknown as { SpeechRecognition?: new () => SpeechRecognition; webkitSpeechRecognition?: new () => SpeechRecognition };
-    const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
-    if (!SR) return;
-    const rec: SpeechRecognition = new SR();
-    rec.lang = "ja-JP";
-    rec.interimResults = false;
-    rec.continuous = false;
-    rec.onresult = (e: SpeechRecognitionEvent) => {
-      const txt = e.results?.[0]?.[0]?.transcript ?? "";
-      if (txt) setTitle((prev) => (prev ? prev + " " + txt : txt));
-    };
-    rec.onend = () => setListening(false);
-    recognitionRef.current = rec as unknown as SpeechRecognition & { start: () => void; stop: () => void };
+    // 状態は hook 内に集約。ここではビジュアル状態のみ連動。
   }, []);
 
   const onSubmit = (e: React.FormEvent) => {
@@ -84,20 +75,7 @@ export default function TaskForm() {
         <button
           type="button"
           className={`px-2 py-1 rounded border text-xs ${listening ? "bg-red-600 text-white border-red-600" : ""}`}
-          onClick={() => {
-            if (!recognitionRef.current) return;
-            if (listening) {
-              recognitionRef.current.stop();
-              setListening(false);
-            } else {
-              try {
-                setListening(true);
-                recognitionRef.current.start();
-              } catch {
-                setListening(false);
-              }
-            }
-          }}
+          onClick={() => { setListening((v)=>!v); toggleSpeech(); }}
         >
           音声入力
         </button>

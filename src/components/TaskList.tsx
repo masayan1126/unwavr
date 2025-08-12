@@ -2,6 +2,7 @@
 import { useAppStore } from "@/lib/store";
 import { Task } from "@/lib/types";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
 function TaskRow({ task }: { task: Task }) {
   const toggle = useAppStore((s) => s.toggleTask);
@@ -105,29 +106,13 @@ export default function TaskList({
   const [formPlannedDateInput, setFormPlannedDateInput] = useState<string>("");
   const [formPlannedDates, setFormPlannedDates] = useState<number[]>([]);
   const [listening, setListening] = useState(false);
-  const recognitionRef = useRef<null | (SpeechRecognition & { start: () => void; stop: () => void })>(null);
+  const { toggle: toggleSpeech } = useSpeechRecognition({
+    onResult: (txt) => setFormTitle((prev) => (prev ? prev + " " + txt : txt)),
+    lang: "ja-JP",
+  });
 
   useEffect(() => {
-    if (!editingTask) return;
-    if (typeof window === "undefined") return;
-    const w = window as unknown as { SpeechRecognition?: new () => SpeechRecognition; webkitSpeechRecognition?: new () => SpeechRecognition };
-    const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
-    if (!SR) return;
-    const rec: SpeechRecognition = new SR();
-    rec.lang = "ja-JP";
-    rec.interimResults = false;
-    rec.continuous = false;
-    rec.onresult = (e: SpeechRecognitionEvent) => {
-      const txt = e.results?.[0]?.[0]?.transcript ?? "";
-      if (txt) setFormTitle((prev) => (prev ? prev + " " + txt : txt));
-    };
-    rec.onend = () => setListening(false);
-    recognitionRef.current = rec as unknown as SpeechRecognition & { start: () => void; stop: () => void };
-    return () => {
-      try { recognitionRef.current?.stop(); } catch {}
-      recognitionRef.current = null;
-      setListening(false);
-    };
+    // 音声認識セットアップは hook に委譲
   }, [editingTask]);
 
   function openEdit(t: Task) {
@@ -335,20 +320,7 @@ export default function TaskList({
                 <button
                   type="button"
                   className={`px-2 py-1 rounded border text-xs ${listening ? "bg-red-600 text-white border-red-600" : ""}`}
-                  onClick={() => {
-                    if (!recognitionRef.current) return;
-                    if (listening) {
-                      recognitionRef.current.stop();
-                      setListening(false);
-                    } else {
-                      try {
-                        setListening(true);
-                        recognitionRef.current.start();
-                      } catch {
-                        setListening(false);
-                      }
-                    }
-                  }}
+                  onClick={() => { setListening((v)=>!v); toggleSpeech(); }}
                 >
                   音声入力
                 </button>
