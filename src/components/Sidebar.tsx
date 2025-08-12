@@ -194,6 +194,12 @@ export default function Sidebar() {
               </Link>
             );
           })}
+          {open && (
+            <div className="mt-3 pt-3 border-t border-black/10 dark:border-white/10 text-[12px] opacity-80 flex flex-col gap-1">
+              <Link href="/terms" className="hover:underline">利用規約</Link>
+              <Link href="/privacy" className="hover:underline">プライバシーポリシー</Link>
+            </div>
+          )}
         </nav>
         <div className="mt-auto flex flex-col gap-3">
         <AuthButtons />
