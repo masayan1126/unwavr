@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Home, ListTodo, Calendar, Rocket, Upload, Plus, Target, Timer, Music } from "lucide-react";
+import { CalendarDays, Home, ListTodo, Calendar, Rocket, Upload, Plus, Target, Timer, Music, ChevronLeft, ChevronRight } from "lucide-react";
 import AuthButtons from "@/components/AuthButtons";
 import { useSession } from "next-auth/react";
+import { useEffect, useRef, useState } from "react";
 
 type NavItem = {
   href: string;
@@ -13,12 +14,8 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { href: "/", label: "ホーム", icon: <Home size={16} /> },
-  { href: "/today", label: "今日", icon: <CalendarDays size={16} /> },
   { href: "/backlog", label: "バックログ", icon: <ListTodo size={16} /> },
-  { href: "/weekend", label: "週末・連休", icon: <Calendar size={16} /> },
   { href: "/launcher", label: "ランチャー", icon: <Rocket size={16} /> },
-  { href: "/tasks/import-export", label: "インポート/エクスポート", icon: <Upload size={16} /> },
-  { href: "/tasks/new", label: "タスク追加", icon: <Plus size={16} /> },
   { href: "/milestones", label: "マイルストーン", icon: <Target size={16} /> },
   { href: "/pomodoro", label: "ポモドーロ", icon: <Timer size={16} /> },
   { href: "/calendar", label: "カレンダー", icon: <Calendar size={16} /> },
@@ -28,13 +25,52 @@ const navItems: NavItem[] = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { status } = useSession();
+  const [open, setOpen] = useState(true);
+  const [width, setWidth] = useState<number>(224);
+  const [tasksOpen, setTasksOpen] = useState<boolean>(false);
+  const startXRef = useRef<number | null>(null);
+  const startWRef = useRef<number>(width);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const w = Number(localStorage.getItem("sidebar:w") || width);
+    const o = localStorage.getItem("sidebar:o");
+    const to = localStorage.getItem("sidebar:tasks:o");
+    if (w) setWidth(Math.max(160, Math.min(360, w)));
+    if (o != null) setOpen(o === "1");
+    if (to != null) {
+      setTasksOpen(to === "1");
+    } else {
+      // パスに基づき初期展開（/tasks/ 配下にいるときは展開）
+      setTasksOpen(location.pathname.startsWith("/tasks/"));
+    }
+  }, []);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("sidebar:w", String(width));
+    localStorage.setItem("sidebar:o", open ? "1" : "0");
+    localStorage.setItem("sidebar:tasks:o", tasksOpen ? "1" : "0");
+  }, [width, open, tasksOpen]);
   if (pathname.startsWith("/unwavr")) return null;
   if (status !== "authenticated") return null;
   return (
-    <aside className="hidden md:flex md:flex-col md:w-56 border-r border-black/10 dark:border-white/10 h-[100svh] sticky top-0 p-4 gap-4">
-      <div className="text-base md:text-lg font-semibold tracking-wide">unwavr</div>
-      <nav className="flex-1 flex flex-col gap-1">
-        {navItems.map((item) => {
+    <aside className="hidden md:flex border-r border-black/10 dark:border-white/10 h-[100svh] sticky top-0" style={{ width: open ? width : 48 }}>
+      <div className="flex flex-col p-4 gap-4 flex-1 overflow-hidden">
+        <div className="flex items-center justify-between">
+          <div className="text-base md:text-lg font-semibold tracking-wide truncate" title="unwavr">{open ? "unwavr" : ""}</div>
+          <button
+            aria-label={open ? "サイドバーを閉じる" : "サイドバーを開く"}
+            title={open ? "閉じる" : "開く"}
+            className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10"
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+          </button>
+        </div>
+        <nav className="flex-1 flex flex-col gap-1">
+        {/* ホームを最上段に表示 */}
+        {(() => {
+          const item = navItems.find((n) => n.href === "/");
+          if (!item) return null;
           const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
           return (
             <Link
@@ -43,36 +79,157 @@ export default function Sidebar() {
               className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
                 active ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
               }`}
-              data-guide-key={
-                item.href === "/launcher"
-                  ? "launcher"
-                  : item.href === "/tasks/import-export"
-                  ? "importExport"
-                  : item.href === "/tasks/new"
-                  ? "tasksNew"
-                  : item.href === "/milestones"
-                  ? "milestones"
-                  : item.href === "/pomodoro"
-                  ? "pomodoro"
-                  : undefined
-              }
             >
               {item.icon}
-              <span>{item.label}</span>
+              {open && <span className="truncate">{item.label}</span>}
             </Link>
           );
-        })}
-      </nav>
-      <div className="mt-auto flex flex-col gap-3">
+        })()}
+
+        {/* マイルストーンをホームの直下に表示 */}
+        {(() => {
+          const item = navItems.find((n) => n.href === "/milestones");
+          if (!item) return null;
+          const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                active ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+              }`}
+              data-guide-key="milestones"
+            >
+              {item.icon}
+              {open && <span className="truncate">{item.label}</span>}
+            </Link>
+          );
+        })()}
+
+        {/* タスク 親メニュー */}
+        <div className="mt-1">
+          <button
+            type="button"
+            onClick={() => setTasksOpen((v) => !v)}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+              pathname.startsWith("/tasks/") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+            }`}
+            data-guide-key="tasksNew"
+            aria-expanded={tasksOpen}
+            aria-controls="sidebar-tasks-submenu"
+          >
+            <ListTodo size={16} />
+            {open && <span className="truncate">タスク</span>}
+            {open && (
+              <span className={`ml-auto transition-transform ${tasksOpen ? "rotate-90" : ""}`}>
+                <ChevronRight size={16} />
+              </span>
+            )}
+          </button>
+          {open && tasksOpen && (
+            <div id="sidebar-tasks-submenu" className="mt-1 flex flex-col gap-1">
+              <Link
+                href="/tasks/new"
+                className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                  pathname.startsWith("/tasks/new") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                }`}
+              >
+                <Plus size={16} />
+                <span className="truncate">タスク追加</span>
+              </Link>
+              <Link
+                href="/tasks/daily"
+                className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                  pathname.startsWith("/tasks/daily") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                }`}
+              >
+                <ListTodo size={16} />
+                <span className="truncate">毎日積み上げ</span>
+              </Link>
+              <Link
+                href="/tasks/scheduled"
+                className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                  pathname.startsWith("/tasks/scheduled") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                }`}
+              >
+                <CalendarDays size={16} />
+                <span className="truncate">特定の日・曜日だけ積み上げ</span>
+              </Link>
+              <Link
+                href="/tasks/import-export"
+                className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                  pathname.startsWith("/tasks/import-export") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                }`}
+                data-guide-key="importExport"
+              >
+                <Upload size={16} />
+                <span className="truncate">インポート/エクスポート</span>
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* 残りのメニュー（ホーム以外） */}
+        {navItems
+          .filter((n) => n.href !== "/" && n.href !== "/milestones")
+          .map((item) => {
+            const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                  active ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                }`}
+                data-guide-key={
+                  item.href === "/launcher"
+                    ? "launcher"
+                    : item.href === "/pomodoro"
+                    ? "pomodoro"
+                    : undefined
+                }
+              >
+                {item.icon}
+                {open && <span className="truncate">{item.label}</span>}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="mt-auto flex flex-col gap-3">
         <AuthButtons />
-        <Link
+          {open && (
+            <Link
           href="/unwavr"
           className="text-[11px] opacity-70 hover:opacity-100 underline underline-offset-4"
-        >
-          プロダクトサイト
-        </Link>
-        <div className="text-[10px] opacity-60">v0.1.0</div>
+            >
+              プロダクトサイト
+            </Link>
+          )}
+          {open && <div className="text-[10px] opacity-60">v0.1.0</div>}
+        </div>
       </div>
+      {open && (
+        <div
+          className="w-1 cursor-col-resize hover:bg-black/10 dark:hover:bg-white/10"
+          onMouseDown={(e) => {
+            startXRef.current = e.clientX;
+            startWRef.current = width;
+            const onMove = (ev: MouseEvent) => {
+              if (startXRef.current == null) return;
+              const dx = ev.clientX - startXRef.current;
+              setWidth(Math.max(160, Math.min(360, startWRef.current + dx)));
+            };
+            const onUp = () => {
+              startXRef.current = null;
+              window.removeEventListener("mousemove", onMove);
+              window.removeEventListener("mouseup", onUp);
+            };
+            window.addEventListener("mousemove", onMove);
+            window.addEventListener("mouseup", onUp);
+          }}
+          title="ドラッグで幅を変更"
+        />
+      )}
     </aside>
   );
 }

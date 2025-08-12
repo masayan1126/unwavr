@@ -47,6 +47,14 @@ export type BgmTrack = {
   title: string;
   url: string;
   createdAt: number;
+  groupId?: string;
+};
+
+export type BgmGroup = {
+  id: string;
+  name: string;
+  color?: string;
+  parentId?: string;
 };
 
 export type AppState = {
@@ -58,8 +66,11 @@ export type AppState = {
   importHistory: ImportHistoryEntry[];
   pomodoro: PomodoroState;
   bgmTracks: BgmTrack[];
+  bgmGroups: BgmGroup[];
   addTask: (input: Omit<Task, "id" | "createdAt" | "completed" | "completedPomodoros">) => void;
   toggleTask: (taskId: string) => void;
+  toggleDailyDoneForToday: (taskId: string) => void;
+  togglePlannedForToday: (taskId: string) => void;
   incrementTaskPomodoro: (taskId: string) => void;
   removeTask: (taskId: string) => void;
   updateTask: (taskId: string, update: Partial<Omit<Task, "id" | "createdAt">>) => void;
@@ -88,8 +99,13 @@ export type AppState = {
   addBgmTrack: (input: Omit<BgmTrack, "id" | "createdAt">) => void;
   removeBgmTrack: (id: string) => void;
   updateBgmTrack: (id: string, update: Partial<Omit<BgmTrack, "id">>) => void;
-  moveBgmTrack: (fromIdx: number, toIdx: number) => void;
+  moveBgmTrack: (fromIdx: number, toIdx: number) => void; // legacy
+  moveBgmTrackWithinGroup: (trackId: string, beforeTrackId?: string) => void;
+  setBgmTrackGroup: (trackId: string, groupId?: string) => void;
   clearBgmTracks: () => void;
+  addBgmGroup: (input: Omit<BgmGroup, "id">) => void;
+  updateBgmGroup: (id: string, update: Partial<Omit<BgmGroup, "id">>) => void;
+  removeBgmGroup: (id: string) => void;
 };
 
 const defaultPomodoro: PomodoroState = {
@@ -119,6 +135,9 @@ function createHistoryId(): string {
 function createBgmId(): string {
   return `bgm_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
 }
+function createBgmGroupId(): string {
+  return `bgmg_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
+}
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -131,6 +150,7 @@ export const useAppStore = create<AppState>()(
       importHistory: [],
       pomodoro: defaultPomodoro,
       bgmTracks: [],
+      bgmGroups: [],
       addTask: (input) =>
         set((state) => ({
           tasks: [
@@ -150,6 +170,36 @@ export const useAppStore = create<AppState>()(
             t.id === taskId ? { ...t, completed: !t.completed } : t
           ),
         })),
+      toggleDailyDoneForToday: (taskId) =>
+        set((state) => {
+          const startOfUtcDay = new Date();
+          startOfUtcDay.setUTCHours(0, 0, 0, 0);
+          const today = startOfUtcDay.getTime();
+          return {
+            tasks: state.tasks.map((t) => {
+              if (t.id !== taskId) return t;
+              const arr = [...(t.dailyDoneDates ?? [])];
+              const idx = arr.indexOf(today);
+              if (idx >= 0) arr.splice(idx, 1); else arr.push(today);
+              return { ...t, dailyDoneDates: arr } as Task;
+            }),
+          };
+        }),
+      togglePlannedForToday: (taskId) =>
+        set((state) => {
+          const d = new Date();
+          d.setUTCHours(0, 0, 0, 0);
+          const today = d.getTime();
+          return {
+            tasks: state.tasks.map((t) => {
+              if (t.id !== taskId) return t;
+              const arr = [...(t.plannedDates ?? [])];
+              const idx = arr.indexOf(today);
+              if (idx >= 0) arr.splice(idx, 1); else arr.push(today);
+              return { ...t, plannedDates: arr } as Task;
+            }),
+          };
+        }),
       incrementTaskPomodoro: (taskId) =>
         set((state) => ({
           tasks: state.tasks.map((t) =>
@@ -305,7 +355,44 @@ export const useAppStore = create<AppState>()(
           list.splice(toIdx, 0, item);
           return { bgmTracks: list };
         }),
+      moveBgmTrackWithinGroup: (trackId, beforeTrackId) =>
+        set((state) => {
+          const tracks = [...state.bgmTracks];
+          const srcIdx = tracks.findIndex((t) => t.id === trackId);
+          if (srcIdx < 0) return state;
+          const src = tracks[srcIdx];
+          const groupId = src.groupId;
+          const groupOrder = tracks
+            .map((t, idx) => ({ t, idx }))
+            .filter(({ t }) => t.groupId === groupId);
+          const fromOrderIdx = groupOrder.findIndex(({ t }) => t.id === trackId);
+          if (fromOrderIdx < 0) return state;
+          let toOrderIdx = beforeTrackId
+            ? groupOrder.findIndex(({ t }) => t.id === beforeTrackId)
+            : groupOrder.length; // move to end of group
+          if (toOrderIdx < 0) toOrderIdx = groupOrder.length;
+          const fromAbs = groupOrder[fromOrderIdx].idx;
+          // Compute absolute index to insert before
+          const toAbs = toOrderIdx >= groupOrder.length ? (groupOrder.at(-1)?.idx ?? fromAbs) + 1 : groupOrder[toOrderIdx].idx;
+          const [moved] = tracks.splice(fromAbs, 1);
+          const adj = fromAbs < toAbs ? toAbs - 1 : toAbs;
+          tracks.splice(adj, 0, moved);
+          return { bgmTracks: tracks };
+        }),
+      setBgmTrackGroup: (trackId, groupId) =>
+        set((state) => ({
+          bgmTracks: state.bgmTracks.map((t) => (t.id === trackId ? { ...t, groupId } : t)),
+        })),
       clearBgmTracks: () => set({ bgmTracks: [] }),
+      addBgmGroup: (input) =>
+        set((state) => ({ bgmGroups: [...state.bgmGroups, { ...input, id: createBgmGroupId() }] })),
+      updateBgmGroup: (id, update) =>
+        set((state) => ({ bgmGroups: state.bgmGroups.map((g) => (g.id === id ? { ...g, ...update } : g)) })),
+      removeBgmGroup: (id) =>
+        set((state) => ({
+          bgmGroups: state.bgmGroups.filter((g) => g.id !== id),
+          bgmTracks: state.bgmTracks.map((t) => (t.groupId === id ? { ...t, groupId: undefined } : t)),
+        })),
     }),
     { name: "obsidian-tasks-store" }
   )

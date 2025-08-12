@@ -15,7 +15,7 @@ export default function BacklogPage() {
           ホーム
         </Link>
       </div>
-      <TaskList title="バックログ" tasks={backlog} />
+      <TaskList title="バックログ" tasks={backlog} showPlannedDates tableMode showCreatedColumn={false} showPlannedColumn />
     </div>
   );
 }

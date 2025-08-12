@@ -1,85 +1,176 @@
 "use client";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import TaskList from "@/components/TaskList";
 import { useAppStore } from "@/lib/store";
 import { isTaskForToday } from "@/lib/types";
 import WeatherWidget from "@/components/WeatherWidget";
-import { Plus, Target, Timer, Rocket, Upload } from "lucide-react";
+import { Plus, Target, Timer, Rocket, Upload, Filter as FilterIcon } from "lucide-react";
 
 export default function Home() {
   const tasks = useAppStore((s) => s.tasks);
-  const tasksForToday = useMemo(() => tasks.filter((t) => isTaskForToday(t)), [tasks]);
-  const backlog = useMemo(() => tasks.filter((t) => t.type === "backlog"), [tasks]);
-  const weekendTasks = useMemo(
-    () =>
-      tasks.filter(
-        (t) =>
-          t.type === "scheduled" &&
-          (t.scheduled?.daysOfWeek?.some((d) => d === 0 || d === 6) || (t.scheduled?.dateRanges?.length ?? 0) > 0)
-      ),
-    [tasks]
+  const [showIncomplete, setShowIncomplete] = useState(true);
+  const [showCompleted, setShowCompleted] = useState(true);
+  const [filterDaily, setFilterDaily] = useState(true);
+  const [filterScheduled, setFilterScheduled] = useState(true);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const tasksForToday = useMemo(() => tasks.filter((t) => {
+    if (t.type === "backlog") {
+      const d = new Date();
+      const todayUtc = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+      return (t.plannedDates ?? []).includes(todayUtc);
+    }
+    return isTaskForToday(t);
+  }), [tasks]);
+  const isDailyDoneToday = (dailyDoneDates?: number[]) => {
+    const d = new Date();
+    d.setUTCHours(0, 0, 0, 0);
+    const today = d.getTime();
+    return Boolean(dailyDoneDates && dailyDoneDates.includes(today));
+  };
+  const dailyForToday = useMemo(() => tasksForToday.filter((t) => t.type === "daily"), [tasksForToday]);
+  const scheduledForToday = useMemo(() => tasksForToday.filter((t) => t.type === "scheduled"), [tasksForToday]);
+  const backlogForToday = useMemo(() => tasksForToday.filter((t) => t.type === "backlog"), [tasksForToday]);
+  const dailyPending = useMemo(() => dailyForToday.filter((t) => !isDailyDoneToday(t.dailyDoneDates)), [dailyForToday]);
+  const dailyDone = useMemo(() => dailyForToday.filter((t) => isDailyDoneToday(t.dailyDoneDates)), [dailyForToday]);
+  const scheduledPending = useMemo(() => scheduledForToday.filter((t) => !t.completed), [scheduledForToday]);
+  const scheduledDone = useMemo(() => scheduledForToday.filter((t) => t.completed), [scheduledForToday]);
+  const backlogPending = useMemo(() => backlogForToday.filter((t) => !t.completed), [backlogForToday]);
+  const backlogDone = useMemo(() => backlogForToday.filter((t) => t.completed), [backlogForToday]);
+  const incompleteToday = useMemo(
+    () => [ ...(filterDaily ? dailyPending : []), ...(filterScheduled ? scheduledPending : []), ...backlogPending ],
+    [dailyPending, scheduledPending, backlogPending, filterDaily, filterScheduled]
   );
+  const dailyDoneFiltered = useMemo(() => (filterDaily ? dailyDone : []), [dailyDone, filterDaily]);
+  const scheduledDoneFiltered = useMemo(() => (filterScheduled ? scheduledDone : []), [scheduledDone, filterScheduled]);
   return (
-    <div className="min-h-screen p-6 sm:p-10 max-w-6xl mx-auto flex flex-col gap-6">
+    <div className="min-h-screen p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-8">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">ダッシュボード</h1>
         <div className="flex items-center gap-4">
-          <Link href="/unwavr" className="text-sm underline opacity-80">プロダクトサイト</Link>
           <span className="text-sm">{new Date().toLocaleDateString()}</span>
           <WeatherWidget variant="large" />
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="border rounded p-4 border-black/10 dark:border-white/10">
-          <div className="text-sm font-medium mb-2">今日のタスク</div>
-          <TaskList title="今日" tasks={tasksForToday.slice(0, 5)} />
-          <div className="mt-2 text-right">
-            <Link className="text-sm underline opacity-80" href="/today">すべて見る</Link>
+
+      <section className="border rounded p-4 border-black/10 dark:border-white/10">
+        <div className="mb-3 flex items-center justify-between gap-3 text-sm">
+          <div className="flex flex-col gap-1">
+            <div className="text-[11px] opacity-70">対象: 今日該当(毎日/特定日) + バックログ(今日やる)</div>
+            <div className="flex flex-wrap items-center gap-2 px-2 py-1 rounded border border-black/10 dark:border-white/10">
+              <span className="text-[11px] opacity-70 mr-1">適用中</span>
+              {showIncomplete && (
+                <span className="px-2 py-0.5 rounded-full border">未実行</span>
+              )}
+              {showCompleted && (
+                <span className="px-2 py-0.5 rounded-full border">完了表示</span>
+              )}
+              {filterDaily && (
+                <span className="px-2 py-0.5 rounded-full border">毎日</span>
+              )}
+              {filterScheduled && (
+                <span className="px-2 py-0.5 rounded-full border">特定日</span>
+              )}
+            </div>
+          </div>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setFilterOpen((v) => !v)}
+              className="px-3 py-1.5 rounded border flex items-center gap-2"
+              aria-haspopup="dialog"
+              aria-expanded={filterOpen}
+            >
+              <FilterIcon size={16} /> フィルター
+            </button>
+            {filterOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setFilterOpen(false)} />
+                <div className="absolute right-0 mt-2 z-50 w-72 border rounded bg-background text-foreground shadow-lg p-3 flex flex-col gap-3">
+                  <div className="text-xs opacity-70">表示設定</div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => setShowIncomplete((v) => !v)}
+                      className={`px-2 py-1 rounded-full border text-xs ${showIncomplete ? "bg-foreground text-background" : ""}`}
+                    >未実行</button>
+                    <button
+                      type="button"
+                      onClick={() => setShowCompleted((v) => !v)}
+                      className={`px-2 py-1 rounded-full border text-xs ${showCompleted ? "bg-foreground text-background" : ""}`}
+                    >完了表示</button>
+                  </div>
+                  <div className="text-xs opacity-70">種別</div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => setFilterDaily((v) => !v)}
+                      className={`px-2 py-1 rounded-full border text-xs ${filterDaily ? "bg-foreground text-background" : ""}`}
+                    >毎日</button>
+                    <button
+                      type="button"
+                      onClick={() => setFilterScheduled((v) => !v)}
+                      className={`px-2 py-1 rounded-full border text-xs ${filterScheduled ? "bg-foreground text-background" : ""}`}
+                    >特定日</button>
+                  </div>
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      className="px-2 py-1 rounded border text-xs"
+                      onClick={() => {
+                        setShowIncomplete(true);
+                        setShowCompleted(true);
+                        setFilterDaily(true);
+                        setFilterScheduled(true);
+                      }}
+                    >リセット</button>
+                    <button type="button" className="px-2 py-1 rounded bg-foreground text-background text-xs" onClick={() => setFilterOpen(false)}>閉じる</button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
-        <div className="border rounded p-4 border-black/10 dark:border-white/10">
-          <div className="text-sm font-medium mb-2">バックログ</div>
-          <TaskList title="バックログ" tasks={backlog.slice(0, 5)} />
-          <div className="mt-2 text-right">
-            <Link className="text-sm underline opacity-80" href="/backlog">すべて見る</Link>
-          </div>
+        {showIncomplete && (
+          <TaskList title={`未実行 (${incompleteToday.length})`} tasks={incompleteToday} showType tableMode showCreatedColumn={false} showPlannedColumn />
+        )}
+        {showCompleted && (
+          <>
+            <div className="mt-3">
+              <TaskList title={`積み上げ済み (毎日) (${dailyDoneFiltered.length})`} tasks={dailyDoneFiltered} showType tableMode showCreatedColumn={false} showPlannedColumn={false} />
+            </div>
+            <div className="mt-3">
+              <TaskList title={`完了済み (特定日) (${scheduledDoneFiltered.length})`} tasks={scheduledDoneFiltered} showType tableMode showCreatedColumn={false} showPlannedColumn={false} />
+            </div>
+          </>
+        )}
+      </section>
+
+      <section className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col gap-3">
+        <div className="text-sm font-medium">クイックアクション</div>
+        <div className="flex gap-2 flex-wrap">
+          <Link className="px-3 py-2 rounded border text-sm flex items-center gap-2" href="/tasks/new">
+            <Plus size={16} />
+            タスク追加
+          </Link>
+          <Link className="px-3 py-2 rounded border text-sm flex items-center gap-2" href="/milestones">
+            <Target size={16} />
+            マイルストーン
+          </Link>
+          <Link className="px-3 py-2 rounded border text-sm flex items-center gap-2" href="/pomodoro">
+            <Timer size={16} />
+            ポモドーロ
+          </Link>
+          <Link className="px-3 py-2 rounded border text-sm flex items-center gap-2" href="/launcher">
+            <Rocket size={16} />
+            ランチャー
+          </Link>
+          <Link className="px-3 py-2 rounded border text-sm flex items-center gap-2" href="/tasks/import-export">
+            <Upload size={16} />
+            インポート/エクスポート
+          </Link>
         </div>
-        <div className="border rounded p-4 border-black/10 dark:border-white/10">
-          <div className="text-sm font-medium mb-2">週末・連休</div>
-          <TaskList title="週末・連休" tasks={weekendTasks.slice(0, 5)} />
-          <div className="mt-2 text-right">
-            <Link className="text-sm underline opacity-80" href="/weekend">すべて見る</Link>
-          </div>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 gap-4">
-        <div className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col gap-2">
-          <div className="text-sm font-medium">クイックアクション</div>
-          <div className="flex gap-2 flex-wrap">
-            <Link className="px-3 py-1 rounded border text-sm flex items-center gap-2" href="/tasks/new">
-              <Plus size={16} />
-              タスク追加
-            </Link>
-            <Link className="px-3 py-1 rounded border text-sm flex items-center gap-2" href="/milestones">
-              <Target size={16} />
-              マイルストーン
-            </Link>
-            <Link className="px-3 py-1 rounded border text-sm flex items-center gap-2" href="/pomodoro">
-              <Timer size={16} />
-              ポモドーロ
-            </Link>
-            <Link className="px-3 py-1 rounded border text-sm flex items-center gap-2" href="/launcher">
-              <Rocket size={16} />
-              ランチャー
-            </Link>
-            <Link className="px-3 py-1 rounded border text-sm flex items-center gap-2" href="/tasks/import-export">
-              <Upload size={16} />
-              インポート/エクスポート
-            </Link>
-          </div>
-        </div>
-      </div>
+      </section>
     </div>
   );
 }

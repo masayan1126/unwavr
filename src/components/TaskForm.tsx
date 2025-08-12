@@ -14,6 +14,8 @@ export default function TaskForm() {
   const [rangeStart, setRangeStart] = useState<string>("");
   const [rangeEnd, setRangeEnd] = useState<string>("");
   const [milestoneId, setMilestoneId] = useState<string>("");
+  const [plannedDateInput, setPlannedDateInput] = useState<string>("");
+  const [plannedDates, setPlannedDates] = useState<number[]>([]);
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef<null | (SpeechRecognition & { start: () => void; stop: () => void })>(null);
 
@@ -43,12 +45,15 @@ export default function TaskForm() {
       scheduled,
       estimatedPomodoros: estimated || 0,
       milestoneId: milestoneId || undefined,
+      dailyDoneDates: [],
+      plannedDates: type === "backlog" ? plannedDates : [],
     });
     setTitle("");
     setDesc("");
     setEstimated(0);
     setScheduled(undefined);
     setMilestoneId("");
+    setPlannedDates([]);
     setType("daily");
   };
 
@@ -109,11 +114,12 @@ export default function TaskForm() {
             setType(v);
             if (v === "scheduled") setScheduled({ daysOfWeek: [] });
             else setScheduled(undefined);
+            if (v !== "backlog") setPlannedDates([]);
           }}
         >
           <option value="daily">毎日</option>
           <option value="backlog">不定期（バックログ）</option>
-          <option value="scheduled">曜日/連休</option>
+          <option value="scheduled">特定の日・曜日だけ</option>
         </select>
       </div>
       <div className="flex gap-2 items-center">
@@ -234,6 +240,49 @@ export default function TaskForm() {
               </div>
             )}
           </div>
+        </div>
+      )}
+      {type === "backlog" && (
+        <div className="flex flex-col gap-2">
+          <div className="text-xs opacity-70">実行日</div>
+          <div className="flex gap-2 items-center flex-wrap">
+            <input
+              type="date"
+              className="border border-black/10 dark:border-white/10 rounded px-2 py-1 bg-transparent"
+              value={plannedDateInput}
+              onChange={(e) => setPlannedDateInput(e.target.value)}
+            />
+            <button
+              type="button"
+              className="px-2 py-1 rounded border text-xs"
+              onClick={() => {
+                if (!plannedDateInput) return;
+                const dt = new Date(plannedDateInput);
+                if (isNaN(dt.getTime())) return;
+                const stamp = Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate());
+                if (!plannedDates.includes(stamp)) setPlannedDates((arr) => [...arr, stamp].sort());
+                setPlannedDateInput("");
+              }}
+            >
+              追加
+            </button>
+          </div>
+          {plannedDates.length > 0 && (
+            <div className="flex flex-col gap-1 text-xs">
+              {plannedDates.map((d) => (
+                <div key={d} className="flex items-center gap-2">
+                  <span>{new Date(d).toLocaleDateString()}</span>
+                  <button
+                    type="button"
+                    className="underline opacity-70"
+                    onClick={() => setPlannedDates((arr) => arr.filter((x) => x !== d))}
+                  >
+                    削除
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
       <div className="flex justify-end">

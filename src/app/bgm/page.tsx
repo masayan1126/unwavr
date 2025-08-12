@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import { useAppStore } from "@/lib/store";
 import { Play, Trash2, ChevronUp, ChevronDown, Plus } from "lucide-react";
@@ -24,13 +24,157 @@ function extractVideoId(input: string): string | null {
 
 export default function BgmPage() {
   const tracks = useAppStore((s) => s.bgmTracks);
+  const groups = useAppStore((s) => s.bgmGroups);
   const add = useAppStore((s) => s.addBgmTrack);
   const remove = useAppStore((s) => s.removeBgmTrack);
   const move = useAppStore((s) => s.moveBgmTrack);
   const clear = useAppStore((s) => s.clearBgmTracks);
+  const addGroup = useAppStore((s) => s.addBgmGroup);
+  const updateGroup = useAppStore((s) => s.updateBgmGroup);
+  const setTrackGroup = useAppStore((s) => s.setBgmTrackGroup);
+  const moveWithinGroup = useAppStore((s) => s.moveBgmTrackWithinGroup);
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
   const [currentId, setCurrentId] = useState<string | null>(null);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [selectedGroupId, setSelectedGroupId] = useState<string>("");
+  const grouped = useMemo(() => {
+    const map = new Map<string | undefined, typeof tracks>();
+    for (const t of tracks) {
+      const key = t.groupId;
+      const arr = map.get(key) ?? [];
+      arr.push(t);
+      map.set(key, arr);
+    }
+    return map;
+  }, [tracks]);
+
+  const [dragOverGroupId, setDragOverGroupId] = useState<string | "__ungrouped" | null>(null);
+
+  const childrenOf = (parentId?: string) => groups.filter((g) => g.parentId === parentId);
+
+  function handleDropToGroup(e: React.DragEvent, targetGroupId?: string) {
+    e.preventDefault();
+    try {
+      const data = JSON.parse(e.dataTransfer.getData("application/json"));
+      const srcId = data.trackId as string;
+      if (!srcId) return;
+      setTrackGroup(srcId, targetGroupId);
+      setDragOverGroupId(null);
+    } catch {
+      setDragOverGroupId(null);
+    }
+  }
+
+  function renderGroupNode(groupId?: string) {
+    const isUngrouped = groupId == null;
+    const group = groups.find((g) => g.id === groupId);
+    const title = isUngrouped ? "未分類" : group?.name ?? "グループ";
+    const list = grouped.get(groupId) ?? [];
+    const grandChildren = isUngrouped ? childrenOf(undefined) : childrenOf(groupId);
+    return (
+      <div key={groupId ?? "__ungrouped"} className={`border rounded ${dragOverGroupId === (groupId ?? "__ungrouped") ? "ring-2 ring-blue-400/50" : ""}`}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOverGroupId(groupId ?? "__ungrouped");
+        }}
+        onDragLeave={() => setDragOverGroupId(null)}
+        onDrop={(e) => handleDropToGroup(e, groupId)}
+      >
+        <div className="px-2 py-1 text-xs opacity-70 flex items-center gap-2">
+          <span className="inline-block w-2 h-2 rounded-full bg-black/20" />
+          <span className="truncate">{title}</span>
+          {!isUngrouped && (
+            <span className="ml-auto flex items-center gap-2">
+              <label className="text-[10px] opacity-60">親</label>
+              <select
+                className="px-1 py-0.5 border rounded text-[11px]"
+                value={group?.parentId ?? ""}
+                onChange={(e) => updateGroup(group!.id, { parentId: e.target.value || undefined })}
+              >
+                <option value="">なし</option>
+                {groups
+                  .filter((g) => g.id !== group!.id)
+                  .map((g) => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+              </select>
+            </span>
+          )}
+        </div>
+        <div>
+          {list.map((t) => (
+            <div
+              key={t.id}
+              className="border-t px-2 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData("application/json", JSON.stringify({ trackId: t.id }));
+              }}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                try {
+                  const data = JSON.parse(e.dataTransfer.getData("application/json"));
+                  const srcId = data.trackId as string;
+                  if (!srcId || srcId === t.id) return;
+                  // 異なるグループから来た場合はグループ変更後、目的のトラックの前に移動
+                  const src = tracks.find((x) => x.id === srcId);
+                  const sameGroup = src?.groupId === (groupId ?? undefined);
+                  if (!sameGroup) setTrackGroup(srcId, groupId);
+                  moveWithinGroup(srcId, t.id);
+                } catch {}
+              }}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <button className="px-2 py-1 border rounded" onClick={() => play(t.id)} title="再生">
+                  <Play size={14} />
+                </button>
+                <Image
+                  src={`https://img.youtube.com/vi/${t.videoId}/mqdefault.jpg`}
+                  alt={t.title}
+                  width={160}
+                  height={90}
+                  className="w-20 h-12 sm:w-16 sm:h-9 object-cover rounded border"
+                />
+                <div className="flex flex-col min-w-0">
+                  <div className="text-sm truncate" title={t.title}>{t.title}</div>
+                  <div className="text-[11px] opacity-60 truncate" title={t.url}>https://youtu.be/{t.videoId}</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                <button className="px-2 py-1 border rounded" onClick={() => move(idxOf(t.id), Math.max(0, idxOf(t.id) - 1))}>
+                  <ChevronUp size={14} />
+                </button>
+                <button className="px-2 py-1 border rounded" onClick={() => move(idxOf(t.id), Math.min(tracks.length - 1, idxOf(t.id) + 1))}>
+                  <ChevronDown size={14} />
+                </button>
+                <select
+                  className="px-2 py-1 border rounded text-xs"
+                  value={t.groupId ?? ""}
+                  onChange={(e) => setTrackGroup(t.id, e.target.value || undefined)}
+                >
+                  <option value="">未分類</option>
+                  {groups.map((g) => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
+                <button className="px-2 py-1 border rounded" onClick={() => remove(t.id)} title="削除">
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* 子グループ */}
+        {!isUngrouped && (
+          <div className="pl-3 sm:pl-4 py-2 flex flex-col gap-2">
+            {childrenOf(groupId).map((child) => renderGroupNode(child.id))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   const addTrack = async () => {
     const vid = extractVideoId(url.trim());
@@ -45,7 +189,7 @@ export default function BgmPage() {
         }
       } catch {}
     }
-    add({ videoId: vid, title: useTitle || "(無題)", url: url.trim() });
+    add({ videoId: vid, title: useTitle || "(無題)", url: url.trim(), groupId: selectedGroupId || undefined });
     setUrl("");
     setTitle("");
   };
@@ -72,47 +216,46 @@ export default function BgmPage() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
+        <select
+          className="border rounded px-2 py-2 text-sm w-full sm:w-auto"
+          value={selectedGroupId}
+          onChange={(e) => setSelectedGroupId(e.target.value)}
+          title="追加先グループ"
+        >
+          <option value="">未分類に追加</option>
+          {groups.map((g) => (
+            <option key={g.id} value={g.id}>{g.name}</option>
+          ))}
+        </select>
         <button className="px-3 py-2 text-sm rounded border flex items-center gap-1 w-full sm:w-auto justify-center" onClick={addTrack}>
           <Plus size={14} /> 追加
         </button>
         <button className="px-3 py-2 text-sm rounded border w-full sm:w-auto" onClick={clear}>全クリア</button>
       </div>
 
-      <div className="grid grid-cols-1 gap-2">
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            className="flex-1 border rounded px-2 py-2 text-sm w-full sm:w-auto"
+            placeholder="グループ名（フォルダ名）"
+            value={newGroupName}
+            onChange={(e) => setNewGroupName(e.target.value)}
+          />
+          <button className="px-3 py-2 text-sm rounded border w-full sm:w-auto" onClick={() => {
+            const name = newGroupName.trim();
+            if (!name) return;
+            addGroup({ name });
+            setNewGroupName("");
+          }}>グループ追加</button>
+        </div>
+
         {tracks.length === 0 ? (
           <div className="text-xs opacity-70">プレイリストが空です。URLまたは動画IDを追加してください。</div>
         ) : (
-          tracks.map((t) => (
-            <div key={t.id} className="border rounded p-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-3 min-w-0">
-                <button className="px-2 py-1 border rounded" onClick={() => play(t.id)} title="再生">
-                  <Play size={14} />
-                </button>
-                <Image
-                  src={`https://img.youtube.com/vi/${t.videoId}/mqdefault.jpg`}
-                  alt={t.title}
-                  width={160}
-                  height={90}
-                  className="w-20 h-12 sm:w-16 sm:h-9 object-cover rounded border"
-                />
-                <div className="flex flex-col min-w-0">
-                  <div className="text-sm truncate" title={t.title}>{t.title}</div>
-                  <div className="text-[11px] opacity-60 truncate" title={t.url}>https://youtu.be/{t.videoId}</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                <button className="px-2 py-1 border rounded" onClick={() => move(idxOf(t.id), Math.max(0, idxOf(t.id) - 1))}>
-                  <ChevronUp size={14} />
-                </button>
-                <button className="px-2 py-1 border rounded" onClick={() => move(idxOf(t.id), Math.min(tracks.length - 1, idxOf(t.id) + 1))}>
-                  <ChevronDown size={14} />
-                </button>
-                <button className="px-2 py-1 border rounded" onClick={() => remove(t.id)} title="削除">
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            </div>
-          ))
+          <div className="flex flex-col gap-2">
+            {renderGroupNode(undefined)}
+            {childrenOf(undefined).map((g) => renderGroupNode(g.id))}
+          </div>
         )}
       </div>
 
