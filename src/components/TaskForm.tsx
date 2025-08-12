@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Scheduled, TaskType } from "@/lib/types";
 import { useAppStore } from "@/lib/store";
 
@@ -14,6 +14,24 @@ export default function TaskForm() {
   const [rangeStart, setRangeStart] = useState<string>("");
   const [rangeEnd, setRangeEnd] = useState<string>("");
   const [milestoneId, setMilestoneId] = useState<string>("");
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef<null | (SpeechRecognition & { start: () => void; stop: () => void })>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return;
+    const rec: SpeechRecognition = new SR();
+    rec.lang = "ja-JP";
+    rec.interimResults = false;
+    rec.continuous = false;
+    rec.onresult = (e: SpeechRecognitionEvent) => {
+      const txt = e.results?.[0]?.[0]?.transcript ?? "";
+      if (txt) setTitle((prev) => (prev ? prev + " " + txt : txt));
+    };
+    rec.onend = () => setListening(false);
+    recognitionRef.current = rec as any;
+  }, []);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,11 +70,37 @@ export default function TaskForm() {
     <form onSubmit={onSubmit} className="flex flex-col gap-2 border border-black/10 dark:border-white/10 p-3 rounded-md w-full">
       <div className="flex gap-2 items-center">
         <input
-          className="flex-1 border border-black/10 dark:border-white/10 rounded px-2 py-1 bg-transparent"
+          className={`flex-1 border border-black/10 dark:border-white/10 rounded px-2 py-1 bg-transparent ${listening ? "ring-2 ring-red-500/60" : ""}`}
           placeholder="タスク名"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
+        <button
+          type="button"
+          className={`px-2 py-1 rounded border text-xs ${listening ? "bg-red-600 text-white border-red-600" : ""}`}
+          onClick={() => {
+            if (!recognitionRef.current) return;
+            if (listening) {
+              recognitionRef.current.stop();
+              setListening(false);
+            } else {
+              try {
+                setListening(true);
+                recognitionRef.current.start();
+              } catch {
+                setListening(false);
+              }
+            }
+          }}
+        >
+          音声入力
+        </button>
+        {listening && (
+          <span className="inline-flex items-center gap-1 text-xs text-red-600">
+            <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
+            音声入力中...
+          </span>
+        )}
         <select
           className="border border-black/10 dark:border-white/10 rounded px-2 py-1 bg-transparent"
           value={type}
