@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import { useAppStore } from "@/lib/store";
 import { Play, Trash2, ChevronUp, ChevronDown, Plus } from "lucide-react";
 
@@ -87,11 +88,12 @@ export default function BgmPage() {
                 <button className="px-2 py-1 border rounded" onClick={() => play(t.id)} title="再生">
                   <Play size={14} />
                 </button>
-                <img
+                <Image
                   src={`https://img.youtube.com/vi/${t.videoId}/mqdefault.jpg`}
                   alt={t.title}
+                  width={160}
+                  height={90}
                   className="w-20 h-12 sm:w-16 sm:h-9 object-cover rounded border"
-                  loading="lazy"
                 />
                 <div className="flex flex-col min-w-0">
                   <div className="text-sm truncate" title={t.title}>{t.title}</div>

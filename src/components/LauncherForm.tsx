@@ -20,7 +20,7 @@ export default function LauncherForm() {
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!label.trim() || !url.trim()) return;
-    let cid = categoryId || undefined;
+    const cid = categoryId || undefined;
     if (!cid && newCategory.trim()) {
       const name = newCategory.trim();
       const col = color;
@@ -53,7 +53,7 @@ export default function LauncherForm() {
         <select
           className="border border-black/10 dark:border-white/10 rounded px-2 py-2 bg-transparent text-sm w-full sm:w-auto"
           value={linkType}
-          onChange={(e) => setLinkType(e.target.value as any)}
+          onChange={(e) => setLinkType((e.target.value as "web" | "app"))}
         >
           <option value="web">Web URL</option>
           <option value="app">アプリ（カスタムスキーム）</option>
@@ -86,7 +86,9 @@ export default function LauncherForm() {
                 const res = await fetch("/api/launcher/pick");
                 const data = await res.json();
                 if (data?.path) setNativePath(data.path);
-              } catch (e) {}
+              } catch {
+                // ignore
+              }
             }}
           >
             アプリ登録

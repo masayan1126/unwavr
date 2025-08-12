@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import * as Icons from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 export default function IconPicker({ value, onChange }: { value: string; onChange: (name: string) => void }) {
   const [query, setQuery] = useState("");
@@ -19,7 +20,7 @@ export default function IconPicker({ value, onChange }: { value: string; onChang
       />
       <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-64 overflow-auto">
         {filtered.map((name) => {
-          const Ico = (Icons as Record<string, React.ComponentType<{ size?: number }>>)[name];
+          const Ico = (Icons as unknown as Record<string, LucideIcon>)[name];
           const active = value === name;
           return (
             <button

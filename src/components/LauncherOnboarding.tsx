@@ -2,6 +2,7 @@
 import { useMemo, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import * as Icons from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 type Template = {
   label: string;
@@ -124,7 +125,7 @@ export default function LauncherOnboarding({ onClose }: { onClose?: () => void }
               </div>
               <div className="flex flex-col gap-1">
                 {items.map((t) => {
-                  const Ico = (Icons as Record<string, React.ComponentType<{ size?: number }>>)[t.iconName];
+                  const Ico = (Icons as unknown as Record<string, LucideIcon>)[t.iconName];
                   return (
                     <label key={t.label} className="flex items-center gap-2 text-sm">
                       <input type="checkbox" checked={Boolean(selected[t.label])} onChange={() => toggle(t.label)} />

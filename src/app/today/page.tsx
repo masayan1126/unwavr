@@ -47,8 +47,8 @@ export default function TodayPage() {
   const timeBoundEvents = useMemo(() => {
     const list = events.filter((e) => Boolean(e.start?.dateTime));
     list.sort((a, b) => {
-      const sa = toDate(a.start?.dateTime!)?.getTime() ?? 0;
-      const sb = toDate(b.start?.dateTime!)?.getTime() ?? 0;
+      const sa = a.start?.dateTime ? toDate(a.start.dateTime)?.getTime() ?? 0 : 0;
+      const sb = b.start?.dateTime ? toDate(b.start.dateTime)?.getTime() ?? 0 : 0;
       return sa - sb;
     });
     return list;

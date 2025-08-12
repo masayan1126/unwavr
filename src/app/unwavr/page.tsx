@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle2, Target, Hourglass, Anchor, Rocket, CalendarDays, Zap } from "lucide-react";
+import { CheckCircle2, Target, Hourglass, Anchor, CalendarDays, Zap } from "lucide-react";
 
 export default function UnwavrLanding() {
   return (

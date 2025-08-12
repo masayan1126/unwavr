@@ -1,5 +1,6 @@
 "use client";
 import * as Icons from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { useMemo, useState } from "react";
 import IconPicker from "@/components/IconPicker";
@@ -122,7 +123,7 @@ export default function LauncherGrid() {
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {list.map((sc) => {
-                const Ico = (Icons as Record<string, React.ComponentType<{ size?: number }>>)[sc.iconName];
+                const Ico = (Icons as unknown as Record<string, LucideIcon>)[sc.iconName];
                 const style = { backgroundColor: `${sc.color ?? "#0ea5e9"}20`, borderColor: sc.color ?? "#0ea5e9" } as React.CSSProperties;
                 return (
                   sc.kind === "web" ? (
@@ -248,7 +249,7 @@ export default function LauncherGrid() {
             <div className="text-sm opacity-70 col-span-full">ショートカットがありません。下のフォームから追加してください。</div>
           ) : (
             groups.rest.map((sc) => {
-                const Ico = (Icons as Record<string, React.ComponentType<{ size?: number }>>)[sc.iconName];
+                const Ico = (Icons as unknown as Record<string, LucideIcon>)[sc.iconName];
               const style = { backgroundColor: `${sc.color ?? "#0ea5e9"}20`, borderColor: sc.color ?? "#0ea5e9" } as React.CSSProperties;
               return (
                 sc.kind === "web" ? (

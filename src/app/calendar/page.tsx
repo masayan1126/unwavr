@@ -139,11 +139,7 @@ export default function CalendarPage() {
   //   return created.getTime() === d0.getTime();
   // };
 
-  const setToDay = (date: Date) => {
-    const iso = format(date, "yyyy-MM-dd");
-    setStartInput(`${iso}T09:00`);
-    setEndInput(`${iso}T09:30`);
-  };
+  // helper removed (unused)
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -246,7 +242,7 @@ export default function CalendarPage() {
 
   const deleteDialog = async () => {
     if (editingEvent?.id) {
-      const accessToken = (session as any)?.access_token as string | undefined;
+      const accessToken = (session as unknown as { access_token?: string })?.access_token;
       if (!accessToken) return;
       await fetch(`/api/calendar/events/${editingEvent.id}`, { method: "DELETE", headers: { Authorization: `Bearer ${accessToken}` } });
       const res = await fetch(`/api/calendar/events?timeMin=${encodeURIComponent(monthStart.toISOString())}&timeMax=${encodeURIComponent(monthEnd.toISOString())}`, {

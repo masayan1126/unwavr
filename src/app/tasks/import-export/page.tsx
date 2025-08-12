@@ -82,8 +82,9 @@ export default function ImportExportPage() {
         }
         addTask({ title, description, type: typeStr, scheduled, estimatedPomodoros: Number.isFinite(est) ? est : 0 });
         ok++;
-      } catch (e: any) {
-        errors.push(`行${i + 1}: ${String(e?.message ?? e)}`);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        errors.push(`行${i + 1}: ${msg}`);
       }
     }
     const summary = { imported: ok, failed: errors.length, errors };

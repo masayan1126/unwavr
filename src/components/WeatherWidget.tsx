@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Sun, Cloud, CloudSun, CloudRain, CloudDrizzle, CloudSnow, CloudLightning, CloudFog } from "lucide-react";
+import { Sun, Cloud, CloudSun, CloudRain, CloudDrizzle, CloudSnow, CloudLightning, CloudFog, type LucideIcon } from "lucide-react";
 
 type WeatherState = {
   loading: boolean;
@@ -12,7 +12,7 @@ type WeatherState = {
 
 function codeToWeather(
   code?: number
-): { label: string; Icon: React.ComponentType<{ size?: number }>; accent: string; bg: string } {
+): { label: string; Icon: LucideIcon; accent: string; bg: string } {
   // デフォルトは曇り系の落ち着いた色
   if (code == null) return { label: "-", Icon: Cloud, accent: "#6b7280", bg: "#6b728020" };
   if (code === 0) return { label: "快晴", Icon: Sun, accent: "#f59e0b", bg: "#f59e0b20" };
@@ -54,7 +54,7 @@ export default function WeatherWidget({ variant = "small" }: WeatherWidgetProps)
           if (!canceled) setState({ loading: false, error: "天気の取得に失敗しました" });
         }
       },
-      (err) => {
+      () => {
         setState({ loading: false, error: "位置情報の許可が必要です" });
       },
       { enableHighAccuracy: false, timeout: 10000 }

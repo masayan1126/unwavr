@@ -7,7 +7,7 @@ type Current = { temperatureC?: number; weatherCode?: number };
 type Daily = { date: string; tMax?: number; tMin?: number; code?: number };
 
 function codeToWeather(code?: number): {
-  Icon: React.ComponentType<{ size?: number }>;
+  Icon: React.ComponentType<{ size?: number; color?: string }>;
   accent: string;
   bg: string;
 } {
@@ -26,7 +26,6 @@ function codeToWeather(code?: number): {
 }
 
 export default function WeatherPage() {
-  const [pos, setPos] = useState<{ lat: number; lon: number } | null>(null);
   const [current, setCurrent] = useState<Current>({});
   const [daily, setDaily] = useState<Daily[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,7 +41,6 @@ export default function WeatherPage() {
       async (p) => {
         const lat = p.coords.latitude;
         const lon = p.coords.longitude;
-        setPos({ lat, lon });
         try {
           const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;
           const res = await fetch(url, { cache: "no-store" });

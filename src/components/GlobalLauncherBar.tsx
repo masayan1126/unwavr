@@ -1,5 +1,6 @@
 "use client";
 import * as Icons from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
@@ -33,7 +34,7 @@ export default function GlobalLauncherBar() {
                   <div className="text-[11px] opacity-70 px-2">ランチャーにショートカットを追加してください</div>
                 ) : (
                   visibleShortcuts.map((sc) => {
-                    const Ico = (Icons as Record<string, React.ComponentType<{ size?: number }>>)[sc.iconName];
+                    const Ico = (Icons as unknown as Record<string, LucideIcon>)[sc.iconName];
                     const style: React.CSSProperties = {
                       backgroundColor: `${sc.color ?? "#0ea5e9"}20`,
                       borderColor: sc.color ?? "#0ea5e9",

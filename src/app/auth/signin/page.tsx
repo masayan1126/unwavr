@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 function GoogleIcon({ size = 16 }: { size?: number }) {
@@ -12,7 +12,7 @@ function GoogleIcon({ size = 16 }: { size?: number }) {
   );
 }
 
-export default function SignInPage() {
+function SignInInner() {
   const params = useSearchParams();
   const callbackUrl = params.get("callbackUrl") || "/";
   const router = useRouter();
@@ -41,6 +41,14 @@ export default function SignInPage() {
         <div className="text-xs opacity-60">ログイン後、元のページに戻ります。</div>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense>
+      <SignInInner />
+    </Suspense>
   );
 }
 
