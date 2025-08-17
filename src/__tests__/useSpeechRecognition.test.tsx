@@ -8,21 +8,21 @@ describe('useSpeechRecognition', () => {
       lang = '';
       continuous = false;
       interimResults = false;
-      onresult: ((ev: any) => void) | null = null;
+      // narrow typing to unknown to avoid any
+      onresult: ((ev: unknown) => void) | null = null;
       onend: (() => void) | null = null;
       start() { /* noop */ }
       stop() { if (this.onend) this.onend(new Event('end')); }
     }
-    // @ts-expect-error inject
-    window.SpeechRecognition = MockSR as any;
+    // @ts-expect-error tests: inject mock SpeechRecognition into window for hook to find
+    window.SpeechRecognition = MockSR as unknown;
   });
 
   it('calls onResult when recognition fires result', () => {
-    let captured = '';
-    const { result } = renderHook(() => useSpeechRecognition({ onResult: (t) => (captured = t) }));
+    const { result } = renderHook(() => useSpeechRecognition({ onResult: () => {} }));
     // simulate result
-    // @ts-expect-error
-    const rec = (result as any).recRef?.current ?? null;
+    // `recRef` は外に露出していないため実体には触らない
+    // ここではトグル可否と公開APIの存在のみを検証する
     // if hook encapsulates ref, we can only assert no crash and toggle
     act(() => result.current.toggle());
     expect(typeof result.current.start).toBe('function');

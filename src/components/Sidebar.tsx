@@ -34,7 +34,6 @@ export default function Sidebar() {
     if (typeof window === "undefined") return;
     const w = Number(localStorage.getItem("sidebar:w") ?? 224);
     const o = localStorage.getItem("sidebar:o");
-    const to = localStorage.getItem("sidebar:tasks:o");
     if (w) setWidth(Math.max(160, Math.min(360, w)));
     if (o != null) setOpen(o === "1");
     setTasksOpen(true); // 常時展開（フラット表示）

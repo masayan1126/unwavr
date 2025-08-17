@@ -161,12 +161,14 @@ export default function WeatherPage() {
           console.log('Forecast data:', forecastData);
           
           // 5日間の予報を日別に集約
-          const dailyData = forecastData.list?.reduce((acc: any[], item: any) => {
+          type ForecastItem = { dt: number; main: { temp: number }; weather?: Array<{ id?: number }> };
+          const list: ForecastItem[] = Array.isArray(forecastData.list) ? forecastData.list : [];
+          const dailyData: Daily[] = list.reduce<Daily[]>((acc, item) => {
             const date = new Date(item.dt * 1000).toISOString().split('T')[0];
             const existing = acc.find(d => d.date === date);
             if (existing) {
-              existing.tMax = Math.max(existing.tMax, item.main.temp);
-              existing.tMin = Math.min(existing.tMin, item.main.temp);
+              existing.tMax = Math.max(existing.tMax ?? item.main.temp, item.main.temp);
+              existing.tMin = Math.min(existing.tMin ?? item.main.temp, item.main.temp);
             } else {
               acc.push({
                 date,
@@ -266,7 +268,7 @@ export default function WeatherPage() {
         console.error('Geolocation error details:', errorDetails);
         
         let errorMessage = "位置情報の許可が必要です";
-        let errorCode = geolocationError.code;
+        const errorCode = geolocationError.code;
         
         switch (errorCode) {
           case geolocationError.PERMISSION_DENIED:
@@ -338,7 +340,7 @@ export default function WeatherPage() {
         console.error('Geolocation error on refresh:', errorDetails);
         
         let errorMessage = "位置情報の取得に失敗しました";
-        let errorCode = geolocationError.code;
+        const errorCode = geolocationError.code;
         
         switch (errorCode) {
           case geolocationError.PERMISSION_DENIED:

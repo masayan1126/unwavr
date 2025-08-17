@@ -6,7 +6,7 @@ describe('useWeather', () => {
     // 環境変数をモック
     process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY = 'test_api_key';
     
-    // @ts-expect-error mock
+    // @ts-expect-error - test-only: mock fetch to return simplified shape
     global.fetch = jest.fn(async () => ({
       ok: true,
       json: async () => ({ 
@@ -23,10 +23,10 @@ describe('useWeather', () => {
         timestamp: new Date().toISOString()
       })
     }));
-    // @ts-expect-error mock
+    // @ts-expect-error - test-only: JSDOM lacks geolocation, inject mock
     global.navigator.geolocation = {
       getCurrentPosition: (success: PositionCallback) => {
-        // @ts-expect-error
+        // @ts-expect-error - test-only: simplify coords object
         success({ coords: { latitude: 35, longitude: 139 } });
       },
     } as Geolocation;
@@ -50,7 +50,7 @@ describe('useWeather', () => {
   it('handles Open-Meteo API fallback when no API key', async () => {
     delete process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
     
-    // @ts-expect-error mock
+    // @ts-expect-error test: mock fetch error response
     global.fetch = jest.fn(async () => ({
       ok: true,
       json: async () => ({ 
@@ -77,7 +77,7 @@ describe('useWeather', () => {
   });
 
   it('handles HTTP errors', async () => {
-    // @ts-expect-error mock
+    // @ts-expect-error - test-only: mock fetch error response
     global.fetch = jest.fn(async () => ({
       ok: false,
       status: 500,

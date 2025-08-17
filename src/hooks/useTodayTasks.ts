@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useAppStore } from "@/lib/store";
-import { isTaskForToday, Task } from "@/lib/types";
+import { isTaskForToday } from "@/lib/types";
 
 function isDailyDoneToday(dailyDoneDates?: number[]) {
   const now = new Date();

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { use } from "react";
 import { useAppStore } from "@/lib/store";
-import { Task, TaskType, Scheduled } from "@/lib/types";
+import { TaskType, Scheduled } from "@/lib/types";
 
 export default function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -19,7 +19,6 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   const [type, setType] = useState<TaskType>("daily");
   const [estimatedPomodoros, setEstimatedPomodoros] = useState(0);
   const [milestoneId, setMilestoneId] = useState("");
-  const [scheduled, setScheduled] = useState<Scheduled | undefined>(undefined);
   const [plannedDates, setPlannedDates] = useState<number[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -40,7 +39,6 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
     setType(task.type);
     setEstimatedPomodoros(task.estimatedPomodoros || 0);
     setMilestoneId(task.milestoneId || "");
-    setScheduled(task.scheduled);
     setPlannedDates(task.plannedDates || []);
 
     // スケジュール設定の初期化
@@ -166,10 +164,10 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 </span>
               </div>
               
-              {task.estimatedPomodoros > 0 && (
+              {(task.estimatedPomodoros ?? 0) > 0 && (
                 <div>
                   <span className="opacity-60">見積ポモ数:</span>
-                  <span className="ml-2">{task.estimatedPomodoros}</span>
+                  <span className="ml-2">{task.estimatedPomodoros ?? 0}</span>
                 </div>
               )}
 
@@ -253,9 +251,9 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                     const newType = e.target.value as TaskType;
                     setType(newType);
                     if (newType === "scheduled") {
-                      setScheduled({ daysOfWeek: [] });
-                    } else {
-                      setScheduled(undefined);
+                      setSelectedDays([]);
+                      setRangeStart("");
+                      setRangeEnd("");
                     }
                     if (newType !== "backlog") {
                       setPlannedDates([]);

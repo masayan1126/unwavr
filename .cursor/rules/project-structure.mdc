@@ -1,0 +1,49 @@
+---
+alwaysApply: true
+---
+
+# プロジェクト構成ガイド
+
+Next.js App Router ベースの構成です。主要な入口と関係ファイルは次の通りです。
+
+- アプリレイアウト/トップ
+  - [src/app/layout.tsx](mdc:src/app/layout.tsx)
+  - [src/app/page.tsx](mdc:src/app/page.tsx)
+
+- API ルート（App Router）
+  - 天気: [src/app/api/weather/route.ts](mdc:src/app/api/weather/route.ts), [src/app/api/weather/forecast/route.ts](mdc:src/app/api/weather/forecast/route.ts)
+  - タスク: [src/app/api/tasks/route.ts](mdc:src/app/api/tasks/route.ts)
+  - カレンダー: [src/app/api/calendar/events/route.ts](mdc:src/app/api/calendar/events/route.ts), [src/app/api/calendar/events/[id]/route.ts](mdc:src/app/api/calendar/events/[id]/route.ts)
+  - ランチャー: [src/app/api/launcher/open/route.ts](mdc:src/app/api/launcher/open/route.ts), [src/app/api/launcher/pick/route.ts](mdc:src/app/api/launcher/pick/route.ts)
+  - 認証: [src/app/api/auth/[...nextauth]/route.ts](mdc:src/app/api/auth/[...nextauth]/route.ts)
+
+- 状態管理と型
+  - Zustand ストア: [src/lib/store.ts](mdc:src/lib/store.ts)
+  - ドメイン型/ユーティリティ: [src/lib/types.ts](mdc:src/lib/types.ts)
+
+- Hooks（機能別）
+  - 天気: [src/hooks/useWeather.ts](mdc:src/hooks/useWeather.ts)
+  - 今日やるタスク: [src/hooks/useTodayTasks.ts](mdc:src/hooks/useTodayTasks.ts)
+  - 音声認識: [src/hooks/useSpeechRecognition.ts](mdc:src/hooks/useSpeechRecognition.ts)
+  - ランチャー: [src/hooks/useLauncher.ts](mdc:src/hooks/useLauncher.ts)
+
+- UI コンポーネント（抜粋）
+  - タスク一覧: [src/components/TaskList.tsx](mdc:src/components/TaskList.tsx)
+  - タスク詳細: [src/components/TaskDetail.tsx](mdc:src/components/TaskDetail.tsx)
+  - 天気ウィジェット: [src/components/WeatherWidget.tsx](mdc:src/components/WeatherWidget.tsx)
+  - サイドバー: [src/components/Sidebar.tsx](mdc:src/components/Sidebar.tsx)
+
+- ページ（抜粋）
+  - 天気ページ: [src/app/weather/page.tsx](mdc:src/app/weather/page.tsx)
+  - タスク（一覧/新規/詳細 等）: [src/app/tasks/page.tsx](mdc:src/app/tasks/page.tsx), [src/app/tasks/new/page.tsx](mdc:src/app/tasks/new/page.tsx), [src/app/tasks/[id]/page.tsx](mdc:src/app/tasks/[id]/page.tsx)
+
+- 設定/ツール
+  - Next 設定: [next.config.ts](mdc:next.config.ts)
+  - ESLint 設定: [eslint.config.mjs](mdc:eslint.config.mjs)
+  - Jest 設定: [jest.config.js](mdc:jest.config.js), [jest.setup.ts](mdc:jest.setup.ts)
+
+ビルド/テスト:
+- Lint: `npm run lint`
+- Test: `npm test`
+- Build: `npm run build`
+

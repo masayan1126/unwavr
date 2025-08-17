@@ -159,7 +159,7 @@ export function useWeather() {
         console.error('Geolocation error details:', errorDetails);
         
         let errorMessage = "位置情報の許可が必要です";
-        let errorCode = geolocationError.code;
+        const errorCode = geolocationError.code;
         
         switch (errorCode) {
           case geolocationError.PERMISSION_DENIED:

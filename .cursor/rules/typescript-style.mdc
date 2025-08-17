@@ -1,0 +1,24 @@
+---
+globs: *.ts,*.tsx
+---
+
+# TypeScript/React コーディング規約（要点）
+
+- 変数・定数
+  - 再代入しない変数は `const` を使用（`prefer-const`）。
+  - 未使用のインポート/変数は残さない（CI の Lint で警告）。
+
+- 型付け
+  - `any` の使用禁止（`unknown` or 具体的な型を使用）。
+  - `@ts-expect-error` を使う場合は、3文字以上の理由コメントを必ず付与。
+  - 外部 API レスポンスは最小限の型を導入して `any` を避ける。
+
+- React/Next.js
+  - App Router のコンポーネントは必要に応じて `"use client"` を明示。
+  - 未使用の `useRef`/`useState` などは削除。
+  - コンポーネントプロップスは型エイリアスまたは interface で明示。
+
+- テスト
+  - JSDOM に存在しない API はテスト内で明示的にモック。
+  - `global.fetch` や `navigator.geolocation` をモックする際は `@ts-expect-error - reason` を付与。
+

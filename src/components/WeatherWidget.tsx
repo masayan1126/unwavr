@@ -1,19 +1,9 @@
 "use client";
-import { useState } from "react";
 import Link from "next/link";
 import { Sun, Cloud, CloudSun, CloudRain, CloudDrizzle, CloudSnow, CloudLightning, CloudFog, type LucideIcon, MapPin } from "lucide-react";
 import { useWeather } from "@/hooks/useWeather";
 
-type WeatherState = {
-  loading: boolean;
-  error?: string;
-  temperatureC?: number;
-  weatherCode?: number;
-  feelsLike?: number;
-  humidity?: number;
-  windSpeed?: number;
-  isDefaultLocation?: boolean;
-};
+// 型はフックの戻り値に依存するためここで再定義しない
 
 function codeToWeather(
   code?: number
@@ -74,7 +64,7 @@ export default function WeatherWidget({ variant = "small" }: WeatherWidgetProps)
       <span className={`${tempClass} tabular-nums`}>{state.temperatureC?.toFixed(1)}°C</span>
       <span className="opacity-80">{label}</span>
       {state.isDefaultLocation && (
-        <MapPin size={12} className="opacity-60" title="東京の天気を表示中" />
+        <MapPin size={12} className="opacity-60" />
       )}
     </Link>
   );

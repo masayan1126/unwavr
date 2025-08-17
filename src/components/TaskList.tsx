@@ -1,7 +1,7 @@
 "use client";
 import { useAppStore } from "@/lib/store";
 import { Task } from "@/lib/types";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, ListTodo, Archive } from "lucide-react";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
@@ -32,8 +32,7 @@ function TypeBadge({ type, label }: { type: "daily" | "scheduled" | "backlog"; l
 function TaskRow({ task, onEdit }: { task: Task; onEdit: (task: Task) => void }) {
   const toggle = useAppStore((s) => s.toggleTask);
   const toggleDailyToday = useAppStore((s) => s.toggleDailyDoneForToday);
-  const setActive = useAppStore((s) => s.setActiveTask);
-  const activeId = useAppStore((s) => s.pomodoro.activeTaskId);
+  
   const milestones = useAppStore((s) => s.milestones);
   const milestone = task.milestoneId ? milestones.find((m) => m.id === task.milestoneId) : undefined;
   const weekdayLabel = ["日","月","火","水","木","金","土"][new Date().getDay()];
@@ -180,16 +179,7 @@ export default function TaskList({
     // 音声認識セットアップは hook に委譲
   }, [editingTask]);
 
-  // 表示カラムに合わせてグリッド定義を一元生成（ヘッダー/行で共有）
-  const gridTemplateColumns = useMemo(() => {
-    const cols: string[] = ["2fr"]; // タイトル列
-    if (showCreatedColumn) cols.push("auto");
-    if (showPlannedColumn) cols.push("auto");
-    if (showScheduledColumn) cols.push("auto");
-    if (showTypeColumn) cols.push("auto");
-    if (showMilestoneColumn) cols.push("auto");
-    return cols.join(" ");
-  }, [showCreatedColumn, showPlannedColumn, showScheduledColumn, showTypeColumn, showMilestoneColumn]);
+  // 表示カラムに合わせたグリッドはテーブルレイアウトを使用しているため未使用の計算を削除
 
   function openEdit(t: Task) {
     setEditingId(t.id);

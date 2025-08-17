@@ -33,7 +33,7 @@ export default function CalendarNotificationBar() {
       setIsVisible(savedVisibility !== 'false');
     }
   }, []);
-  const [isLoading, setIsLoading] = useState(false);
+  
   const [hasFetched, setHasFetched] = useState(false);
 
   useEffect(() => {
@@ -42,7 +42,6 @@ export default function CalendarNotificationBar() {
     if (!accessToken) return;
     if (hasFetched) return; // 既に取得済みの場合はスキップ
 
-    setIsLoading(true);
     setHasFetched(true);
     const todayStart = startOfDay(new Date());
     const todayEnd = endOfDay(new Date());
@@ -55,11 +54,8 @@ export default function CalendarNotificationBar() {
       .then((r) => r.json())
       .then((d) => {
         setEvents(d.items ?? []);
-        setIsLoading(false);
       })
-      .catch(() => {
-        setIsLoading(false);
-      });
+      .catch(() => {});
   }, [session, status, hasFetched]);
 
   // 時間が決まっているイベントのみを取得し、時間順にソート

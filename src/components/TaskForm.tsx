@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { Scheduled, TaskType } from "@/lib/types";
 import { useAppStore } from "@/lib/store";
@@ -18,7 +18,7 @@ export default function TaskForm() {
   const [plannedDateInput, setPlannedDateInput] = useState<string>("");
   const [plannedDates, setPlannedDates] = useState<number[]>([]);
   const [listening, setListening] = useState(false);
-  const { toggle: toggleSpeech, supported } = useSpeechRecognition({
+  const { toggle: toggleSpeech } = useSpeechRecognition({
     onResult: (txt) => setTitle((prev) => (prev ? prev + " " + txt : txt)),
     lang: "ja-JP",
   });
