@@ -9,7 +9,10 @@ import LauncherOnboarding from "@/components/LauncherOnboarding";
 export default function LauncherPage() {
   const onboarded = useAppStore((s) => s.launcherOnboarded);
   const hasShortcuts = useAppStore((s) => s.launcherShortcuts.length > 0);
+  const exportLaunchers = useAppStore((s) => s.exportLaunchers);
+  const importLaunchers = useAppStore((s) => s.importLaunchers);
   const [show, setShow] = useState(false);
+  const [importing, setImporting] = useState(false);
   return (
     <div className="p-6 sm:p-10 max-w-5xl mx-auto flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -18,12 +21,45 @@ export default function LauncherPage() {
           <button className="text-sm underline opacity-80" onClick={() => setShow(true)}>
             一括登録
           </button>
+          <button
+            className="text-sm underline opacity-80"
+            onClick={() => exportLaunchers()}
+            title="JSONとしてエクスポート"
+          >
+            エクスポート
+          </button>
+          <button
+            className="text-sm underline opacity-80"
+            onClick={() => setImporting(true)}
+            title="JSONをインポート"
+          >
+            インポート
+          </button>
           <Link className="text-sm underline opacity-80" href="/">ホーム</Link>
         </div>
       </div>
       <LauncherGrid />
       <LauncherForm />
       {show && <LauncherOnboarding onClose={() => setShow(false)} />}
+      {importing && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setImporting(false)}>
+          <div className="bg-background text-foreground rounded-md border border-black/10 dark:border-white/10 p-6 w-full max-w-md" onClick={(e)=>e.stopPropagation()}>
+            <div className="text-sm font-medium mb-3">ランチャーのインポート</div>
+            <input
+              type="file"
+              accept="application/json,.json"
+              onChange={async (e) => {
+                const f = e.target.files?.[0];
+                if (!f) return;
+                const text = await f.text();
+                importLaunchers(text, true);
+                setImporting(false);
+              }}
+            />
+            <div className="mt-3 text-xs opacity-70">選択したJSONで上書きインポートします。</div>
+          </div>
+        </div>
+      )}
       {!onboarded && !hasShortcuts && !show && <LauncherOnboarding onClose={() => setShow(false)} />}
     </div>
   );

@@ -20,6 +20,8 @@ const TEMPLATES: Template[] = [
   { label: "Google ドライブ", url: "https://drive.google.com/", iconName: "Folder", color: "#10b981", category: "Google" },
   { label: "Google カレンダー", url: "https://calendar.google.com/", iconName: "Calendar", color: "#3b82f6", category: "Google" },
   { label: "GitHub", url: "https://github.com/", iconName: "Github", color: "#111827", category: "開発" },
+  { label: "Qiita トレンド", url: "https://qiita.com/", iconName: "TrendingUp", color: "#55c500", category: "開発" },
+  { label: "Zenn", url: "https://zenn.dev/", iconName: "BookOpen", color: "#3ea8ff", category: "開発" },
   { label: "X (Twitter)", url: "https://x.com/", iconName: "Bird", color: "#0ea5e9", category: "SNS" },
   { label: "Canva", url: "https://www.canva.com/", iconName: "Palette", color: "#a855f7", category: "デザイン" },
   { label: "画像変換サイト", url: "https://squoosh.app/", iconName: "Image", color: "#0ea5e9", category: "デザイン" },

@@ -1,15 +1,23 @@
 "use client";
-import { useParams } from "next/navigation";
-import TaskDetail from "@/components/TaskDetail";
+import { use } from "react";
+import { useRouter } from "next/navigation";
+import { useAppStore } from "@/lib/store";
 
-export default function WeekendDetailPage() {
-  const params = useParams<{ id: string }>();
-  const id = Array.isArray(params.id) ? params.id[0] : params.id;
-  return (
-    <div className="p-6 sm:p-10 max-w-3xl mx-auto">
-      <TaskDetail taskId={id} backHref="/weekend" />
-    </div>
-  );
+export default function WeekendTaskPage({ params }: { params: Promise<{ id: string }> }) {
+  const router = useRouter();
+  const { id } = use(params);
+  const taskId = Array.isArray(id) ? id[0] : id;
+  const task = useAppStore((s) => s.tasks.find((t) => t.id === taskId));
+  const toggleTask = useAppStore((s) => s.toggleTask);
+
+  if (!task) {
+    router.push("/weekend");
+    return null;
+  }
+
+  toggleTask(task.id);
+  router.push("/weekend");
+  return null;
 }
 
 

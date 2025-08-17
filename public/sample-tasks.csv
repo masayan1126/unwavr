@@ -1,4 +1,4 @@
-title,description,type,daysOfWeek,dateRanges,estimatedPomodoros
+タイトル,説明,種別,曜日,期間,見積ポモ
 毎日ストレッチ,,daily,1;3;5,,1
 ブログ執筆,下書きを2000字,backlog,,,3
 動画撮影の準備,,scheduled,6;0,2025-05-03..2025-05-06,2

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Home, ListTodo, Calendar, Rocket, Upload, Plus, Target, Timer, Music, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, ListTodo, Upload, Plus, ChevronLeft, ChevronRight, AlertTriangle, Home, Archive, Rocket, Target, Timer, Calendar, Music } from "lucide-react";
 import AuthButtons from "@/components/AuthButtons";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
@@ -14,7 +14,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { href: "/", label: "ホーム", icon: <Home size={16} /> },
-  { href: "/backlog", label: "バックログ", icon: <ListTodo size={16} /> },
+  { href: "/backlog", label: "バックログ", icon: <Archive size={16} /> },
   { href: "/launcher", label: "ランチャー", icon: <Rocket size={16} /> },
   { href: "/milestones", label: "マイルストーン", icon: <Target size={16} /> },
   { href: "/pomodoro", label: "ポモドーロ", icon: <Timer size={16} /> },
@@ -27,7 +27,7 @@ export default function Sidebar() {
   const { status } = useSession();
   const [open, setOpen] = useState(true);
   const [width, setWidth] = useState<number>(224);
-  const [tasksOpen, setTasksOpen] = useState<boolean>(false);
+  const [tasksOpen, setTasksOpen] = useState<boolean>(true);
   const startXRef = useRef<number | null>(null);
   const startWRef = useRef<number>(width);
   useEffect(() => {
@@ -37,12 +37,7 @@ export default function Sidebar() {
     const to = localStorage.getItem("sidebar:tasks:o");
     if (w) setWidth(Math.max(160, Math.min(360, w)));
     if (o != null) setOpen(o === "1");
-    if (to != null) {
-      setTasksOpen(to === "1");
-    } else {
-      // パスに基づき初期展開（/tasks/ 配下にいるときは展開）
-      setTasksOpen(location.pathname.startsWith("/tasks/"));
-    }
+    setTasksOpen(true); // 常時展開（フラット表示）
   }, []);
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -67,7 +62,7 @@ export default function Sidebar() {
           </button>
         </div>
         <nav className="flex-1 flex flex-col gap-1">
-        {/* ホームを最上段に表示 */}
+        {/* ホーム */}
         {(() => {
           const item = navItems.find((n) => n.href === "/");
           if (!item) return null;
@@ -86,7 +81,7 @@ export default function Sidebar() {
           );
         })()}
 
-        {/* マイルストーンをホームの直下に表示 */}
+        {/* マイルストーン */}
         {(() => {
           const item = navItems.find((n) => n.href === "/milestones");
           if (!item) return null;
@@ -106,28 +101,36 @@ export default function Sidebar() {
           );
         })()}
 
-        {/* タスク 親メニュー */}
+        {/* タスク（トップレベルのショートカット） */}
+        {(() => {
+          const active = pathname === "/tasks" || pathname.startsWith("/tasks/");
+          return (
+            <Link
+              href="/tasks"
+              className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                active ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+              }`}
+              data-guide-key="tasksTop"
+            >
+              <ListTodo size={16} />
+              {open && <span className="truncate">タスク</span>}
+            </Link>
+          );
+        })()}
+
+        {/* タスク 親メニュー（復活） */}
         <div className="mt-1">
-          <button
-            type="button"
-            onClick={() => setTasksOpen((v) => !v)}
-            className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-              pathname.startsWith("/tasks/") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
-            }`}
-            data-guide-key="tasksNew"
-            aria-expanded={tasksOpen}
-            aria-controls="sidebar-tasks-submenu"
-          >
-            <ListTodo size={16} />
-            {open && <span className="truncate">タスク</span>}
-            {open && (
-              <span className={`ml-auto transition-transform ${tasksOpen ? "rotate-90" : ""}`}>
-                <ChevronRight size={16} />
-              </span>
-            )}
-          </button>
           {open && tasksOpen && (
             <div id="sidebar-tasks-submenu" className="mt-1 flex flex-col gap-1">
+              <Link
+                href="/tasks"
+                className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                  pathname === "/tasks" ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                }`}
+              >
+                <ListTodo size={16} />
+                <span className="truncate">タスク管理</span>
+              </Link>
               <Link
                 href="/tasks/new"
                 className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
@@ -165,35 +168,37 @@ export default function Sidebar() {
                 <Upload size={16} />
                 <span className="truncate">インポート/エクスポート</span>
               </Link>
+              <Link
+                href="/tasks/incomplete"
+                className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                  pathname.startsWith("/tasks/incomplete") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                }`}
+              >
+                <AlertTriangle size={16} />
+                <span className="truncate">未完了タスク</span>
+              </Link>
             </div>
           )}
         </div>
 
-        {/* 残りのメニュー（ホーム以外） */}
-        {navItems
-          .filter((n) => n.href !== "/" && n.href !== "/milestones")
-          .map((item) => {
-            const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                  active ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
-                }`}
-                data-guide-key={
-                  item.href === "/launcher"
-                    ? "launcher"
-                    : item.href === "/pomodoro"
-                    ? "pomodoro"
-                    : undefined
-                }
-              >
-                {item.icon}
-                {open && <span className="truncate">{item.label}</span>}
-              </Link>
-            );
-          })}
+          {/* 残りのメニュー（ホーム/マイルストーン以外） */}
+          {navItems
+            .filter((n) => n.href !== "/" && n.href !== "/milestones")
+            .map((item) => {
+              const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                    active ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                  }`}
+                >
+                  {item.icon}
+                  {open && <span className="truncate">{item.label}</span>}
+                </Link>
+              );
+            })}
           {open && (
             <div className="mt-3 pt-3 border-t border-black/10 dark:border-white/10 text-[12px] opacity-80 flex flex-col gap-1">
               <Link href="/terms" className="hover:underline">利用規約</Link>

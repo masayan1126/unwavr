@@ -16,6 +16,23 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Environment Variables
+
+### Weather API Setup (Optional)
+
+より精度の高い天気データを取得するために、OpenWeatherMap APIキーを設定できます：
+
+1. [OpenWeatherMap](https://openweathermap.org/api) で無料アカウントを作成
+2. APIキーを取得
+3. プロジェクトルートに `.env.local` ファイルを作成：
+
+```bash
+# .env.local
+NEXT_PUBLIC_OPENWEATHER_API_KEY=your_api_key_here
+```
+
+APIキーが設定されていない場合は、Open-Meteo API（無料）がフォールバックとして使用されます。
+
 ## Service Overview
 
 See `docs/ServiceOverview.md` for the product concept, features, user value, and name candidates.

@@ -37,6 +37,26 @@ export default function ImportExportPage() {
   const deleteHistory = useAppStore((s) => s.deleteImportHistory);
   const clearHistory = useAppStore((s) => s.clearImportHistory);
   const [result, setResult] = useState<ImportResult | null>(null);
+  const dayLabels = ["日","月","火","水","木","金","土"] as const;
+
+  function parseDaysOfWeek(input: string): number[] {
+    const parts = input
+      .split(";")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const out: number[] = [];
+    for (const p of parts) {
+      if (/^\d+$/.test(p)) {
+        const n = parseInt(p, 10);
+        if (n >= 0 && n <= 6) out.push(n);
+        continue;
+      }
+      // 日本語の曜日記号（例: 月, 水, 金）をサポート
+      const idx = dayLabels.indexOf(p as typeof dayLabels[number]);
+      if (idx !== -1) out.push(idx);
+    }
+    return out.sort();
+  }
 
   async function handleImport(file: File) {
     const text = await file.text();
@@ -46,14 +66,21 @@ export default function ImportExportPage() {
       return;
     }
     const header = lines[0].split(",").map((h) => h.trim());
-    const col = (name: string) => header.indexOf(name);
+    // 日本語/英語ヘッダー双方を許容
+    const headerIndex = (...names: string[]) => {
+      for (const n of names) {
+        const i = header.indexOf(n);
+        if (i !== -1) return i;
+      }
+      return -1;
+    };
     const idx = {
-      title: col("title"),
-      description: col("description"),
-      type: col("type"),
-      daysOfWeek: col("daysOfWeek"),
-      dateRanges: col("dateRanges"),
-      estimatedPomodoros: col("estimatedPomodoros"),
+      title: headerIndex("title", "タイトル"),
+      description: headerIndex("description", "説明"),
+      type: headerIndex("type", "種別"),
+      daysOfWeek: headerIndex("daysOfWeek", "曜日"),
+      dateRanges: headerIndex("dateRanges", "期間"),
+      estimatedPomodoros: headerIndex("estimatedPomodoros", "見積ポモ"),
     };
     const errors: string[] = [];
     let ok = 0;
@@ -63,7 +90,7 @@ export default function ImportExportPage() {
       const cells = raw.split(",");
       try {
         const title = (cells[idx.title] ?? "").trim();
-        if (!title) throw new Error("titleが空です");
+        if (!title) throw new Error("タイトルが空です");
         const typeStr = (cells[idx.type] ?? "backlog").trim() as TaskType;
         const description = (cells[idx.description] ?? "").trim() || undefined;
         const est = parseInt((cells[idx.estimatedPomodoros] ?? "0").trim() || "0", 10);
@@ -71,12 +98,7 @@ export default function ImportExportPage() {
         if (typeStr === "scheduled" || typeStr === "daily") {
           const dows = (cells[idx.daysOfWeek] ?? "").trim();
           const dr = (cells[idx.dateRanges] ?? "").trim();
-          const daysOfWeek = dows
-            ? dows
-                .split(";")
-                .map((s) => parseInt(s.trim(), 10))
-                .filter((n) => Number.isInteger(n) && n >= 0 && n <= 6)
-            : [];
+          const daysOfWeek = dows ? parseDaysOfWeek(dows) : [];
           const dateRanges = parseDateRanges(dr);
           scheduled = { daysOfWeek, dateRanges: dateRanges.length ? dateRanges : undefined };
         }
@@ -93,12 +115,17 @@ export default function ImportExportPage() {
   }
 
   function exportCSV() {
-    const header = ["title", "description", "type", "daysOfWeek", "dateRanges", "estimatedPomodoros"]; 
+    // 日本語ヘッダーで出力
+    const header = ["タイトル", "説明", "種別", "曜日", "期間", "見積ポモ"]; 
     const rows = tasks.map((t) => {
-      const days = t.scheduled?.daysOfWeek?.join(";") ?? "";
-      const ranges = (t.scheduled?.dateRanges ?? [])
+      const daysRaw = (t.scheduled?.daysOfWeek ?? [])
+        .map((n) => (n >= 0 && n <= 6 ? dayLabels[n] : String(n)))
+        .join(";");
+      const days = daysRaw || "-"; // 空欄だと表計算で0になることがあるため見やすい表記に
+      const rangesRaw = (t.scheduled?.dateRanges ?? [])
         .map((r) => `${formatDate(r.start)}..${formatDate(r.end)}`)
         .join(";");
+      const ranges = rangesRaw || "-";
       const esc = (v: string) => (v.includes(",") || v.includes("\n") ? `"${v.replaceAll('"', '""')}"` : v);
       return [
         esc(t.title ?? ""),
@@ -130,7 +157,7 @@ export default function ImportExportPage() {
 
       <div className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col gap-3">
         <div className="text-sm font-medium">インポート（CSV）</div>
-        <div className="text-xs opacity-70">ヘッダー行を含むCSVを選択してください。対応列: title, description, type, daysOfWeek(例: 1;3;5), dateRanges(例: 2025-01-01..2025-01-05;2025-05-01..2025-05-03), estimatedPomodoros</div>
+        <div className="text-xs opacity-70">ヘッダー行を含むCSVを選択してください。対応列（日本語/英語どちらでも可）: タイトル(title), 説明(description), 種別(type: daily/scheduled/backlog), 曜日(daysOfWeek: 1;3;5), 期間(dateRanges: 2025-01-01..2025-01-05;2025-05-01..2025-05-03), 見積ポモ(estimatedPomodoros)</div>
         <input
           type="file"
           accept=".csv,text/csv"

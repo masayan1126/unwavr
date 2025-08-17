@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAppStore } from "@/lib/store";
 
 export default function Milestones() {
@@ -7,13 +7,90 @@ export default function Milestones() {
   const add = useAppStore((s) => s.addMilestone);
   const update = useAppStore((s) => s.updateMilestoneProgress);
   const remove = useAppStore((s) => s.removeMilestone);
+  const exportMilestones = useAppStore((s) => s.exportMilestones);
+  const importMilestones = useAppStore((s) => s.importMilestones);
 
   const [title, setTitle] = useState("");
   const [target, setTarget] = useState(10);
+  const [importMessage, setImportMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExport = () => {
+    exportMilestones();
+  };
+
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      const result = importMilestones(content);
+      
+      if (result.success) {
+        setImportMessage({
+          type: 'success',
+          message: `${result.imported}個のマイルストーンをインポートしました。${result.errors.length > 0 ? ` (${result.errors.length}個のエラー)` : ''}`
+        });
+      } else {
+        setImportMessage({
+          type: 'error',
+          message: `インポートに失敗しました: ${result.errors.join(', ')}`
+        });
+      }
+
+      // メッセージを3秒後に消す
+      setTimeout(() => setImportMessage(null), 3000);
+    };
+    reader.readAsText(file);
+
+    // ファイル入力をリセット
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   return (
     <div className="border border-black/10 dark:border-white/10 rounded-md p-3">
-      <div className="text-xs uppercase tracking-wide opacity-70 mb-2">マイルストーン</div>
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-xs uppercase tracking-wide opacity-70">マイルストーン</div>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExport}
+            className="px-3 py-1 rounded border text-xs hover:bg-gray-100 dark:hover:bg-gray-800"
+            disabled={milestones.length === 0}
+            title="CSV形式（日本語ヘッダー）でダウンロードします"
+          >
+            CSVエクスポート
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="px-3 py-1 rounded border text-xs hover:bg-gray-100 dark:hover:bg-gray-800"
+            title="CSV/JSONのどちらでもインポートできます（推奨: CSV）"
+          >
+            CSVインポート
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.json,text/csv,application/json"
+            onChange={handleImport}
+            className="hidden"
+          />
+        </div>
+      </div>
+
+      {importMessage && (
+        <div className={`mb-3 p-2 rounded text-xs ${
+          importMessage.type === 'success' 
+            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+        }`}>
+          {importMessage.message}
+        </div>
+      )}
+
       <form
         className="flex gap-2 mb-3"
         onSubmit={(e) => {

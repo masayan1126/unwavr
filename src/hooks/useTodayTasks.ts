@@ -4,16 +4,12 @@ import { useAppStore } from "@/lib/store";
 import { isTaskForToday, Task } from "@/lib/types";
 
 function isDailyDoneToday(dailyDoneDates?: number[]) {
-  const d = new Date();
-  d.setUTCHours(0, 0, 0, 0);
-  const today = d.getTime();
-  return Boolean(dailyDoneDates && dailyDoneDates.includes(today));
-}
-
-function isBacklogPlannedForToday(task: Task) {
-  const d = new Date();
-  const todayUtc = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
-  return (task.plannedDates ?? []).includes(todayUtc);
+  const now = new Date();
+  // ローカル日付の 00:00:00 を基準にする（ユーザー体験に合わせる）
+  const local = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  // 互換性のため、過去のUTC基準データも許容
+  const utc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  return Boolean(dailyDoneDates && (dailyDoneDates.includes(local) || dailyDoneDates.includes(utc)));
 }
 
 export function useTodayTasks() {
@@ -23,14 +19,11 @@ export function useTodayTasks() {
   const [showCompleted, setShowCompleted] = useState(true);
   const [filterDaily, setFilterDaily] = useState(true);
   const [filterScheduled, setFilterScheduled] = useState(true);
+  const [filterBacklog, setFilterBacklog] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
 
   const tasksForToday = useMemo(
-    () =>
-      tasks.filter((t) => {
-        if (t.type === "backlog") return isBacklogPlannedForToday(t);
-        return isTaskForToday(t);
-      }),
+    () => tasks.filter((t) => isTaskForToday(t)),
     [tasks]
   );
 
@@ -45,8 +38,8 @@ export function useTodayTasks() {
   const backlogPending = useMemo(() => backlogForToday.filter((t) => !t.completed), [backlogForToday]);
 
   const incompleteToday = useMemo(
-    () => [...(filterDaily ? dailyPending : []), ...(filterScheduled ? scheduledPending : []), ...backlogPending],
-    [dailyPending, scheduledPending, backlogPending, filterDaily, filterScheduled]
+    () => [...(filterDaily ? dailyPending : []), ...(filterScheduled ? scheduledPending : []), ...(filterBacklog ? backlogPending : [])],
+    [dailyPending, scheduledPending, backlogPending, filterDaily, filterScheduled, filterBacklog]
   );
   const dailyDoneFiltered = useMemo(() => (filterDaily ? dailyDone : []), [dailyDone, filterDaily]);
   const scheduledDoneFiltered = useMemo(() => (filterScheduled ? scheduledDone : []), [scheduledDone, filterScheduled]);
@@ -56,6 +49,7 @@ export function useTodayTasks() {
     setShowCompleted(true);
     setFilterDaily(true);
     setFilterScheduled(true);
+    setFilterBacklog(true);
   };
 
   return {
@@ -74,6 +68,8 @@ export function useTodayTasks() {
     setFilterDaily,
     filterScheduled,
     setFilterScheduled,
+    filterBacklog,
+    setFilterBacklog,
     resetFilters,
   };
 }

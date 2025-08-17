@@ -12,7 +12,7 @@ export default function DailyTasksPage() {
         <h1 className="text-xl font-semibold">毎日積み上げ</h1>
         <Link className="text-sm underline opacity-80" href="/tasks/new">タスク追加</Link>
       </div>
-      <TaskList title="毎日積み上げ" tasks={daily} tableMode showCreatedColumn={false} showPlannedColumn={false} />
+      <TaskList title="毎日積み上げ" tasks={daily} tableMode showCreatedColumn={false} showPlannedColumn={false} showTypeColumn showMilestoneColumn={false} />
     </div>
   );
 }

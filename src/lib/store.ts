@@ -77,6 +77,8 @@ export type AppState = {
   addMilestone: (input: Omit<Milestone, "id">) => void;
   updateMilestoneProgress: (milestoneId: string, delta: number) => void;
   removeMilestone: (milestoneId: string) => void;
+  exportMilestones: () => string;
+  importMilestones: (jsonData: string) => { success: boolean; imported: number; errors: string[] };
   setActiveTask: (taskId?: string) => void;
   startPomodoro: (isBreak?: boolean) => void;
   stopPomodoro: () => void;
@@ -92,6 +94,8 @@ export type AppState = {
   addLauncherCategory: (input: Omit<LauncherCategory, "id">) => void;
   removeLauncherCategory: (id: string) => void;
   updateLauncherCategory: (id: string, update: Partial<Omit<LauncherCategory, "id">>) => void;
+  exportLaunchers: () => string;
+  importLaunchers: (jsonData: string, replace?: boolean) => { success: boolean; importedShortcuts: number; importedCategories: number; errors: string[] };
   setLauncherOnboarded: (value: boolean) => void;
   addImportHistory: (entry: Omit<ImportHistoryEntry, "id">) => void;
   deleteImportHistory: (id: string) => void;
@@ -144,7 +148,24 @@ export const useAppStore = create<AppState>()(
     (set, get) => ({
       tasks: [],
       milestones: [],
-      launcherShortcuts: [],
+      launcherShortcuts: [
+        {
+          id: createShortcutId(),
+          label: "Qiita トレンド",
+          url: "https://qiita.com/",
+          iconName: "TrendingUp",
+          color: "#55c500",
+          kind: "web"
+        },
+        {
+          id: createShortcutId(),
+          label: "Zenn",
+          url: "https://zenn.dev/",
+          iconName: "BookOpen",
+          color: "#3ea8ff",
+          kind: "web"
+        }
+      ],
       launcherCategories: [],
       launcherOnboarded: false,
       importHistory: [],
@@ -236,6 +257,149 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           milestones: state.milestones.filter((m) => m.id !== milestoneId),
         })),
+      exportMilestones: () => {
+        // CSV（日本語ヘッダー）でエクスポート
+        const milestones = get().milestones;
+        const header = ["タイトル", "目標", "現在", "期限"];
+        const formatDate = (ts?: number) => {
+          if (!ts) return "-";
+          const d = new Date(ts);
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, "0");
+          const dd = String(d.getDate()).padStart(2, "0");
+          return `${y}-${m}-${dd}`;
+        };
+        const esc = (v: string) =>
+          v.includes(",") || v.includes("\n") ? `"${v.replaceAll('"', '""')}"` : v;
+        const rows = milestones.map((m) =>
+          [
+            esc(m.title),
+            String(m.targetUnits),
+            String(m.currentUnits ?? 0),
+            formatDate(m.dueDate),
+          ].join(",")
+        );
+        const csv = [header.join(","), ...rows].join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "milestones.csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        return csv;
+      },
+      importMilestones: (data) => {
+        const errors: string[] = [];
+        let imported = 0;
+
+        // ユーティリティ: CSVパーサ（簡易・引用符対応）
+        function parseCsv(text: string): string[][] {
+          const rows: string[][] = [];
+          let row: string[] = [];
+          let field = "";
+          let inQuotes = false;
+          for (let i = 0; i < text.length; i++) {
+            const ch = text[i];
+            if (inQuotes) {
+              if (ch === '"') {
+                if (i + 1 < text.length && text[i + 1] === '"') {
+                  field += '"';
+                  i++;
+                } else {
+                  inQuotes = false;
+                }
+              } else {
+                field += ch;
+              }
+            } else {
+              if (ch === '"') inQuotes = true;
+              else if (ch === ',') { row.push(field.trim()); field = ""; }
+              else if (ch === '\n') { row.push(field.trim()); rows.push(row); row = []; field = ""; }
+              else if (ch === '\r') { /* ignore */ }
+              else { field += ch; }
+            }
+          }
+          // last field
+          row.push(field.trim());
+          if (row.some((c) => c.length > 0)) rows.push(row);
+          return rows;
+        }
+
+        // JSONとCSVの両対応
+        const trimmed = data.trim();
+        if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            const list: Partial<Milestone>[] = Array.isArray(parsed) ? parsed : [parsed];
+            list.forEach((m, idx) => {
+              const title = (m.title ?? "").toString().trim();
+              const target = Number(m.targetUnits ?? 0);
+              const current = Number(m.currentUnits ?? 0);
+              if (!title) { errors.push(`JSON #${idx + 1}: タイトルが空です`); return; }
+              if (!Number.isFinite(target) || target < 1) { errors.push(`JSON #${idx + 1}: 目標が不正です`); return; }
+              const dueDate = typeof m.dueDate === 'number' ? m.dueDate : undefined;
+              set((state) => ({
+                milestones: [...state.milestones, { id: createMilestoneId(), title, targetUnits: Math.max(1, Math.floor(target)), currentUnits: Math.max(0, Math.floor(current)), dueDate }],
+              }));
+              imported++;
+            });
+            return { success: true, imported, errors };
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            return { success: false, imported: 0, errors: [msg] };
+          }
+        }
+
+        // CSVの想定ヘッダー: タイトル,目標,現在,期限（日本語） もしくは title,target,current,dueDate
+        try {
+          const rows = parseCsv(trimmed).filter((r) => r.length > 0);
+          if (rows.length === 0) return { success: true, imported: 0, errors };
+          const header = rows[0].map((h) => h.trim());
+          const col = (...names: string[]) => {
+            for (const n of names) { const i = header.indexOf(n); if (i !== -1) return i; }
+            return -1;
+          };
+          const idxTitle = col("タイトル", "title");
+          const idxTarget = col("目標", "target", "targetUnits");
+          const idxCurrent = col("現在", "current", "currentUnits");
+          const idxDue = col("期限", "dueDate");
+          if (idxTitle === -1 || idxTarget === -1) {
+            return { success: false, imported: 0, errors: ["CSVヘッダーが不正です（必要: タイトル, 目標）"] };
+          }
+          for (let i = 1; i < rows.length; i++) {
+            const cells = rows[i];
+            if (cells.every((c) => c.trim() === "")) continue;
+            const title = (cells[idxTitle] ?? "").trim();
+            const target = parseInt((cells[idxTarget] ?? "").trim(), 10);
+            const current = parseInt((cells[idxCurrent] ?? "0").trim() || "0", 10);
+            const dueStr = (idxDue >= 0 ? (cells[idxDue] ?? "").trim() : "");
+            if (!title) { errors.push(`行${i + 1}: タイトルが空です`); continue; }
+            if (!Number.isFinite(target) || target < 1) { errors.push(`行${i + 1}: 目標が不正です`); continue; }
+            let dueDate: number | undefined = undefined;
+            if (dueStr && dueStr !== "-") {
+              const d = new Date(dueStr);
+              if (!isNaN(d.getTime())) {
+                const local = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+                dueDate = local.getTime();
+              }
+            }
+            set((state) => ({
+              milestones: [
+                ...state.milestones,
+                { id: createMilestoneId(), title, targetUnits: Math.max(1, Math.floor(target)), currentUnits: Math.max(0, Math.min(target, Math.floor(current))), dueDate },
+              ],
+            }));
+            imported++;
+          }
+          return { success: true, imported, errors };
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          return { success: false, imported: 0, errors: [msg] };
+        }
+      },
       setActiveTask: (taskId) =>
         set((state) => ({ pomodoro: { ...state.pomodoro, activeTaskId: taskId } })),
       startPomodoro: (isBreak) =>
@@ -336,6 +500,39 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           launcherCategories: state.launcherCategories.map((c) => (c.id === id ? { ...c, ...update } : c)),
         })),
+      exportLaunchers: () => {
+        const data = {
+          categories: get().launcherCategories,
+          shortcuts: get().launcherShortcuts,
+        };
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "launchers.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        return json;
+      },
+      importLaunchers: (jsonData, replace) => {
+        try {
+          const parsed = JSON.parse(jsonData) as { categories?: LauncherCategory[]; shortcuts?: LauncherShortcut[] };
+          const errors: string[] = [];
+          const importedCategories = parsed.categories?.length ?? 0;
+          const importedShortcuts = parsed.shortcuts?.length ?? 0;
+          set((state) => ({
+            launcherCategories: replace ? (parsed.categories ?? []) : [...state.launcherCategories, ...(parsed.categories ?? [])],
+            launcherShortcuts: replace ? (parsed.shortcuts ?? []) : [...state.launcherShortcuts, ...(parsed.shortcuts ?? [])],
+          }));
+          return { success: true, importedShortcuts, importedCategories, errors };
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          return { success: false, importedShortcuts: 0, importedCategories: 0, errors: [msg] };
+        }
+      },
       setLauncherOnboarded: (value) => set({ launcherOnboarded: value }),
       addImportHistory: (entry) =>
         set((state) => ({ importHistory: [{ ...entry, id: createHistoryId() }, ...state.importHistory] })),

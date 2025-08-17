@@ -61,6 +61,10 @@ export function isTaskForToday(task: Task, referenceDate: Date = new Date()): bo
     const byRange = isWithinDateRanges(referenceDate, task.scheduled?.dateRanges);
     return byDow || byRange;
   }
+  if (task.type === "backlog") {
+    const todayUtc = Date.UTC(referenceDate.getUTCFullYear(), referenceDate.getUTCMonth(), referenceDate.getUTCDate());
+    return (task.plannedDates ?? []).includes(todayUtc);
+  }
   return false;
 }
 

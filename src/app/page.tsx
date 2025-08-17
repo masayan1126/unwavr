@@ -3,7 +3,8 @@ import Link from "next/link";
 import TaskList from "@/components/TaskList";
 import { useTodayTasks } from "@/hooks/useTodayTasks";
 import WeatherWidget from "@/components/WeatherWidget";
-import { Plus, Target, Timer, Rocket, Upload, Filter as FilterIcon } from "lucide-react";
+import { Plus, Target, Timer, Rocket, Upload, Filter as FilterIcon, AlertTriangle } from "lucide-react";
+import AddQiitaZenn from "@/components/AddQiitaZenn";
 
 export default function Home() {
   const {
@@ -20,6 +21,8 @@ export default function Home() {
     setFilterDaily,
     filterScheduled,
     setFilterScheduled,
+    filterBacklog,
+    setFilterBacklog,
     resetFilters,
   } = useTodayTasks();
   return (
@@ -33,6 +36,11 @@ export default function Home() {
       </div>
 
       <section className="border rounded p-4 border-black/10 dark:border-white/10">
+        <div className="mb-2 flex gap-2">
+          <Link href="/tasks/new" className="inline-flex items-center gap-2 px-3 py-1.5 rounded border text-sm">
+            <Plus size={16} /> タスク追加
+          </Link>
+        </div>
         <div className="mb-3 flex items-center justify-between gap-3 text-sm">
           <div className="flex flex-col gap-1">
             <div className="text-[11px] opacity-70">対象: 今日該当(毎日/特定日) + バックログ(今日やる)</div>
@@ -49,6 +57,9 @@ export default function Home() {
               )}
               {filterScheduled && (
                 <span className="px-2 py-0.5 rounded-full border">特定日</span>
+              )}
+              {filterBacklog && (
+                <span className="px-2 py-0.5 rounded-full border">バックログ</span>
               )}
             </div>
           </div>
@@ -91,6 +102,11 @@ export default function Home() {
                       onClick={() => setFilterScheduled((v) => !v)}
                       className={`px-2 py-1 rounded-full border text-xs ${filterScheduled ? "bg-foreground text-background" : ""}`}
                     >特定日</button>
+                    <button
+                      type="button"
+                      onClick={() => setFilterBacklog((v) => !v)}
+                      className={`px-2 py-1 rounded-full border text-xs ${filterBacklog ? "bg-foreground text-background" : ""}`}
+                    >バックログ</button>
                   </div>
                   <div className="flex items-center justify-end gap-2">
                     <button
@@ -106,15 +122,33 @@ export default function Home() {
           </div>
         </div>
         {showIncomplete && (
-          <TaskList title={`未実行 (${incompleteToday.length})`} tasks={incompleteToday} showType tableMode showCreatedColumn={false} showPlannedColumn />
+          <TaskList 
+            title={`未実行 (${incompleteToday.length})`} 
+            tasks={incompleteToday} 
+            showType 
+            tableMode 
+            showCreatedColumn={false} 
+            showPlannedColumn 
+            showTypeColumn 
+            showMilestoneColumn={false} 
+          />
         )}
         {showCompleted && (
           <>
             <div className="mt-3">
-              <TaskList title={`積み上げ済み (毎日) (${dailyDoneFiltered.length})`} tasks={dailyDoneFiltered} showType tableMode showCreatedColumn={false} showPlannedColumn={false} />
+              <TaskList title={`積み上げ済み (毎日) (${dailyDoneFiltered.length})`} tasks={dailyDoneFiltered} showType tableMode showCreatedColumn={false} showPlannedColumn={false} showTypeColumn showMilestoneColumn={false} />
             </div>
             <div className="mt-3">
-              <TaskList title={`完了済み (特定日) (${scheduledDoneFiltered.length})`} tasks={scheduledDoneFiltered} showType tableMode showCreatedColumn={false} showPlannedColumn={false} />
+              <TaskList 
+                title={`完了済み (特定日) (${scheduledDoneFiltered.length})`} 
+                tasks={scheduledDoneFiltered} 
+                showType 
+                tableMode 
+                showCreatedColumn={false} 
+                showPlannedColumn={false} 
+                showTypeColumn 
+                showMilestoneColumn={false} 
+              />
             </div>
           </>
         )}
@@ -123,9 +157,9 @@ export default function Home() {
       <section className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col gap-3">
         <div className="text-sm font-medium">クイックアクション</div>
         <div className="flex gap-2 flex-wrap">
-          <Link className="px-3 py-2 rounded border text-sm flex items-center gap-2" href="/tasks/new">
+          <Link className="px-3 py-2 rounded border text-sm flex items-center gap-2" href="/tasks">
             <Plus size={16} />
-            タスク追加
+            タスク管理
           </Link>
           <Link className="px-3 py-2 rounded border text-sm flex items-center gap-2" href="/milestones">
             <Target size={16} />
@@ -143,8 +177,14 @@ export default function Home() {
             <Upload size={16} />
             インポート/エクスポート
           </Link>
+          <Link className="px-3 py-2 rounded border text-sm flex items-center gap-2" href="/tasks/incomplete">
+            <AlertTriangle size={16} />
+            未完了タスク
+          </Link>
         </div>
       </section>
+
+      {/* AddQiitaZenn は案内文削除のため一時的に非表示 */}
     </div>
   );
 }

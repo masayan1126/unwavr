@@ -12,7 +12,7 @@ export default function ScheduledTasksPage() {
         <h1 className="text-xl font-semibold">特定の日・曜日だけ積み上げ</h1>
         <Link className="text-sm underline opacity-80" href="/tasks/new">タスク追加</Link>
       </div>
-      <TaskList title="特定の日/曜日" tasks={scheduled} tableMode showCreatedColumn={false} showPlannedColumn={false} showScheduledColumn />
+      <TaskList title="特定の日/曜日" tasks={scheduled} tableMode showCreatedColumn={false} showPlannedColumn={false} showScheduledColumn showTypeColumn showMilestoneColumn={false} />
     </div>
   );
 }

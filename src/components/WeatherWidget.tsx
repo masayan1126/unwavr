@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Sun, Cloud, CloudSun, CloudRain, CloudDrizzle, CloudSnow, CloudLightning, CloudFog, type LucideIcon } from "lucide-react";
+import { Sun, Cloud, CloudSun, CloudRain, CloudDrizzle, CloudSnow, CloudLightning, CloudFog, type LucideIcon, MapPin } from "lucide-react";
 import { useWeather } from "@/hooks/useWeather";
 
 type WeatherState = {
@@ -9,12 +9,15 @@ type WeatherState = {
   error?: string;
   temperatureC?: number;
   weatherCode?: number;
+  feelsLike?: number;
+  humidity?: number;
+  windSpeed?: number;
+  isDefaultLocation?: boolean;
 };
 
 function codeToWeather(
   code?: number
 ): { label: string; Icon: LucideIcon; accent: string; bg: string } {
-  // デフォルトは曇り系の落ち着いた色
   if (code == null) return { label: "-", Icon: Cloud, accent: "#6b7280", bg: "#6b728020" };
   if (code === 0) return { label: "快晴", Icon: Sun, accent: "#f59e0b", bg: "#f59e0b20" };
   if ([1, 2, 3].includes(code)) return { label: "晴れ/くもり", Icon: CloudSun, accent: "#9ca3af", bg: "#9ca3af20" };
@@ -33,26 +36,46 @@ type WeatherWidgetProps = { variant?: "small" | "large" };
 export default function WeatherWidget({ variant = "small" }: WeatherWidgetProps) {
   const state = useWeather();
 
-  if (state.loading) {
-    return <div className="text-xs opacity-70">天気取得中...</div>;
-  }
-  if (state.error) {
-    return <div className="text-xs opacity-70">{state.error}</div>;
-  }
-  const { label, Icon, accent, bg } = codeToWeather(state.weatherCode);
   const iconSize = variant === "large" ? 28 : 18;
   const tempClass = variant === "large" ? "text-lg font-semibold" : "font-medium";
   const containerClass = variant === "large" ? "px-3 py-2 text-base" : "px-2 py-1 text-sm";
+
+  if (state.loading) {
+    return (
+      <div className={`flex items-center gap-2 border rounded ${containerClass} opacity-70`} style={{ minHeight: variant === "large" ? "48px" : "32px" }}>
+        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs">天気取得中...</span>
+      </div>
+    );
+  }
+  
+  if (state.error) {
+    return (
+      <div className={`flex items-center gap-2 border rounded ${containerClass} opacity-70`} style={{ minHeight: variant === "large" ? "48px" : "32px" }}>
+        <span className="text-xs">{state.error}</span>
+      </div>
+    );
+  }
+  
+  const { label, Icon, accent, bg } = codeToWeather(state.weatherCode);
+  
   return (
     <Link
       href="/weather"
-      className={`flex items-center gap-2 hover:opacity-80 border rounded ${containerClass}`}
-      title="天気の詳細を見る"
-      style={{ backgroundColor: bg, borderColor: accent }}
+      className={`flex items-center gap-2 hover:opacity-80 border rounded ${containerClass} relative`}
+      title={`天気の詳細を見る${state.feelsLike ? ` (体感: ${state.feelsLike.toFixed(1)}°C)` : ''}${state.isDefaultLocation ? ' (東京の天気)' : ''}`}
+      style={{ 
+        backgroundColor: bg, 
+        borderColor: accent,
+        minHeight: variant === "large" ? "48px" : "32px"
+      }}
     >
       <Icon size={iconSize} color={accent} />
       <span className={`${tempClass} tabular-nums`}>{state.temperatureC?.toFixed(1)}°C</span>
       <span className="opacity-80">{label}</span>
+      {state.isDefaultLocation && (
+        <MapPin size={12} className="opacity-60" title="東京の天気を表示中" />
+      )}
     </Link>
   );
 }
