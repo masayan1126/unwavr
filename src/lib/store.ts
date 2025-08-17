@@ -67,6 +67,11 @@ export type AppState = {
   pomodoro: PomodoroState;
   bgmTracks: BgmTrack[];
   bgmGroups: BgmGroup[];
+  // destructive ops
+  clearTasks: () => void;
+  clearMilestones: () => void;
+  clearLaunchers: () => void;
+  clearTasksMilestonesLaunchers: () => void;
   addTask: (input: Omit<Task, "id" | "createdAt" | "completed" | "completedPomodoros">) => void;
   toggleTask: (taskId: string) => void;
   toggleDailyDoneForToday: (taskId: string) => void;
@@ -172,6 +177,10 @@ export const useAppStore = create<AppState>()(
       pomodoro: defaultPomodoro,
       bgmTracks: [],
       bgmGroups: [],
+      clearTasks: () => set({ tasks: [] }),
+      clearMilestones: () => set({ milestones: [] }),
+      clearLaunchers: () => set({ launcherShortcuts: [], launcherCategories: [], launcherOnboarded: false }),
+      clearTasksMilestonesLaunchers: () => set({ tasks: [], milestones: [], launcherShortcuts: [], launcherCategories: [], launcherOnboarded: false }),
       addTask: (input) =>
         set((state) => ({
           tasks: [

@@ -32,12 +32,118 @@ function formatDate(ts: number): string {
 export default function ImportExportPage() {
   const tasks = useAppStore((s) => s.tasks);
   const addTask = useAppStore((s) => s.addTask);
+  const addMilestone = useAppStore((s) => s.addMilestone);
+  const addLauncherCategory = useAppStore((s) => s.addLauncherCategory);
+  const addLauncherShortcut = useAppStore((s) => s.addLauncherShortcut);
+  const setLauncherOnboarded = useAppStore((s) => s.setLauncherOnboarded);
   const addHistory = useAppStore((s) => s.addImportHistory);
   const history = useAppStore((s) => s.importHistory);
   const deleteHistory = useAppStore((s) => s.deleteImportHistory);
   const clearHistory = useAppStore((s) => s.clearImportHistory);
+  const clearAll = useAppStore((s) => s.clearTasksMilestonesLaunchers);
   const [result, setResult] = useState<ImportResult | null>(null);
   const dayLabels = ["日","月","火","水","木","金","土"] as const;
+
+  function generateDemoData() {
+    // Milestones
+    const milestoneTitles = [
+      "React学習100時間",
+      "英単語2000語",
+      "ランニング300km",
+      "読書20冊",
+      "ブログ10記事"
+    ];
+    milestoneTitles.forEach((title, idx) => {
+      addMilestone({ title, targetUnits: (idx + 1) * 10, currentUnits: Math.floor(((idx + 1) * 10) * 0.3) });
+    });
+
+    // Tasks
+    // 20件: daily
+    for (let i = 0; i < 20; i++) {
+      addTask({
+        title: `毎日タスク #${i + 1}`,
+        description: i % 3 === 0 ? `説明: 習慣 ${i + 1}` : undefined,
+        type: "daily",
+        estimatedPomodoros: (i % 5),
+      });
+    }
+    // 20件: scheduled（曜日＋期間混在）
+    for (let i = 0; i < 20; i++) {
+      const start = new Date();
+      start.setDate(start.getDate() + i);
+      start.setHours(0,0,0,0);
+      const end = new Date(start);
+      end.setDate(start.getDate() + 3);
+      const daysOfWeek = [i % 7, (i + 2) % 7].sort();
+      addTask({
+        title: `特定日タスク #${i + 1}`,
+        description: i % 4 === 0 ? `説明: 集中 ${i + 1}` : undefined,
+        type: "scheduled",
+        scheduled: {
+          daysOfWeek,
+          dateRanges: i % 2 === 0 ? [{ start: start.getTime(), end: end.getTime() }] : undefined,
+        },
+        estimatedPomodoros: (i % 4) + 1,
+      });
+    }
+    // 20件: backlog（今日やる日付含む）
+    for (let i = 0; i < 20; i++) {
+      const today = new Date();
+      const todayUtc = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+      const another = new Date();
+      another.setDate(another.getDate() + (i % 10));
+      const anotherUtc = Date.UTC(another.getUTCFullYear(), another.getUTCMonth(), another.getUTCDate());
+      const planned = i % 3 === 0 ? [todayUtc, anotherUtc] : [anotherUtc];
+      addTask({
+        title: `バックログ #${i + 1}`,
+        description: i % 2 === 0 ? `説明: 後でやる ${i + 1}` : undefined,
+        type: "backlog",
+        plannedDates: planned,
+        estimatedPomodoros: i % 3,
+      });
+    }
+
+    // Launchers
+    const cats = [
+      { name: "学習", color: "#3b82f6" },
+      { name: "開発", color: "#10b981" },
+      { name: "情報収集", color: "#f59e0b" },
+      { name: "コミュニケーション", color: "#8b5cf6" },
+    ];
+    cats.forEach((c) => addLauncherCategory({ name: c.name, color: c.color }));
+    type ShortcutSeed = {
+      label: string;
+      url: string;
+      iconName: string;
+      color: string;
+      categoryIndex: number;
+      kind?: "web" | "app";
+    };
+    const shortcuts: ShortcutSeed[] = [
+      { label: "GitHub", url: "https://github.com", iconName: "Github", color: "#000000", categoryIndex: 1 },
+      { label: "StackOverflow", url: "https://stackoverflow.com", iconName: "MessageSquare", color: "#f48024", categoryIndex: 1 },
+      { label: "MDN", url: "https://developer.mozilla.org", iconName: "BookOpen", color: "#000000", categoryIndex: 1 },
+      { label: "Qiita", url: "https://qiita.com", iconName: "TrendingUp", color: "#55c500", categoryIndex: 2 },
+      { label: "Zenn", url: "https://zenn.dev", iconName: "BookOpen", color: "#3ea8ff", categoryIndex: 2 },
+      { label: "Notion", url: "https://www.notion.so", iconName: "NotebookPen", color: "#000000", categoryIndex: 0 },
+      { label: "Google Calendar", url: "https://calendar.google.com", iconName: "Calendar", color: "#4285F4", categoryIndex: 3 },
+      { label: "Slack", url: "slack://open", iconName: "MessageCircle", color: "#611f69", categoryIndex: 3, kind: "app" },
+      { label: "Zoom", url: "zoommtg://", iconName: "Video", color: "#0B5CFF", categoryIndex: 3, kind: "app" },
+    ];
+    shortcuts.forEach((s) => {
+      addLauncherShortcut({
+        label: s.label,
+        url: s.url,
+        iconName: s.iconName,
+        color: s.color,
+        kind: s.kind ?? "web",
+        categoryId: undefined,
+      });
+    });
+    setLauncherOnboarded(true);
+
+    alert("デモデータを作成しました（タスク60件、マイルストーン5件、ランチャー9件）");
+  }
 
   function parseDaysOfWeek(input: string): number[] {
     const parts = input
@@ -192,6 +298,20 @@ export default function ImportExportPage() {
         </button>
       </div>
 
+      <div className="border rounded p-4 border-black/10 dark:border-white/10 flex items-center justify-between">
+        <div className="text-sm font-medium">デモデータの作成</div>
+        <button
+          className="px-3 py-1 rounded bg-foreground text-background text-sm"
+          onClick={() => {
+            if (confirm('デモデータ（タスク/ランチャー/マイルストーン）を大量生成します。続行しますか？')) {
+              generateDemoData();
+            }
+          }}
+        >
+          作成する
+        </button>
+      </div>
+
       <div className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="text-sm font-medium">インポート履歴</div>
@@ -216,6 +336,24 @@ export default function ImportExportPage() {
             ))}
           </div>
         )}
+      </div>
+
+      <div className="border rounded p-4 border-red-500/30 bg-red-500/5 flex flex-col gap-3">
+        <div className="text-sm font-medium text-red-600">危険な操作</div>
+        <div className="text-xs opacity-80">タスク・マイルストーン・ランチャーの設定をすべて削除します。この操作は取り消せません。</div>
+        <div>
+          <button
+            className="px-3 py-2 rounded bg-red-600 text-white text-sm"
+            onClick={() => {
+              if (confirm('本当に全て削除しますか？この操作は取り消せません。')) {
+                clearAll();
+                alert('すべて削除しました');
+              }
+            }}
+          >
+            すべて削除（タスク/マイルストーン/ランチャー）
+          </button>
+        </div>
       </div>
     </div>
   );
