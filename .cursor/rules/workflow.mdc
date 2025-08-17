@@ -8,7 +8,7 @@ alwaysApply: true
 2. 変更は最小限かつ局所的に行い、編集後は Lint とテストを実行。
    - Lint: `npm run lint`
    - Test: `npm test`
-   - Build: `npm run build`
+   - Build: `npm run build && npm run e2e`
 3. Lint エラーが出たらまず修正。3回同じ方法で失敗した場合は別アプローチを検討。
 4. 新規フレームワークプロジェクト作成後は、別ウィンドウでエディタを開く:
    - `open -a "Cursor" <プロジェクトディレクトリ>`
