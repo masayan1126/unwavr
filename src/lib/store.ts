@@ -2,6 +2,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { Task, Milestone, createTaskId, createMilestoneId, isTaskForToday } from "./types";
+import { supabase } from "@/lib/supabaseClient";
 
 export type LauncherShortcut = {
   id: string;
@@ -58,6 +59,7 @@ export type BgmGroup = {
 };
 
 export type AppState = {
+  dataSource: 'local' | 'db';
   tasks: Task[];
   milestones: Milestone[];
   launcherShortcuts: LauncherShortcut[];
@@ -72,6 +74,8 @@ export type AppState = {
   clearMilestones: () => void;
   clearLaunchers: () => void;
   clearTasksMilestonesLaunchers: () => void;
+  setDataSource: (src: 'local' | 'db') => void;
+  hydrateFromDb: () => Promise<void>;
   addTask: (input: Omit<Task, "id" | "createdAt" | "completed" | "completedPomodoros">) => void;
   toggleTask: (taskId: string) => void;
   toggleDailyDoneForToday: (taskId: string) => void;
@@ -151,6 +155,7 @@ function createBgmGroupId(): string {
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
+      dataSource: 'local',
       tasks: [],
       milestones: [],
       launcherShortcuts: [
@@ -177,58 +182,80 @@ export const useAppStore = create<AppState>()(
       pomodoro: defaultPomodoro,
       bgmTracks: [],
       bgmGroups: [],
+      setDataSource: (src) => set({ dataSource: src }),
+      hydrateFromDb: async () => {
+        try {
+          const [tasksRes, milestonesRes, launchersRes] = await Promise.all([
+            fetch('/api/db/tasks', { cache: 'no-store' }).then((r) => r.json()),
+            fetch('/api/db/milestones', { cache: 'no-store' }).then((r) => r.json()),
+            fetch('/api/db/launchers', { cache: 'no-store' }).then((r) => r.json()),
+          ]);
+          set({
+            tasks: (tasksRes.items ?? []) as Task[],
+            milestones: (milestonesRes.items ?? []) as Milestone[],
+            launcherCategories: (launchersRes.categories ?? []) as LauncherCategory[],
+            launcherShortcuts: (launchersRes.shortcuts ?? []) as LauncherShortcut[],
+          });
+        } catch (e) {
+          console.warn('hydrateFromDb failed');
+        }
+      },
       clearTasks: () => set({ tasks: [] }),
       clearMilestones: () => set({ milestones: [] }),
       clearLaunchers: () => set({ launcherShortcuts: [], launcherCategories: [], launcherOnboarded: false }),
       clearTasksMilestonesLaunchers: () => set({ tasks: [], milestones: [], launcherShortcuts: [], launcherCategories: [], launcherOnboarded: false }),
       addTask: (input) =>
-        set((state) => ({
-          tasks: [
-            ...state.tasks,
-            {
-              ...input,
-              id: createTaskId(),
-              createdAt: Date.now(),
-              completed: false,
-              completedPomodoros: 0,
-            },
-          ],
-        })),
+        set((state) => {
+          const newTask: Task = {
+            ...(input as Task),
+            id: createTaskId(),
+            createdAt: Date.now(),
+            completed: false,
+            completedPomodoros: 0,
+          };
+          if (get().dataSource === 'db') {
+            fetch('/api/db/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newTask) }).catch(() => {});
+          }
+          return { tasks: [...state.tasks, newTask] };
+        }),
       toggleTask: (taskId) =>
-        set((state) => ({
-          tasks: state.tasks.map((t) =>
-            t.id === taskId ? { ...t, completed: !t.completed } : t
-          ),
-        })),
+        set((state) => {
+          const tasks = state.tasks.map((t) => (t.id === taskId ? { ...t, completed: !t.completed } : t));
+          const changed = tasks.find((t) => t.id === taskId);
+          if (changed && get().dataSource === 'db') fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ completed: changed.completed }) }).catch(() => {});
+          return { tasks };
+        }),
       toggleDailyDoneForToday: (taskId) =>
         set((state) => {
           const startOfUtcDay = new Date();
           startOfUtcDay.setUTCHours(0, 0, 0, 0);
           const today = startOfUtcDay.getTime();
-          return {
-            tasks: state.tasks.map((t) => {
-              if (t.id !== taskId) return t;
-              const arr = [...(t.dailyDoneDates ?? [])];
-              const idx = arr.indexOf(today);
-              if (idx >= 0) arr.splice(idx, 1); else arr.push(today);
-              return { ...t, dailyDoneDates: arr } as Task;
-            }),
-          };
+          const tasks = state.tasks.map((t) => {
+            if (t.id !== taskId) return t;
+            const arr = [...(t.dailyDoneDates ?? [])];
+            const idx = arr.indexOf(today);
+            if (idx >= 0) arr.splice(idx, 1); else arr.push(today);
+            const next = { ...t, dailyDoneDates: arr } as Task;
+            if (get().dataSource === 'db') fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dailyDoneDates: next.dailyDoneDates }) }).catch(() => {});
+            return next;
+          });
+          return { tasks };
         }),
       togglePlannedForToday: (taskId) =>
         set((state) => {
           const d = new Date();
           d.setUTCHours(0, 0, 0, 0);
           const today = d.getTime();
-          return {
-            tasks: state.tasks.map((t) => {
-              if (t.id !== taskId) return t;
-              const arr = [...(t.plannedDates ?? [])];
-              const idx = arr.indexOf(today);
-              if (idx >= 0) arr.splice(idx, 1); else arr.push(today);
-              return { ...t, plannedDates: arr } as Task;
-            }),
-          };
+          const tasks = state.tasks.map((t) => {
+            if (t.id !== taskId) return t;
+            const arr = [...(t.plannedDates ?? [])];
+            const idx = arr.indexOf(today);
+            if (idx >= 0) arr.splice(idx, 1); else arr.push(today);
+            const next = { ...t, plannedDates: arr } as Task;
+            if (get().dataSource === 'db') fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plannedDates: next.plannedDates }) }).catch(() => {});
+            return next;
+          });
+          return { tasks };
         }),
       incrementTaskPomodoro: (taskId) =>
         set((state) => ({
@@ -239,33 +266,41 @@ export const useAppStore = create<AppState>()(
           ),
         })),
       removeTask: (taskId) =>
-        set((state) => ({ tasks: state.tasks.filter((t) => t.id !== taskId) })),
+        set((state) => {
+          if (get().dataSource === 'db') fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'DELETE' }).catch(() => {});
+          return { tasks: state.tasks.filter((t) => t.id !== taskId) };
+        }),
       updateTask: (taskId, update) =>
-        set((state) => ({
-          tasks: state.tasks.map((t) => (t.id === taskId ? { ...t, ...update } : t)),
-        })),
+        set((state) => {
+          const tasks = state.tasks.map((t) => (t.id === taskId ? { ...t, ...update } : t));
+          if (get().dataSource === 'db') fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update) }).catch(() => {});
+          return { tasks };
+        }),
       addMilestone: (input) =>
-        set((state) => ({
-          milestones: [
-            ...state.milestones,
-            { ...input, id: createMilestoneId(), currentUnits: input.currentUnits ?? 0 },
-          ],
-        })),
+        set((state) => {
+          const m: Milestone = { ...input, id: createMilestoneId(), currentUnits: input.currentUnits ?? 0 } as Milestone;
+          if (get().dataSource === 'db') fetch('/api/db/milestones', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(m) }).catch(() => {});
+          return { milestones: [...state.milestones, m] };
+        }),
       updateMilestoneProgress: (milestoneId, delta) =>
-        set((state) => ({
-          milestones: state.milestones.map((m) =>
+        set((state) => {
+          const milestones = state.milestones.map((m) =>
             m.id === milestoneId
               ? {
                   ...m,
                   currentUnits: Math.max(0, Math.min(m.targetUnits, m.currentUnits + delta)),
                 }
               : m
-          ),
-        })),
+          );
+          const changed = milestones.find((m) => m.id === milestoneId);
+          if (changed && get().dataSource === 'db') fetch(`/api/db/milestones/${encodeURIComponent(milestoneId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ currentUnits: changed.currentUnits }) }).catch(() => {});
+          return { milestones };
+        }),
       removeMilestone: (milestoneId) =>
-        set((state) => ({
-          milestones: state.milestones.filter((m) => m.id !== milestoneId),
-        })),
+        set((state) => {
+          if (get().dataSource === 'db') fetch(`/api/db/milestones/${encodeURIComponent(milestoneId)}`, { method: 'DELETE' }).catch(() => {});
+          return { milestones: state.milestones.filter((m) => m.id !== milestoneId) };
+        }),
       exportMilestones: () => {
         // CSV（日本語ヘッダー）でエクスポート
         const milestones = get().milestones;
@@ -490,25 +525,42 @@ export const useAppStore = create<AppState>()(
           (t) => t.type === "scheduled" && (t.scheduled?.daysOfWeek?.some((d) => d === 0 || d === 6) || (t.scheduled?.dateRanges?.length ?? 0) > 0)
         ),
       addLauncherShortcut: (input) =>
-        set((state) => ({ launcherShortcuts: [...state.launcherShortcuts, { ...input, id: createShortcutId() }] })),
+        set((state) => {
+          const sc = { ...input, id: createShortcutId() } as LauncherShortcut;
+          if (get().dataSource === 'db') fetch('/api/db/launchers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ shortcuts: [sc] }) }).catch(() => {});
+          return { launcherShortcuts: [...state.launcherShortcuts, sc] };
+        }),
       removeLauncherShortcut: (id) =>
-        set((state) => ({ launcherShortcuts: state.launcherShortcuts.filter((s) => s.id !== id) })),
+        set((state) => {
+          if (get().dataSource === 'db') fetch(`/api/db/launchers/shortcuts/${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => {});
+          return { launcherShortcuts: state.launcherShortcuts.filter((s) => s.id !== id) };
+        }),
       updateLauncherShortcut: (id, update) =>
-        set((state) => ({
-          launcherShortcuts: state.launcherShortcuts.map((s) => (s.id === id ? { ...s, ...update } : s)),
-        })),
+        set((state) => {
+          const launcherShortcuts = state.launcherShortcuts.map((s) => (s.id === id ? { ...s, ...update } : s));
+          if (get().dataSource === 'db') fetch(`/api/db/launchers/shortcuts/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update) }).catch(() => {});
+          return { launcherShortcuts };
+        }),
       addLauncherCategory: (input) =>
-        set((state) => ({ launcherCategories: [...state.launcherCategories, { ...input, id: createCategoryId() }] })),
+        set((state) => {
+          const cat = { ...input, id: createCategoryId() } as LauncherCategory;
+          if (get().dataSource === 'db') fetch('/api/db/launchers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ categories: [cat] }) }).catch(() => {});
+          return { launcherCategories: [...state.launcherCategories, cat] };
+        }),
       removeLauncherCategory: (id) =>
-        set((state) => ({
-          launcherCategories: state.launcherCategories.filter((c) => c.id !== id),
-          // 削除されたカテゴリに属するショートカットは未分類へ
-          launcherShortcuts: state.launcherShortcuts.map((s) => (s.categoryId === id ? { ...s, categoryId: undefined } : s)),
-        })),
+        set((state) => {
+          if (get().dataSource === 'db') fetch(`/api/db/launchers/categories/${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => {});
+          return {
+            launcherCategories: state.launcherCategories.filter((c) => c.id !== id),
+            launcherShortcuts: state.launcherShortcuts.map((s) => (s.categoryId === id ? { ...s, categoryId: undefined } : s)),
+          };
+        }),
       updateLauncherCategory: (id, update) =>
-        set((state) => ({
-          launcherCategories: state.launcherCategories.map((c) => (c.id === id ? { ...c, ...update } : c)),
-        })),
+        set((state) => {
+          const launcherCategories = state.launcherCategories.map((c) => (c.id === id ? { ...c, ...update } : c));
+          if (get().dataSource === 'db') fetch(`/api/db/launchers/categories/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update) }).catch(() => {});
+          return { launcherCategories };
+        }),
       exportLaunchers: () => {
         const data = {
           categories: get().launcherCategories,

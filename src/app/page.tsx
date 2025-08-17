@@ -4,6 +4,7 @@ import TaskList from "@/components/TaskList";
 import { useTodayTasks } from "@/hooks/useTodayTasks";
 import WeatherWidget from "@/components/WeatherWidget";
 import { Plus, Target, Timer, Rocket, Upload, Filter as FilterIcon, AlertTriangle } from "lucide-react";
+import { useAppStore } from "@/lib/store";
 // import AddQiitaZenn from "@/components/AddQiitaZenn";
 
 export default function Home() {
@@ -26,6 +27,9 @@ export default function Home() {
     setFilterBacklog,
     resetFilters,
   } = useTodayTasks();
+  const dataSource = useAppStore((s) => s.dataSource);
+  const setDataSource = useAppStore((s) => s.setDataSource);
+  const hydrateFromDb = useAppStore((s) => s.hydrateFromDb);
   return (
     <div className="min-h-screen p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-8">
       <div className="flex items-center justify-between">
@@ -41,6 +45,17 @@ export default function Home() {
           <Link href="/tasks/new" className="inline-flex items-center gap-2 px-3 py-1.5 rounded border text-sm">
             <Plus size={16} /> タスク追加
           </Link>
+          <div className="ml-auto flex items-center gap-2 text-xs">
+            <span className="opacity-70">データソース:</span>
+            <button
+              className={`px-2 py-1 rounded border ${dataSource === 'local' ? 'bg-foreground text-background' : ''}`}
+              onClick={() => setDataSource('local')}
+            >local</button>
+            <button
+              className={`px-2 py-1 rounded border ${dataSource === 'db' ? 'bg-foreground text-background' : ''}`}
+              onClick={async () => { setDataSource('db'); await hydrateFromDb(); }}
+            >db</button>
+          </div>
         </div>
         <div className="mb-3 flex items-center justify-between gap-3 text-sm">
           <div className="flex flex-col gap-1">
