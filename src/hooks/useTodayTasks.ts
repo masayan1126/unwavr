@@ -36,6 +36,7 @@ export function useTodayTasks() {
   const scheduledPending = useMemo(() => scheduledForToday.filter((t) => !t.completed), [scheduledForToday]);
   const scheduledDone = useMemo(() => scheduledForToday.filter((t) => t.completed), [scheduledForToday]);
   const backlogPending = useMemo(() => backlogForToday.filter((t) => !t.completed), [backlogForToday]);
+  const backlogDone = useMemo(() => backlogForToday.filter((t) => t.completed), [backlogForToday]);
 
   const incompleteToday = useMemo(
     () => [...(filterDaily ? dailyPending : []), ...(filterScheduled ? scheduledPending : []), ...(filterBacklog ? backlogPending : [])],
@@ -43,6 +44,7 @@ export function useTodayTasks() {
   );
   const dailyDoneFiltered = useMemo(() => (filterDaily ? dailyDone : []), [dailyDone, filterDaily]);
   const scheduledDoneFiltered = useMemo(() => (filterScheduled ? scheduledDone : []), [scheduledDone, filterScheduled]);
+  const backlogDoneFiltered = useMemo(() => (filterBacklog ? backlogDone : []), [backlogDone, filterBacklog]);
 
   const resetFilters = () => {
     setShowIncomplete(true);
@@ -57,6 +59,7 @@ export function useTodayTasks() {
     incompleteToday,
     dailyDoneFiltered,
     scheduledDoneFiltered,
+    backlogDoneFiltered,
     // filter states
     filterOpen,
     setFilterOpen,

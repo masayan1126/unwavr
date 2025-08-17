@@ -11,6 +11,7 @@ export default function Home() {
     incompleteToday,
     dailyDoneFiltered,
     scheduledDoneFiltered,
+    backlogDoneFiltered,
     filterOpen,
     setFilterOpen,
     showIncomplete,
@@ -146,6 +147,18 @@ export default function Home() {
                 tableMode 
                 showCreatedColumn={false} 
                 showPlannedColumn={false} 
+                showTypeColumn 
+                showMilestoneColumn={false} 
+              />
+            </div>
+            <div className="mt-3">
+              <TaskList 
+                title={`完了済み (バックログ) (${backlogDoneFiltered.length})`} 
+                tasks={backlogDoneFiltered} 
+                showType 
+                tableMode 
+                showCreatedColumn={false} 
+                showPlannedColumn 
                 showTypeColumn 
                 showMilestoneColumn={false} 
               />
