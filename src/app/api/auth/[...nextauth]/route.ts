@@ -1,5 +1,5 @@
-import NextAuth, { type NextAuthOptions, type Session } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
+import NextAuth from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 
 // See: https://authjs.dev/reference/nextjs
 type JwtToken = {
@@ -37,59 +37,7 @@ async function refreshAccessToken(token: JwtToken): Promise<JwtToken> {
   }
 }
 
-const handler = NextAuth({
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          scope:
-            "openid email profile https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/tasks.readonly",
-          access_type: "offline",
-          prompt: "consent",
-        },
-      },
-    }),
-  ],
-  session: { strategy: "jwt" },
-  callbacks: {
-    async jwt({ token, account }) {
-      // 初回ログイン時
-      if (account) {
-        const acc = account as unknown as Record<string, unknown>;
-        const accessToken = typeof acc.access_token === "string" ? acc.access_token : undefined;
-        const expiresIn = typeof acc.expires_in === "number" ? acc.expires_in : 3600;
-        const refreshToken = typeof acc.refresh_token === "string" ? acc.refresh_token : undefined;
-        token.access_token = accessToken;
-        token.expires_at = Math.floor(Date.now() / 1000) + expiresIn - 60;
-        token.refresh_token = refreshToken;
-        token.provider = account.provider;
-        return token;
-      }
-      // アクセストークン期限チェック
-      if (token.expires_at && Date.now() / 1000 < (token.expires_at as number)) {
-        return token;
-      }
-      // 期限切れなら更新
-      if (token.refresh_token) {
-        return await refreshAccessToken(token as JwtToken);
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      type ExtendedSession = Session & { provider?: string; access_token?: string };
-      const t = token as JwtToken;
-      const extended: ExtendedSession = {
-        ...session,
-        provider: typeof t.provider === "string" ? t.provider : undefined,
-        access_token: typeof t.access_token === "string" ? t.access_token : undefined,
-      };
-      return extended;
-    },
-  },
-  secret: process.env.NEXTAUTH_SECRET,
-} satisfies NextAuthOptions);
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
 
