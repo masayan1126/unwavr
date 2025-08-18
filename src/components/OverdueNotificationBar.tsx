@@ -3,31 +3,10 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAppStore } from "@/lib/store";
 import type { Task } from "@/lib/types";
+import { isOverdue } from "@/lib/taskUtils";
 import { X, AlertTriangle } from "lucide-react";
 
-function getTodayUtc(): number {
-  const d = new Date();
-  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
-}
-
-function isOverdue(task: Task): boolean {
-  const todayUtc = getTodayUtc();
-  if (task.completed) return false;
-  if (task.type === "daily") return false;
-  if (task.type === "scheduled") {
-    const ranges = task.scheduled?.dateRanges ?? [];
-    if (ranges.length === 0) return false;
-    // いずれかの期間が今日より前に終了
-    return ranges.some((r) => r.end < todayUtc);
-  }
-  if (task.type === "backlog") {
-    const planned = task.plannedDates ?? [];
-    if (planned.length === 0) return false;
-    const latest = Math.max(...planned);
-    return latest < todayUtc;
-  }
-  return false;
-}
+// moved to taskUtils
 
 export default function OverdueNotificationBar() {
   const tasks = useAppStore((s) => s.tasks);

@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 
-describe('useSpeechRecognition', () => {
+describe('音声認識フック useSpeechRecognition', () => {
   beforeEach(() => {
     // minimal mock for SpeechRecognition
     class MockSR {
@@ -18,7 +18,7 @@ describe('useSpeechRecognition', () => {
     window.SpeechRecognition = MockSR as unknown;
   });
 
-  it('calls onResult when recognition fires result', () => {
+  it('認識結果イベント発火時に公開APIが動作する', () => {
     const { result } = renderHook(() => useSpeechRecognition({ onResult: () => {} }));
     // simulate result
     // `recRef` は外に露出していないため実体には触らない

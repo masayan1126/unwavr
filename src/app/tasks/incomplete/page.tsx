@@ -4,70 +4,9 @@ import { useMemo } from "react";
 import TaskList from "@/components/TaskList";
 import { useAppStore } from "@/lib/store";
 import { Task } from "@/lib/types";
+import { getEarliestExecutionDate, isOverdue } from "@/lib/taskUtils";
 
-// 今日の日付をUTCで取得（0時0分0秒）
-function getTodayUtc(): number {
-  const today = new Date();
-  return Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
-}
-
-// タスクが期限切れかどうかを判定
-function isOverdue(task: Task): boolean {
-  const todayUtc = getTodayUtc();
-  
-  if (task.type === "daily") {
-    // 毎日タスクは期限切れの概念がない
-    return false;
-  }
-  
-  if (task.type === "scheduled") {
-    // 特定日タスクの場合、日付範囲をチェック
-    if (task.scheduled?.dateRanges) {
-      for (const range of task.scheduled.dateRanges) {
-        if (range.end < todayUtc) {
-          return true; // 期間が終了している
-        }
-      }
-    }
-    // 曜日指定のみの場合は期限切れの概念がない
-    return false;
-  }
-  
-  if (task.type === "backlog") {
-    // バックログタスクの場合、plannedDatesをチェック
-    if (task.plannedDates && task.plannedDates.length > 0) {
-      const latestPlannedDate = Math.max(...task.plannedDates);
-      return latestPlannedDate < todayUtc;
-    }
-    // 実行日が設定されていない場合は期限切れの概念がない
-    return false;
-  }
-  
-  return false;
-}
-
-// タスクの最古の実行日を取得
-function getEarliestExecutionDate(task: Task): number | null {
-  if (task.type === "daily") {
-    return null; // 毎日タスクは実行日がない
-  }
-  
-  if (task.type === "scheduled") {
-    if (task.scheduled?.dateRanges && task.scheduled.dateRanges.length > 0) {
-      return Math.min(...task.scheduled.dateRanges.map(r => r.start));
-    }
-    return null;
-  }
-  
-  if (task.type === "backlog") {
-    if (task.plannedDates && task.plannedDates.length > 0) {
-      return Math.min(...task.plannedDates);
-    }
-    return null;
-  }
-  
-  return null;
-}
+// moved to taskUtils
 
 export default function IncompleteTasksPage() {
   const tasks = useAppStore((s) => s.tasks);

@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { useWeather } from '@/hooks/useWeather';
 
-describe('useWeather', () => {
+describe('天気取得フック useWeather', () => {
   beforeEach(() => {
     // 環境変数をモック
     process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY = 'test_api_key';
@@ -36,7 +36,7 @@ describe('useWeather', () => {
     delete process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
   });
 
-  it('returns temperature and weather code with additional data', async () => {
+  it('OpenWeather API で温度/コード等を取得できる', async () => {
     const { result } = renderHook(() => useWeather());
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.temperatureC).toBe(20.5);
@@ -47,7 +47,7 @@ describe('useWeather', () => {
     expect(result.current.error).toBeUndefined();
   });
 
-  it('handles Open-Meteo API fallback when no API key', async () => {
+  it('APIキーがない場合 Open-Meteo にフォールバックする', async () => {
     delete process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
     
     // @ts-expect-error test: mock fetch error response
@@ -76,7 +76,7 @@ describe('useWeather', () => {
     expect(result.current.error).toBeUndefined();
   });
 
-  it('handles HTTP errors', async () => {
+  it('HTTP エラー時にユーザー向けエラー文言を返す', async () => {
     // @ts-expect-error - test-only: mock fetch error response
     global.fetch = jest.fn(async () => ({
       ok: false,

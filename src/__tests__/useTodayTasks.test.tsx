@@ -23,8 +23,8 @@ function setTasks(tasks: MinimalTask[]) {
   setState({ ...currentState, tasks });
 }
 
-describe('useTodayTasks', () => {
-  it('filters daily and scheduled and backlog planned for today', () => {
+describe('今日のタスク用フック useTodayTasks', () => {
+  it('毎日/曜日指定/今日に計画したバックログが含まれる', () => {
     const today = new Date();
     const todayUtc = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
     setTasks([
