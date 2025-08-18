@@ -1,8 +1,6 @@
 "use client";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { Task, Milestone, createTaskId, createMilestoneId, isTaskForToday } from "./types";
-import { supabase } from "@/lib/supabaseClient";
 
 export type LauncherShortcut = {
   id: string;
@@ -59,7 +57,7 @@ export type BgmGroup = {
 };
 
 export type AppState = {
-  dataSource: 'local' | 'db';
+  dataSource: 'db';
   tasks: Task[];
   milestones: Milestone[];
   launcherShortcuts: LauncherShortcut[];
@@ -74,7 +72,7 @@ export type AppState = {
   clearMilestones: () => void;
   clearLaunchers: () => void;
   clearTasksMilestonesLaunchers: () => void;
-  setDataSource: (src: 'local' | 'db') => void;
+  setDataSource: (src: 'db') => void;
   hydrateFromDb: () => Promise<void>;
   addTask: (input: Omit<Task, "id" | "createdAt" | "completed" | "completedPomodoros">) => void;
   toggleTask: (taskId: string) => void;
@@ -153,9 +151,8 @@ function createBgmGroupId(): string {
 }
 
 export const useAppStore = create<AppState>()(
-  persist(
-    (set, get) => ({
-      dataSource: 'local',
+  (set, get) => ({
+      dataSource: 'db',
       tasks: [],
       milestones: [],
       launcherShortcuts: [
@@ -196,10 +193,27 @@ export const useAppStore = create<AppState>()(
             launcherCategories: (launchersRes.categories ?? []) as LauncherCategory[],
             launcherShortcuts: (launchersRes.shortcuts ?? []) as LauncherShortcut[],
           });
-        } catch (e) {
+        } catch {
           console.warn('hydrateFromDb failed');
         }
       },
+      // 初期起動時にDBからハイドレート
+      ...(async () => {
+        try {
+          const [tasksRes, milestonesRes, launchersRes] = await Promise.all([
+            fetch('/api/db/tasks', { cache: 'no-store' }).then((r) => r.json()),
+            fetch('/api/db/milestones', { cache: 'no-store' }).then((r) => r.json()),
+            fetch('/api/db/launchers', { cache: 'no-store' }).then((r) => r.json()),
+          ]);
+          set({
+            tasks: (tasksRes.items ?? []) as Task[],
+            milestones: (milestonesRes.items ?? []) as Milestone[],
+            launcherCategories: (launchersRes.categories ?? []) as LauncherCategory[],
+            launcherShortcuts: (launchersRes.shortcuts ?? []) as LauncherShortcut[],
+          });
+        } catch {}
+        return {} as Partial<AppState>;
+      })(),
       clearTasks: () => set({ tasks: [] }),
       clearMilestones: () => set({ milestones: [] }),
       clearLaunchers: () => set({ launcherShortcuts: [], launcherCategories: [], launcherOnboarded: false }),
@@ -213,7 +227,7 @@ export const useAppStore = create<AppState>()(
             completed: false,
             completedPomodoros: 0,
           };
-          if (get().dataSource === 'db') {
+          {
             fetch('/api/db/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newTask) }).catch(() => {});
           }
           return { tasks: [...state.tasks, newTask] };
@@ -222,7 +236,7 @@ export const useAppStore = create<AppState>()(
         set((state) => {
           const tasks = state.tasks.map((t) => (t.id === taskId ? { ...t, completed: !t.completed } : t));
           const changed = tasks.find((t) => t.id === taskId);
-          if (changed && get().dataSource === 'db') fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ completed: changed.completed }) }).catch(() => {});
+          if (changed) fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ completed: changed.completed }) }).catch(() => {});
           return { tasks };
         }),
       toggleDailyDoneForToday: (taskId) =>
@@ -236,7 +250,7 @@ export const useAppStore = create<AppState>()(
             const idx = arr.indexOf(today);
             if (idx >= 0) arr.splice(idx, 1); else arr.push(today);
             const next = { ...t, dailyDoneDates: arr } as Task;
-            if (get().dataSource === 'db') fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dailyDoneDates: next.dailyDoneDates }) }).catch(() => {});
+            fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dailyDoneDates: next.dailyDoneDates }) }).catch(() => {});
             return next;
           });
           return { tasks };
@@ -252,7 +266,7 @@ export const useAppStore = create<AppState>()(
             const idx = arr.indexOf(today);
             if (idx >= 0) arr.splice(idx, 1); else arr.push(today);
             const next = { ...t, plannedDates: arr } as Task;
-            if (get().dataSource === 'db') fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plannedDates: next.plannedDates }) }).catch(() => {});
+            fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plannedDates: next.plannedDates }) }).catch(() => {});
             return next;
           });
           return { tasks };
@@ -267,19 +281,19 @@ export const useAppStore = create<AppState>()(
         })),
       removeTask: (taskId) =>
         set((state) => {
-          if (get().dataSource === 'db') fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'DELETE' }).catch(() => {});
+          fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'DELETE' }).catch(() => {});
           return { tasks: state.tasks.filter((t) => t.id !== taskId) };
         }),
       updateTask: (taskId, update) =>
         set((state) => {
           const tasks = state.tasks.map((t) => (t.id === taskId ? { ...t, ...update } : t));
-          if (get().dataSource === 'db') fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update) }).catch(() => {});
+          fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update) }).catch(() => {});
           return { tasks };
         }),
       addMilestone: (input) =>
         set((state) => {
           const m: Milestone = { ...input, id: createMilestoneId(), currentUnits: input.currentUnits ?? 0 } as Milestone;
-          if (get().dataSource === 'db') fetch('/api/db/milestones', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(m) }).catch(() => {});
+          fetch('/api/db/milestones', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(m) }).catch(() => {});
           return { milestones: [...state.milestones, m] };
         }),
       updateMilestoneProgress: (milestoneId, delta) =>
@@ -293,12 +307,12 @@ export const useAppStore = create<AppState>()(
               : m
           );
           const changed = milestones.find((m) => m.id === milestoneId);
-          if (changed && get().dataSource === 'db') fetch(`/api/db/milestones/${encodeURIComponent(milestoneId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ currentUnits: changed.currentUnits }) }).catch(() => {});
+          if (changed) fetch(`/api/db/milestones/${encodeURIComponent(milestoneId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ currentUnits: changed.currentUnits }) }).catch(() => {});
           return { milestones };
         }),
       removeMilestone: (milestoneId) =>
         set((state) => {
-          if (get().dataSource === 'db') fetch(`/api/db/milestones/${encodeURIComponent(milestoneId)}`, { method: 'DELETE' }).catch(() => {});
+          fetch(`/api/db/milestones/${encodeURIComponent(milestoneId)}`, { method: 'DELETE' }).catch(() => {});
           return { milestones: state.milestones.filter((m) => m.id !== milestoneId) };
         }),
       exportMilestones: () => {
@@ -527,29 +541,29 @@ export const useAppStore = create<AppState>()(
       addLauncherShortcut: (input) =>
         set((state) => {
           const sc = { ...input, id: createShortcutId() } as LauncherShortcut;
-          if (get().dataSource === 'db') fetch('/api/db/launchers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ shortcuts: [sc] }) }).catch(() => {});
+          fetch('/api/db/launchers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ shortcuts: [sc] }) }).catch(() => {});
           return { launcherShortcuts: [...state.launcherShortcuts, sc] };
         }),
       removeLauncherShortcut: (id) =>
         set((state) => {
-          if (get().dataSource === 'db') fetch(`/api/db/launchers/shortcuts/${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => {});
+          fetch(`/api/db/launchers/shortcuts/${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => {});
           return { launcherShortcuts: state.launcherShortcuts.filter((s) => s.id !== id) };
         }),
       updateLauncherShortcut: (id, update) =>
         set((state) => {
           const launcherShortcuts = state.launcherShortcuts.map((s) => (s.id === id ? { ...s, ...update } : s));
-          if (get().dataSource === 'db') fetch(`/api/db/launchers/shortcuts/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update) }).catch(() => {});
+          fetch(`/api/db/launchers/shortcuts/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update) }).catch(() => {});
           return { launcherShortcuts };
         }),
       addLauncherCategory: (input) =>
         set((state) => {
           const cat = { ...input, id: createCategoryId() } as LauncherCategory;
-          if (get().dataSource === 'db') fetch('/api/db/launchers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ categories: [cat] }) }).catch(() => {});
+          fetch('/api/db/launchers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ categories: [cat] }) }).catch(() => {});
           return { launcherCategories: [...state.launcherCategories, cat] };
         }),
       removeLauncherCategory: (id) =>
         set((state) => {
-          if (get().dataSource === 'db') fetch(`/api/db/launchers/categories/${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => {});
+          fetch(`/api/db/launchers/categories/${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => {});
           return {
             launcherCategories: state.launcherCategories.filter((c) => c.id !== id),
             launcherShortcuts: state.launcherShortcuts.map((s) => (s.categoryId === id ? { ...s, categoryId: undefined } : s)),
@@ -558,7 +572,7 @@ export const useAppStore = create<AppState>()(
       updateLauncherCategory: (id, update) =>
         set((state) => {
           const launcherCategories = state.launcherCategories.map((c) => (c.id === id ? { ...c, ...update } : c));
-          if (get().dataSource === 'db') fetch(`/api/db/launchers/categories/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update) }).catch(() => {});
+          fetch(`/api/db/launchers/categories/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update) }).catch(() => {});
           return { launcherCategories };
         }),
       exportLaunchers: () => {
@@ -651,9 +665,7 @@ export const useAppStore = create<AppState>()(
           bgmGroups: state.bgmGroups.filter((g) => g.id !== id),
           bgmTracks: state.bgmTracks.map((t) => (t.groupId === id ? { ...t, groupId: undefined } : t)),
         })),
-    }),
-    { name: "obsidian-tasks-store" }
-  )
+    })
 );
 
 

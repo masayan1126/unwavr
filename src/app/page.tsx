@@ -46,15 +46,11 @@ export default function Home() {
             <Plus size={16} /> タスク追加
           </Link>
           <div className="ml-auto flex items-center gap-2 text-xs">
-            <span className="opacity-70">データソース:</span>
+            <span className="opacity-70">データソース: db</span>
             <button
-              className={`px-2 py-1 rounded border ${dataSource === 'local' ? 'bg-foreground text-background' : ''}`}
-              onClick={() => setDataSource('local')}
-            >local</button>
-            <button
-              className={`px-2 py-1 rounded border ${dataSource === 'db' ? 'bg-foreground text-background' : ''}`}
-              onClick={async () => { setDataSource('db'); await hydrateFromDb(); }}
-            >db</button>
+              className={`px-2 py-1 rounded border bg-foreground text-background`}
+              onClick={async () => { await hydrateFromDb(); }}
+            >再読み込み</button>
           </div>
         </div>
         <div className="mb-3 flex items-center justify-between gap-3 text-sm">
