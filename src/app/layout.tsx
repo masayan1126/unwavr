@@ -8,6 +8,7 @@ import GlobalLauncherBar from "@/components/GlobalLauncherBar";
 import MobileTabBar from "@/components/MobileTabBar";
 import CalendarNotificationBar from "@/components/CalendarNotificationBar";
 import OverdueNotificationBar from "@/components/OverdueNotificationBar";
+import CookieConsent from "@/components/CookieConsent";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -63,6 +64,8 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [{ url: "/favicon.ico" }],
+    shortcut: [{ url: "/unwavr-logo.svg" }],
+    apple: [{ url: "/unwavr-logo.svg" }],
   },
   category: "productivity",
 };
@@ -88,6 +91,7 @@ export default function RootLayout({
           </div>
           <OnboardingGuide />
           <GlobalLauncherBar />
+          <CookieConsent />
           <MobileTabBar />
         </Providers>
       </body>

@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
+import { useState } from "react";
 import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -17,6 +18,10 @@ function SignInInner() {
   const callbackUrl = params.get("callbackUrl") || "/";
   const router = useRouter();
   const { status } = useSession();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | undefined>();
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -28,6 +33,33 @@ function SignInInner() {
     <div className="min-h-[80svh] grid place-items-center p-6">
       <div className="w-full max-w-sm border rounded-lg p-6 flex flex-col gap-4">
         <div className="text-lg font-semibold">ログイン</div>
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setMessage(undefined);
+            setLoading(true);
+            try {
+              const res = await signIn("credentials", { redirect: false, email, password, callbackUrl });
+              if (res?.error) throw new Error(res.error);
+              router.replace(callbackUrl);
+            } catch {
+              setMessage("メールまたはパスワードが正しくありません");
+            } finally {
+              setLoading(false);
+            }
+          }}
+          className="flex flex-col gap-2"
+        >
+          <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="メールアドレス" className="px-3 py-2 border rounded" required />
+          <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="パスワード" className="px-3 py-2 border rounded" required />
+          <button disabled={loading} className="px-4 py-2 rounded border hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-50">
+            メールでログイン
+          </button>
+          {message && <div className="text-xs opacity-70">{message}</div>}
+        </form>
+        <div className="text-xs opacity-70">
+          <a href="/auth/reset" className="underline underline-offset-4">パスワードをお忘れですか？</a>
+        </div>
         <button
           onClick={() => signIn("google", { callbackUrl })}
           className="flex items-center justify-center gap-2 px-4 py-2 rounded border hover:bg-black/5 dark:hover:bg-white/10"

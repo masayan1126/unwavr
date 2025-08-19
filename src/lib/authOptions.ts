@@ -1,7 +1,9 @@
 import type { NextAuthOptions, Session } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
 import type { Account, Profile, User } from "next-auth";
 import { supabase } from "@/lib/supabaseClient";
+import bcrypt from "bcryptjs";
 
 // See: https://authjs.dev/reference/nextjs
 type JwtToken = {
@@ -51,6 +53,33 @@ export const authOptions: NextAuthOptions = {
           access_type: "offline",
           prompt: "consent",
         },
+      },
+    }),
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        try {
+          const email = credentials?.email?.toLowerCase().trim();
+          const password = credentials?.password ?? "";
+          if (!email || !password) return null;
+          if (!supabase) return null;
+          const { data, error } = await supabase
+            .from("users")
+            .select("id, email, name, image, password_hash")
+            .eq("email", email)
+            .single();
+          if (error || !data) return null;
+          const withHash = data as unknown as { id: string | number; email?: string | null; name?: string | null; image?: string | null; password_hash?: string | null };
+          const ok = typeof withHash.password_hash === "string" && (await bcrypt.compare(password, withHash.password_hash));
+          if (!ok) return null;
+          return { id: String(withHash.id), email: withHash.email ?? undefined, name: withHash.name ?? undefined, image: withHash.image ?? undefined };
+        } catch {
+          return null;
+        }
       },
     }),
   ],
@@ -105,24 +134,28 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }: { user: User; account?: Account | null; profile?: Profile | undefined }) {
       if (!supabase) return;
       const email = user.email ?? (typeof (profile as Record<string, unknown> | undefined)?.email === "string" ? (profile as Record<string, unknown>).email as string : undefined);
-      // userId はプロバイダの subject を優先（なければ email）
-      const providerSubject = typeof (profile as Record<string, unknown> | undefined)?.sub === "string"
-        ? (profile as Record<string, unknown>).sub as string
-        : undefined;
-      const userId = providerSubject || email;
-      if (!userId) return;
+      if (!email) return;
+      const lowerEmail = email.toLowerCase();
+
+      // 既存ユーザーが同じメールで存在する場合は、そのidを尊重して上書き（重複emailの新規作成を避ける）
+      const existing = await supabase.from("users").select("id").eq("email", lowerEmail).maybeSingle();
+      let idToUse: string | undefined = existing.data ? String(existing.data.id) : undefined;
+      if (!idToUse) {
+        const providerSubject = typeof (profile as Record<string, unknown> | undefined)?.sub === "string"
+          ? (profile as Record<string, unknown>).sub as string
+          : undefined;
+        idToUse = providerSubject || lowerEmail;
+      }
       const payload: Record<string, unknown> = {
-        id: userId,
-        email: email ?? null,
+        id: idToUse,
+        email: lowerEmail,
         name: user.name ?? null,
         image: user.image ?? null,
         provider: account?.provider ?? null,
         provider_account_id: account?.providerAccountId ?? null,
         updated_at: new Date().toISOString(),
       };
-      await supabase
-        .from("users")
-        .upsert(payload, { onConflict: "id" });
+      await supabase.from("users").upsert(payload, { onConflict: "id" });
     },
   },
 };

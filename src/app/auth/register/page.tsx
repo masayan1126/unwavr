@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { useState } from "react";
+import { ErrorToast, NoticeToast } from "@/components/Toast";
 
 function GoogleIcon({ size = 16 }: { size?: number }) {
   return (
@@ -11,10 +13,47 @@ function GoogleIcon({ size = 16 }: { size?: number }) {
 }
 
 export default function RegisterPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | undefined>();
+  const [toast, setToast] = useState<{ message: string; type?: "info" | "success" | "warning" | "error" } | null>(null);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setMessage(undefined);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (res.status === 409 || data?.error === "already_exists") {
+        setToast({ message: "すでにアカウントが存在します。ログインしてください。", type: "warning" });
+        return;
+      }
+      if (!res.ok) throw new Error(data?.error ?? "register failed");
+      setToast({ message: "登録しました。ログインしてください。", type: "success" });
+    } catch {
+      setToast({ message: "登録に失敗しました", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  }
   return (
     <div className="min-h-[80svh] grid place-items-center p-6">
       <div className="w-full max-w-sm border rounded-lg p-6 flex flex-col gap-4">
         <div className="text-lg font-semibold">会員登録</div>
+        <form onSubmit={onSubmit} className="flex flex-col gap-2">
+          <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="メールアドレス" className="px-3 py-2 border rounded" required />
+          <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="パスワード" className="px-3 py-2 border rounded" required />
+          <button disabled={loading} className="px-4 py-2 rounded border hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-50">
+            メールで登録
+          </button>
+          {message && <div className="text-xs opacity-70">{message}</div>}
+        </form>
         <button
           onClick={() => signIn("google")}
           className="flex items-center justify-center gap-2 px-4 py-2 rounded border hover:bg-black/5 dark:hover:bg-white/10"
@@ -26,6 +65,13 @@ export default function RegisterPage() {
           すでにアカウントをお持ちの方は<Link href="/auth/signin" className="underline underline-offset-4 ml-1">ログイン</Link>
         </div>
       </div>
+      {toast && (
+        toast.type === "error" ? (
+          <ErrorToast message={toast.message} onClose={() => setToast(null)} />
+        ) : (
+          <NoticeToast message={toast.message} onClose={() => setToast(null)} />
+        )
+      )}
     </div>
   );
 }

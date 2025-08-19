@@ -16,6 +16,8 @@
     "start:e2e": "next start -p 3001"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.539.0",
@@ -23,9 +25,9 @@
     "next-auth": "^4.24.11",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "@supabase/supabase-js": "^2.45.4",
     "zod": "^4.0.17",
-    "zustand": "^5.0.7"
+    "zustand": "^5.0.7",
+    "resend": "^3.5.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -34,6 +36,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.0.1",
     "@testing-library/user-event": "^14.6.1",
+    "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.13",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -44,6 +47,7 @@
     "jest-environment-jsdom": "^29.7.0",
     "tailwindcss": "^4",
     "ts-jest": "^29.2.5",
-    "typescript": "^5"
+    "typescript": "^5",
+    "jose": "^5.9.6"
   }
 }
