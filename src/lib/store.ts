@@ -67,6 +67,8 @@ export type AppState = {
   pomodoro: PomodoroState;
   bgmTracks: BgmTrack[];
   bgmGroups: BgmGroup[];
+  // loading flags
+  hydrating: boolean;
   // destructive ops
   clearTasks: () => void;
   clearMilestones: () => void;
@@ -155,6 +157,7 @@ export const useAppStore = create<AppState>()(
       dataSource: 'db',
       tasks: [],
       milestones: [],
+      hydrating: true,
       launcherShortcuts: [
         {
           id: createShortcutId(),
@@ -181,6 +184,7 @@ export const useAppStore = create<AppState>()(
       bgmGroups: [],
       setDataSource: (src) => set({ dataSource: src }),
       hydrateFromDb: async () => {
+        set({ hydrating: true });
         try {
           const [tasksRes, milestonesRes, launchersRes] = await Promise.all([
             fetch('/api/db/tasks', { cache: 'no-store' }).then((r) => r.json()),
@@ -192,13 +196,16 @@ export const useAppStore = create<AppState>()(
             milestones: (milestonesRes.items ?? []) as Milestone[],
             launcherCategories: (launchersRes.categories ?? []) as LauncherCategory[],
             launcherShortcuts: (launchersRes.shortcuts ?? []) as LauncherShortcut[],
+            hydrating: false,
           });
         } catch {
           console.warn('hydrateFromDb failed');
+          set({ hydrating: false });
         }
       },
       // 初期起動時にDBからハイドレート
       ...(async () => {
+        set({ hydrating: true });
         try {
           const [tasksRes, milestonesRes, launchersRes] = await Promise.all([
             fetch('/api/db/tasks', { cache: 'no-store' }).then((r) => r.json()),
@@ -210,8 +217,11 @@ export const useAppStore = create<AppState>()(
             milestones: (milestonesRes.items ?? []) as Milestone[],
             launcherCategories: (launchersRes.categories ?? []) as LauncherCategory[],
             launcherShortcuts: (launchersRes.shortcuts ?? []) as LauncherShortcut[],
+            hydrating: false,
           });
-        } catch {}
+        } catch {
+          set({ hydrating: false });
+        }
         return {} as Partial<AppState>;
       })(),
       clearTasks: () => set({ tasks: [] }),

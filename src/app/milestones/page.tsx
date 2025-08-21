@@ -1,8 +1,11 @@
 "use client";
 import Link from "next/link";
 import Milestones from "@/components/Milestones";
+import { useAppStore } from "@/lib/store";
+import SectionLoader from "@/components/SectionLoader";
 
 export default function MilestonesPage() {
+  const hydrating = useAppStore((s) => s.hydrating);
   return (
     <div className="p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -11,7 +14,7 @@ export default function MilestonesPage() {
           ホーム
         </Link>
       </div>
-      <Milestones />
+      {hydrating ? <SectionLoader label="マイルストーンを読み込み中..." lines={4} /> : <Milestones />}
     </div>
   );
 }

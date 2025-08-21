@@ -5,6 +5,7 @@ import { useTodayTasks } from "@/hooks/useTodayTasks";
 import WeatherWidget from "@/components/WeatherWidget";
 import { Plus, Target, Timer, Rocket, Upload, Filter as FilterIcon, AlertTriangle } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import SectionLoader from "@/components/SectionLoader";
 // import AddQiitaZenn from "@/components/AddQiitaZenn";
 
 export default function Home() {
@@ -30,6 +31,7 @@ export default function Home() {
   const dataSource = useAppStore((s) => s.dataSource);
   const setDataSource = useAppStore((s) => s.setDataSource);
   const hydrateFromDb = useAppStore((s) => s.hydrateFromDb);
+  const hydrating = useAppStore((s) => s.hydrating);
   return (
     <div className="min-h-screen p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-8">
       <div className="flex items-center justify-between">
@@ -133,19 +135,25 @@ export default function Home() {
             )}
           </div>
         </div>
-        {showIncomplete && (
-          <TaskList 
-            title={`未実行 (${incompleteToday.length})`} 
-            tasks={incompleteToday} 
-            showType 
-            tableMode 
-            showCreatedColumn={false} 
-            showPlannedColumn 
-            showTypeColumn 
-            showMilestoneColumn={false} 
-          />
+        {hydrating ? (
+          <SectionLoader label="今日のタスクを読み込み中..." lines={5} />
+        ) : (
+          <>
+            {showIncomplete && (
+              <TaskList 
+                title={`未実行 (${incompleteToday.length})`} 
+                tasks={incompleteToday} 
+                showType 
+                tableMode 
+                showCreatedColumn={false} 
+                showPlannedColumn 
+                showTypeColumn 
+                showMilestoneColumn={false} 
+              />
+            )}
+          </>
         )}
-        {showCompleted && (
+        {showCompleted && !hydrating && (
           <>
             <div className="mt-3">
               <TaskList title={`積み上げ済み (毎日) (${dailyDoneFiltered.length})`} tasks={dailyDoneFiltered} showType tableMode showCreatedColumn={false} showPlannedColumn={false} showTypeColumn showMilestoneColumn={false} />

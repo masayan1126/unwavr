@@ -1,8 +1,10 @@
 "use client";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ErrorToast, NoticeToast } from "@/components/Toast";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 function GoogleIcon({ size = 16 }: { size?: number }) {
   return (
@@ -13,11 +15,17 @@ function GoogleIcon({ size = 16 }: { size?: number }) {
 }
 
 export default function RegisterPage() {
+  const { status } = useSession();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | undefined>();
   const [toast, setToast] = useState<{ message: string; type?: "info" | "success" | "warning" | "error" } | null>(null);
+
+  useEffect(() => {
+    if (status === "authenticated") router.replace("/");
+  }, [status, router]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();

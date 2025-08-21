@@ -10,7 +10,6 @@ export async function POST(req: NextRequest) {
   if (!supabase) return NextResponse.json({ error: "not configured" }, { status: 400 });
   const { email } = Schema.parse(await req.json());
   const { data } = await supabase.from("users").select("id").eq("email", email.toLowerCase()).maybeSingle();
-  console.log(data);
   if (!data) return NextResponse.json({ ok: true });
   console.log(email);
   const secret = new TextEncoder().encode(process.env.RESET_TOKEN_SECRET || process.env.NEXTAUTH_SECRET || "dev-secret");

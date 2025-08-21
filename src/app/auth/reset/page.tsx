@@ -1,11 +1,19 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function ResetRequestPage() {
+  const { status } = useSession();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [token, setToken] = useState<string | undefined>();
   const [msg, setMsg] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (status === "authenticated") router.replace("/");
+  }, [status, router]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();

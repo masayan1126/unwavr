@@ -4,9 +4,11 @@ import { useMemo, useState } from "react";
 import TaskList from "@/components/TaskList";
 import { useAppStore } from "@/lib/store";
 import { Filter as FilterIcon } from "lucide-react";
+import SectionLoader from "@/components/SectionLoader";
 
 export default function BacklogPage() {
   const tasks = useAppStore((s) => s.tasks);
+  const hydrating = useAppStore((s) => s.hydrating);
   const backlog = useMemo(() => tasks.filter((t) => t.type === "backlog"), [tasks]);
   
   // フィルター状態
@@ -86,7 +88,9 @@ export default function BacklogPage() {
       </div>
       
       {/* 未実行のバックログ */}
-      {showIncomplete && (
+      {hydrating ? (
+        <SectionLoader label="バックログを読み込み中..." lines={6} />
+      ) : showIncomplete ? (
         <TaskList 
           title={`未実行 (${incompleteBacklog.length})`} 
           tasks={incompleteBacklog} 
@@ -97,10 +101,10 @@ export default function BacklogPage() {
           showTypeColumn 
           showMilestoneColumn={false}
         />
-      )}
+      ) : null}
       
       {/* 実行済みのバックログ */}
-      {showCompleted && completedBacklog.length > 0 && (
+      {showCompleted && !hydrating && completedBacklog.length > 0 && (
         <TaskList 
           title={`実行済み (${completedBacklog.length})`} 
           tasks={completedBacklog} 

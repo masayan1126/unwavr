@@ -5,11 +5,13 @@ import TaskList from "@/components/TaskList";
 import { useAppStore } from "@/lib/store";
 import { Task } from "@/lib/types";
 import { getEarliestExecutionDate, isOverdue } from "@/lib/taskUtils";
+import SectionLoader from "@/components/SectionLoader";
 
 // moved to taskUtils
 
 export default function IncompleteTasksPage() {
   const tasks = useAppStore((s) => s.tasks);
+  const hydrating = useAppStore((s) => s.hydrating);
   
   // 未完了で期限切れのタスクを取得
   const overdueTasks = useMemo(() => {
@@ -54,7 +56,9 @@ export default function IncompleteTasksPage() {
         実行日が今日の日付より前なのに完了済みになっていないタスクを表示しています。
       </div>
       
-      {overdueTasks.length === 0 ? (
+      {hydrating ? (
+        <SectionLoader label="未完了タスクを読み込み中..." lines={5} />
+      ) : overdueTasks.length === 0 ? (
         <div className="border rounded p-8 text-center">
           <div className="text-lg font-medium mb-2">🎉 素晴らしい！</div>
           <div className="text-sm opacity-70">期限切れの未完了タスクはありません。</div>

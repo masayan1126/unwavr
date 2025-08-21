@@ -1,11 +1,16 @@
 "use client";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 function ResetConfirmInner() {
+  const { status } = useSession();
   const sp = useSearchParams();
   const router = useRouter();
   const token = sp.get("token") || "";
+  useEffect(() => {
+    if (status === "authenticated") router.replace("/");
+  }, [status, router]);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | undefined>();

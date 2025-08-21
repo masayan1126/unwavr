@@ -5,12 +5,14 @@ import LauncherForm from "@/components/LauncherForm";
 import { useAppStore } from "@/lib/store";
 import { useState } from "react";
 import LauncherOnboarding from "@/components/LauncherOnboarding";
+import SectionLoader from "@/components/SectionLoader";
 
 export default function LauncherPage() {
   const onboarded = useAppStore((s) => s.launcherOnboarded);
   const hasShortcuts = useAppStore((s) => s.launcherShortcuts.length > 0);
   const exportLaunchers = useAppStore((s) => s.exportLaunchers);
   const importLaunchers = useAppStore((s) => s.importLaunchers);
+  const hydrating = useAppStore((s) => s.hydrating);
   const [show, setShow] = useState(false);
   const [importing, setImporting] = useState(false);
   return (
@@ -38,7 +40,7 @@ export default function LauncherPage() {
           <Link className="text-sm underline opacity-80" href="/">ホーム</Link>
         </div>
       </div>
-      <LauncherGrid />
+      {hydrating ? <SectionLoader label="ランチャーを読み込み中..." lines={6} /> : <LauncherGrid />}
       <LauncherForm />
       {show && <LauncherOnboarding onClose={() => setShow(false)} />}
       {importing && (

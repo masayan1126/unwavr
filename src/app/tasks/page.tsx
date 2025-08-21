@@ -4,9 +4,11 @@ import Link from "next/link";
 import TaskList from "@/components/TaskList";
 import { useAppStore } from "@/lib/store";
 import { TaskType } from "@/lib/types";
+import SectionLoader from "@/components/SectionLoader";
 
 export default function TasksPage() {
   const tasks = useAppStore((s) => s.tasks);
+  const hydrating = useAppStore((s) => s.hydrating);
   const [selectedType, setSelectedType] = useState<TaskType | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -112,8 +114,9 @@ export default function TasksPage() {
 
       {/* タスク一覧 */}
       <div className="space-y-6">
-        {selectedType === "all" ? (
-          // 全タスクをタイプ別にグループ化
+        {hydrating ? (
+          <SectionLoader label="タスクを読み込み中..." lines={6} />
+        ) : selectedType === "all" ? (
           <>
             <TaskList 
               title={`毎日タスク (${taskCounts.daily})`} 
@@ -147,7 +150,6 @@ export default function TasksPage() {
             />
           </>
         ) : (
-          // 選択されたタイプのみ表示
           <TaskList 
             title={`${typeLabels[selectedType]} (${filteredTasks.length})`} 
             tasks={filteredTasks} 

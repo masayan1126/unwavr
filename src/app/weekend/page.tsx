@@ -3,9 +3,11 @@ import Link from "next/link";
 import { useMemo } from "react";
 import TaskList from "@/components/TaskList";
 import { useAppStore } from "@/lib/store";
+import SectionLoader from "@/components/SectionLoader";
 
 export default function WeekendPage() {
   const tasks = useAppStore((s) => s.tasks);
+  const hydrating = useAppStore((s) => s.hydrating);
   const weekend = useMemo(
     () =>
       tasks.filter(
@@ -23,7 +25,7 @@ export default function WeekendPage() {
           ホーム
         </Link>
       </div>
-      <TaskList title="週末・連休向け" tasks={weekend} />
+      {hydrating ? <SectionLoader label="週末・連休向けタスクを読み込み中..." lines={5} /> : <TaskList title="週末・連休向け" tasks={weekend} />}
     </div>
   );
 }
