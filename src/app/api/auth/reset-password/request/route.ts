@@ -11,7 +11,6 @@ export async function POST(req: NextRequest) {
   const { email } = Schema.parse(await req.json());
   const { data } = await supabase.from("users").select("id").eq("email", email.toLowerCase()).maybeSingle();
   if (!data) return NextResponse.json({ ok: true });
-  console.log(email);
   const secret = new TextEncoder().encode(process.env.RESET_TOKEN_SECRET || process.env.NEXTAUTH_SECRET || "dev-secret");
   const token = await new SignJWT({ sub: String(data.id), email: email.toLowerCase(), t: "reset" })
     .setProtectedHeader({ alg: "HS256" })
@@ -30,7 +29,7 @@ export async function POST(req: NextRequest) {
         text: `以下のURLから30分以内にパスワード再設定を完了してください。\n${url}`,
       });
       return NextResponse.json({ ok: true });
-    } catch (e) {
+    } catch (_e) {
       // 送信失敗時は開発向けにトークンも返却
       return NextResponse.json({ ok: true, token });
     }

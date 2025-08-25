@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect } from "react";
+import type { ReactElement } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -14,7 +15,7 @@ type WysiwygEditorProps = {
   heightClass?: string; // e.g., 'h-80', 'h-[70vh]'
 };
 
-export default function WysiwygEditor({ value, onChange, className, onBlur, heightClass = "h-80" }: WysiwygEditorProps): JSX.Element {
+export default function WysiwygEditor({ value, onChange, className, onBlur, heightClass = "h-80" }: WysiwygEditorProps): ReactElement {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: false }),
@@ -31,9 +32,11 @@ export default function WysiwygEditor({ value, onChange, className, onBlur, heig
       attributes: {
         class: "prose prose-sm max-w-none dark:prose-invert w-full h-full min-h-[300px] p-3 border rounded-lg border-black/10 dark:border-white/10 focus:outline-none bg-transparent",
       },
-      handleBlur: () => {
-        if (onBlur) onBlur();
-        return false;
+      handleDOMEvents: {
+        blur: () => {
+          if (onBlur) onBlur();
+          return false;
+        },
       },
     },
   });
@@ -41,7 +44,7 @@ export default function WysiwygEditor({ value, onChange, className, onBlur, heig
   useEffect(() => {
     if (!editor) return;
     const current = editor.getHTML();
-    if ((value || "") !== current) editor.commands.setContent(value || "", false);
+    if ((value || "") !== current) editor.commands.setContent(value || "", { emitUpdate: false });
   }, [value, editor]);
 
   return (

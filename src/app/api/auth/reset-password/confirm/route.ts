@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const { error } = await supabase.from("users").update({ password_hash: hash, updated_at: new Date().toISOString() }).eq("id", payload.sub);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true });
-  } catch (e) {
+  } catch (_e) {
     return NextResponse.json({ error: "invalid_or_expired" }, { status: 400 });
   }
 }

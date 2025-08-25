@@ -1,5 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
+import type { ReactNode, ReactElement } from "react";
 import SidebarConditional from "@/components/SidebarConditional";
 import NotificationBars from "@/components/NotificationBars";
 import OnboardingGuide from "@/components/OnboardingGuide";
@@ -7,7 +8,7 @@ import GlobalLauncherBarConditional from "@/components/GlobalLauncherBarConditio
 import CookieConsentConditional from "@/components/CookieConsentConditional";
 import MobileTabBar from "@/components/MobileTabBar";
 
-export default function LayoutChrome({ children }: { children: React.ReactNode }): JSX.Element {
+export default function LayoutChrome({ children }: { children: ReactNode }): ReactElement {
   const pathname = usePathname();
   const isStandaloneEditor = /^\/tasks\/[^/]+\/description\/?$/.test(pathname ?? "");
 

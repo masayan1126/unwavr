@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { use } from "react";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
@@ -21,17 +21,17 @@ export default function TaskDescriptionEditorPage({ params }: { params: Promise<
     setHtml(task.description ?? "");
   }, [task]);
 
-  useEffect(() => {
-    if (!task) router.push("/");
-  }, [task, router]);
-
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (!task) return;
     setIsSaving(true);
     updateTask(task.id, { description: html || undefined });
     setLastSavedAt(Date.now());
     setTimeout(() => setIsSaving(false), 150);
-  };
+  }, [task, html, updateTask]);
+
+  useEffect(() => {
+    if (!task) router.push("/");
+  }, [task, router]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

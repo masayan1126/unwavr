@@ -1,6 +1,5 @@
 import { render, screen } from "@testing-library/react";
 import TaskDetail from "@/components/TaskDetail";
-import { useAppStore } from "@/lib/store";
 
 jest.mock("next/navigation", () => ({
   __esModule: true,

@@ -6,7 +6,6 @@ import { useConfirm } from "@/components/Providers";
 import { CalendarDays, ListTodo, Archive, Loader2, X } from "lucide-react";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import WysiwygEditor from "@/components/WysiwygEditor";
-import Link from "next/link";
 
 // 文字列を20字で省略するユーティリティ関数
 function truncateText(text: string, maxLength: number = 20): string {
