@@ -1,14 +1,17 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { use } from "react";
 import { useAppStore } from "@/lib/store";
 import { TaskType, Scheduled } from "@/lib/types";
+import RichText from "@/components/RichText";
+import WysiwygEditor from "@/components/WysiwygEditor";
 
 export default function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id } = use(params);
+  const searchParams = useSearchParams();
   const task = useAppStore((s) => s.tasks.find((t) => t.id === id));
   const updateTask = useAppStore((s) => s.updateTask);
   const removeTask = useAppStore((s) => s.removeTask);
@@ -52,6 +55,17 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
     }
   }, [task, router]);
 
+  useEffect(() => {
+    const focus = searchParams?.get('focus');
+    if (focus === 'description') {
+      setIsEditing(true);
+      setTimeout(() => {
+        const el = document.getElementById('editor-description');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 0);
+    }
+  }, [searchParams]);
+
   if (!task) {
     return (
       <div className="p-6 sm:p-10 max-w-3xl mx-auto">
@@ -60,7 +74,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
     );
   }
 
-  const handleSave = () => {
+  const handleSave = (keepEditing?: boolean) => {
     if (!title.trim()) return;
 
     let newScheduled: Scheduled | undefined = undefined;
@@ -86,7 +100,9 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
       plannedDates: type === "backlog" ? plannedDates : []
     });
 
-    setIsEditing(false);
+    if (!keepEditing) {
+      setIsEditing(false);
+    }
   };
 
   const handleDelete = () => {
@@ -95,18 +111,24 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   };
 
   const toggleDay = (day: number) => {
-    setSelectedDays(prev => 
-      prev.includes(day) 
+    setSelectedDays(prev => {
+      const next = prev.includes(day)
         ? prev.filter(d => d !== day)
-        : [...prev, day]
-    );
+        : [...prev, day];
+      setTimeout(() => handleSave(true), 0);
+      return next;
+    });
   };
 
   const addPlannedDate = () => {
     const today = new Date();
     const todayUtc = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
     if (!plannedDates.includes(todayUtc)) {
-      setPlannedDates(prev => [...prev, todayUtc]);
+      setPlannedDates(prev => {
+        const next = [...prev, todayUtc];
+        setTimeout(() => handleSave(true), 0);
+        return next;
+      });
     }
   };
 
@@ -152,7 +174,9 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
             </div>
             
             {task.description && (
-              <p className="text-sm opacity-70 mb-3">{task.description}</p>
+              <div className="prose prose-sm dark:prose-invert opacity-90 mb-3">
+                <RichText html={task.description} />
+              </div>
             )}
 
             <div className="grid grid-cols-2 gap-4 text-sm">
@@ -160,7 +184,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 <span className="opacity-60">タイプ:</span>
                 <span className="ml-2">
                   {task.type === "daily" ? "毎日" : 
-                   task.type === "scheduled" ? "特定の日・曜日" : "バックログ"}
+                   task.type === "scheduled" ? "特定曜日" : "積み上げ候補"}
                 </span>
               </div>
               
@@ -229,17 +253,17 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  onBlur={() => handleSave(true)}
                   className="w-full border border-black/10 dark:border-white/10 rounded px-3 py-2 bg-transparent"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">説明</label>
-                <textarea
+              <div id="editor-description" className="space-y-2">
+                <label className="block text-sm font-medium">説明</label>
+                <WysiwygEditor
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full border border-black/10 dark:border-white/10 rounded px-3 py-2 bg-transparent"
-                  rows={3}
+                  onChange={(html) => { setDescription(html); }}
+                  onBlur={() => handleSave(true)}
                 />
               </div>
 
@@ -259,11 +283,12 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                       setPlannedDates([]);
                     }
                   }}
+                  onBlur={() => handleSave(true)}
                   className="w-full border border-black/10 dark:border-white/10 rounded px-3 py-2 bg-transparent"
                 >
                   <option value="daily">毎日</option>
-                  <option value="backlog">バックログ</option>
-                  <option value="scheduled">特定の日・曜日</option>
+                  <option value="backlog">積み上げ候補</option>
+                  <option value="scheduled">特定曜日</option>
                 </select>
               </div>
 
@@ -274,6 +299,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                   min={0}
                   value={estimatedPomodoros}
                   onChange={(e) => setEstimatedPomodoros(parseInt(e.target.value) || 0)}
+                  onBlur={() => handleSave(true)}
                   className="w-full border border-black/10 dark:border-white/10 rounded px-3 py-2 bg-transparent"
                 />
               </div>
@@ -283,6 +309,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 <select
                   value={milestoneId}
                   onChange={(e) => setMilestoneId(e.target.value)}
+                  onBlur={() => handleSave(true)}
                   className="w-full border border-black/10 dark:border-white/10 rounded px-3 py-2 bg-transparent"
                 >
                   <option value="">未選択</option>
@@ -323,6 +350,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                         type="date"
                         value={rangeStart}
                         onChange={(e) => setRangeStart(e.target.value)}
+                        onBlur={() => handleSave(true)}
                         className="border border-black/10 dark:border-white/10 rounded px-3 py-2 bg-transparent"
                       />
                       <span className="flex items-center">〜</span>
@@ -330,6 +358,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                         type="date"
                         value={rangeEnd}
                         onChange={(e) => setRangeEnd(e.target.value)}
+                        onBlur={() => handleSave(true)}
                         className="border border-black/10 dark:border-white/10 rounded px-3 py-2 bg-transparent"
                       />
                     </div>
@@ -354,7 +383,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                           <div key={date} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
                             <span>{formatDate(date)}</span>
                             <button
-                              onClick={() => removePlannedDate(date)}
+                              onClick={() => { removePlannedDate(date); setTimeout(()=>handleSave(), 0); }}
                               className="text-red-500 text-sm"
                             >
                               削除
@@ -371,7 +400,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
           <div className="flex gap-2">
             <button
-              onClick={handleSave}
+              onClick={() => handleSave()}
               disabled={!title.trim()}
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
             >

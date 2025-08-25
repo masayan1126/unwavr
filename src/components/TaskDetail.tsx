@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { isTaskForToday } from "@/lib/types";
+import RichText from "@/components/RichText";
 
 function formatDow(days?: number[]): string {
   if (!days || days.length === 0) return "-";
@@ -43,12 +44,14 @@ export default function TaskDetail({ taskId, backHref }: { taskId: string; backH
         </Link>
       </div>
 
-      {task.description && <p className="text-sm opacity-80">{task.description}</p>}
+      {task.description && (
+        <RichText className="prose prose-sm dark:prose-invert opacity-90" html={task.description} />
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="border rounded p-3 border-black/10 dark:border-white/10">
           <div className="text-xs uppercase opacity-60 mb-2">基本情報</div>
-          <div className="text-sm">種別: {task.type === "daily" ? "毎日" : task.type === "backlog" ? "バックログ" : "曜日/連休"}</div>
+          <div className="text-sm">種別: {task.type === "daily" ? "毎日" : task.type === "backlog" ? "積み上げ候補" : "曜日/連休"}</div>
           <div className="text-sm">今日対象: {today ? "はい" : "いいえ"}</div>
           <div className="text-sm">作成: {new Date(task.createdAt).toLocaleString()}</div>
           <div className="text-sm">

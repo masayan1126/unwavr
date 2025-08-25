@@ -14,7 +14,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { href: "/", label: "ホーム", icon: <Home size={16} /> },
-  { href: "/backlog", label: "バックログ", icon: <Archive size={16} /> },
+  { href: "/backlog", label: "積み上げ候補", icon: <Archive size={16} /> },
   { href: "/launcher", label: "ランチャー", icon: <Rocket size={16} /> },
   { href: "/milestones", label: "マイルストーン", icon: <Target size={16} /> },
   { href: "/pomodoro", label: "ポモドーロ", icon: <Timer size={16} /> },
@@ -131,7 +131,7 @@ export default function Sidebar() {
                 <span className="truncate">タスク管理</span>
               </Link>
               <Link
-                href="/tasks/new"
+                href={{ pathname: "/tasks", query: { new: "1" } }}
                 className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
                   pathname.startsWith("/tasks/new") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
                 }`}
@@ -155,7 +155,7 @@ export default function Sidebar() {
                 }`}
               >
                 <CalendarDays size={16} />
-                <span className="truncate">特定の日・曜日だけ積み上げ</span>
+                <span className="truncate">特定曜日だけ積み上げ</span>
               </Link>
               <Link
                 href="/tasks/import-export"
@@ -175,6 +175,15 @@ export default function Sidebar() {
               >
                 <AlertTriangle size={16} />
                 <span className="truncate">未完了タスク</span>
+              </Link>
+              <Link
+                href="/tasks/archived"
+                className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                  pathname.startsWith("/tasks/archived") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                }`}
+              >
+                <Archive size={16} />
+                <span className="truncate">アーカイブ</span>
               </Link>
             </div>
           )}

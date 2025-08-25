@@ -41,9 +41,3 @@ Next.js App Router ベースの構成です。主要な入口と関係ファイ�
   - Next 設定: [next.config.ts](mdc:next.config.ts)
   - ESLint 設定: [eslint.config.mjs](mdc:eslint.config.mjs)
   - Jest 設定: [jest.config.js](mdc:jest.config.js), [jest.setup.ts](mdc:jest.setup.ts)
-
-ビルド/テスト:
-- Lint: `npm run lint`
-- Test: `npm test`
-- Build: `npm run build`
-

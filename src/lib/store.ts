@@ -76,13 +76,17 @@ export type AppState = {
   clearTasksMilestonesLaunchers: () => void;
   setDataSource: (src: 'db') => void;
   hydrateFromDb: () => Promise<void>;
-  addTask: (input: Omit<Task, "id" | "createdAt" | "completed" | "completedPomodoros">) => void;
+  addTask: (input: Omit<Task, "id" | "createdAt" | "completed" | "completedPomodoros">) => string;
   toggleTask: (taskId: string) => void;
   toggleDailyDoneForToday: (taskId: string) => void;
   togglePlannedForToday: (taskId: string) => void;
   incrementTaskPomodoro: (taskId: string) => void;
   removeTask: (taskId: string) => void;
   updateTask: (taskId: string, update: Partial<Omit<Task, "id" | "createdAt">>) => void;
+  completeTasks: (taskIds: string[]) => void;
+  resetDailyDoneForToday: (taskIds: string[]) => void;
+  archiveDailyTasks: (taskIds: string[]) => void;
+  archiveDailyTask: (taskId: string) => void;
   addMilestone: (input: Omit<Milestone, "id">) => void;
   updateMilestoneProgress: (milestoneId: string, delta: number) => void;
   removeMilestone: (milestoneId: string) => void;
@@ -192,7 +196,7 @@ export const useAppStore = create<AppState>()(
             fetch('/api/db/launchers', { cache: 'no-store' }).then((r) => r.json()),
           ]);
           set({
-            tasks: (tasksRes.items ?? []) as Task[],
+            tasks: ((tasksRes.items ?? []) as Task[]).filter((t) => t.archived !== true),
             milestones: (milestonesRes.items ?? []) as Milestone[],
             launcherCategories: (launchersRes.categories ?? []) as LauncherCategory[],
             launcherShortcuts: (launchersRes.shortcuts ?? []) as LauncherShortcut[],
@@ -213,7 +217,7 @@ export const useAppStore = create<AppState>()(
             fetch('/api/db/launchers', { cache: 'no-store' }).then((r) => r.json()),
           ]);
           set({
-            tasks: (tasksRes.items ?? []) as Task[],
+            tasks: ((tasksRes.items ?? []) as Task[]).filter((t) => t.archived !== true),
             milestones: (milestonesRes.items ?? []) as Milestone[],
             launcherCategories: (launchersRes.categories ?? []) as LauncherCategory[],
             launcherShortcuts: (launchersRes.shortcuts ?? []) as LauncherShortcut[],
@@ -228,7 +232,8 @@ export const useAppStore = create<AppState>()(
       clearMilestones: () => set({ milestones: [] }),
       clearLaunchers: () => set({ launcherShortcuts: [], launcherCategories: [], launcherOnboarded: false }),
       clearTasksMilestonesLaunchers: () => set({ tasks: [], milestones: [], launcherShortcuts: [], launcherCategories: [], launcherOnboarded: false }),
-      addTask: (input) =>
+      addTask: (input) => {
+        let createdId = '';
         set((state) => {
           const newTask: Task = {
             ...(input as Task),
@@ -237,11 +242,12 @@ export const useAppStore = create<AppState>()(
             completed: false,
             completedPomodoros: 0,
           };
-          {
-            fetch('/api/db/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newTask) }).catch(() => {});
-          }
+          createdId = newTask.id;
+          fetch('/api/db/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newTask) }).catch(() => {});
           return { tasks: [...state.tasks, newTask] };
-        }),
+        });
+        return createdId;
+      },
       toggleTask: (taskId) =>
         set((state) => {
           const tasks = state.tasks.map((t) => (t.id === taskId ? { ...t, completed: !t.completed } : t));
@@ -298,6 +304,92 @@ export const useAppStore = create<AppState>()(
         set((state) => {
           const tasks = state.tasks.map((t) => (t.id === taskId ? { ...t, ...update } : t));
           fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update) }).catch(() => {});
+          return { tasks };
+        }),
+      archiveDailyTask: (taskId) =>
+        set((state) => {
+          const now = Date.now();
+          // 楽観的更新: まずローカルから除外
+          const tasks = state.tasks.filter((t) => t.id !== taskId);
+          fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ archived: true, archivedAt: now })
+          }).then(() => {
+              try { if (typeof window !== 'undefined') { useAppStore.getState().hydrateFromDb(); } } catch {}
+            })
+            .catch(() => {});
+          return { tasks };
+        }),
+      completeTasks: (taskIds) =>
+        set((state) => {
+          if (!Array.isArray(taskIds) || taskIds.length === 0) return state;
+          const d = new Date();
+          d.setUTCHours(0, 0, 0, 0);
+          const todayUtc = d.getTime();
+
+          const tasks = state.tasks.map((t) => {
+            if (!taskIds.includes(t.id)) return t;
+            if (t.type === 'daily') {
+              const arr = Array.isArray(t.dailyDoneDates) ? [...t.dailyDoneDates] : [];
+              if (!arr.includes(todayUtc)) arr.push(todayUtc);
+              const next = { ...t, dailyDoneDates: arr } as Task;
+              fetch(`/api/db/tasks/${encodeURIComponent(t.id)}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dailyDoneDates: next.dailyDoneDates })
+              }).catch(() => {});
+              return next;
+            }
+            const next = { ...t, completed: true } as Task;
+            fetch(`/api/db/tasks/${encodeURIComponent(t.id)}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ completed: true })
+            }).catch(() => {});
+            return next;
+          });
+          return { tasks };
+        }),
+      resetDailyDoneForToday: (taskIds) =>
+        set((state) => {
+          if (!Array.isArray(taskIds) || taskIds.length === 0) return state;
+          const d = new Date();
+          d.setUTCHours(0, 0, 0, 0);
+          const todayUtc = d.getTime();
+          const tasks = state.tasks.map((t) => {
+            if (t.type !== 'daily') return t;
+            if (!taskIds.includes(t.id)) return t;
+            const arr = Array.isArray(t.dailyDoneDates) ? [...t.dailyDoneDates] : [];
+            const idx = arr.indexOf(todayUtc);
+            if (idx >= 0) arr.splice(idx, 1);
+            const next = { ...t, dailyDoneDates: arr } as Task;
+            fetch(`/api/db/tasks/${encodeURIComponent(t.id)}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ dailyDoneDates: next.dailyDoneDates })
+            }).catch(() => {});
+            return next;
+          });
+          return { tasks };
+        }),
+      archiveDailyTasks: (taskIds) =>
+        set((state) => {
+          if (!Array.isArray(taskIds) || taskIds.length === 0) return state;
+          // 楽観的更新: 指定のdailyタスクをローカルから除外
+          const toArchive = new Set(taskIds);
+          const tasks = state.tasks.filter((t) => !(t.type === 'daily' && toArchive.has(t.id)));
+          // サーバーへPATCH
+          const now = Date.now();
+          taskIds.forEach((id) => {
+            fetch(`/api/db/tasks/${encodeURIComponent(id)}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ archived: true, archivedAt: now })
+            }).catch(() => {});
+          });
+          // 同期
+          Promise.resolve().then(() => { try { if (typeof window !== 'undefined') { useAppStore.getState().hydrateFromDb(); } } catch {} });
           return { tasks };
         }),
       addMilestone: (input) =>
@@ -542,11 +634,11 @@ export const useAppStore = create<AppState>()(
           }
           return { pomodoro: next };
         }),
-      tasksForToday: () => get().tasks.filter((t) => isTaskForToday(t)),
-      backlogTasks: () => get().tasks.filter((t) => t.type === "backlog"),
+      tasksForToday: () => get().tasks.filter((t) => t.archived !== true && isTaskForToday(t)),
+      backlogTasks: () => get().tasks.filter((t) => t.archived !== true && t.type === "backlog"),
       weekendOrHolidayTasks: () =>
         get().tasks.filter(
-          (t) => t.type === "scheduled" && (t.scheduled?.daysOfWeek?.some((d) => d === 0 || d === 6) || (t.scheduled?.dateRanges?.length ?? 0) > 0)
+          (t) => t.archived !== true && t.type === "scheduled" && (t.scheduled?.daysOfWeek?.some((d) => d === 0 || d === 6) || (t.scheduled?.dateRanges?.length ?? 0) > 0)
         ),
       addLauncherShortcut: (input) =>
         set((state) => {

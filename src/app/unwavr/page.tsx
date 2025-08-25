@@ -31,7 +31,7 @@ export default function UnwavrLanding() {
           <div className="border rounded p-4 flex flex-col gap-2">
             <CalendarDays size={18} />
             <div className="text-sm font-medium">ブレない今日</div>
-            <p className="text-xs opacity-80">毎日/バックログ/週末・連休で自動分類。今日やるべきことだけに集中。</p>
+            <p className="text-xs opacity-80">毎日/積み上げ候補/週末・連休で自動分類。今日やるべきことだけに集中。</p>
           </div>
           <div className="border rounded p-4 flex flex-col gap-2">
             <Hourglass size={18} />
@@ -81,7 +81,7 @@ export default function UnwavrLanding() {
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="flex flex-col gap-3">
             <div className="text-xs uppercase tracking-wider opacity-70">Tasks</div>
-            <h2 className="text-xl font-semibold">今日/バックログ/週末・連休を自動で整える</h2>
+            <h2 className="text-xl font-semibold">今日/積み上げ候補/週末・連休を自動で整える</h2>
             <ul className="text-sm flex flex-col gap-2 opacity-90">
               <li className="flex items-start gap-2"><CheckCircle2 size={16} className="mt-0.5" /> 曜日＋期間レンジで週末/連休を柔軟にスケジュール</li>
               <li className="flex items-start gap-2"><CheckCircle2 size={16} className="mt-0.5" /> 詳細ページで完了/ポモ対象/削除を素早く</li>

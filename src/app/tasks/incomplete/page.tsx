@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import TaskList from "@/components/TaskList";
 import { useAppStore } from "@/lib/store";
 import { Task } from "@/lib/types";
@@ -43,13 +43,30 @@ export default function IncompleteTasksPage() {
     return { daily, scheduled, backlog };
   }, [overdueTasks]);
   
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const total = overdueTasks.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const pageItems = useMemo(() => {
+    const offset = (page - 1) * pageSize;
+    return overdueTasks.slice(offset, offset + pageSize);
+  }, [overdueTasks, page, pageSize]);
+
   return (
     <div className="p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">未完了タスク</h1>
-        <Link className="text-sm underline opacity-80" href="/">
-          ホーム
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            className="px-3 py-1.5 rounded border text-sm"
+            onClick={() => {
+              const ids = pageItems.map((t) => t.id);
+              useAppStore.getState().completeTasks(ids);
+            }}
+            title="このページに表示中の未完了を完了にします"
+          >表示分を完了</button>
+          <Link className="text-sm underline opacity-80" href="/">ホーム</Link>
+        </div>
       </div>
       
       <div className="text-sm opacity-70 mb-4">
@@ -65,11 +82,26 @@ export default function IncompleteTasksPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* バックログタスク */}
-          {overdueByType.backlog.length > 0 && (
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs opacity-70">{page} / {totalPages}（全 {total} 件）</div>
+            <div className="flex items-center gap-2 text-sm">
+              <label className="flex items-center gap-2">
+                <span className="opacity-70">1ページあたり</span>
+                <select className="border rounded px-2 py-1 bg-transparent" value={pageSize} onChange={(e)=>{ setPageSize(Number(e.target.value)); setPage(1); }}>
+                  {[10,20,50,100].map(n => (<option key={n} value={n}>{n}</option>))}
+                </select>
+              </label>
+              <div className="flex items-center gap-2">
+                <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}>前へ</button>
+                <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={page>=totalPages} onClick={()=>setPage(p=>Math.min(totalPages,p+1))}>次へ</button>
+              </div>
+            </div>
+          </div>
+          {/* 積み上げ候補タスク */}
+          {pageItems.filter(t=>t.type==='backlog').length > 0 && (
             <TaskList 
-              title={`バックログ - 期限切れ (${overdueByType.backlog.length})`} 
-              tasks={overdueByType.backlog} 
+              title={`積み上げ候補 - 期限切れ (${pageItems.filter(t=>t.type==='backlog').length})`} 
+              tasks={pageItems.filter(t=>t.type==='backlog')} 
               showPlannedDates 
               tableMode 
               showCreatedColumn={false} 
@@ -80,10 +112,10 @@ export default function IncompleteTasksPage() {
           )}
           
           {/* 特定日タスク */}
-          {overdueByType.scheduled.length > 0 && (
+          {pageItems.filter(t=>t.type==='scheduled').length > 0 && (
             <TaskList 
-              title={`特定日 - 期限切れ (${overdueByType.scheduled.length})`} 
-              tasks={overdueByType.scheduled} 
+              title={`特定日 - 期限切れ (${pageItems.filter(t=>t.type==='scheduled').length})`} 
+              tasks={pageItems.filter(t=>t.type==='scheduled')} 
               showPlannedDates 
               tableMode 
               showCreatedColumn={false} 
@@ -95,10 +127,10 @@ export default function IncompleteTasksPage() {
           )}
           
           {/* 毎日タスク（期限切れの概念はないが、一応表示） */}
-          {overdueByType.daily.length > 0 && (
+          {pageItems.filter(t=>t.type==='daily').length > 0 && (
             <TaskList 
-              title={`毎日 - 未完了 (${overdueByType.daily.length})`} 
-              tasks={overdueByType.daily} 
+              title={`毎日 - 未完了 (${pageItems.filter(t=>t.type==='daily').length})`} 
+              tasks={pageItems.filter(t=>t.type==='daily')} 
               showPlannedDates 
               tableMode 
               showCreatedColumn={false} 

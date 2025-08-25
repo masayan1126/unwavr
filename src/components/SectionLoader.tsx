@@ -1,5 +1,7 @@
 "use client";
 
+import React from "react";
+
 type SectionLoaderProps = {
   label?: string;
   lines?: number;
@@ -7,7 +9,7 @@ type SectionLoaderProps = {
   className?: string;
 };
 
-export default function SectionLoader({ label = "読み込み中...", lines = 3, height, className = "" }: SectionLoaderProps): JSX.Element {
+export default function SectionLoader({ label = "読み込み中...", lines = 3, height, className = "" }: SectionLoaderProps): React.ReactElement {
   const placeholders = Array.from({ length: Math.max(1, Math.min(lines, 8)) });
   return (
     <div className={`border rounded p-4 border-black/10 dark:border-white/10 ${className}`} style={height ? { minHeight: typeof height === "number" ? `${height}px` : String(height) } : undefined}>

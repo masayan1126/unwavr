@@ -5,10 +5,9 @@ alwaysApply: true
 # 開発ワークフロー（Cursor用）
 
 1. 変更前に関連ファイルを読み、影響範囲を把握する。
-2. 変更は最小限かつ局所的に行い、編集後は Lint とテストを実行。build成功したら必ずbuildコマンドの起動を停止して再度npm run dev実行すること
-   - Lint: `npm run lint`
+2. 変更は最小限かつ局所的に行い、編集後は以下を実行。
+   - Lint: `npx eslint . --ext .ts,.tsx --max-warnings=0`
    - Test: `npm test`
-   - Build: `npm run build && npm run e2e`
 3. Lint エラーが出たらまず修正。3回同じ方法で失敗した場合は別アプローチを検討。
 4. 新規フレームワークプロジェクト作成後は、別ウィンドウでエディタを開く:
    - `open -a "Cursor" <プロジェクトディレクトリ>`

@@ -95,7 +95,7 @@ export default function ImportExportPage() {
       const anotherUtc = Date.UTC(another.getUTCFullYear(), another.getUTCMonth(), another.getUTCDate());
       const planned = i % 3 === 0 ? [todayUtc, anotherUtc] : [anotherUtc];
       addTask({
-        title: `バックログ #${i + 1}`,
+        title: `積み上げ候補 #${i + 1}`,
         description: i % 2 === 0 ? `説明: 後でやる ${i + 1}` : undefined,
         type: "backlog",
         plannedDates: planned,
@@ -302,10 +302,10 @@ export default function ImportExportPage() {
         <div className="text-sm font-medium">デモデータの作成</div>
         <button
           className="px-3 py-1 rounded bg-foreground text-background text-sm"
-          onClick={() => {
-            if (confirm('デモデータ（タスク/ランチャー/マイルストーン）を大量生成します。続行しますか？')) {
-              generateDemoData();
-            }
+          onClick={async () => {
+            const mod = await import('@/components/Providers');
+            const ok = await mod.useConfirm()('デモデータ（タスク/ランチャー/マイルストーン）を大量生成します。続行しますか？', { confirmText: '生成' });
+            if (ok) generateDemoData();
           }}
         >
           作成する
@@ -344,8 +344,10 @@ export default function ImportExportPage() {
         <div>
           <button
             className="px-3 py-2 rounded bg-red-600 text-white text-sm"
-            onClick={() => {
-              if (confirm('本当に全て削除しますか？この操作は取り消せません。')) {
+            onClick={async () => {
+              const mod = await import('@/components/Providers');
+              const ok2 = await mod.useConfirm()('本当に全て削除しますか？この操作は取り消せません。', { tone: 'danger', confirmText: '削除' });
+              if (ok2) {
                 clearAll();
                 alert('すべて削除しました');
               }

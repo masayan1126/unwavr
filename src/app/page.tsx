@@ -3,7 +3,8 @@ import Link from "next/link";
 import TaskList from "@/components/TaskList";
 import { useTodayTasks } from "@/hooks/useTodayTasks";
 import WeatherWidget from "@/components/WeatherWidget";
-import { Plus, Target, Timer, Rocket, Upload, Filter as FilterIcon, AlertTriangle } from "lucide-react";
+import { Plus, Target, Timer, Rocket, Upload, AlertTriangle } from "lucide-react";
+import { useConfirm } from "@/components/Providers";
 import { useAppStore } from "@/lib/store";
 import SectionLoader from "@/components/SectionLoader";
 // import AddQiitaZenn from "@/components/AddQiitaZenn";
@@ -14,26 +15,12 @@ export default function Home() {
     dailyDoneFiltered,
     scheduledDoneFiltered,
     backlogDoneFiltered,
-    filterOpen,
-    setFilterOpen,
-    showIncomplete,
-    setShowIncomplete,
-    showCompleted,
-    setShowCompleted,
-    filterDaily,
-    setFilterDaily,
-    filterScheduled,
-    setFilterScheduled,
-    filterBacklog,
-    setFilterBacklog,
-    resetFilters,
   } = useTodayTasks();
-  const dataSource = useAppStore((s) => s.dataSource);
-  const setDataSource = useAppStore((s) => s.setDataSource);
   const hydrateFromDb = useAppStore((s) => s.hydrateFromDb);
   const hydrating = useAppStore((s) => s.hydrating);
+  const confirm = useConfirm();
   return (
-    <div className="min-h-screen p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-8">
+    <div className="min-h-screen p-6 sm:p-10 max-w-6xl mx-auto flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">ダッシュボード</h1>
         <div className="flex items-center gap-4">
@@ -42,153 +29,79 @@ export default function Home() {
         </div>
       </div>
 
-      <section className="border rounded p-4 border-black/10 dark:border-white/10">
-        <div className="mb-2 flex gap-2">
-          <Link href="/tasks/new" className="inline-flex items-center gap-2 px-3 py-1.5 rounded border text-sm">
-            <Plus size={16} /> タスク追加
-          </Link>
-          <div className="ml-auto flex items-center gap-2 text-xs">
-            <span className="opacity-70">データソース: db</span>
-            <button
-              className={`px-2 py-1 rounded border bg-foreground text-background`}
-              onClick={async () => { await hydrateFromDb(); }}
-            >再読み込み</button>
-          </div>
-        </div>
-        <div className="mb-3 flex items-center justify-between gap-3 text-sm">
-          <div className="flex flex-col gap-1">
-            <div className="text-[11px] opacity-70">対象: 今日該当(毎日/特定日) + バックログ(今日やる)</div>
-            <div className="flex flex-wrap items-center gap-2 px-2 py-1 rounded border border-black/10 dark:border-white/10">
-              <span className="text-[11px] opacity-70 mr-1">適用中</span>
-              {showIncomplete && (
-                <span className="px-2 py-0.5 rounded-full border">未実行</span>
-              )}
-              {showCompleted && (
-                <span className="px-2 py-0.5 rounded-full border">完了表示</span>
-              )}
-              {filterDaily && (
-                <span className="px-2 py-0.5 rounded-full border">毎日</span>
-              )}
-              {filterScheduled && (
-                <span className="px-2 py-0.5 rounded-full border">特定日</span>
-              )}
-              {filterBacklog && (
-                <span className="px-2 py-0.5 rounded-full border">バックログ</span>
-              )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-fr">
+        {/* 未完了 */}
+        <section className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col min-h-[320px]">
+          <div className="mb-2 flex gap-2 items-center">
+            <h2 className="text-sm font-medium">未完了 ({incompleteToday.length})</h2>
+            <div className="ml-auto flex items-center gap-2 text-xs">
+              <Link href={{ pathname: "/tasks", query: { new: "1" } }} className="inline-flex items-center gap-2 px-3 py-1.5 rounded border text-sm"><Plus size={16} />追加</Link>
+              <button className={`px-2 py-1 rounded border bg-foreground text-background`} onClick={async () => { await hydrateFromDb(); }}>再読み込み</button>
             </div>
           </div>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setFilterOpen((v) => !v)}
-              className="px-3 py-1.5 rounded border flex items-center gap-2"
-              aria-haspopup="dialog"
-              aria-expanded={filterOpen}
-            >
-              <FilterIcon size={16} /> フィルター
-            </button>
-            {filterOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setFilterOpen(false)} />
-                <div className="absolute right-0 mt-2 z-50 w-72 border rounded bg-background text-foreground shadow-lg p-3 flex flex-col gap-3">
-                  <div className="text-xs opacity-70">表示設定</div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <button
-                      type="button"
-                      onClick={() => setShowIncomplete((v) => !v)}
-                      className={`px-2 py-1 rounded-full border text-xs ${showIncomplete ? "bg-foreground text-background" : ""}`}
-                    >未実行</button>
-                    <button
-                      type="button"
-                      onClick={() => setShowCompleted((v) => !v)}
-                      className={`px-2 py-1 rounded-full border text-xs ${showCompleted ? "bg-foreground text-background" : ""}`}
-                    >完了表示</button>
-                  </div>
-                  <div className="text-xs opacity-70">種別</div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <button
-                      type="button"
-                      onClick={() => setFilterDaily((v) => !v)}
-                      className={`px-2 py-1 rounded-full border text-xs ${filterDaily ? "bg-foreground text-background" : ""}`}
-                    >毎日</button>
-                    <button
-                      type="button"
-                      onClick={() => setFilterScheduled((v) => !v)}
-                      className={`px-2 py-1 rounded-full border text-xs ${filterScheduled ? "bg-foreground text-background" : ""}`}
-                    >特定日</button>
-                    <button
-                      type="button"
-                      onClick={() => setFilterBacklog((v) => !v)}
-                      className={`px-2 py-1 rounded-full border text-xs ${filterBacklog ? "bg-foreground text-background" : ""}`}
-                    >バックログ</button>
-                  </div>
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      type="button"
-                      className="px-2 py-1 rounded border text-xs"
-                    onClick={resetFilters}
-                    >リセット</button>
-                    <button type="button" className="px-2 py-1 rounded bg-foreground text-background text-xs" onClick={() => setFilterOpen(false)}>閉じる</button>
-                  </div>
-                </div>
-              </>
-            )}
+          {hydrating ? (
+            <SectionLoader label="今日のタスクを読み込み中..." lines={5} />
+          ) : (
+            <TaskList title="" tasks={incompleteToday.slice(0,10)} showType tableMode showCreatedColumn={false} showPlannedColumn showTypeColumn showMilestoneColumn={false} enableSelection />
+          )}
+          <div className="mt-2 text-right">
+            <Link href={{ pathname: "/tasks", query: { daily: "1", backlogToday: "1", scheduledToday: "1", onlyIncomplete: "1" } }} className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
           </div>
-        </div>
-        {hydrating ? (
-          <SectionLoader label="今日のタスクを読み込み中..." lines={5} />
-        ) : (
-          <>
-            {showIncomplete && (
-              <TaskList 
-                title={`未実行 (${incompleteToday.length})`} 
-                tasks={incompleteToday} 
-                showType 
-                tableMode 
-                showCreatedColumn={false} 
-                showPlannedColumn 
-                showTypeColumn 
-                showMilestoneColumn={false} 
-              />
-            )}
-          </>
-        )}
-        {showCompleted && !hydrating && (
-          <>
-            <div className="mt-3">
-              <TaskList title={`積み上げ済み (毎日) (${dailyDoneFiltered.length})`} tasks={dailyDoneFiltered} showType tableMode showCreatedColumn={false} showPlannedColumn={false} showTypeColumn showMilestoneColumn={false} />
-            </div>
-            <div className="mt-3">
-              <TaskList 
-                title={`完了済み (特定日) (${scheduledDoneFiltered.length})`} 
-                tasks={scheduledDoneFiltered} 
-                showType 
-                tableMode 
-                showCreatedColumn={false} 
-                showPlannedColumn={false} 
-                showTypeColumn 
-                showMilestoneColumn={false} 
-              />
-            </div>
-            <div className="mt-3">
-              <TaskList 
-                title={`完了済み (バックログ) (${backlogDoneFiltered.length})`} 
-                tasks={backlogDoneFiltered} 
-                showType 
-                tableMode 
-                showCreatedColumn={false} 
-                showPlannedColumn 
-                showTypeColumn 
-                showMilestoneColumn={false} 
-              />
-            </div>
-          </>
-        )}
-      </section>
+        </section>
 
-      <section className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col gap-3">
+        {/* 積み上げ済み (毎日) */}
+        <section className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col min-h-[320px]">
+          <div className="mb-2 flex gap-2 items-center">
+            <h2 className="text-sm font-medium">積み上げ済み (毎日) ({dailyDoneFiltered.length})</h2>
+            <div className="ml-auto flex items-center gap-2 text-xs">
+              <button className={`px-2 py-1 rounded border bg-foreground text-background`} onClick={async () => { await hydrateFromDb(); }}>再読み込み</button>
+            </div>
+          </div>
+          {hydrating ? (
+            <SectionLoader label="読み込み中..." lines={4} />
+          ) : (
+            <TaskList title="" tasks={dailyDoneFiltered.slice(0,10)} showType tableMode showCreatedColumn={false} showPlannedColumn={false} showTypeColumn showMilestoneColumn={false} enableSelection />
+          )}
+          <div className="mt-2 text-right">
+            <Link href="/tasks/daily" className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
+          </div>
+        </section>
+
+        {/* 完了済み (特定曜日) */}
+        <section className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col min-h-[320px]">
+          <div className="mb-2 flex gap-2 items-center">
+            <h2 className="text-sm font-medium">完了済み (特定曜日) ({scheduledDoneFiltered.length})</h2>
+          </div>
+          {hydrating ? (
+            <SectionLoader label="読み込み中..." lines={4} />
+          ) : (
+            <TaskList title="" tasks={scheduledDoneFiltered.slice(0,10)} showType tableMode showCreatedColumn={false} showPlannedColumn={false} showTypeColumn showMilestoneColumn={false} enableSelection />
+          )}
+          <div className="mt-2 text-right">
+            <Link href="/tasks/scheduled" className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
+          </div>
+        </section>
+
+        {/* 完了済み (積み上げ候補) */}
+        <section className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col min-h-[320px]">
+          <div className="mb-2 flex gap-2 items-center">
+            <h2 className="text-sm font-medium">完了済み (積み上げ候補) ({backlogDoneFiltered.length})</h2>
+          </div>
+          {hydrating ? (
+            <SectionLoader label="読み込み中..." lines={4} />
+          ) : (
+            <TaskList title="" tasks={backlogDoneFiltered.slice(0,10)} showType tableMode showCreatedColumn={false} showPlannedColumn showTypeColumn showMilestoneColumn={false} enableSelection />
+          )}
+          <div className="mt-2 text-right">
+            <Link href="/backlog" className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
+          </div>
+        </section>
+      </div>
+
+      {/* クイックアクション（最下段） */}
+      <section className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col min-h-[120px]">
         <div className="text-sm font-medium">クイックアクション</div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap mt-2">
           <Link className="px-3 py-2 rounded border text-sm flex items-center gap-2" href="/tasks">
             <Plus size={16} />
             タスク管理

@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { isTaskForToday } from "@/lib/types";
 
@@ -14,6 +14,16 @@ function isDailyDoneToday(dailyDoneDates?: number[]) {
 
 export function useTodayTasks() {
   const tasks = useAppStore((s) => s.tasks);
+  // 日付が変わったら強制的に再評価するためのトリガ
+  const [dateTick, setDateTick] = useState(0);
+  // 次のローカル日付0時に再評価（以降も毎日）
+  useEffect(() => {
+    const now = new Date();
+    const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 1, 0);
+    const delay = Math.max(1000, next.getTime() - now.getTime());
+    const timer = setTimeout(() => setDateTick((v) => v + 1), delay);
+    return () => clearTimeout(timer);
+  }, [dateTick]);
 
   const [showIncomplete, setShowIncomplete] = useState(true);
   const [showCompleted, setShowCompleted] = useState(true);
@@ -22,21 +32,47 @@ export function useTodayTasks() {
   const [filterBacklog, setFilterBacklog] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
 
-  const tasksForToday = useMemo(
-    () => tasks.filter((t) => isTaskForToday(t)),
-    [tasks]
-  );
+  function isBacklogPlannedToday(plannedDates?: number[]): boolean {
+    if (!plannedDates || plannedDates.length === 0) return false;
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    const d = now.getDate();
 
-  const dailyForToday = useMemo(() => tasksForToday.filter((t) => t.type === "daily"), [tasksForToday]);
-  const scheduledForToday = useMemo(() => tasksForToday.filter((t) => t.type === "scheduled"), [tasksForToday]);
-  const backlogForToday = useMemo(() => tasksForToday.filter((t) => t.type === "backlog"), [tasksForToday]);
+    const localMidnight = new Date(y, m, d).getTime();
+    const utcMidnight = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
 
-  const dailyPending = useMemo(() => dailyForToday.filter((t) => !isDailyDoneToday(t.dailyDoneDates)), [dailyForToday]);
-  const dailyDone = useMemo(() => dailyForToday.filter((t) => isDailyDoneToday(t.dailyDoneDates)), [dailyForToday]);
-  const scheduledPending = useMemo(() => scheduledForToday.filter((t) => !t.completed), [scheduledForToday]);
-  const scheduledDone = useMemo(() => scheduledForToday.filter((t) => t.completed), [scheduledForToday]);
-  const backlogPending = useMemo(() => backlogForToday.filter((t) => !t.completed), [backlogForToday]);
-  const backlogDone = useMemo(() => backlogForToday.filter((t) => t.completed), [backlogForToday]);
+    // まずは数値完全一致（ローカル/UTCの双方）
+    if (plannedDates.includes(localMidnight) || plannedDates.includes(utcMidnight)) return true;
+
+    // フォーマット揺れ対策: 秒エポックや非0時タイムスタンプを年月日で比較
+    return plannedDates.some((rawTs) => {
+      const tsMs = rawTs < 1e12 ? rawTs * 1000 : rawTs; // 秒→ミリ秒 補正
+      const dt = new Date(tsMs);
+      return dt.getFullYear() === y && dt.getMonth() === m && dt.getDate() === d;
+    });
+  }
+
+  const tasksForToday = useMemo(() => {
+    // dateTickを参照して0時で再評価
+    void dateTick;
+    return tasks.filter((t) => {
+      if (t.archived === true) return false;
+      if (t.type === "backlog") return isBacklogPlannedToday(t.plannedDates);
+      return isTaskForToday(t);
+    });
+  }, [tasks, dateTick]);
+
+  const dailyForToday = useMemo(() => { void dateTick; return tasksForToday.filter((t) => t.type === "daily"); }, [tasksForToday, dateTick]);
+  const scheduledForToday = useMemo(() => { void dateTick; return tasksForToday.filter((t) => t.type === "scheduled"); }, [tasksForToday, dateTick]);
+  const backlogForToday = useMemo(() => { void dateTick; return tasksForToday.filter((t) => t.type === "backlog"); }, [tasksForToday, dateTick]);
+
+  const dailyPending = useMemo(() => { void dateTick; return dailyForToday.filter((t) => !isDailyDoneToday(t.dailyDoneDates)); }, [dailyForToday, dateTick]);
+  const dailyDone = useMemo(() => { void dateTick; return dailyForToday.filter((t) => isDailyDoneToday(t.dailyDoneDates)); }, [dailyForToday, dateTick]);
+  const scheduledPending = useMemo(() => { void dateTick; return scheduledForToday.filter((t) => !t.completed); }, [scheduledForToday, dateTick]);
+  const scheduledDone = useMemo(() => { void dateTick; return scheduledForToday.filter((t) => t.completed); }, [scheduledForToday, dateTick]);
+  const backlogPending = useMemo(() => { void dateTick; return backlogForToday.filter((t) => !t.completed); }, [backlogForToday, dateTick]);
+  const backlogDone = useMemo(() => { void dateTick; return backlogForToday.filter((t) => t.completed); }, [backlogForToday, dateTick]);
 
   const incompleteToday = useMemo(
     () => [...(filterDaily ? dailyPending : []), ...(filterScheduled ? scheduledPending : []), ...(filterBacklog ? backlogPending : [])],

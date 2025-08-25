@@ -1,9 +1,12 @@
 "use client";
 import { useAppStore } from "@/lib/store";
 import { Task } from "@/lib/types";
-import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, ListTodo, Archive } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useConfirm } from "@/components/Providers";
+import { CalendarDays, ListTodo, Archive, Loader2, X } from "lucide-react";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
+import WysiwygEditor from "@/components/WysiwygEditor";
+import Link from "next/link";
 
 // 文字列を20字で省略するユーティリティ関数
 function truncateText(text: string, maxLength: number = 20): string {
@@ -15,9 +18,9 @@ function TypeBadge({ type, label }: { type: "daily" | "scheduled" | "backlog"; l
   const map = {
     // サイドバーと同一のアイコンに統一
     daily: { label: "毎日", classes: "bg-blue-500/10 text-blue-600 border-blue-500/30", Icon: ListTodo },
-    scheduled: { label: "特定日", classes: "bg-amber-500/10 text-amber-700 border-amber-500/30", Icon: CalendarDays },
-    // 視認性向上＆重複回避のためバックログはArchiveアイコン
-    backlog: { label: "バックログ", classes: "bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-500/30", Icon: Archive },
+    scheduled: { label: "特定曜日", classes: "bg-amber-500/10 text-amber-700 border-amber-500/30", Icon: CalendarDays },
+    // 視認性向上＆重複回避のため積み上げ候補はArchiveアイコン
+    backlog: { label: "積み上げ候補", classes: "bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-500/30", Icon: Archive },
   } as const;
   const info = map[type];
   const Icon = info.Icon;
@@ -35,7 +38,10 @@ function TaskRow({ task, onEdit }: { task: Task; onEdit: (task: Task) => void })
   
   const milestones = useAppStore((s) => s.milestones);
   const milestone = task.milestoneId ? milestones.find((m) => m.id === task.milestoneId) : undefined;
-  const weekdayLabel = ["日","月","火","水","木","金","土"][new Date().getDay()];
+  const dowShort = ["日","月","火","水","木","金","土"] as const;
+  const scheduledDaysLabel = task.type === "scheduled" && (task.scheduled?.daysOfWeek?.length ?? 0) > 0
+    ? task.scheduled!.daysOfWeek.map((d) => dowShort[d]).join("・")
+    : undefined;
   const isDailyDoneToday = (() => {
     if (task.type !== "daily") return false;
     const d = new Date();
@@ -107,10 +113,10 @@ function TaskRow({ task, onEdit }: { task: Task; onEdit: (task: Task) => void })
             task.type === "daily"
               ? "毎日積み上げ"
               : task.type === "scheduled"
-              ? `特定日(${weekdayLabel})`
+              ? (scheduledDaysLabel ? `特定曜日（${scheduledDaysLabel}）` : "特定曜日")
               : isPlannedToday
               ? "今日やる"
-              : "バックログ"
+              : "積み上げ候補"
           }
         />
         {task.estimatedPomodoros != null && (
@@ -139,6 +145,12 @@ export default function TaskList({
   showScheduledColumn = false,
   showTypeColumn = true,
   showMilestoneColumn = false,
+  // 拡張: 共通の列ソート/フィルター
+  sortKey,
+  sortAsc,
+  filterType = "all",
+  filterStatus = "all",
+  enableSelection = false,
 }: {
   title: string;
   tasks: Task[];
@@ -150,6 +162,11 @@ export default function TaskList({
   showScheduledColumn?: boolean;
   showTypeColumn?: boolean;
   showMilestoneColumn?: boolean;
+  sortKey?: "title" | "createdAt" | "planned" | "scheduled" | "type" | "milestone";
+  sortAsc?: boolean;
+  filterType?: "all" | "daily" | "backlog" | "scheduled";
+  filterStatus?: "all" | "completed" | "incomplete";
+  enableSelection?: boolean;
 }) {
   const updateTask = useAppStore((s) => s.updateTask);
   const removeTask = useAppStore((s) => s.removeTask);
@@ -174,6 +191,14 @@ export default function TaskList({
     onResult: (txt) => setFormTitle((prev) => (prev ? prev + " " + txt : txt)),
     lang: "ja-JP",
   });
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+  const saveTimerRef = useRef<number | null>(null);
+  const scheduleSave = (delay: number = 500) => {
+    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = window.setTimeout(() => saveEdit(true), delay);
+  };
+  const [showDescOverlay, setShowDescOverlay] = useState(false);
 
   useEffect(() => {
     // 音声認識セットアップは hook に委譲
@@ -208,8 +233,9 @@ export default function TaskList({
     setEditingId(null);
   }
 
-  function saveEdit() {
+  function saveEdit(keepOpen?: boolean) {
     if (!editingId) return;
+    setIsSaving(true);
     // 入力中の日付がボタン未押下でも保存時に取り込む
     // 単一の実行日として保存（上書き）
     let selectedPlanned: number | null = formPlannedDate;
@@ -245,29 +271,136 @@ export default function TaskList({
     }
 
     updateTask(editingId, baseUpdate);
-    closeEdit();
+    setLastSavedAt(Date.now());
+    setTimeout(() => setIsSaving(false), 150);
+    if (!keepOpen) closeEdit();
+  }
+
+  function isDailyDoneToday(dates?: number[]): boolean {
+    const d = new Date();
+    d.setUTCHours(0, 0, 0, 0);
+    const today = d.getTime();
+    const utc = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+    return Boolean(dates && (dates.includes(today) || dates.includes(utc)));
+  }
+
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const onSelectAll = (checked: boolean) => {
+    if (!enableSelection) return;
+    setSelected(Object.fromEntries(filteredSorted.map((t) => [t.id, checked])));
+  };
+  const onSelectOne = (id: string, checked: boolean) => setSelected((s) => ({ ...s, [id]: checked }));
+  const filteredSorted = useMemo(() => {
+    let list = tasks.slice();
+    if (filterType !== "all") list = list.filter((t) => t.type === filterType);
+    if (filterStatus !== "all") {
+      list = list.filter((t) => {
+        if (t.type === "daily") {
+          const done = isDailyDoneToday(t.dailyDoneDates);
+          return filterStatus === "completed" ? done : !done;
+        }
+        return filterStatus === "completed" ? t.completed : !t.completed;
+      });
+    }
+    if (sortKey) {
+      list.sort((a, b) => {
+        const dir = sortAsc ? 1 : -1;
+        if (sortKey === "title") {
+          return dir * (a.title ?? "").localeCompare(b.title ?? "");
+        }
+        if (sortKey === "createdAt") {
+          return dir * ((a.createdAt ?? 0) - (b.createdAt ?? 0));
+        }
+        if (sortKey === "planned") {
+          const pa = (a.plannedDates ?? []).slice().sort((x, y) => x - y)[0] ?? Number.MAX_SAFE_INTEGER;
+          const pb = (b.plannedDates ?? []).slice().sort((x, y) => x - y)[0] ?? Number.MAX_SAFE_INTEGER;
+          return dir * (pa - pb);
+        }
+        if (sortKey === "scheduled") {
+          const da = (a.scheduled?.daysOfWeek ?? []).join(",");
+          const db = (b.scheduled?.daysOfWeek ?? []).join(",");
+          return dir * da.localeCompare(db);
+        }
+        if (sortKey === "type") {
+          const order: Record<string, number> = { daily: 0, scheduled: 1, backlog: 2 };
+          return dir * ((order[a.type] ?? 9) - (order[b.type] ?? 9));
+        }
+        if (sortKey === "milestone") {
+          const ma = milestones.find((m) => m.id === a.milestoneId)?.title ?? "";
+          const mb = milestones.find((m) => m.id === b.milestoneId)?.title ?? "";
+          return dir * ma.localeCompare(mb);
+        }
+        return 0;
+      });
+    }
+    return list;
+  }, [tasks, filterType, filterStatus, sortKey, sortAsc, milestones]);
+
+  // selection state derived helpers
+  const allChecked = enableSelection && filteredSorted.length > 0 && filteredSorted.every((t) => selected[t.id]);
+
+  // 一括操作
+  const completeTasks = useAppStore((s) => s.completeTasks);
+  const resetDailyDoneForToday = useAppStore((s) => s.resetDailyDoneForToday);
+  const archiveDailyTasks = useAppStore((s) => s.archiveDailyTasks);
+  const confirm = useConfirm();
+
+  async function bulkComplete() {
+    if (Object.values(selected).every((v) => !v)) return;
+    const ids = filteredSorted.filter((t) => selected[t.id]).map((t) => t.id);
+    completeTasks(ids);
+    setSelected({});
+  }
+  async function bulkMarkIncomplete() {
+    if (Object.values(selected).every((v) => !v)) return;
+    const dailies = filteredSorted.filter((t) => selected[t.id] && t.type === "daily").map((t) => t.id);
+    if (dailies.length) resetDailyDoneForToday(dailies);
+    const others = filteredSorted.filter((t) => selected[t.id] && t.type !== "daily");
+    for (const t of others) updateTask(t.id, { completed: false });
+    setSelected({});
+  }
+  async function bulkArchiveDaily() {
+    const dailies = filteredSorted.filter((t) => selected[t.id] && t.type === "daily").map((t) => t.id);
+    if (!dailies.length) return;
+    const ok = await confirm(`${dailies.length}件の毎日タスクをアーカイブしますか？`, { confirmText: 'アーカイブ' });
+    if (!ok) return;
+    archiveDailyTasks(dailies);
+    setSelected({});
+  }
+  async function bulkDelete() {
+    const ids = filteredSorted.filter((t) => selected[t.id]).map((t) => t.id);
+    if (!ids.length) return;
+    const ok = await confirm(`${ids.length}件を削除しますか？この操作は取り消せません。`, { tone: 'danger', confirmText: '削除' });
+    if (!ok) return;
+    for (const id of ids) removeTask(id);
+    setSelected({});
   }
 
   const tableView = (
     <div className="overflow-x-auto">
-      <table className="min-w-[720px] w-full border-separate border-spacing-0">
+      <table className="table-fixed w-full border-separate border-spacing-0">
         <thead>
           <tr className="text-[12px] font-medium opacity-70">
+            {enableSelection && (
+              <th className="w-[36px] text-left px-2 py-1">
+                <input type="checkbox" checked={allChecked} onChange={(e)=>onSelectAll(e.target.checked)} />
+              </th>
+            )}
             <th className="text-left px-2 py-1">タイトル</th>
-            {showCreatedColumn && <th className="text-left px-2 py-1">日付</th>}
-            {showPlannedColumn && <th className="text-left px-2 py-1">実行日</th>}
-            {showScheduledColumn && <th className="text-left px-2 py-1">設定（曜日/期間）</th>}
-            {showTypeColumn && <th className="text-left px-2 py-1">種別</th>}
-            {showMilestoneColumn && <th className="text-left px-2 py-1">マイルストーン</th>}
+            {showCreatedColumn && <th className="text-left px-2 py-1 w-[100px]">日付</th>}
+            {showPlannedColumn && <th className="text-left px-2 py-1 w-[120px]">実行日</th>}
+            {showScheduledColumn && <th className="text-left px-2 py-1 w-[160px]">設定（曜日/期間）</th>}
+            {showTypeColumn && <th className="text-left px-2 py-1 w-[128px]">種別</th>}
+            {showMilestoneColumn && <th className="text-left px-2 py-1 w-[160px]">マイルストーン</th>}
           </tr>
         </thead>
         <tbody className="align-top">
-          {tasks.length === 0 ? (
+          {(filteredSorted.length === 0) ? (
             <tr>
-              <td className="px-2 py-2 text-sm opacity-60" colSpan={1 + Number(showCreatedColumn) + Number(showPlannedColumn) + Number(showScheduledColumn) + Number(showTypeColumn) + Number(showMilestoneColumn)}>タスクなし</td>
+              <td className="px-2 py-2 text-sm opacity-60" colSpan={(enableSelection?1:0) + 1 + Number(showCreatedColumn) + Number(showPlannedColumn) + Number(showScheduledColumn) + Number(showTypeColumn) + Number(showMilestoneColumn)}>タスクなし</td>
             </tr>
           ) : (
-            tasks.map((t) => {
+            filteredSorted.map((t) => {
               const created = new Date(t.createdAt);
               const planned = t.type === "backlog" ? (t.plannedDates ?? []).slice().sort((a,b)=>a-b) : [];
               const milestone = milestones.find((m) => m.id === t.milestoneId);
@@ -289,8 +422,13 @@ export default function TaskList({
                     t.completed ? "bg-emerald-50 dark:bg-emerald-900/20" : ""
                   }`}
                 >
-                  <td className="px-2 py-2">
-                    <div className="flex items-center gap-2 min-w-0">
+                  {enableSelection && (
+                    <td className="px-2 py-1">
+                      <input type="checkbox" checked={!!selected[t.id]} onChange={(e)=>onSelectOne(t.id, e.target.checked)} />
+                    </td>
+                  )}
+                  <td className="px-2 py-1 overflow-hidden">
+                    <div className="flex items-center gap-2 min-w-0 overflow-hidden">
                       {isDaily ? (
                         <button
                           type="button"
@@ -327,7 +465,7 @@ export default function TaskList({
                         </button>
                       )}
                       <button 
-                        className={`text-left truncate flex-1 ${t.completed ? "line-through opacity-60" : ""}`} 
+                        className={`text-left truncate flex-1 max-w-full ${t.completed ? "line-through opacity-60" : ""}`} 
                         onClick={() => openEdit(t)}
                         title={t.title}
                       >
@@ -336,10 +474,10 @@ export default function TaskList({
                     </div>
                   </td>
                   {showCreatedColumn && (
-                    <td className="px-2 py-2 text-xs opacity-80 whitespace-nowrap">{created.toLocaleDateString()}</td>
+                    <td className="px-2 py-1 w-[100px] text-xs opacity-80 whitespace-nowrap overflow-hidden">{created.toLocaleDateString()}</td>
                   )}
                   {showPlannedColumn && (
-                    <td className="px-2 py-2">
+                    <td className="px-2 py-1 w-[120px] overflow-hidden">
                       <div className="flex items-center gap-1 flex-wrap text-[10px] opacity-80">
                         {planned.length > 0 ? (
                           <span className="border rounded px-1 py-0.5">{new Date(planned[0]).toLocaleDateString()}</span>
@@ -350,7 +488,7 @@ export default function TaskList({
                     </td>
                   )}
                   {showScheduledColumn && (
-                    <td className="px-2 py-2">
+                    <td className="px-2 py-1 w-[160px] overflow-hidden">
                       <div className="flex items-center gap-1 flex-wrap text-[10px] opacity-80">
                         {scheduledDays.length > 0 && (
                           <span className="border rounded px-1 py-0.5">{scheduledDays.map((d) => dow[d]).join("・")}</span>
@@ -368,15 +506,21 @@ export default function TaskList({
                     </td>
                   )}
                   {showTypeColumn && (
-                    <td className="px-2 py-2">
+                    <td className="px-2 py-1 w-[128px] whitespace-nowrap">
                       <TypeBadge
                         type={t.type}
-                        label={t.type === "daily" ? "毎日積み上げ" : t.type === "scheduled" ? "特定日" : "バックログ"}
+                        label={
+                          t.type === "daily"
+                            ? "毎日"
+                            : t.type === "scheduled"
+                            ? "特定曜日"
+                            : "積み上げ候補"
+                        }
                       />
                     </td>
                   )}
                   {showMilestoneColumn && (
-                    <td className="px-2 py-2 text-xs opacity-80 truncate" title={milestone?.title}>
+                    <td className="px-2 py-1 w-[160px] text-xs opacity-80 truncate" title={milestone?.title}>
                       {milestone ? truncateText(milestone.title, 20) : <span className="opacity-40">-</span>}
                     </td>
                   )}
@@ -391,7 +535,18 @@ export default function TaskList({
 
   return (
     <div className="border border-black/10 dark:border-white/10 rounded-md p-3">
-      <div className="text-xs uppercase tracking-wide opacity-70 mb-2">{title}</div>
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-xs uppercase tracking-wide opacity-70">{title}</div>
+        {enableSelection && (
+          <div className="flex items-center gap-2 text-xs">
+            <span className="opacity-70">{Object.values(selected).filter(Boolean).length} 件選択中</span>
+            <button className="px-2 py-1 rounded border disabled:opacity-50" onClick={bulkComplete} disabled={Object.values(selected).every((v)=>!v)}>完了</button>
+            <button className="px-2 py-1 rounded border disabled:opacity-50" onClick={bulkMarkIncomplete} disabled={Object.values(selected).every((v)=>!v)}>未完了に戻す</button>
+            <button className="px-2 py-1 rounded border disabled:opacity-50" onClick={bulkArchiveDaily} disabled={Object.values(selected).every((v)=>!v)}>アーカイブ（毎日）</button>
+            <button className="px-2 py-1 rounded border text-red-600 border-red-600 disabled:opacity-50" onClick={bulkDelete} disabled={Object.values(selected).every((v)=>!v)}>削除</button>
+          </div>
+        )}
+      </div>
       {tableMode ? (
         tableView
       ) : (
@@ -404,7 +559,7 @@ export default function TaskList({
                 <TaskRow task={t} onEdit={openEdit} />
                 {showType && (t.type === "daily" || t.type === "scheduled") && (
                   <span className="text-[10px] opacity-70 border rounded px-1 py-0.5 whitespace-nowrap">
-                    {t.type === "daily" ? "毎日" : "特定日"}
+                    {t.type === "daily" ? "毎日" : "特定曜日"}
                   </span>
                 )}
                 {showPlannedDates && t.type === "backlog" && (t.plannedDates?.length ?? 0) > 0 && (
@@ -424,14 +579,36 @@ export default function TaskList({
         <div
           className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
           onClick={(e) => {
-            if (e.target === e.currentTarget) closeEdit();
+            if (e.target === e.currentTarget) {
+              // バックドロップクリック時もまず保存してから閉じる
+              saveEdit(true);
+              closeEdit();
+            }
           }}
         >
           <div className="w-full max-w-4xl bg-background text-foreground rounded border border-black/10 dark:border-white/10 p-8 flex flex-col gap-6"
                onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <div className="text-xl font-semibold">タスク詳細</div>
-              <button className="text-sm underline opacity-80" onClick={closeEdit}>閉じる</button>
+              <button
+                type="button"
+                className="p-2 rounded hover:bg-black/5 dark:hover:bg-white/10"
+                onClick={closeEdit}
+                aria-label="閉じる"
+                title="閉じる"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3 text-xs min-h-[20px]">
+              {isSaving ? (
+                <span className="inline-flex items-center gap-1 opacity-80">
+                  <Loader2 size={14} className="animate-spin" /> 更新中です...
+                </span>
+              ) : lastSavedAt ? (
+                <span className="opacity-70">更新完了: {new Date(lastSavedAt).toLocaleTimeString()}</span>
+              ) : null}
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -443,6 +620,7 @@ export default function TaskList({
                       className={`flex-1 border rounded-lg px-4 py-3 bg-transparent border-black/10 dark:border-white/10 ${listening ? "ring-2 ring-red-500/60" : ""}`}
                       value={formTitle}
                       onChange={(e) => setFormTitle(e.target.value)}
+                      onBlur={() => saveEdit(true)}
                     />
                     <button
                       type="button"
@@ -461,11 +639,21 @@ export default function TaskList({
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium block">説明</label>
-                  <textarea
-                    className="border rounded-lg px-4 py-3 bg-transparent border-black/10 dark:border-white/10 min-h-[140px] w-full"
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font平均">説明</label>
+                    <button
+                      type="button"
+                      className="text-xs px-2 py-1 border rounded"
+                      onClick={() => setShowDescOverlay(true)}
+                    >
+                      説明欄を拡大
+                    </button>
+                  </div>
+                  <WysiwygEditor
                     value={formDescription}
-                    onChange={(e) => setFormDescription(e.target.value)}
+                    onChange={(html) => { setFormDescription(html); scheduleSave(); }}
+                    onBlur={() => saveEdit(true)}
+                    heightClass="h-[50vh]"
                   />
                 </div>
               </div>
@@ -477,9 +665,10 @@ export default function TaskList({
                     className="w-full border rounded-lg px-3 py-2 bg-transparent border-black/10 dark:border-white/10"
                     value={formType}
                     onChange={(e) => setFormType(e.target.value as "daily" | "scheduled" | "backlog")}
+                    onBlur={() => saveEdit(true)}
                   >
                     <option value="daily">毎日積み上げ</option>
-                    <option value="scheduled">特定の日・曜日</option>
+                    <option value="scheduled">特定曜日</option>
                     <option value="backlog">バックログ</option>
                   </select>
                 </div>
@@ -493,6 +682,7 @@ export default function TaskList({
                       className="w-full border rounded-lg px-3 py-2 bg-transparent border-black/10 dark:border-white/10"
                       value={Number.isFinite(formEst) ? formEst : 0}
                       onChange={(e) => setFormEst(Number(e.target.value))}
+                      onBlur={() => saveEdit(true)}
                     />
                   </div>
                   <div className="space-y-2">
@@ -501,6 +691,7 @@ export default function TaskList({
                       className="w-full border rounded-lg px-3 py-2 bg-transparent border-black/10 dark:border-white/10"
                       value={formMilestoneId}
                       onChange={(e) => setFormMilestoneId(e.target.value)}
+                      onBlur={() => saveEdit(true)}
                     >
                       <option value="">未設定</option>
                       {milestoneOptions.map((m) => (
@@ -547,6 +738,7 @@ export default function TaskList({
                         className="border border-black/10 dark:border-white/10 rounded-lg px-3 py-2 bg-transparent"
                         value={formPlannedDateInput}
                         onChange={(e) => setFormPlannedDateInput(e.target.value)}
+                        onBlur={() => saveEdit(true)}
                         title="保存ボタンでこの日付が実行日に設定されます"
                       />
                       <button
@@ -566,18 +758,65 @@ export default function TaskList({
             <div className="flex justify-between items-center pt-6 border-t border-black/10 dark:border-white/10">
               <button 
                 className="px-6 py-3 rounded-lg border text-sm text-red-600 border-red-600 hover:bg-red-600 hover:text-white transition-colors"
-                onClick={() => {
-                  if (confirm('このタスクを削除しますか？')) {
-                    removeTask(editingTask.id);
-                    closeEdit();
+                onClick={async () => {
+                  if (!editingTask) return;
+                  if (editingTask.type === "daily") {
+                    const ok = await confirm('この毎日タスクをアーカイブしますか？（削除はしません）', { tone: 'default', confirmText: 'アーカイブ' });
+                    if (ok) { useAppStore.getState().archiveDailyTask(editingTask.id); closeEdit(); }
+                  } else {
+                    const ok = await confirm('このタスクを削除しますか？', { tone: 'danger', confirmText: '削除' });
+                    if (ok) { removeTask(editingTask.id); closeEdit(); }
                   }
                 }}
               >
-                削除
+                {editingTask.type === "daily" ? "アーカイブ" : "削除"}
               </button>
               <div className="flex gap-3">
                 <button className="px-6 py-3 rounded-lg border text-sm" onClick={closeEdit}>キャンセル</button>
-                <button className="px-6 py-3 rounded-lg bg-foreground text-background text-sm" onClick={saveEdit}>保存</button>
+                <button className="px-6 py-3 rounded-lg bg-foreground text-background text-sm" onClick={() => saveEdit()}>保存</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDescOverlay && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/60"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              saveEdit(true);
+              setShowDescOverlay(false);
+            }
+          }}
+        >
+          <div className="absolute inset-0 bg-background text-foreground flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-end px-4 py-3 border-b border-black/10 dark:border-white/10">
+              <div className="flex items-center gap-3 text-xs">
+                {isSaving ? (
+                  <span className="opacity-80">更新中です...</span>
+                ) : lastSavedAt ? (
+                  <span className="opacity-70">更新完了: {new Date(lastSavedAt).toLocaleTimeString()}</span>
+                ) : null}
+                <button
+                  type="button"
+                  className="p-2 rounded border hover:bg-black/5 dark:hover:bg-white/10"
+                  onClick={() => { saveEdit(true); setShowDescOverlay(false); }}
+                  aria-label="閉じる"
+                  title="閉じる"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 min-h-0 p-6">
+              <div className="h-full min-h-0 w-full">
+                <WysiwygEditor
+                  value={formDescription}
+                  onChange={(html) => { setFormDescription(html); scheduleSave(400); }}
+                  onBlur={() => saveEdit(true)}
+                  heightClass="h-full"
+                />
               </div>
             </div>
           </div>

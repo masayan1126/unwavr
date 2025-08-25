@@ -2,15 +2,14 @@ import { test, expect } from '@playwright/test';
 
 const routes = [
   { path: '/', title: 'ダッシュボード' },
-  { path: '/backlog', title: 'バックログ' },
+  { path: '/backlog', title: '積み上げ候補' },
   { path: '/launcher', title: 'ランチャー' },
   { path: '/milestones', title: 'マイルストーン' },
   { path: '/pomodoro', title: 'ポモドーロ' },
   { path: '/calendar', title: 'カレンダー' },
   { path: '/tasks', title: 'タスク' },
-  { path: '/tasks/new', title: 'タスク追加' },
   { path: '/tasks/daily', title: '毎日積み上げ' },
-  { path: '/tasks/scheduled', title: '特定の日・曜日' },
+  { path: '/tasks/scheduled', title: '特定曜日' },
   { path: '/tasks/incomplete', title: '未完了' },
   { path: '/tasks/import-export', title: 'インポート/エクスポート' },
   { path: '/privacy', title: 'プライバシー' },
