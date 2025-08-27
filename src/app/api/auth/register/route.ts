@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 import bcrypt from "bcryptjs";
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseAdmin, supabaseUrl } from "@/lib/supabaseClient";
+import { randomUUID } from "crypto";
 
 const RegisterSchema = z.object({
   email: z.string().email().min(5).max(200),
@@ -10,24 +11,36 @@ const RegisterSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    if (!supabase) return NextResponse.json({ error: "not configured" }, { status: 400 });
+    if (!supabaseAdmin) {
+      const missing: string[] = [];
+      if (!supabaseUrl) missing.push("SUPABASE_URL");
+      if (!process.env.SUPABASE_SERVICE_ROLE_KEY) missing.push("SUPABASE_SERVICE_ROLE_KEY");
+      return NextResponse.json({ error: "not configured", missing }, { status: 400 });
+    }
     const body = await req.json();
     const { email, password } = RegisterSchema.parse(body);
     const lower = email.toLowerCase();
 
     // 既存確認
-    const { data: exists } = await supabase.from("users").select("id").eq("email", lower).maybeSingle();
+    const { data: exists } = await supabaseAdmin.from("users").select("id").eq("email", lower).maybeSingle();
     if (exists) return NextResponse.json({ error: "already_exists" }, { status: 409 });
 
     const password_hash = await bcrypt.hash(password, 10);
-    // 既存メールと衝突しないように、IDは安定だがメールとは別の値にする
-    const id = `cred_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
+    // DB側でデフォルトが無い構成のため、ここでUUIDを生成
+    const id = randomUUID();
     const payload = { id, email: lower, password_hash, updated_at: new Date().toISOString(), provider: "credentials" };
-    const { error } = await supabase.from("users").insert(payload);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const { error } = await supabaseAdmin.from("users").insert(payload);
+    if (error) {
+      const code = typeof (error as { code?: string }).code === "string" ? (error as { code: string }).code : undefined;
+      return NextResponse.json({ error: "db_error", message: error.message, code }, { status: 500 });
+    }
     return NextResponse.json({ ok: true });
-  } catch (_e) {
-    return NextResponse.json({ error: "invalid_request" }, { status: 400 });
+  } catch (e) {
+    if (e instanceof ZodError) {
+      return NextResponse.json({ error: "validation_error", issues: e.issues }, { status: 422 });
+    }
+    const message = e instanceof Error ? e.message : "unknown_error";
+    return NextResponse.json({ error: "invalid_request", message }, { status: 400 });
   }
 }
 

@@ -7,6 +7,7 @@ import { useAppStore } from "@/lib/store";
 import { TaskType } from "@/lib/types";
 import SectionLoader from "@/components/SectionLoader";
 import TaskCreateDialog from "@/components/TaskCreateDialog";
+import { isOverdue } from "@/lib/taskUtils";
 
 function TasksPageInner() {
   const tasks = useAppStore((s) => s.tasks);
@@ -54,10 +55,11 @@ function TasksPageInner() {
     const dailyFlag = searchParams.get("daily") === "1";
     const backlogTodayFlag = searchParams.get("backlogToday") === "1";
     const scheduledTodayFlag = searchParams.get("scheduledToday") === "1";
+    const overdueFlag = searchParams.get("overdue") === "1";
     const onlyIncomplete = searchParams.get("onlyIncomplete") === "1";
 
     let filtered = tasks.filter((task) => {
-      if (dailyFlag || backlogTodayFlag || scheduledTodayFlag) {
+      if (dailyFlag || backlogTodayFlag || scheduledTodayFlag || overdueFlag) {
         if (onlyIncomplete) {
           if (task.type === "daily") {
             if (isDailyDoneToday(task.dailyDoneDates)) return false;
@@ -65,6 +67,9 @@ function TasksPageInner() {
             if (task.completed) return false;
           }
         }
+        const now = new Date();
+        const todayLocalMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        if (overdueFlag && isOverdue(task, todayLocalMidnight)) return true;
         if (dailyFlag && task.type === "daily") return true;
         if (backlogTodayFlag && task.type === "backlog" && isBacklogPlannedToday(task.plannedDates)) return true;
         if (scheduledTodayFlag && task.type === "scheduled" && isScheduledForToday(task.scheduled?.daysOfWeek, task.scheduled?.dateRanges)) return true;

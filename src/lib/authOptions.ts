@@ -2,7 +2,7 @@ import type { NextAuthOptions, Session } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import type { Account, Profile, User } from "next-auth";
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseAdmin } from "@/lib/supabaseClient";
 import bcrypt from "bcryptjs";
 
 // See: https://authjs.dev/reference/nextjs
@@ -66,8 +66,8 @@ export const authOptions: NextAuthOptions = {
           const email = credentials?.email?.toLowerCase().trim();
           const password = credentials?.password ?? "";
           if (!email || !password) return null;
-          if (!supabase) return null;
-          const { data, error } = await supabase
+          if (!supabaseAdmin) return null;
+          const { data, error } = await supabaseAdmin
             .from("users")
             .select("id, email, name, image, password_hash")
             .eq("email", email)

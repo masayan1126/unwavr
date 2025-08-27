@@ -43,7 +43,29 @@ export default function RegisterPage() {
         return;
       }
       if (!res.ok) throw new Error(data?.error ?? "register failed");
-      setToast({ message: "登録しました。ログインしてください。", type: "success" });
+      // 登録成功 → 自動サインイン
+      // 登録直後はDBの整合にタイムラグが出ることがあるため、少しリトライ
+      async function trySignIn(): Promise<boolean> {
+        const res = await signIn("credentials", { email, password, redirect: false });
+        if (res?.ok) return true;
+        return false;
+      }
+
+      let signedIn = await trySignIn();
+      if (!signedIn) {
+        await new Promise((r) => setTimeout(r, 300));
+        signedIn = await trySignIn();
+      }
+      if (!signedIn) {
+        await new Promise((r) => setTimeout(r, 300));
+        signedIn = await trySignIn();
+      }
+
+      if (signedIn) {
+        router.replace("/");
+        return;
+      }
+      setToast({ message: "登録しました。続けてログインしてください。", type: "success" });
     } catch {
       setToast({ message: "登録に失敗しました", type: "error" });
     } finally {

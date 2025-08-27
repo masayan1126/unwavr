@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { isTaskForToday } from "@/lib/types";
+import { isOverdue } from "@/lib/taskUtils";
 
 function isDailyDoneToday(dailyDoneDates?: number[]) {
   const now = new Date();
@@ -34,22 +35,13 @@ export function useTodayTasks() {
 
   function isBacklogPlannedToday(plannedDates?: number[]): boolean {
     if (!plannedDates || plannedDates.length === 0) return false;
+    // ローカル日付ベースで「今日の範囲 [00:00, 24:00)」に入っていれば今日扱い
     const now = new Date();
-    const y = now.getFullYear();
-    const m = now.getMonth();
-    const d = now.getDate();
-
-    const localMidnight = new Date(y, m, d).getTime();
-    const utcMidnight = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-
-    // まずは数値完全一致（ローカル/UTCの双方）
-    if (plannedDates.includes(localMidnight) || plannedDates.includes(utcMidnight)) return true;
-
-    // フォーマット揺れ対策: 秒エポックや非0時タイムスタンプを年月日で比較
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const end = start + 24 * 60 * 60 * 1000; // 24:00 の瞬間は含めない
     return plannedDates.some((rawTs) => {
-      const tsMs = rawTs < 1e12 ? rawTs * 1000 : rawTs; // 秒→ミリ秒 補正
-      const dt = new Date(tsMs);
-      return dt.getFullYear() === y && dt.getMonth() === m && dt.getDate() === d;
+      const tsMs = rawTs < 1e12 ? rawTs * 1000 : rawTs;
+      return tsMs >= start && tsMs < end;
     });
   }
 
@@ -74,10 +66,17 @@ export function useTodayTasks() {
   const backlogPending = useMemo(() => { void dateTick; return backlogForToday.filter((t) => !t.completed); }, [backlogForToday, dateTick]);
   const backlogDone = useMemo(() => { void dateTick; return backlogForToday.filter((t) => t.completed); }, [backlogForToday, dateTick]);
 
-  const incompleteToday = useMemo(
-    () => [...(filterDaily ? dailyPending : []), ...(filterScheduled ? scheduledPending : []), ...(filterBacklog ? backlogPending : [])],
-    [dailyPending, scheduledPending, backlogPending, filterDaily, filterScheduled, filterBacklog]
-  );
+  const incompleteToday = useMemo(() => {
+    const now = new Date();
+    const todayLocalMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const combined = [
+      ...(filterDaily ? dailyPending : []),
+      ...(filterScheduled ? scheduledPending : []),
+      ...(filterBacklog ? backlogPending : []),
+    ];
+    // 期限切れはダッシュボード未完了一覧から除外
+    return combined.filter((t) => !isOverdue(t, todayLocalMidnight));
+  }, [dailyPending, scheduledPending, backlogPending, filterDaily, filterScheduled, filterBacklog]);
   const dailyDoneFiltered = useMemo(() => (filterDaily ? dailyDone : []), [dailyDone, filterDaily]);
   const scheduledDoneFiltered = useMemo(() => (filterScheduled ? scheduledDone : []), [scheduledDone, filterScheduled]);
   const backlogDoneFiltered = useMemo(() => (filterBacklog ? backlogDone : []), [backlogDone, filterBacklog]);
