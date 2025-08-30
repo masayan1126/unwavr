@@ -31,7 +31,7 @@ jest.mock("@/lib/store", () => {
   };
 });
 
-describe("タスク説明のリッチテキスト描画", () => {
+describe("タスク詳細のリッチテキスト描画", () => {
   it("HTML見出しがレンダリングされる", () => {
     render(<TaskDetail taskId="t1" backHref="/" />);
     expect(screen.getByRole("heading", { name: "見出し" })).toBeInTheDocument();

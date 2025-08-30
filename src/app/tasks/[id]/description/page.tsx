@@ -56,7 +56,7 @@ export default function TaskDescriptionEditorPage({ params }: { params: Promise<
     <div className="min-h-screen flex flex-col">
       <div className="flex items-center justify-between px-4 py-3 border-b border-black/10 dark:border-white/10 bg-background sticky top-0">
         <div className="flex items-center gap-3">
-          <h1 className="text-sm font-medium">説明を編集: {task.title}</h1>
+          <h1 className="text-sm font-medium">詳細を編集: {task.title}</h1>
           <span className="text-xs opacity-70">ID: {task.id}</span>
         </div>
         <div className="flex items-center gap-3 text-xs">

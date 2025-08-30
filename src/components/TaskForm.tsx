@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
-import { Scheduled, TaskType } from "@/lib/types";
+import { Scheduled, TaskType, type Task } from "@/lib/types";
 import { useAppStore } from "@/lib/store";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mic } from "lucide-react";
 import WysiwygEditor from "@/components/WysiwygEditor";
 import { X } from "lucide-react";
 
@@ -17,7 +17,6 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
   const [title, setTitle] = useState("");
   const [type, setType] = useState<TaskType>("daily");
   const [desc, setDesc] = useState("");
-  const [estimated, setEstimated] = useState(0);
   const [scheduled, setScheduled] = useState<Scheduled | undefined>(undefined);
   const [rangeStart, setRangeStart] = useState<string>("");
   const [rangeEnd, setRangeEnd] = useState<string>("");
@@ -29,7 +28,7 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
   const [draftTaskId, setDraftTaskId] = useState<string | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
-  const [showDescOverlay, setShowDescOverlay] = useState(false);
+  
   const { toggle: toggleSpeech } = useSpeechRecognition({
     onResult: (txt) => setTitle((prev) => (prev ? prev + " " + txt : txt)),
     lang: "ja-JP",
@@ -42,46 +41,45 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
   const performSave = useCallback(() => {
     if (isSubmittingRef.current) return;
     const trimmed = title.trim();
-    if (!trimmed) return;
     isSubmittingRef.current = true;
     setIsSaving(true);
     try {
       if (!draftTaskId) {
+        // タイトル未入力でも下書きを作成
         const newId = addTask({
-          title: trimmed,
+          title: trimmed || "(無題)",
           description: desc || undefined,
           type,
           scheduled,
-          estimatedPomodoros: estimated || 0,
           milestoneId: milestoneId || undefined,
           dailyDoneDates: [],
           plannedDates: type === "backlog" ? plannedDates : [],
         });
         setDraftTaskId(newId);
       } else {
-        useAppStore.getState().updateTask(draftTaskId, {
-          title: trimmed,
+        const updatePayload: Partial<Task> = {
           description: desc || undefined,
           type,
           scheduled,
-          estimatedPomodoros: estimated || 0,
           milestoneId: milestoneId || undefined,
           plannedDates: type === "backlog" ? plannedDates : [],
-        });
+        };
+        if (trimmed) {
+          updatePayload.title = trimmed;
+        }
+        useAppStore.getState().updateTask(draftTaskId, updatePayload);
       }
       setLastSavedAt(Date.now());
     } finally {
-      // 次のイベントループで解除して多重発火を防止
       setTimeout(() => { isSubmittingRef.current = false; }, 0);
       setTimeout(() => setIsSaving(false), 150);
     }
-  }, [addTask, desc, estimated, milestoneId, plannedDates, scheduled, title, type, draftTaskId]);
+  }, [addTask, desc, milestoneId, plannedDates, scheduled, title, type, draftTaskId]);
 
   const resetForm = () => {
     setDraftTaskId(undefined);
     setTitle("");
     setDesc("");
-    setEstimated(0);
     setScheduled(undefined);
     setMilestoneId("");
     setPlannedDates([]);
@@ -124,9 +122,10 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
           />
           <button
             type="button"
-            className={`px-2 py-1 rounded border text-xs ${listening ? "bg-red-600 text-white border-red-600" : ""}`}
+            className={`inline-flex items-center justify-center px-3 py-1 rounded border text-xs shrink-0 whitespace-nowrap min-w-[84px] ${listening ? "bg-red-600 text-white border-red-600" : ""}`}
             onClick={() => { setListening((v)=>!v); toggleSpeech(); }}
           >
+            <Mic size={14} className="mr-1" />
             音声入力
           </button>
           {listening && (
@@ -152,7 +151,7 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
             <option value="scheduled">特定曜日だけ</option>
           </select>
         </div>
-        <div className="text-xs min-w-[180px] text-right">
+        <div className="text-xs text-right truncate max-w-[40%]">
           {isSaving ? (
             <span className="inline-flex items-center gap-1 opacity-80"><Loader2 size={14} className="animate-spin" /> 更新中です...</span>
           ) : lastSavedAt ? (
@@ -160,46 +159,54 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
           ) : null}
         </div>
       </div>
-      <div className="flex gap-2 items-center">
-        <label className="text-sm">マイルストーン</label>
-        <select
-          className="border border-black/10 dark:border-white/10 rounded px-2 py-1 bg-transparent"
-          value={milestoneId}
-          onChange={(e) => setMilestoneId(e.target.value)}
-          onBlur={performSave}
-        >
-          <option value="">未選択</option>
-          {milestones.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.title} ({m.currentUnits}/{m.targetUnits})
-            </option>
-          ))}
-        </select>
+      <div className="flex flex-wrap gap-4 items-center">
+        <div className="flex gap-2 items-center">
+          <label className="text-sm">タスクタイプ</label>
+          <select
+            className="border border-black/10 dark:border-white/10 rounded px-2 py-1 bg-transparent"
+            value={type}
+            onChange={(e) => {
+              const v = e.target.value as TaskType;
+              setType(v);
+              if (v === "scheduled") setScheduled({ daysOfWeek: [] });
+              else setScheduled(undefined);
+              if (v !== "backlog") setPlannedDates([]);
+            }}
+            onBlur={performSave}
+          >
+            <option value="daily">毎日</option>
+            <option value="backlog">不定期（積み上げ候補）</option>
+            <option value="scheduled">特定曜日だけ</option>
+          </select>
+        </div>
+        <div className="flex gap-2 items-center">
+          <label className="text-sm">マイルストーン</label>
+          <select
+            className="border border-black/10 dark:border-white/10 rounded px-2 py-1 bg-transparent"
+            value={milestoneId}
+            onChange={(e) => setMilestoneId(e.target.value)}
+            onBlur={performSave}
+          >
+            <option value="">未選択</option>
+            {milestones.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.title} ({m.currentUnits}/{m.targetUnits})
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <label className="text-sm">説明 (任意)</label>
-          <button
-            type="button"
-            className="text-xs px-2 py-1 border rounded"
-            onClick={() => setShowDescOverlay(true)}
-          >
-            説明欄を拡大
-          </button>
+          <label className="text-sm">詳細</label>
+          
         </div>
-        <WysiwygEditor value={desc} onChange={(html) => { setDesc(html); setTimeout(() => performSave(), 0); }} />
-      </div>
-      <div className="flex gap-2 items-center">
-        <label className="text-sm">見積(ポモ数)</label>
-        <input
-          type="number"
-          min={0}
-          className="w-24 border border-black/10 dark:border-white/10 rounded px-2 py-1 bg-transparent"
-          value={Number.isFinite(estimated) ? estimated : 0}
-          onChange={(e) => setEstimated(parseInt(e.target.value || "0", 10))}
-          onBlur={performSave}
+        <WysiwygEditor
+          value={desc}
+          onChange={(html) => { setDesc(html); setTimeout(() => performSave(), 0); }}
         />
       </div>
+      
       {type === "scheduled" && (
         <div className="flex flex-col gap-2">
           <div className="flex gap-1 flex-wrap">
@@ -354,48 +361,7 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
         <button type="submit" className="px-3 py-1 rounded bg-foreground text-background text-sm">追加</button>
       </div>
     </form>
-    {showDescOverlay && (
-      <div
-        className="fixed inset-0 z-50 bg-black/60"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            performSave();
-            setShowDescOverlay(false);
-          }
-        }}
-      >
-        <div className="absolute inset-0 bg-background text-foreground flex flex-col" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center justify-end px-4 py-3 border-b border-black/10 dark:border-white/10">
-            <div className="flex items-center gap-3 text-xs">
-              {isSaving ? (
-                <span className="opacity-80">更新中です...</span>
-              ) : lastSavedAt ? (
-                <span className="opacity-70">更新完了: {new Date(lastSavedAt).toLocaleTimeString()}</span>
-              ) : null}
-              <button
-                type="button"
-                className="p-2 rounded border hover:bg-black/5 dark:hover:bg-white/10"
-                onClick={() => { performSave(); setShowDescOverlay(false); }}
-                aria-label="閉じる"
-                title="閉じる"
-              >
-                <X size={16} />
-              </button>
-            </div>
-          </div>
-          <div className="flex-1 min-h-0 p-6">
-            <div className="h-full min-h-0 w-full">
-              <WysiwygEditor
-                value={desc}
-                onChange={(html) => { setDesc(html); setTimeout(() => performSave(), 0); }}
-                onBlur={() => performSave()}
-                heightClass="h-full"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    )}
+    
     </>
   );
 }

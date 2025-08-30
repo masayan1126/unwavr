@@ -3,7 +3,7 @@ import Link from "next/link";
 import TaskList from "@/components/TaskList";
 import { useTodayTasks } from "@/hooks/useTodayTasks";
 import WeatherWidget from "@/components/WeatherWidget";
-import { Plus, Target, Timer, Rocket, Upload, AlertTriangle } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import { useConfirm } from "@/components/Providers";
 import { useAppStore } from "@/lib/store";
 import SectionLoader from "@/components/SectionLoader";
@@ -18,7 +18,7 @@ export default function Home() {
   } = useTodayTasks();
   const hydrateFromDb = useAppStore((s) => s.hydrateFromDb);
   const hydrating = useAppStore((s) => s.hydrating);
-  const confirm = useConfirm();
+  useConfirm();
   return (
     <div className="min-h-screen p-6 sm:p-10 max-w-6xl mx-auto flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -26,6 +26,18 @@ export default function Home() {
         <div className="flex items-center gap-4">
           <span className="text-sm">{new Date().toLocaleDateString()}</span>
           <WeatherWidget variant="large" />
+          <button
+            className={`px-2 py-1 rounded border flex items-center gap-2 ${hydrating ? "opacity-70" : ""}`}
+            onClick={async () => {
+              await hydrateFromDb();
+            }}
+            disabled={hydrating}
+            aria-busy={hydrating}
+            title="データを再読み込み"
+          >
+            <RefreshCw size={16} className={hydrating ? "animate-spin" : ""} />
+            <span className="hidden sm:inline">再読み込み</span>
+          </button>
         </div>
       </div>
 
@@ -36,7 +48,6 @@ export default function Home() {
             <h2 className="text-sm font-medium">未完了 ({incompleteToday.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs">
               <Link href={{ pathname: "/tasks", query: { new: "1" } }} className="inline-flex items-center gap-2 px-3 py-1.5 rounded border text-sm"><Plus size={16} />追加</Link>
-              <button className={`px-2 py-1 rounded border bg-foreground text-background`} onClick={async () => { await hydrateFromDb(); }}>再読み込み</button>
             </div>
           </div>
           {hydrating ? (
@@ -53,9 +64,7 @@ export default function Home() {
         <section className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col min-h-[320px]">
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">積み上げ済み (毎日) ({dailyDoneFiltered.length})</h2>
-            <div className="ml-auto flex items-center gap-2 text-xs">
-              <button className={`px-2 py-1 rounded border bg-foreground text-background`} onClick={async () => { await hydrateFromDb(); }}>再読み込み</button>
-            </div>
+            <div className="ml-auto flex items-center gap-2 text-xs" />
           </div>
           {hydrating ? (
             <SectionLoader label="読み込み中..." lines={4} />
@@ -97,37 +106,6 @@ export default function Home() {
           </div>
         </section>
       </div>
-
-      {/* クイックアクション（最下段） */}
-      <section className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col min-h-[120px]">
-        <div className="text-sm font-medium">クイックアクション</div>
-        <div className="flex gap-2 flex-wrap mt-2">
-          <Link className="px-3 py-2 rounded border text-sm flex items-center gap-2" href="/tasks">
-            <Plus size={16} />
-            タスク管理
-          </Link>
-          <Link className="px-3 py-2 rounded border text-sm flex items-center gap-2" href="/milestones">
-            <Target size={16} />
-            マイルストーン
-          </Link>
-          <Link className="px-3 py-2 rounded border text-sm flex items-center gap-2" href="/pomodoro">
-            <Timer size={16} />
-            ポモドーロ
-          </Link>
-          <Link className="px-3 py-2 rounded border text-sm flex items-center gap-2" href="/launcher">
-            <Rocket size={16} />
-            ランチャー
-          </Link>
-          <Link className="px-3 py-2 rounded border text-sm flex items-center gap-2" href="/tasks/import-export">
-            <Upload size={16} />
-            インポート/エクスポート
-          </Link>
-          <Link className="px-3 py-2 rounded border text-sm flex items-center gap-2" href="/tasks/incomplete">
-            <AlertTriangle size={16} />
-            未完了タスク
-          </Link>
-        </div>
-      </section>
 
       {/* AddQiitaZenn は案内文削除のため一時的に非表示 */}
     </div>

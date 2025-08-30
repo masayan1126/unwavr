@@ -50,7 +50,10 @@ export default function Sidebar() {
     <aside className="hidden md:flex border-r border-black/10 dark:border-white/10 h-[100svh] sticky top-0" style={{ width: open ? width : 48 }}>
       <div className="flex flex-col p-4 gap-4 flex-1 overflow-hidden">
         <div className="flex items-center justify-between">
-          <div className="text-base md:text-lg font-semibold tracking-wide truncate" title="unwavr">{open ? "unwavr" : ""}</div>
+          <div className="flex items-center gap-2 min-w-0">
+            <img src="/unwavr-logo.svg" alt="unwavr logo" className="w-5 h-5 shrink-0" />
+            <div className="text-base md:text-lg font-semibold tracking-wide truncate" title="unwavr">{open ? "unwavr" : ""}</div>
+          </div>
           <button
             aria-label={open ? "サイドバーを閉じる" : "サイドバーを開く"}
             title={open ? "閉じる" : "開く"}

@@ -132,13 +132,13 @@ export const authOptions: NextAuthOptions = {
   events: {
     // 会員登録/ログイン時に users テーブルへUpsert
     async signIn({ user, account, profile }: { user: User; account?: Account | null; profile?: Profile | undefined }) {
-      if (!supabase) return;
+      if (!supabaseAdmin) return;
       const email = user.email ?? (typeof (profile as Record<string, unknown> | undefined)?.email === "string" ? (profile as Record<string, unknown>).email as string : undefined);
       if (!email) return;
       const lowerEmail = email.toLowerCase();
 
       // 既存ユーザーが同じメールで存在する場合は、そのidを尊重して上書き（重複emailの新規作成を避ける）
-      const existing = await supabase.from("users").select("id").eq("email", lowerEmail).maybeSingle();
+      const existing = await supabaseAdmin.from("users").select("id").eq("email", lowerEmail).maybeSingle();
       let idToUse: string | undefined = existing.data ? String(existing.data.id) : undefined;
       if (!idToUse) {
         const providerSubject = typeof (profile as Record<string, unknown> | undefined)?.sub === "string"
@@ -155,7 +155,7 @@ export const authOptions: NextAuthOptions = {
         provider_account_id: account?.providerAccountId ?? null,
         updated_at: new Date().toISOString(),
       };
-      await supabase.from("users").upsert(payload, { onConflict: "id" });
+      await supabaseAdmin.from("users").upsert(payload, { onConflict: "id" });
     },
   },
 };

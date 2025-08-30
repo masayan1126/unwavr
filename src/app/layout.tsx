@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     follow: true,
   },
   icons: {
-    icon: [{ url: "/favicon.ico" }],
+    icon: [{ url: "/unwavr-logo.svg" }],
     shortcut: [{ url: "/unwavr-logo.svg" }],
     apple: [{ url: "/unwavr-logo.svg" }],
   },

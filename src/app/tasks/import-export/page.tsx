@@ -182,7 +182,7 @@ export default function ImportExportPage() {
     };
     const idx = {
       title: headerIndex("title", "タイトル"),
-      description: headerIndex("description", "説明"),
+      description: headerIndex("description", "詳細"),
       type: headerIndex("type", "種別"),
       daysOfWeek: headerIndex("daysOfWeek", "曜日"),
       dateRanges: headerIndex("dateRanges", "期間"),
@@ -263,7 +263,7 @@ export default function ImportExportPage() {
 
       <div className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col gap-3">
         <div className="text-sm font-medium">インポート（CSV）</div>
-        <div className="text-xs opacity-70">ヘッダー行を含むCSVを選択してください。対応列（日本語/英語どちらでも可）: タイトル(title), 説明(description), 種別(type: daily/scheduled/backlog), 曜日(daysOfWeek: 1;3;5), 期間(dateRanges: 2025-01-01..2025-01-05;2025-05-01..2025-05-03), 見積ポモ(estimatedPomodoros)</div>
+        <div className="text-xs opacity-70">ヘッダー行を含むCSVを選択してください。対応列（日本語/英語どちらでも可）: タイトル(title), 詳細(description), 種別(type: daily/scheduled/backlog), 曜日(daysOfWeek: 1;3;5), 期間(dateRanges: 2025-01-01..2025-01-05;2025-05-01..2025-05-03), 見積ポモ(estimatedPomodoros)</div>
         <input
           type="file"
           accept=".csv,text/csv"

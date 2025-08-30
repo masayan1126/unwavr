@@ -3,7 +3,7 @@ import { useAppStore } from "@/lib/store";
 import { Task } from "@/lib/types";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useConfirm } from "@/components/Providers";
-import { CalendarDays, ListTodo, Archive, Loader2, X } from "lucide-react";
+import { CalendarDays, ListTodo, Archive, Loader2, X, Mic } from "lucide-react";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import WysiwygEditor from "@/components/WysiwygEditor";
 
@@ -585,7 +585,7 @@ export default function TaskList({
             }
           }}
         >
-          <div className="w-full max-w-4xl bg-background text-foreground rounded border border-black/10 dark:border-white/10 p-8 flex flex-col gap-6"
+          <div className="w-full max-w-4xl bg-background text-foreground rounded border border-black/10 dark:border-white/10 px-8 py-12 my-8 flex flex-col gap-6 max-h-[90vh] overflow-y-auto"
                onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <div className="text-xl font-semibold">タスク詳細</div>
@@ -610,8 +610,8 @@ export default function TaskList({
               ) : null}
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="space-y-6">
+            <div className="grid grid-cols-12 gap-8 items-start">
+              <div className="space-y-6 col-span-12 lg:col-span-8">
                 <div className="space-y-2">
                   <label className="text-sm font-medium block">タイトル</label>
                   <div className="flex items-center gap-3">
@@ -623,10 +623,10 @@ export default function TaskList({
                     />
                     <button
                       type="button"
-                      className={`px-4 py-3 rounded-lg border text-sm whitespace-nowrap ${listening ? "bg-red-600 text-white border-red-600" : ""}`}
+                      className={`px-4 py-3 rounded-lg border text-sm whitespace-nowrap inline-flex items-center ${listening ? "bg-red-600 text-white border-red-600" : ""}`}
                       onClick={() => { setListening((v)=>!v); toggleSpeech(); }}
                     >
-                      音声入力
+                      <Mic size={16} className="mr-2" /> 音声入力
                     </button>
                   </div>
                   {listening && (
@@ -637,27 +637,10 @@ export default function TaskList({
                   )}
                 </div>
                 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font平均">説明</label>
-                    <button
-                      type="button"
-                      className="text-xs px-2 py-1 border rounded"
-                      onClick={() => setShowDescOverlay(true)}
-                    >
-                      説明欄を拡大
-                    </button>
-                  </div>
-                  <WysiwygEditor
-                    value={formDescription}
-                    onChange={(html) => { setFormDescription(html); scheduleSave(); }}
-                    onBlur={() => saveEdit(true)}
-                    heightClass="h-[50vh]"
-                  />
-                </div>
+                
               </div>
               
-              <div className="space-y-6">
+              <div className="space-y-6 col-span-12 lg:col-span-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium block">タスクタイプ</label>
                   <select
@@ -752,6 +735,15 @@ export default function TaskList({
                   </div>
                 )}
               </div>
+              {/* 詳細（全幅） */}
+              <div className="space-y-2 col-span-12">
+                <label className="text-sm font平均">詳細</label>
+                <WysiwygEditor
+                  value={formDescription}
+                  onChange={(html) => { setFormDescription(html); scheduleSave(); }}
+                  onBlur={() => saveEdit(true)}
+                />
+              </div>
             </div>
 
             <div className="flex justify-between items-center pt-6 border-t border-black/10 dark:border-white/10">
@@ -779,48 +771,7 @@ export default function TaskList({
         </div>
       )}
 
-      {showDescOverlay && (
-        <div
-          className="fixed inset-0 z-[60] bg-black/60"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              saveEdit(true);
-              setShowDescOverlay(false);
-            }
-          }}
-        >
-          <div className="absolute inset-0 bg-background text-foreground flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-end px-4 py-3 border-b border-black/10 dark:border-white/10">
-              <div className="flex items-center gap-3 text-xs">
-                {isSaving ? (
-                  <span className="opacity-80">更新中です...</span>
-                ) : lastSavedAt ? (
-                  <span className="opacity-70">更新完了: {new Date(lastSavedAt).toLocaleTimeString()}</span>
-                ) : null}
-                <button
-                  type="button"
-                  className="p-2 rounded border hover:bg-black/5 dark:hover:bg-white/10"
-                  onClick={() => { saveEdit(true); setShowDescOverlay(false); }}
-                  aria-label="閉じる"
-                  title="閉じる"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 min-h-0 p-6">
-              <div className="h-full min-h-0 w-full">
-                <WysiwygEditor
-                  value={formDescription}
-                  onChange={(html) => { setFormDescription(html); scheduleSave(400); }}
-                  onBlur={() => saveEdit(true)}
-                  heightClass="h-full"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      
     </div>
   );
 }

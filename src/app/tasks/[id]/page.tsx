@@ -259,7 +259,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               </div>
 
               <div id="editor-description" className="space-y-2">
-                <label className="block text-sm font-medium">説明</label>
+                <label className="block text-sm font-medium">詳細</label>
                 <WysiwygEditor
                   value={description}
                   onChange={(html) => { setDescription(html); }}
