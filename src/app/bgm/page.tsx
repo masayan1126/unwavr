@@ -25,6 +25,8 @@ function extractVideoId(input: string): string | null {
 export default function BgmPage() {
   const tracks = useAppStore((s) => s.bgmTracks);
   const groups = useAppStore((s) => s.bgmGroups);
+  const hydrating = useAppStore((s) => s.hydrating);
+  const hydrate = useAppStore((s) => s.hydrateFromDb);
   const add = useAppStore((s) => s.addBgmTrack);
   const remove = useAppStore((s) => s.removeBgmTrack);
   const move = useAppStore((s) => s.moveBgmTrack);
@@ -201,6 +203,14 @@ export default function BgmPage() {
 
   return (
     <div className="p-4 border rounded max-w-3xl">
+      {hydrating && <div className="text-xs opacity-70 mb-2">同期中...</div>}
+      {!hydrating && tracks.length === 0 && groups.length === 0 && (
+        <div className="text-xs opacity-70 mb-2">
+          DBからプレイリストを読み込みます。必要に応じて
+          <button className="underline ml-1" onClick={() => hydrate()}>再読み込み</button>
+          してください。
+        </div>
+      )}
       <div className="text-sm font-semibold mb-3">作業用BGM（YouTubeプレイリスト）</div>
       <div className="flex flex-col sm:flex-row gap-2 mb-3">
         <input

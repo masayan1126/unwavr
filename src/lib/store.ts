@@ -190,16 +190,25 @@ export const useAppStore = create<AppState>()(
       hydrateFromDb: async () => {
         set({ hydrating: true });
         try {
-          const [tasksRes, milestonesRes, launchersRes] = await Promise.all([
+          const [tasksRes, milestonesRes, launchersRes, bgmRes] = await Promise.all([
             fetch('/api/db/tasks', { cache: 'no-store' }).then((r) => r.json()),
             fetch('/api/db/milestones', { cache: 'no-store' }).then((r) => r.json()),
             fetch('/api/db/launchers', { cache: 'no-store' }).then((r) => r.json()),
+            fetch('/api/db/bgm', { cache: 'no-store' }).then((r) => r.json()),
           ]);
           set({
             tasks: ((tasksRes.items ?? []) as Task[]).filter((t) => t.archived !== true),
             milestones: (milestonesRes.items ?? []) as Milestone[],
             launcherCategories: (launchersRes.categories ?? []) as LauncherCategory[],
             launcherShortcuts: (launchersRes.shortcuts ?? []) as LauncherShortcut[],
+            bgmGroups: (Array.isArray(bgmRes.groups) ? (bgmRes.groups as BgmGroup[]).map((g) => ({
+              ...g,
+              parentId: (g as unknown as { parentId?: string | null }).parentId ?? undefined,
+            })) : []) as BgmGroup[],
+            bgmTracks: (Array.isArray(bgmRes.tracks) ? (bgmRes.tracks as BgmTrack[]).map((t) => ({
+              ...t,
+              groupId: (t as unknown as { groupId?: string | null }).groupId ?? undefined,
+            })) : []) as BgmTrack[],
             hydrating: false,
           });
         } catch {
@@ -211,16 +220,25 @@ export const useAppStore = create<AppState>()(
       ...(async () => {
         set({ hydrating: true });
         try {
-          const [tasksRes, milestonesRes, launchersRes] = await Promise.all([
+          const [tasksRes, milestonesRes, launchersRes, bgmRes] = await Promise.all([
             fetch('/api/db/tasks', { cache: 'no-store' }).then((r) => r.json()),
             fetch('/api/db/milestones', { cache: 'no-store' }).then((r) => r.json()),
             fetch('/api/db/launchers', { cache: 'no-store' }).then((r) => r.json()),
+            fetch('/api/db/bgm', { cache: 'no-store' }).then((r) => r.json()),
           ]);
           set({
             tasks: ((tasksRes.items ?? []) as Task[]).filter((t) => t.archived !== true),
             milestones: (milestonesRes.items ?? []) as Milestone[],
             launcherCategories: (launchersRes.categories ?? []) as LauncherCategory[],
             launcherShortcuts: (launchersRes.shortcuts ?? []) as LauncherShortcut[],
+            bgmGroups: (Array.isArray(bgmRes.groups) ? (bgmRes.groups as BgmGroup[]).map((g) => ({
+              ...g,
+              parentId: (g as unknown as { parentId?: string | null }).parentId ?? undefined,
+            })) : []) as BgmGroup[],
+            bgmTracks: (Array.isArray(bgmRes.tracks) ? (bgmRes.tracks as BgmTrack[]).map((t) => ({
+              ...t,
+              groupId: (t as unknown as { groupId?: string | null }).groupId ?? undefined,
+            })) : []) as BgmTrack[],
             hydrating: false,
           });
         } catch {
@@ -717,7 +735,11 @@ export const useAppStore = create<AppState>()(
         set((state) => ({ importHistory: state.importHistory.filter((e) => e.id !== id) })),
       clearImportHistory: () => set({ importHistory: [] }),
       addBgmTrack: (input) =>
-        set((state) => ({ bgmTracks: [...state.bgmTracks, { ...input, id: createBgmId(), createdAt: Date.now() }] })),
+        set((state) => {
+          const newTrack = { ...input, id: createBgmId(), createdAt: Date.now() } as BgmTrack;
+          fetch('/api/db/bgm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tracks: [newTrack] }) }).catch(() => {});
+          return { bgmTracks: [...state.bgmTracks, newTrack] };
+        }),
       removeBgmTrack: (id) => set((state) => ({ bgmTracks: state.bgmTracks.filter((t) => t.id !== id) })),
       updateBgmTrack: (id, update) =>
         set((state) => ({ bgmTracks: state.bgmTracks.map((t) => (t.id === id ? { ...t, ...update } : t)) })),
@@ -759,7 +781,11 @@ export const useAppStore = create<AppState>()(
         })),
       clearBgmTracks: () => set({ bgmTracks: [] }),
       addBgmGroup: (input) =>
-        set((state) => ({ bgmGroups: [...state.bgmGroups, { ...input, id: createBgmGroupId() }] })),
+        set((state) => {
+          const newGroup = { ...input, id: createBgmGroupId() } as BgmGroup;
+          fetch('/api/db/bgm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ groups: [newGroup] }) }).catch(() => {});
+          return { bgmGroups: [...state.bgmGroups, newGroup] };
+        }),
       updateBgmGroup: (id, update) =>
         set((state) => ({ bgmGroups: state.bgmGroups.map((g) => (g.id === id ? { ...g, ...update } : g)) })),
       removeBgmGroup: (id) =>
