@@ -7,9 +7,10 @@ type ToastProps = {
   type?: "info" | "success" | "warning" | "error";
   onClose?: () => void;
   durationMs?: number;
+  position?: "top" | "bottom";
 };
 
-export default function Toast({ message, type = "info", onClose, durationMs = 3000 }: ToastProps) {
+export default function Toast({ message, type = "info", onClose, durationMs = 3000, position = "bottom" }: ToastProps) {
   useEffect(() => {
     const id = window.setTimeout(() => onClose?.(), durationMs);
     return () => window.clearTimeout(id);
@@ -32,8 +33,10 @@ export default function Toast({ message, type = "info", onClose, durationMs = 30
   const normalContainer = "border-black/10 dark:border-white/10 bg-white/90 dark:bg-neutral-900/90";
   const errorContainer = "bg-rose-600 text-white border-rose-700";
 
+  const posCls = position === "top" ? "top-4" : "bottom-4";
+
   return (
-    <div className="fixed bottom-4 right-4 z-[1000] pointer-events-none">
+    <div className={`fixed ${posCls} right-4 z-[1000] pointer-events-none`}>
       <div role="alert" aria-live="assertive" className={`${baseContainer} ${isError ? errorContainer : normalContainer}`}>
         <div className={`w-1 rounded-full ${accent}`} />
         <div className="flex items-start gap-2">
@@ -49,8 +52,8 @@ export function ErrorToast({ message, onClose, durationMs }: Omit<ToastProps, "t
   return <Toast message={message} type="error" onClose={onClose} durationMs={durationMs} />;
 }
 
-export function NoticeToast({ message, onClose, durationMs }: Omit<ToastProps, "type">) {
-  return <Toast message={message} type="info" onClose={onClose} durationMs={durationMs} />;
+export function NoticeToast({ message, onClose, durationMs, position }: Omit<ToastProps, "type">) {
+  return <Toast message={message} type="info" onClose={onClose} durationMs={durationMs} position={position} />;
 }
 
 

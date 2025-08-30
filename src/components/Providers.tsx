@@ -80,9 +80,29 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       <ConfirmProvider>
         {children}
         <AuthHydrator />
+        {/* Pomodoro ticker: requestAnimationFrameで常時進行（バックグラウンドでもcatch-up可能）*/}
+        <PomodoroTicker />
       </ConfirmProvider>
     </SessionProvider>
   );
+}
+function PomodoroTicker() {
+  const isRunning = useAppStore((s) => s.pomodoro.isRunning);
+  const tick = useAppStore((s) => s.tickPomodoro);
+  useEffect(() => {
+    let raf = 0;
+    const loop = () => {
+      raf = window.requestAnimationFrame(loop);
+      // 軽量化: およそ1秒ごとに実秒に追従（tickPomodoro内部でcatch-up）
+      tick();
+    };
+    if (isRunning) {
+      raf = window.requestAnimationFrame(loop);
+      return () => window.cancelAnimationFrame(raf);
+    }
+    return () => {};
+  }, [isRunning, tick]);
+  return null;
 }
 
 

@@ -38,6 +38,7 @@ export type PomodoroState = {
   cyclesUntilLongBreak: number;
   completedWorkSessions: number;
   activeTaskId?: string;
+  lastTickAtMs?: number;
 };
 
 export type BgmTrack = {
@@ -592,6 +593,7 @@ export const useAppStore = create<AppState>()(
               isRunning: true,
               isBreak: nextIsBreak,
               secondsLeft,
+              lastTickAtMs: Date.now(),
             },
           };
         }),
@@ -601,36 +603,60 @@ export const useAppStore = create<AppState>()(
         set((state) => {
           const s = state.pomodoro;
           if (!s.isRunning) return state;
-          if (s.secondsLeft > 1) {
-            return { pomodoro: { ...s, secondsLeft: s.secondsLeft - 1 } };
+          const now = Date.now();
+          const last = typeof s.lastTickAtMs === 'number' ? s.lastTickAtMs : now;
+          const elapsedMs = Math.max(0, now - last);
+          if (elapsedMs < 1000) {
+            // まだ1秒未満なので状態は変更しない（蓄積して次回まとめて処理）
+            return state;
           }
-          // Timer reached zero: switch modes
-          if (!s.isBreak) {
-            const completed = s.completedWorkSessions + 1;
-            // reward active task
-            const activeId = s.activeTaskId;
-            const tasks = activeId
-              ? state.tasks.map((t) =>
-                  t.id === activeId
-                    ? { ...t, completedPomodoros: (t.completedPomodoros ?? 0) + 1 }
-                    : t
-                )
-              : state.tasks;
-            const shouldLong = completed % s.cyclesUntilLongBreak === 0;
-            return {
-              tasks,
-              pomodoro: {
-                ...s,
-                isBreak: true,
-                isRunning: true,
-                secondsLeft: shouldLong ? s.longBreakSec : s.shortBreakSec,
-                completedWorkSessions: completed,
-              },
-            };
+          let secondsAdvance = Math.floor(elapsedMs / 1000);
+          const remainderMs = elapsedMs % 1000;
+          let secondsLeft = s.secondsLeft;
+          let isBreak = s.isBreak;
+          let completed = s.completedWorkSessions;
+          let workSessionCompletions = 0;
+
+          while (secondsAdvance > 0) {
+            if (secondsLeft > secondsAdvance) {
+              secondsLeft -= secondsAdvance;
+              secondsAdvance = 0;
+              break;
+            }
+            // cross boundary
+            secondsAdvance -= secondsLeft;
+            if (!isBreak) {
+              completed += 1;
+              workSessionCompletions += 1;
+              const shouldLong = completed % s.cyclesUntilLongBreak === 0;
+              isBreak = true;
+              secondsLeft = shouldLong ? s.longBreakSec : s.shortBreakSec;
+            } else {
+              isBreak = false;
+              secondsLeft = s.workDurationSec;
+            }
           }
-          // end of break -> start work
+
+          // apply task reward if needed
+          const activeId = s.activeTaskId;
+          const tasks = activeId && workSessionCompletions > 0
+            ? state.tasks.map((t) => (
+                t.id === activeId
+                  ? { ...t, completedPomodoros: (t.completedPomodoros ?? 0) + workSessionCompletions }
+                  : t
+              ))
+            : state.tasks;
+
           return {
-            pomodoro: { ...s, isBreak: false, isRunning: true, secondsLeft: s.workDurationSec },
+            tasks,
+            pomodoro: {
+              ...s,
+              secondsLeft,
+              isBreak,
+              isRunning: true,
+              completedWorkSessions: completed,
+              lastTickAtMs: now - remainderMs,
+            },
           };
         }),
       resetPomodoro: () =>
@@ -641,6 +667,7 @@ export const useAppStore = create<AppState>()(
             isBreak: false,
             secondsLeft: state.pomodoro.workDurationSec,
             completedWorkSessions: 0,
+            lastTickAtMs: undefined,
           },
         })),
       setPomodoroSettings: (settings) =>

@@ -7,6 +7,7 @@ import { Plus, RefreshCw } from "lucide-react";
 import { useConfirm } from "@/components/Providers";
 import { useAppStore } from "@/lib/store";
 import SectionLoader from "@/components/SectionLoader";
+import { useEffect, useState } from "react";
 // import AddQiitaZenn from "@/components/AddQiitaZenn";
 
 export default function Home() {
@@ -19,12 +20,25 @@ export default function Home() {
   const hydrateFromDb = useAppStore((s) => s.hydrateFromDb);
   const hydrating = useAppStore((s) => s.hydrating);
   useConfirm();
+  const [nowLabel, setNowLabel] = useState("");
+  useEffect(() => {
+    const update = () => {
+      const d = new Date();
+      const dateStr = d.toLocaleDateString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit" });
+      const weekday = d.toLocaleDateString("ja-JP", { weekday: "short" });
+      const timeStr = d.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
+      setNowLabel(`${dateStr} (${weekday}) ${timeStr}`);
+    };
+    update();
+    const id = window.setInterval(update, 10000);
+    return () => window.clearInterval(id);
+  }, []);
   return (
     <div className="min-h-screen p-6 sm:p-10 max-w-6xl mx-auto flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">ダッシュボード</h1>
+        <h1 className="text-xl font-semibold">ホーム</h1>
         <div className="flex items-center gap-4">
-          <span className="text-sm">{new Date().toLocaleDateString()}</span>
+          <span className="text-base sm:text-lg md:text-xl font-medium tabular-nums">{nowLabel}</span>
           <WeatherWidget variant="large" />
           <button
             className={`px-2 py-1 rounded border flex items-center gap-2 ${hydrating ? "opacity-70" : ""}`}

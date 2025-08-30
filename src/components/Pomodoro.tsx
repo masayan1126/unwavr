@@ -1,5 +1,7 @@
 "use client";
+import { useEffect, useRef, useState } from "react";
 import { usePomodoro } from "@/hooks/usePomodoro";
+import { NoticeToast } from "@/components/Toast";
 
 function format(sec: number): string {
   const m = Math.floor(sec / 60)
@@ -14,9 +16,101 @@ function format(sec: number): string {
 export default function Pomodoro() {
   const { s, start, stop, reset, setSettings } = usePomodoro();
   const activeTaskId = s.activeTaskId;
+  const [toastQueue, setToastQueue] = useState<string[]>([]);
+  const prevCompletedRef = useRef<number>(s.completedWorkSessions);
+  const audioRef = useRef<AudioContext | null>(null);
+  const prevIsBreakForSoundRef = useRef<boolean>(s.isBreak);
+
+  const ensureAudio = () => {
+    try {
+      if (!audioRef.current) {
+        audioRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      }
+      if (audioRef.current.state === 'suspended') {
+        void audioRef.current.resume();
+      }
+    } catch {}
+  };
+
+  const playPattern = (freqs: number[]) => {
+    const ctx = audioRef.current;
+    if (!ctx || ctx.state !== 'running') return;
+    let t = ctx.currentTime;
+    for (const f of freqs) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = f;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.22, t + 0.01);
+      gain.gain.linearRampToValueAtTime(0.0, t + 0.18);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.2);
+      t += 0.22;
+    }
+  };
+
+  // 休憩終了（作業再開）を検知して別音を再生
+  useEffect(() => {
+    if (!s.isRunning) {
+      prevIsBreakForSoundRef.current = s.isBreak;
+      return;
+    }
+    const changed = prevIsBreakForSoundRef.current !== s.isBreak;
+    if (changed) {
+      try {
+        ensureAudio();
+        // break -> work に切り替わった時のみ鳴らす（作業再開サウンド）
+        if (!s.isBreak) {
+          // 明瞭な上昇3連（作業再開）
+          playPattern([1200, 1400, 1600]);
+        }
+      } catch {}
+      prevIsBreakForSoundRef.current = s.isBreak;
+    }
+  }, [s.isBreak, s.isRunning]);
+
+  // 作業セッションの終了ごとにトースト（タブ不在で複数回進んだ場合にも対応）
+  useEffect(() => {
+    const prev = prevCompletedRef.current;
+    const curr = s.completedWorkSessions;
+    if (!s.isRunning || curr <= prev) {
+      prevCompletedRef.current = curr;
+      return;
+    }
+    const diff = curr - prev;
+    const messages: string[] = [];
+    for (let i = 1; i <= diff; i++) {
+      const count = prev + i;
+      const isLong = count % s.cyclesUntilLongBreak === 0;
+      messages.push(`作業セッション終了（合計 ${count} 回）。${isLong ? "ロング休憩" : "休憩"}を始めましょう。`);
+    }
+    setToastQueue((q) => [...q, ...messages]);
+    // 音を鳴らす（差分回数分）
+    try {
+      const isLong = curr % s.cyclesUntilLongBreak === 0;
+      ensureAudio();
+      // ロング休憩: 低め3連、通常: 高め3連
+      const pattern = isLong ? [440, 392, 349] : [880, 988, 1047];
+      // diffが複数でも聴覚的にわかるように繰り返し
+      for (let i = 0; i < diff; i++) {
+        playPattern(pattern);
+      }
+    } catch {}
+    prevCompletedRef.current = curr;
+  }, [s.completedWorkSessions, s.cyclesUntilLongBreak, s.isRunning]);
 
   return (
     <div className="border border-black/10 dark:border-white/10 rounded-md p-3">
+      {toastQueue.length > 0 && (
+        <NoticeToast
+          message={toastQueue[0]}
+          onClose={() => setToastQueue((q) => q.slice(1))}
+          durationMs={4000}
+          position="top"
+        />
+      )}
       <div className="text-xs uppercase tracking-wide opacity-70 mb-2">ポモドーロ</div>
       <div className="text-4xl font-bold tabular-nums mb-2">{format(s.secondsLeft)}</div>
       <div className="text-xs mb-3 opacity-70">
@@ -25,7 +119,7 @@ export default function Pomodoro() {
       </div>
       <div className="flex gap-2 items-center mb-3">
         {!s.isRunning ? (
-          <button className="px-3 py-1 rounded bg-foreground text-background text-sm" onClick={() => start()}>
+          <button className="px-3 py-1 rounded bg-foreground text-background text-sm" onClick={() => { ensureAudio(); start(); }}>
             スタート
           </button>
         ) : (
@@ -36,10 +130,10 @@ export default function Pomodoro() {
         <button className="px-3 py-1 rounded border text-sm" onClick={() => reset()}>
           リセット
         </button>
-        <button className="px-3 py-1 rounded border text-sm" onClick={() => start(false)}>
+        <button className="px-3 py-1 rounded border text-sm" onClick={() => { ensureAudio(); start(false); }}>
           作業開始
         </button>
-        <button className="px-3 py-1 rounded border text-sm" onClick={() => start(true)}>
+        <button className="px-3 py-1 rounded border text-sm" onClick={() => { ensureAudio(); start(true); }}>
           休憩開始
         </button>
       </div>

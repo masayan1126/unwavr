@@ -7,6 +7,7 @@ import OnboardingGuide from "@/components/OnboardingGuide";
 import GlobalLauncherBarConditional from "@/components/GlobalLauncherBarConditional";
 import CookieConsentConditional from "@/components/CookieConsentConditional";
 import MobileTabBar from "@/components/MobileTabBar";
+import PomodoroTopBar from "@/components/PomodoroTopBar";
 
 export default function LayoutChrome({ children }: { children: ReactNode }): ReactElement {
   const pathname = usePathname();
@@ -26,6 +27,7 @@ export default function LayoutChrome({ children }: { children: ReactNode }): Rea
         <SidebarConditional />
       </div>
       <div className="flex-1 min-w-0 flex flex-col">
+        <PomodoroTopBar />
         <NotificationBars />
         <main className="flex-1 pb-16 md:pb-0">{children}</main>
       </div>
