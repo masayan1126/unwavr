@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, ListTodo, Upload, Plus, ChevronLeft, ChevronRight, AlertTriangle, Home, Archive, Rocket, Target, Timer, Calendar, Music } from "lucide-react";
+import { CalendarDays, ListTodo, Upload, Plus, ChevronLeft, ChevronRight, AlertTriangle, Home, Archive, Rocket, Target, Timer, Calendar, Music, Lock } from "lucide-react";
 import AuthButtons from "@/components/AuthButtons";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
@@ -24,7 +24,7 @@ const navItems: NavItem[] = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { status } = useSession();
+  const { status, data: session } = useSession();
   const [open, setOpen] = useState(true);
   const [width, setWidth] = useState<number>(224);
   const [tasksOpen, setTasksOpen] = useState<boolean>(true);
@@ -197,6 +197,28 @@ export default function Sidebar() {
             .filter((n) => n.href !== "/" && n.href !== "/milestones")
             .map((item) => {
               const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+              // Googleログインでのみカレンダーを有効化
+              if (item.href === "/calendar") {
+                const isGoogle = (session as unknown as { provider?: string } | null)?.provider === "google";
+                if (!isGoogle) {
+                  return (
+                    <div
+                      key={item.href}
+                      className={`flex items-center gap-2 px-3 py-2 rounded text-sm opacity-70 cursor-not-allowed select-none ${
+                        active ? "bg-foreground text-background/80" : "bg-transparent"
+                      }`}
+                      title="Googleログインが必要です"
+                      aria-disabled
+                    >
+                      <div className="flex items-center gap-1">
+                        {item.icon}
+                        <Lock size={14} className="opacity-80" />
+                      </div>
+                      {open && <span className="truncate">{item.label}</span>}
+                    </div>
+                  );
+                }
+              }
               return (
                 <Link
                   key={item.href}
