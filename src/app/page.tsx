@@ -8,7 +8,6 @@ import { useConfirm } from "@/components/Providers";
 import { useAppStore } from "@/lib/store";
 import SectionLoader from "@/components/SectionLoader";
 import { useEffect, useState } from "react";
-// import AddQiitaZenn from "@/components/AddQiitaZenn";
 
 export default function Home() {
   const {
@@ -125,3 +124,5 @@ export default function Home() {
     </div>
   );
 }
+
+

@@ -34,6 +34,39 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Simple demo animations used in /unwavr page */
+@keyframes highlight {
+  0% { background: transparent; }
+  10% { background: rgba(16,185,129,0.12); }
+  40% { background: transparent; }
+  100% { background: transparent; }
+}
+.anim-highlight { animation: highlight 3.2s ease-in-out infinite; }
+
+@keyframes checkpop {
+  0% { transform: scale(0.2); opacity: 0; }
+  15% { transform: scale(1.1); opacity: 1; }
+  25% { transform: scale(1); }
+  100% { transform: scale(1); }
+}
+.anim-check { animation: checkpop 3.2s ease-in-out infinite 0.4s; }
+
+@keyframes spin360 {
+  0% { transform: rotate(0deg); }
+  70% { transform: rotate(340deg); }
+  100% { transform: rotate(360deg); }
+}
+.anim-spin { animation: spin360 4s linear infinite; transform-origin: 50% 50%; }
+
+@keyframes dragx {
+  0% { transform: translateX(0); }
+  45% { transform: translateX(120px); }
+  50% { transform: translateX(120px); }
+  95% { transform: translateX(0); }
+  100% { transform: translateX(0); }
+}
+.anim-drag { animation: dragx 4s ease-in-out infinite; }
+
 /* Generic surfaces */
 .card {
   background: var(--card);

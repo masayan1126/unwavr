@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, ListTodo, Upload, Plus, ChevronLeft, ChevronRight, AlertTriangle, Home, Archive, Rocket, Target, Timer, Calendar, Music, Lock } from "lucide-react";
+import { CalendarDays, ListTodo, Upload, Plus, ChevronLeft, ChevronRight, AlertTriangle, Home, Archive, Rocket, Target, Timer, Calendar, Music, Lock, MessageSquare } from "lucide-react";
 import AuthButtons from "@/components/AuthButtons";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
@@ -20,6 +20,8 @@ const navItems: NavItem[] = [
   { href: "/pomodoro", label: "ポモドーロ", icon: <Timer size={16} /> },
   { href: "/calendar", label: "カレンダー", icon: <Calendar size={16} /> },
   { href: "/bgm", label: "BGMプレイリスト", icon: <Music size={16} /> },
+  { href: "/assistant", label: "AIアシスタント", icon: <MessageSquare size={16} /> },
+  { href: "/pricing", label: "料金プラン", icon: <span className="inline-block w-4 h-4">¥</span> },
 ];
 
 export default function Sidebar() {
@@ -48,7 +50,7 @@ export default function Sidebar() {
   if (status !== "authenticated") return null;
   return (
     <aside className="hidden md:flex border-r border-black/10 dark:border-white/10 h-[100svh] sticky top-0" style={{ width: open ? width : 48 }}>
-      <div className="flex flex-col p-4 gap-4 flex-1 overflow-hidden">
+      <div className="flex flex-col p-4 gap-4 flex-1 overflow-y-auto">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
             <img src="/unwavr-logo.svg" alt="unwavr logo" className="w-5 h-5 shrink-0" />
