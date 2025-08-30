@@ -740,7 +740,11 @@ export const useAppStore = create<AppState>()(
           fetch('/api/db/bgm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tracks: [newTrack] }) }).catch(() => {});
           return { bgmTracks: [...state.bgmTracks, newTrack] };
         }),
-      removeBgmTrack: (id) => set((state) => ({ bgmTracks: state.bgmTracks.filter((t) => t.id !== id) })),
+      removeBgmTrack: (id) =>
+        set((state) => {
+          fetch(`/api/db/bgm/tracks/${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => {});
+          return { bgmTracks: state.bgmTracks.filter((t) => t.id !== id) };
+        }),
       updateBgmTrack: (id, update) =>
         set((state) => ({ bgmTracks: state.bgmTracks.map((t) => (t.id === id ? { ...t, ...update } : t)) })),
       moveBgmTrack: (fromIdx, toIdx) =>
