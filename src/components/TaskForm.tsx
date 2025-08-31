@@ -15,14 +15,14 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
   const addTask = useAppStore((s) => s.addTask);
   const milestones = useAppStore((s) => s.milestones);
   const [title, setTitle] = useState("");
-  const [type, setType] = useState<TaskType>("daily");
+  const [type, setType] = useState<TaskType>("backlog");
   const [desc, setDesc] = useState("");
   const [scheduled, setScheduled] = useState<Scheduled | undefined>(undefined);
   const [rangeStart, setRangeStart] = useState<string>("");
   const [rangeEnd, setRangeEnd] = useState<string>("");
   const [milestoneId, setMilestoneId] = useState<string>("");
   const [plannedDateInput, setPlannedDateInput] = useState<string>("");
-  const [plannedDates, setPlannedDates] = useState<number[]>([]);
+  const [plannedDates, setPlannedDates] = useState<number[]>([(() => { const d = new Date(); d.setUTCHours(0,0,0,0); return d.getTime(); })()]);
   const [listening, setListening] = useState(false);
   const isSubmittingRef = useRef(false);
   const [draftTaskId, setDraftTaskId] = useState<string | undefined>(undefined);
@@ -45,9 +45,10 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
     setIsSaving(true);
     try {
       if (!draftTaskId) {
-        // タイトル未入力でも下書きを作成
+        // 新規作成時: タイトル未入力なら保存しない
+        if (!trimmed) return;
         const newId = addTask({
-          title: trimmed || "(無題)",
+          title: trimmed,
           description: desc || undefined,
           type,
           scheduled,
@@ -82,12 +83,14 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
     setDesc("");
     setScheduled(undefined);
     setMilestoneId("");
-    setPlannedDates([]);
-    setType("daily");
+    setPlannedDates([(() => { const d = new Date(); d.setUTCHours(0,0,0,0); return d.getTime(); })()]);
+    setType("backlog");
   };
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const trimmed = title.trim();
+    if (!trimmed) return; // タイトル未入力は保存しない
     performSave();
     // 追加ボタンで確定: リセットして閉じる
     resetForm();
@@ -160,25 +163,7 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
         </div>
       </div>
       <div className="flex flex-wrap gap-4 items-center">
-        <div className="flex gap-2 items-center">
-          <label className="text-sm">タスクタイプ</label>
-          <select
-            className="border border-black/10 dark:border-white/10 rounded px-2 py-1 bg-transparent"
-            value={type}
-            onChange={(e) => {
-              const v = e.target.value as TaskType;
-              setType(v);
-              if (v === "scheduled") setScheduled({ daysOfWeek: [] });
-              else setScheduled(undefined);
-              if (v !== "backlog") setPlannedDates([]);
-            }}
-            onBlur={performSave}
-          >
-            <option value="daily">毎日</option>
-            <option value="backlog">不定期（積み上げ候補）</option>
-            <option value="scheduled">特定曜日だけ</option>
-          </select>
-        </div>
+        
         <div className="flex gap-2 items-center">
           <label className="text-sm">マイルストーン</label>
           <select

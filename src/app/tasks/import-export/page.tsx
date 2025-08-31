@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useAppStore } from "@/lib/store";
+import { useConfirm } from "@/components/Providers";
 import { TaskType, Scheduled, DateRange } from "@/lib/types";
 
 type ImportResult = { imported: number; failed: number; errors: string[] };
@@ -41,8 +42,10 @@ export default function ImportExportPage() {
   const deleteHistory = useAppStore((s) => s.deleteImportHistory);
   const clearHistory = useAppStore((s) => s.clearImportHistory);
   const clearAll = useAppStore((s) => s.clearTasksMilestonesLaunchers);
+  const hydrate = useAppStore((s) => s.hydrateFromDb);
   const [result, setResult] = useState<ImportResult | null>(null);
   const dayLabels = ["日","月","火","水","木","金","土"] as const;
+  const confirm = useConfirm();
 
   function generateDemoData() {
     // Milestones
@@ -299,17 +302,30 @@ export default function ImportExportPage() {
       </div>
 
       <div className="border rounded p-4 border-black/10 dark:border-white/10 flex items-center justify-between">
-        <div className="text-sm font-medium">デモデータの作成</div>
-        <button
-          className="px-3 py-1 rounded bg-foreground text-background text-sm"
-          onClick={async () => {
-            const mod = await import('@/components/Providers');
-            const ok = await mod.useConfirm()('デモデータ（タスク/ランチャー/マイルストーン）を大量生成します。続行しますか？', { confirmText: '生成' });
-            if (ok) generateDemoData();
-          }}
-        >
-          作成する
-        </button>
+        <div className="text-sm font-medium">デモデータ / サンプル投入</div>
+        <div className="flex gap-2">
+          <button
+            className="px-3 py-1 rounded border text-sm"
+            onClick={async () => {
+              const ok = await confirm('エンジニア向けの実務的なサンプル（タスク/マイルストーン/ランチャー）をDBに投入します。続行しますか？', { confirmText: '投入' });
+              if (!ok) return;
+              try {
+                const res = await fetch('/api/db/seed/engineer', { method: 'POST' });
+                if (!res.ok) {
+                  const err = await res.json().catch(() => ({}));
+                  alert(`投入に失敗しました: ${err.error ?? res.statusText}`);
+                  return;
+                }
+                await hydrate();
+                alert('エンジニア向けサンプルを投入しました');
+              } catch {
+                alert('投入に失敗しました');
+              }
+            }}
+          >
+            デモデータ投入
+          </button>
+        </div>
       </div>
 
       <div className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col gap-3">
@@ -345,8 +361,7 @@ export default function ImportExportPage() {
           <button
             className="px-3 py-2 rounded bg-red-600 text-white text-sm"
             onClick={async () => {
-              const mod = await import('@/components/Providers');
-              const ok2 = await mod.useConfirm()('本当に全て削除しますか？この操作は取り消せません。', { tone: 'danger', confirmText: '削除' });
+              const ok2 = await confirm('本当に全て削除しますか？この操作は取り消せません。', { tone: 'danger', confirmText: '削除' });
               if (ok2) {
                 clearAll();
                 alert('すべて削除しました');

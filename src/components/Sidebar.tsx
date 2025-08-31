@@ -14,12 +14,10 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { href: "/", label: "ホーム", icon: <Home size={16} /> },
-  { href: "/backlog", label: "積み上げ候補", icon: <Archive size={16} /> },
+  { href: "/tasks/import-export", label: "インポート/エクスポート", icon: <Upload size={16} /> },
   { href: "/launcher", label: "ランチャー", icon: <Rocket size={16} /> },
   { href: "/milestones", label: "マイルストーン", icon: <Target size={16} /> },
-  { href: "/pomodoro", label: "ポモドーロ", icon: <Timer size={16} /> },
   { href: "/calendar", label: "カレンダー", icon: <Calendar size={16} /> },
-  { href: "/bgm", label: "BGMプレイリスト", icon: <Music size={16} /> },
   { href: "/assistant", label: "AIアシスタント", icon: <MessageSquare size={16} /> },
   { href: "/pricing", label: "料金プラン", icon: <span className="inline-block w-4 h-4">¥</span> },
 ];
@@ -107,7 +105,9 @@ export default function Sidebar() {
 
         {/* タスク（トップレベルのショートカット） */}
         {(() => {
-          const active = pathname === "/tasks" || pathname.startsWith("/tasks/");
+          const isImportExport = pathname.startsWith("/tasks/import-export");
+          const isBacklog = pathname === "/backlog" || pathname.startsWith("/backlog/");
+          const active = !isImportExport && (pathname === "/tasks" || pathname.startsWith("/tasks/") || isBacklog);
           return (
             <Link
               href="/tasks"
@@ -126,24 +126,7 @@ export default function Sidebar() {
         <div className="mt-1">
           {open && tasksOpen && (
             <div id="sidebar-tasks-submenu" className="mt-1 flex flex-col gap-1">
-              <Link
-                href="/tasks"
-                className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                  pathname === "/tasks" ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
-                }`}
-              >
-                <ListTodo size={16} />
-                <span className="truncate">タスク管理</span>
-              </Link>
-              <Link
-                href={{ pathname: "/tasks", query: { new: "1" } }}
-                className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                  pathname.startsWith("/tasks/new") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
-                }`}
-              >
-                <Plus size={16} />
-                <span className="truncate">タスク追加</span>
-              </Link>
+              
               <Link
                 href="/tasks/daily"
                 className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
@@ -163,14 +146,13 @@ export default function Sidebar() {
                 <span className="truncate">特定曜日だけ積み上げ</span>
               </Link>
               <Link
-                href="/tasks/import-export"
+                href="/backlog"
                 className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                  pathname.startsWith("/tasks/import-export") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                  pathname.startsWith("/backlog") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
                 }`}
-                data-guide-key="importExport"
               >
-                <Upload size={16} />
-                <span className="truncate">インポート/エクスポート</span>
+                <Archive size={16} />
+                <span className="truncate">積み上げ候補</span>
               </Link>
               <Link
                 href="/tasks/incomplete"
@@ -181,6 +163,7 @@ export default function Sidebar() {
                 <AlertTriangle size={16} />
                 <span className="truncate">未完了タスク</span>
               </Link>
+              
               <Link
                 href="/tasks/archived"
                 className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
@@ -191,6 +174,35 @@ export default function Sidebar() {
                 <span className="truncate">アーカイブ</span>
               </Link>
             </div>
+          )}
+        </div>
+
+        {/* 集中 親メニュー */}
+        <div className="mt-2">
+          {open && (
+            <>
+              <div className="px-3 py-1 text-[11px] uppercase tracking-wide opacity-60">集中</div>
+              <div className="mt-1 flex flex-col gap-1">
+                <Link
+                  href="/pomodoro"
+                  className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                    pathname.startsWith("/pomodoro") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                  }`}
+                >
+                  <Timer size={16} />
+                  <span className="truncate">ポモドーロ</span>
+                </Link>
+                <Link
+                  href="/bgm"
+                  className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                    pathname.startsWith("/bgm") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                  }`}
+                >
+                  <Music size={16} />
+                  <span className="truncate">BGMプレイリスト</span>
+                </Link>
+              </div>
+            </>
           )}
         </div>
 

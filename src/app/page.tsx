@@ -39,19 +39,22 @@ export default function Home() {
         <div className="flex items-center gap-4">
           <span className="text-base sm:text-lg md:text-xl font-medium tabular-nums">{nowLabel}</span>
           <WeatherWidget variant="large" />
-          <button
-            className={`px-2 py-1 rounded border flex items-center gap-2 ${hydrating ? "opacity-70" : ""}`}
-            onClick={async () => {
-              await hydrateFromDb();
-            }}
-            disabled={hydrating}
-            aria-busy={hydrating}
-            title="データを再読み込み"
-          >
-            <RefreshCw size={16} className={hydrating ? "animate-spin" : ""} />
-            <span className="hidden sm:inline">再読み込み</span>
-          </button>
         </div>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          className={`mt-1 px-2 py-1 rounded border flex items-center gap-2 ${hydrating ? "opacity-70" : ""}`}
+          onClick={async () => {
+            await hydrateFromDb();
+          }}
+          disabled={hydrating}
+          aria-busy={hydrating}
+          title="データを再読み込み"
+        >
+          <RefreshCw size={16} className={hydrating ? "animate-spin" : ""} />
+          <span className="hidden sm:inline">再読み込み</span>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-fr">
@@ -60,7 +63,7 @@ export default function Home() {
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">未完了 ({incompleteToday.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs">
-              <Link href={{ pathname: "/tasks", query: { new: "1" } }} className="inline-flex items-center gap-2 px-3 py-1.5 rounded border text-sm"><Plus size={16} />追加</Link>
+              <Link href={{ pathname: "/tasks", query: { new: "1" } }} className="inline-flex items-center gap-2 px-3 py-1.5 rounded border text-sm"><Plus size={16} />タスク追加</Link>
             </div>
           </div>
           {hydrating ? (

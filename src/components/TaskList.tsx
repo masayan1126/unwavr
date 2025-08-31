@@ -178,7 +178,7 @@ export default function TaskList({
   const editingTask = useMemo(() => tasks.find((t) => t.id === editingId), [editingId, tasks]);
   const [formTitle, setFormTitle] = useState("");
   const [formDescription, setFormDescription] = useState("");
-  const [formType, setFormType] = useState<"daily" | "scheduled" | "backlog">("daily");
+  const [formType, setFormType] = useState<"daily" | "scheduled" | "backlog">("backlog");
   const [formEst, setFormEst] = useState<number>(0);
   const [formMilestoneId, setFormMilestoneId] = useState<string>("");
   const [formPlannedDateInput, setFormPlannedDateInput] = useState<string>("");

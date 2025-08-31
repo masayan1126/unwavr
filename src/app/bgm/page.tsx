@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import { useAppStore } from "@/lib/store";
-import { Play, Trash2, ChevronUp, ChevronDown, Plus } from "lucide-react";
+import { Play, Trash2, ChevronUp, ChevronDown, Plus, RefreshCw, Download } from "lucide-react";
 
 function extractVideoId(input: string): string | null {
   try {
@@ -40,6 +40,9 @@ export default function BgmPage() {
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [newGroupName, setNewGroupName] = useState("");
   const [selectedGroupId, setSelectedGroupId] = useState<string>("");
+  const [importing, setImporting] = useState(false);
+  const [deletingAll, setDeletingAll] = useState(false);
+  const [keyword, setKeyword] = useState("");
   const grouped = useMemo(() => {
     const map = new Map<string | undefined, typeof tracks>();
     for (const t of tracks) {
@@ -74,7 +77,7 @@ export default function BgmPage() {
     const title = isUngrouped ? "未分類" : group?.name ?? "グループ";
     const list = grouped.get(groupId) ?? [];
     return (
-      <div key={groupId ?? "__ungrouped"} className={`border rounded ${dragOverGroupId === (groupId ?? "__ungrouped") ? "ring-2 ring-blue-400/50" : ""}`}
+      <div key={groupId ?? "__ungrouped"} className={`border rounded-lg overflow-hidden bg-background shadow-sm ${dragOverGroupId === (groupId ?? "__ungrouped") ? "ring-2 ring-blue-400/50" : ""}`}
         onDragOver={(e) => {
           e.preventDefault();
           setDragOverGroupId(groupId ?? "__ungrouped");
@@ -82,14 +85,14 @@ export default function BgmPage() {
         onDragLeave={() => setDragOverGroupId(null)}
         onDrop={(e) => handleDropToGroup(e, groupId)}
       >
-        <div className="px-2 py-1 text-xs opacity-70 flex items-center gap-2">
+        <div className="px-3 py-2 text-[11px] uppercase tracking-wide opacity-70 flex items-center gap-2 border-b border-black/5 dark:border-white/5">
           <span className="inline-block w-2 h-2 rounded-full bg-black/20" />
           <span className="truncate">{title}</span>
           {!isUngrouped && (
             <span className="ml-auto flex items-center gap-2">
               <label className="text-[10px] opacity-60">親</label>
               <select
-                className="px-1 py-0.5 border rounded text-[11px]"
+                className="px-2 py-1 border rounded text-[11px] bg-transparent"
                 value={group?.parentId ?? ""}
                 onChange={(e) => updateGroup(group!.id, { parentId: e.target.value || undefined })}
               >
@@ -107,7 +110,7 @@ export default function BgmPage() {
           {list.map((t) => (
             <div
               key={t.id}
-              className="border-t px-2 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+              className="border-t px-3 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
               draggable
               onDragStart={(e) => {
                 e.dataTransfer.setData("application/json", JSON.stringify({ trackId: t.id }));
@@ -128,7 +131,7 @@ export default function BgmPage() {
               }}
             >
               <div className="flex items-center gap-3 min-w-0">
-                <button className="px-2 py-1 border rounded" onClick={() => play(t.id)} title="再生">
+                <button className="px-2 py-1 border rounded hover:bg-black/5 dark:hover:bg-white/10" onClick={() => play(t.id)} title="再生">
                   <Play size={14} />
                 </button>
                 <Image
@@ -136,22 +139,22 @@ export default function BgmPage() {
                   alt={t.title}
                   width={160}
                   height={90}
-                  className="w-20 h-12 sm:w-16 sm:h-9 object-cover rounded border"
+                  className="w-24 h-14 sm:w-24 sm:h-14 object-cover rounded border"
                 />
                 <div className="flex flex-col min-w-0">
-                  <div className="text-sm truncate" title={t.title}>{t.title}</div>
+                  <div className="text-sm font-medium truncate" title={t.title}>{t.title}</div>
                   <div className="text-[11px] opacity-60 truncate" title={t.url}>https://youtu.be/{t.videoId}</div>
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                <button className="px-2 py-1 border rounded" onClick={() => move(idxOf(t.id), Math.max(0, idxOf(t.id) - 1))}>
+                <button className="px-2 py-1 border rounded hover:bg-black/5 dark:hover:bg-white/10" onClick={() => move(idxOf(t.id), Math.max(0, idxOf(t.id) - 1))}>
                   <ChevronUp size={14} />
                 </button>
-                <button className="px-2 py-1 border rounded" onClick={() => move(idxOf(t.id), Math.min(tracks.length - 1, idxOf(t.id) + 1))}>
+                <button className="px-2 py-1 border rounded hover:bg-black/5 dark:hover:bg-white/10" onClick={() => move(idxOf(t.id), Math.min(tracks.length - 1, idxOf(t.id) + 1))}>
                   <ChevronDown size={14} />
                 </button>
                 <select
-                  className="px-2 py-1 border rounded text-xs"
+                  className="px-2 py-1 border rounded text-xs bg-transparent"
                   value={t.groupId ?? ""}
                   onChange={(e) => setTrackGroup(t.id, e.target.value || undefined)}
                 >
@@ -160,7 +163,7 @@ export default function BgmPage() {
                     <option key={g.id} value={g.id}>{g.name}</option>
                   ))}
                 </select>
-                <button className="px-2 py-1 border rounded" onClick={() => remove(t.id)} title="削除">
+                <button className="px-2 py-1 border rounded hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => remove(t.id)} title="削除">
                   <Trash2 size={14} />
                 </button>
               </div>
@@ -197,12 +200,25 @@ export default function BgmPage() {
 
   const play = (id: string) => {
     setCurrentId(id);
+    try { useAppStore.getState().playBgmTrack(id); } catch {}
   };
 
   const idxOf = (id: string) => tracks.findIndex((t) => t.id === id);
 
   return (
-    <div className="p-4 border rounded max-w-3xl">
+    <div className="max-w-5xl mx-auto p-6 sm:p-10 flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">作業用BGM（YouTubeプレイリスト）</h1>
+        <button
+          className={`px-3 py-1.5 rounded border text-sm flex items-center gap-2 ${hydrating ? "opacity-70" : ""}`}
+          onClick={() => hydrate()}
+          disabled={hydrating}
+          aria-busy={hydrating}
+          title="データを再同期"
+        >
+          <RefreshCw size={16} className={hydrating ? "animate-spin" : ""} /> 再読み込み
+        </button>
+      </div>
       {hydrating && <div className="text-xs opacity-70 mb-2">同期中...</div>}
       {!hydrating && tracks.length === 0 && groups.length === 0 && (
         <div className="text-xs opacity-70 mb-2">
@@ -211,22 +227,21 @@ export default function BgmPage() {
           してください。
         </div>
       )}
-      <div className="text-sm font-semibold mb-3">作業用BGM（YouTubeプレイリスト）</div>
-      <div className="flex flex-col sm:flex-row gap-2 mb-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-3">
         <input
-          className="flex-1 border rounded px-2 py-2 text-sm w-full sm:w-auto"
+          className="border rounded-lg px-3 py-2 text-sm bg-transparent sm:col-span-2 lg:col-span-3"
           placeholder="YouTubeのURL または 動画ID"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
         />
         <input
-          className="flex-1 border rounded px-2 py-2 text-sm w-full sm:w-auto"
+          className="border rounded-lg px-3 py-2 text-sm bg-transparent sm:col-span-2 lg:col-span-2"
           placeholder="タイトル（任意）"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
         <select
-          className="border rounded px-2 py-2 text-sm w-full sm:w-auto"
+          className="border rounded-lg px-3 py-2 text-sm bg-transparent"
           value={selectedGroupId}
           onChange={(e) => setSelectedGroupId(e.target.value)}
           title="追加先グループ"
@@ -236,21 +251,72 @@ export default function BgmPage() {
             <option key={g.id} value={g.id}>{g.name}</option>
           ))}
         </select>
-        <button className="px-3 py-2 text-sm rounded border flex items-center gap-1 w-full sm:w-auto justify-center" onClick={addTrack}>
+        <button className="px-3 py-2 text-sm rounded border flex items-center gap-2 justify-center hover:bg-black/5 dark:hover:bg-white/10" onClick={addTrack}>
           <Plus size={14} /> 追加
         </button>
-        <button className="px-3 py-2 text-sm rounded border w-full sm:w-auto" onClick={clear}>全クリア</button>
+        <button className="px-3 py-2 text-sm rounded border hover:bg-black/5 dark:hover:bg-white/10" onClick={clear}>全クリア</button>
+        <button
+          className={`px-3 py-2 text-sm rounded border hover:bg-red-50 dark:hover:bg-red-900/20 ${deletingAll ? 'opacity-70' : ''}`}
+          disabled={deletingAll}
+          onClick={async () => {
+            if (!window.confirm('プレイリスト内の全トラックを削除します。よろしいですか？')) return;
+            try {
+              setDeletingAll(true);
+              const ids = tracks.map((t) => t.id);
+              for (const id of ids) {
+                remove(id);
+              }
+              alert('全トラックを削除しました');
+            } finally {
+              setDeletingAll(false);
+            }
+          }}
+        >一括削除</button>
+        <input
+          className="border rounded-lg px-3 py-2 text-sm bg-transparent"
+          placeholder="キーワード（例: MV, Official Video）"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          title="タイトルに含まれるキーワードでフィルタ"
+        />
+        <button
+          className={`px-3 py-2 text-sm rounded border flex items-center gap-2 justify-center ${importing ? 'opacity-70' : ''}`}
+          disabled={importing}
+          onClick={async () => {
+            try {
+              setImporting(true);
+              const res = await fetch('/api/youtube/channel?handle=@gadoro1next&max=200');
+              const data = await res.json();
+              if (!res.ok) throw new Error(data?.error || 'fetch failed');
+              let items = (data.items ?? []) as Array<{ videoId: string; title: string; url: string }>;
+              const kw = keyword.trim().toLowerCase();
+              if (kw) items = items.filter((it) => (it.title ?? '').toLowerCase().includes(kw));
+              for (const it of items) {
+                add({ videoId: it.videoId, title: it.title || it.videoId, url: it.url, groupId: selectedGroupId || undefined });
+              }
+              alert(`${items.length}件を取り込みました`);
+            } catch (e) {
+              const msg = e instanceof Error ? e.message : String(e);
+              alert(`取り込みに失敗しました: ${msg}`);
+            } finally {
+              setImporting(false);
+            }
+          }}
+          title="gadoro公式チャンネルから取得して一括登録"
+        >
+          <Download size={14} /> 公式から一括取込
+        </button>
       </div>
 
       <div className="flex flex-col gap-3">
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row gap-3">
           <input
-            className="flex-1 border rounded px-2 py-2 text-sm w-full sm:w-auto"
+            className="flex-1 border rounded-lg px-3 py-2 text-sm bg-transparent"
             placeholder="グループ名（フォルダ名）"
             value={newGroupName}
             onChange={(e) => setNewGroupName(e.target.value)}
           />
-          <button className="px-3 py-2 text-sm rounded border w-full sm:w-auto" onClick={() => {
+          <button className="px-3 py-2 text-sm rounded border w-full sm:w-auto hover:bg-black/5 dark:hover:bg-white/10" onClick={() => {
             const name = newGroupName.trim();
             if (!name) return;
             addGroup({ name });
@@ -271,7 +337,7 @@ export default function BgmPage() {
       {currentId && (
         <div className="mt-4">
           <div className="text-xs font-semibold mb-2">再生中</div>
-          <div className="aspect-video w-full border rounded overflow-hidden">
+          <div className="aspect-video w-full border rounded-lg overflow-hidden shadow-sm">
             <iframe
               className="w-full h-full"
               src={`https://www.youtube.com/embed/${tracks.find((t) => t.id === currentId)?.videoId}?autoplay=1`}

@@ -105,4 +105,6 @@ function PomodoroTicker() {
   return null;
 }
 
+// GlobalBgmPlayer removed per request
+
 

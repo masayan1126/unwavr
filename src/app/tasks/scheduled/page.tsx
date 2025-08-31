@@ -4,11 +4,14 @@ import TaskList from "@/components/TaskList";
 import { useMemo, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import SectionLoader from "@/components/SectionLoader";
+import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
 
 export default function ScheduledTasksPage() {
   const tasks = useAppStore((s) => s.tasks);
   const hydrating = useAppStore((s) => s.hydrating);
   const scheduled = useMemo(() => tasks.filter((t) => t.type === "scheduled"), [tasks]);
+  const router = useRouter();
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [sortKey, setSortKey] = useState<"title" | "createdAt" | "scheduled" | "type" | "milestone">("createdAt");
@@ -24,7 +27,13 @@ export default function ScheduledTasksPage() {
     <div className="p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">特定曜日だけ積み上げ</h1>
-        <Link className="text-sm underline opacity-80" href={{ pathname: "/tasks", query: { new: "1" } }}>タスク追加</Link>
+        <button
+          type="button"
+          className="px-3 py-1.5 rounded border text-sm flex items-center gap-2"
+          onClick={() => router.push({ pathname: "/tasks", query: { new: "1" } } as unknown as string)}
+        >
+          <Plus size={16} /> タスク追加
+        </button>
       </div>
       {hydrating ? (
         <SectionLoader label="特定曜日タスクを読み込み中..." lines={5} />

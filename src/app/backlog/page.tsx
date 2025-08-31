@@ -5,11 +5,14 @@ import TaskList from "@/components/TaskList";
 import { useAppStore } from "@/lib/store";
 import { Filter as FilterIcon } from "lucide-react";
 import SectionLoader from "@/components/SectionLoader";
+import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
 
 export default function BacklogPage() {
   const tasks = useAppStore((s) => s.tasks);
   const hydrating = useAppStore((s) => s.hydrating);
   const backlog = useMemo(() => tasks.filter((t) => t.type === "backlog"), [tasks]);
+  const router = useRouter();
   
   // フィルター状態
   const [showIncomplete, setShowIncomplete] = useState(true);
@@ -45,9 +48,13 @@ export default function BacklogPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">積み上げ候補</h1>
         <div className="flex items-center gap-4">
-          <Link href={{ pathname: "/tasks", query: { new: "1" } }} className="px-3 py-1.5 rounded border text-sm flex items-center gap-2">
-            タスク追加
-          </Link>
+          <button
+            type="button"
+            className="px-3 py-1.5 rounded border text-sm flex items-center gap-2"
+            onClick={() => router.push({ pathname: "/tasks", query: { new: "1" } } as unknown as string)}
+          >
+            <Plus size={16} /> タスク追加
+          </button>
           <div className="relative">
             <button
               type="button"

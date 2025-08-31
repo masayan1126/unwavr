@@ -3,6 +3,7 @@ import { z, ZodError } from "zod";
 import bcrypt from "bcryptjs";
 import { supabaseAdmin, supabaseUrl } from "@/lib/supabaseClient";
 import { randomUUID } from "crypto";
+import { Resend } from "resend";
 
 const RegisterSchema = z.object({
   email: z.string().email().min(5).max(200),
@@ -33,6 +34,22 @@ export async function POST(req: NextRequest) {
     if (error) {
       const code = typeof (error as { code?: string }).code === "string" ? (error as { code: string }).code : undefined;
       return NextResponse.json({ error: "db_error", message: error.message, code }, { status: 500 });
+    }
+    // 登録完了メール（失敗しても登録は成功させる）
+    try {
+      const resendKey = process.env.RESEND_API_KEY;
+      const from = process.env.EMAIL_FROM || "noreply@unwavr.local";
+      if (resendKey) {
+        const resend = new Resend(resendKey);
+        await resend.emails.send({
+          from,
+          to: lower,
+          subject: "ご登録ありがとうございます（Unwavr）",
+          text: `Unwavr へのご登録が完了しました。\n\nログイン: ${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/auth/signin\n\n引き続きよろしくお願いいたします。`,
+        });
+      }
+    } catch {
+      // noop
     }
     return NextResponse.json({ ok: true });
   } catch (e) {

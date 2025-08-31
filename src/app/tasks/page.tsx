@@ -115,10 +115,10 @@ function TasksPageInner() {
   return (
     <div className="p-6 sm:p-10 max-w-6xl mx-auto flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">タスク管理</h1>
+        <h1 className="text-xl font-semibold">今日のタスク</h1>
         <div className="flex items-center gap-4">
           <button onClick={()=>setOpenCreate(true)} className="px-3 py-1.5 rounded border text-sm flex items-center gap-2">
-            <span>タスク追加</span>
+            <span className="inline-flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>タスク追加</span>
           </button>
           <Link className="text-sm underline opacity-80" href="/">
             ホーム

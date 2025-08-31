@@ -68,8 +68,13 @@ export type AppState = {
   pomodoro: PomodoroState;
   bgmTracks: BgmTrack[];
   bgmGroups: BgmGroup[];
+  bgmCurrentTrackId?: string;
+  bgmMiniPos?: { x: number; y: number };
   // loading flags
   hydrating: boolean;
+  // bgm global player controls
+  playBgmTrack: (trackId: string) => void;
+  stopBgm: () => void;
   // destructive ops
   clearTasks: () => void;
   clearMilestones: () => void;
@@ -124,6 +129,10 @@ export type AppState = {
   addBgmGroup: (input: Omit<BgmGroup, "id">) => void;
   updateBgmGroup: (id: string, update: Partial<Omit<BgmGroup, "id">>) => void;
   removeBgmGroup: (id: string) => void;
+  // bgm global control (lightweight state only)
+  playBgmTrack: (trackId: string) => void;
+  stopBgm: () => void;
+  setBgmMiniPos: (pos: { x: number; y: number }) => void;
 };
 
 const defaultPomodoro: PomodoroState = {
@@ -184,6 +193,8 @@ export const useAppStore = create<AppState>()(
       launcherCategories: [],
       launcherOnboarded: false,
       importHistory: [],
+      bgmCurrentTrackId: undefined,
+      bgmMiniPos: undefined,
       pomodoro: defaultPomodoro,
       bgmTracks: [],
       bgmGroups: [],
@@ -250,7 +261,13 @@ export const useAppStore = create<AppState>()(
       clearTasks: () => set({ tasks: [] }),
       clearMilestones: () => set({ milestones: [] }),
       clearLaunchers: () => set({ launcherShortcuts: [], launcherCategories: [], launcherOnboarded: false }),
-      clearTasksMilestonesLaunchers: () => set({ tasks: [], milestones: [], launcherShortcuts: [], launcherCategories: [], launcherOnboarded: false }),
+      clearTasksMilestonesLaunchers: () => {
+        // 先にローカルをクリアし、APIでDBのデータも削除
+        set({ tasks: [], milestones: [], launcherShortcuts: [], launcherCategories: [], launcherOnboarded: false });
+        fetch('/api/db/clear', { method: 'POST' })
+          .then(() => { try { if (typeof window !== 'undefined') { useAppStore.getState().hydrateFromDb(); } } catch {} })
+          .catch(() => {});
+      },
       addTask: (input) => {
         let createdId = '';
         set((state) => {
@@ -520,9 +537,13 @@ export const useAppStore = create<AppState>()(
               if (!title) { errors.push(`JSON #${idx + 1}: タイトルが空です`); return; }
               if (!Number.isFinite(target) || target < 1) { errors.push(`JSON #${idx + 1}: 目標が不正です`); return; }
               const dueDate = typeof m.dueDate === 'number' ? m.dueDate : undefined;
-              set((state) => ({
-                milestones: [...state.milestones, { id: createMilestoneId(), title, targetUnits: Math.max(1, Math.floor(target)), currentUnits: Math.max(0, Math.floor(current)), dueDate }],
-              }));
+              // DB経由で保存
+              try {
+                get().addMilestone({ title, targetUnits: Math.max(1, Math.floor(target)), currentUnits: Math.max(0, Math.floor(current)), dueDate } as Omit<Milestone, "id">);
+              } catch {
+                errors.push(`JSON #${idx + 1}: 追加に失敗`);
+                return;
+              }
               imported++;
             });
             return { success: true, imported, errors };
@@ -565,12 +586,18 @@ export const useAppStore = create<AppState>()(
                 dueDate = local.getTime();
               }
             }
-            set((state) => ({
-              milestones: [
-                ...state.milestones,
-                { id: createMilestoneId(), title, targetUnits: Math.max(1, Math.floor(target)), currentUnits: Math.max(0, Math.min(target, Math.floor(current))), dueDate },
-              ],
-            }));
+            // DB経由で保存
+            try {
+              get().addMilestone({
+                title,
+                targetUnits: Math.max(1, Math.floor(target)),
+                currentUnits: Math.max(0, Math.min(target, Math.floor(current))),
+                dueDate,
+              } as Omit<Milestone, "id">);
+            } catch {
+              errors.push(`行${i + 1}: 追加に失敗`);
+              continue;
+            }
             imported++;
           }
           return { success: true, imported, errors };
@@ -824,6 +851,10 @@ export const useAppStore = create<AppState>()(
           bgmGroups: state.bgmGroups.filter((g) => g.id !== id),
           bgmTracks: state.bgmTracks.map((t) => (t.groupId === id ? { ...t, groupId: undefined } : t)),
         })),
+      // bgm global control (lightweight state only)
+      playBgmTrack: (trackId: string) => set({ bgmCurrentTrackId: trackId }),
+      stopBgm: () => set({ bgmCurrentTrackId: undefined }),
+      setBgmMiniPos: (pos) => set({ bgmMiniPos: pos }),
     })
 );
 
