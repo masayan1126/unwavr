@@ -130,8 +130,6 @@ export type AppState = {
   updateBgmGroup: (id: string, update: Partial<Omit<BgmGroup, "id">>) => void;
   removeBgmGroup: (id: string) => void;
   // bgm global control (lightweight state only)
-  playBgmTrack: (trackId: string) => void;
-  stopBgm: () => void;
   setBgmMiniPos: (pos: { x: number; y: number }) => void;
 };
 
