@@ -95,7 +95,7 @@
 1. カラートークン設計の拡張
    - `--surface`, `--muted`, `--info`（必要なら）などの論理トークン追加
 2. SVGの色運用
-   - 可能なら `currentColor` 化し、`color` 属性/親の `text-[var(--...)]` で統一
+   - 可能なら `currentColor` 化し、`color` 属性/親の `text-[var(--token)]` で統一
 3. Tailwind連携
    - 必要に応じて tailwind.config で CSS変数をテーマカラーにマッピング
 4. 監査
