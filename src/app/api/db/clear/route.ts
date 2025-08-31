@@ -12,12 +12,12 @@ export async function POST() {
   // 依存関係順序: 子→親の順に削除
   const ops: Array<Promise<unknown>> = [];
   // tasks
-  ops.push(supabaseAdmin.from('tasks').delete().eq('user_id', userId));
+  ops.push(supabaseAdmin.from('tasks').delete().eq('user_id', userId) as unknown as Promise<unknown>);
   // launcher shortcuts then categories
-  ops.push(supabaseAdmin.from('launcher_shortcuts').delete().eq('user_id', userId));
-  ops.push(supabaseAdmin.from('launcher_categories').delete().eq('user_id', userId));
+  ops.push(supabaseAdmin.from('launcher_shortcuts').delete().eq('user_id', userId) as unknown as Promise<unknown>);
+  ops.push(supabaseAdmin.from('launcher_categories').delete().eq('user_id', userId) as unknown as Promise<unknown>);
   // milestones
-  ops.push(supabaseAdmin.from('milestones').delete().eq('user_id', userId));
+  ops.push(supabaseAdmin.from('milestones').delete().eq('user_id', userId) as unknown as Promise<unknown>);
 
   const results = await Promise.all(ops);
   type SupaResp = { error: { message: string } | null } | { error?: { message: string } | null } | null;
