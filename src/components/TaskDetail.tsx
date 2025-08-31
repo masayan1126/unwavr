@@ -109,7 +109,7 @@ export default function TaskDetail({ taskId, backHref }: { taskId: string; backH
 
       <div className="flex justify-end">
         <button
-          className="px-3 py-1 rounded bg-red-600 text-white text-sm"
+          className="px-3 py-1 rounded bg-[var(--danger)] text-white text-sm"
           onClick={() => {
             remove(task.id);
             router.push(backHref);

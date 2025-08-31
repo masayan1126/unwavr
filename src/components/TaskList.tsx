@@ -16,10 +16,10 @@ function truncateText(text: string, maxLength: number = 20): string {
 function TypeBadge({ type, label }: { type: "daily" | "scheduled" | "backlog"; label?: string }) {
   const map = {
     // サイドバーと同一のアイコンに統一
-    daily: { label: "毎日", classes: "bg-blue-500/10 text-blue-600 border-blue-500/30", Icon: ListTodo },
-    scheduled: { label: "特定曜日", classes: "bg-amber-500/10 text-amber-700 border-amber-500/30", Icon: CalendarDays },
+    daily: { label: "毎日", classes: "bg-[var(--tag-daily)]/10 text-[var(--tag-daily)] border-[var(--tag-daily)]/30", Icon: ListTodo },
+    scheduled: { label: "特定曜日", classes: "bg-[var(--tag-scheduled)]/10 text-[var(--tag-scheduled)] border-[var(--tag-scheduled)]/30", Icon: CalendarDays },
     // 視認性向上＆重複回避のため積み上げ候補はArchiveアイコン
-    backlog: { label: "積み上げ候補", classes: "bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-500/30", Icon: Archive },
+    backlog: { label: "積み上げ候補", classes: "bg-[var(--tag-backlog)]/10 text-[var(--tag-backlog)] border-[var(--tag-backlog)]/30", Icon: Archive },
   } as const;
   const info = map[type];
   const Icon = info.Icon;
@@ -57,7 +57,7 @@ function TaskRow({ task, onEdit }: { task: Task; onEdit: (task: Task) => void })
 
   return (
     <div className={`flex items-center gap-2 py-1 min-w-0 ${
-      task.completed ? "bg-emerald-50/60 dark:bg-emerald-900/20 rounded" : ""
+      task.completed ? "bg-[var(--success)]/10 dark:bg-[var(--success)]/20 rounded" : ""
     }`}>
       {task.type === "daily" ? (
         <button
@@ -66,8 +66,8 @@ function TaskRow({ task, onEdit }: { task: Task; onEdit: (task: Task) => void })
           title="今日実行済みにする"
           className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${
             isDailyDoneToday
-              ? "bg-blue-500 border-blue-500 text-white"
-              : "border-gray-300 hover:border-blue-400 hover:bg-blue-50 dark:border-gray-600 dark:hover:border-blue-400 dark:hover:bg-blue-900/20"
+              ? "bg-[var(--primary)] border-[var(--primary)] text-white"
+              : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-blue-50 dark:hover:border-[var(--primary)] dark:hover:bg-blue-900/20"
           }`}
         >
           {isDailyDoneToday && (
@@ -83,8 +83,8 @@ function TaskRow({ task, onEdit }: { task: Task; onEdit: (task: Task) => void })
           title={task.completed ? "完了を解除" : "完了にする"}
           className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${
             task.completed
-              ? "bg-green-500 border-green-500 text-white"
-              : "border-gray-300 hover:border-green-400 hover:bg-green-50 dark:border-gray-600 dark:hover:border-green-400 dark:hover:bg-green-900/20"
+              ? "bg-[var(--success)] border-[var(--success)] text-white"
+              : "border-[var(--border)] hover:border-[var(--success)] hover:bg-[var(--success)]/10 dark:hover:border-[var(--success)] dark:hover:bg-[var(--success)]/20"
           }`}
         >
           {task.completed && (
@@ -418,7 +418,7 @@ export default function TaskList({
                 <tr
                   key={t.id}
                   className={`border-t border-black/5 dark:border-white/5 ${
-                    t.completed ? "bg-emerald-50 dark:bg-emerald-900/20" : ""
+                    t.completed ? "bg-[var(--success)]/10 dark:bg-[var(--success)]/20" : ""
                   }`}
                 >
                   {enableSelection && (
@@ -435,8 +435,8 @@ export default function TaskList({
                           title="今日実行済みにする"
                           className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${
                             isDailyDoneToday
-                              ? "bg-blue-500 border-blue-500 text-white"
-                              : "border-gray-300 hover:border-blue-400 hover:bg-blue-50 dark:border-gray-600 dark:hover:border-blue-400 dark:hover:bg-blue-900/20"
+                              ? "bg-[var(--primary)] border-[var(--primary)] text-white"
+                              : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-blue-50 dark:hover:border-[var(--primary)] dark:hover:bg-blue-900/20"
                           }`}
                         >
                           {isDailyDoneToday && (
@@ -452,8 +452,8 @@ export default function TaskList({
                           title={t.completed ? "完了を解除" : "完了にする"}
                           className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${
                             t.completed
-                              ? "bg-green-500 border-green-500 text-white"
-                              : "border-gray-300 hover:border-green-400 hover:bg-green-50 dark:border-gray-600 dark:hover:border-green-400 dark:hover:bg-green-900/20"
+                              ? "bg-[var(--success)] border-[var(--success)] text-white"
+                              : "border-[var(--border)] hover:border-[var(--success)] hover:bg-[var(--success)]/10 dark:hover:border-[var(--success)] dark:hover:bg-[var(--success)]/20"
                           }`}
                         >
                           {t.completed && (
@@ -533,7 +533,7 @@ export default function TaskList({
   );
 
   return (
-    <div className="border border-black/10 dark:border-white/10 rounded-md p-3">
+    <div className="border border-[var(--border)] rounded-md p-3">
       <div className="flex items-center justify-between mb-2">
         <div className="text-xs uppercase tracking-wide opacity-70">{title}</div>
         {enableSelection && (
@@ -542,7 +542,7 @@ export default function TaskList({
             <button className="px-2 py-1 rounded border disabled:opacity-50" onClick={bulkComplete} disabled={Object.values(selected).every((v)=>!v)}>完了</button>
             <button className="px-2 py-1 rounded border disabled:opacity-50" onClick={bulkMarkIncomplete} disabled={Object.values(selected).every((v)=>!v)}>未完了に戻す</button>
             <button className="px-2 py-1 rounded border disabled:opacity-50" onClick={bulkArchiveDaily} disabled={Object.values(selected).every((v)=>!v)}>アーカイブ（毎日）</button>
-            <button className="px-2 py-1 rounded border text-red-600 border-red-600 disabled:opacity-50" onClick={bulkDelete} disabled={Object.values(selected).every((v)=>!v)}>削除</button>
+            <button className="px-2 py-1 rounded border text-[var(--danger)] border-[var(--danger)] disabled:opacity-50" onClick={bulkDelete} disabled={Object.values(selected).every((v)=>!v)}>削除</button>
           </div>
         )}
       </div>
@@ -585,7 +585,7 @@ export default function TaskList({
             }
           }}
         >
-          <div className="w-full max-w-4xl bg-background text-foreground rounded border border-black/10 dark:border-white/10 px-8 py-12 my-8 flex flex-col gap-6 max-h-[90vh] overflow-y-auto"
+          <div className="w-full max-w-4xl bg-background text-foreground rounded border border-[var(--border)] px-8 py-12 my-8 flex flex-col gap-6 max-h-[90vh] overflow-y-auto"
                onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <div className="text-xl font-semibold">タスク詳細</div>
@@ -748,7 +748,7 @@ export default function TaskList({
 
             <div className="flex justify-between items-center pt-6 border-t border-black/10 dark:border-white/10">
               <button 
-                className="px-6 py-3 rounded-lg border text-sm text-red-600 border-red-600 hover:bg-red-600 hover:text-white transition-colors"
+                className="px-6 py-3 rounded-lg border text-sm text-[var(--danger)] border-[var(--danger)] hover:bg-[var(--danger)] hover:text-white transition-colors"
                 onClick={async () => {
                   if (!editingTask) return;
                   if (editingTask.type === "daily") {

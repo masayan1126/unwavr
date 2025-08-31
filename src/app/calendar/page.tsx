@@ -290,9 +290,9 @@ export default function CalendarPage() {
             "border rounded min-h-24 p-1 flex flex-col gap-1 cursor-pointer",
             inMonth ? "" : "opacity-50",
             isToday(d) ? "ring-2 ring-foreground" : "",
-            dow === 0 ? "bg-red-500/5 border-red-500/20" : "",
-            dow === 6 ? "bg-blue-500/5 border-blue-500/20" : "",
-            dragOverKey === key ? "bg-amber-500/10 border-amber-500/30" : "",
+            dow === 0 ? "bg-[var(--danger)]/5 border-[var(--danger)]/20" : "",
+            dow === 6 ? "bg-[var(--primary)]/5 border-[var(--primary)]/20" : "",
+            dragOverKey === key ? "bg-[var(--warning)]/10 border-[var(--warning)]/30" : "",
           ].join(" ");
           return (
             <div

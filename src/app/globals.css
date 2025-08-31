@@ -8,6 +8,15 @@
   --card: #ffffff;
   --muted-foreground: #6b7280; /* gray-500 */
   --border: rgba(0,0,0,.08);
+  /* Semantic color tokens */
+  --primary: #3b82f6; /* blue-500 */
+  --success: #10b981; /* emerald-500 as brand success base */
+  --warning: #f59e0b; /* amber-500 */
+  --danger: #ef4444; /* red-500 */
+  /* Tag/Badge tokens */
+  --tag-daily: var(--primary);
+  --tag-scheduled: var(--warning);
+  --tag-backlog: #8b5cf6; /* violet-500 */
 }
 
 @theme inline {
@@ -25,6 +34,15 @@
     --card: #0f141a;
     --muted-foreground: #94a3b8; /* slate-400 */
     --border: rgba(255,255,255,.08);
+    /* Dark theme semantic tokens (adjusted for contrast) */
+    --primary: #60a5fa; /* blue-400 */
+    --success: #34d399; /* emerald-400 */
+    --warning: #fbbf24; /* amber-400 */
+    --danger: #f87171; /* red-400 */
+    /* Tag/Badge tokens */
+    --tag-daily: var(--primary);
+    --tag-scheduled: var(--warning);
+    --tag-backlog: #a78bfa; /* violet-400 */
   }
 }
 

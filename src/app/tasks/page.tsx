@@ -135,7 +135,7 @@ function TasksPageInner() {
               onClick={() => setSelectedType(type)}
               className={`px-3 py-1 rounded border text-sm ${
                 selectedType === type
-                  ? "bg-blue-500 text-white border-blue-500"
+                  ? "bg-[var(--primary)] text-white border-[var(--primary)]"
                   : "border-black/10 dark:border-white/10"
               }`}
             >

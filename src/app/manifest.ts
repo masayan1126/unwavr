@@ -6,8 +6,8 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "unwavr",
     start_url: "/",
     display: "standalone",
-    background_color: "#0b0f14",
-    theme_color: "#0b0f14",
+    background_color: "#f9fafb",
+    theme_color: "#3b82f6",
     icons: [
       { src: "/unwavr-logo.svg", sizes: "any", type: "image/svg+xml" },
     ],

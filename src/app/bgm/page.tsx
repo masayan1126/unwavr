@@ -77,7 +77,7 @@ export default function BgmPage() {
     const title = isUngrouped ? "未分類" : group?.name ?? "グループ";
     const list = grouped.get(groupId) ?? [];
     return (
-      <div key={groupId ?? "__ungrouped"} className={`border rounded-lg overflow-hidden bg-background shadow-sm ${dragOverGroupId === (groupId ?? "__ungrouped") ? "ring-2 ring-blue-400/50" : ""}`}
+      <div key={groupId ?? "__ungrouped"} className={`border rounded-lg overflow-hidden bg-background shadow-sm ${dragOverGroupId === (groupId ?? "__ungrouped") ? "ring-2 ring-[var(--primary)]/50" : ""}`}
         onDragOver={(e) => {
           e.preventDefault();
           setDragOverGroupId(groupId ?? "__ungrouped");
@@ -163,7 +163,7 @@ export default function BgmPage() {
                     <option key={g.id} value={g.id}>{g.name}</option>
                   ))}
                 </select>
-                <button className="px-2 py-1 border rounded hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => remove(t.id)} title="削除">
+                <button className="px-2 py-1 border rounded hover:bg-[var(--danger)]/10 dark:hover:bg-[var(--danger)]/20" onClick={() => remove(t.id)} title="削除">
                   <Trash2 size={14} />
                 </button>
               </div>

@@ -264,7 +264,7 @@ export default function ImportExportPage() {
         </Link>
       </div>
 
-      <div className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col gap-3">
+      <div className="border rounded p-4 border-[var(--border)] flex flex-col gap-3">
         <div className="text-sm font-medium">インポート（CSV）</div>
         <div className="text-xs opacity-70">ヘッダー行を含むCSVを選択してください。対応列（日本語/英語どちらでも可）: タイトル(title), 詳細(description), 種別(type: daily/scheduled/backlog), 曜日(daysOfWeek: 1;3;5), 期間(dateRanges: 2025-01-01..2025-01-05;2025-05-01..2025-05-03), 見積ポモ(estimatedPomodoros)</div>
         <input
@@ -279,7 +279,7 @@ export default function ImportExportPage() {
           <div className="text-sm">
             インポート: {result.imported}件 / 失敗: {result.failed}件
             {result.errors.length > 0 && (
-              <ul className="mt-2 list-disc pl-5 text-xs text-red-600 dark:text-red-400">
+              <ul className="mt-2 list-disc pl-5 text-xs text-[var(--danger)] dark:text-[var(--danger)]">
                 {result.errors.map((er, i) => (
                   <li key={i}>{er}</li>
                 ))}
@@ -294,14 +294,14 @@ export default function ImportExportPage() {
         </div>
       </div>
 
-      <div className="border rounded p-4 border-black/10 dark:border-white/10 flex items-center justify-between">
+      <div className="border rounded p-4 border-[var(--border)] flex items-center justify-between">
         <div className="text-sm font-medium">エクスポート（CSV）</div>
         <button className="px-3 py-1 rounded bg-foreground text-background text-sm" onClick={exportCSV}>
           ダウンロード
         </button>
       </div>
 
-      <div className="border rounded p-4 border-black/10 dark:border-white/10 flex items-center justify-between">
+      <div className="border rounded p-4 border-[var(--border)] flex items-center justify-between">
         <div className="text-sm font-medium">デモデータ / サンプル投入</div>
         <div className="flex gap-2">
           <button
@@ -328,7 +328,7 @@ export default function ImportExportPage() {
         </div>
       </div>
 
-      <div className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col gap-3">
+      <div className="border rounded p-4 border-[var(--border)] flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="text-sm font-medium">インポート履歴</div>
           <button className="text-xs underline opacity-80" onClick={clearHistory}>履歴をすべて削除</button>
@@ -354,12 +354,12 @@ export default function ImportExportPage() {
         )}
       </div>
 
-      <div className="border rounded p-4 border-red-500/30 bg-red-500/5 flex flex-col gap-3">
-        <div className="text-sm font-medium text-red-600">危険な操作</div>
+      <div className="border rounded p-4 border-[var(--danger)]/30 bg-[var(--danger)]/5 flex flex-col gap-3">
+        <div className="text-sm font-medium text-[var(--danger)]">危険な操作</div>
         <div className="text-xs opacity-80">タスク・マイルストーン・ランチャーの設定をすべて削除します。この操作は取り消せません。</div>
         <div>
           <button
-            className="px-3 py-2 rounded bg-red-600 text-white text-sm"
+            className="px-3 py-2 rounded bg-[var(--danger)] text-white text-sm"
             onClick={async () => {
               const ok2 = await confirm('本当に全て削除しますか？この操作は取り消せません。', { tone: 'danger', confirmText: '削除' });
               if (ok2) {

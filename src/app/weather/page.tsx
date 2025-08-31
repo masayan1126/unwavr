@@ -394,9 +394,9 @@ export default function WeatherPage() {
       ) : (
         <>
           {isDefaultLocation && (
-            <div className="border rounded p-3 border-yellow-500/20 bg-yellow-500/10">
+            <div className="border rounded p-3 border-[var(--warning)]/20 bg-[var(--warning)]/10">
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-yellow-600">📍</span>
+                <span className="text-[var(--warning)]">📍</span>
                 <span>東京の天気を表示中</span>
               </div>
               <p className="text-xs opacity-70 mt-1">

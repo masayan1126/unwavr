@@ -29,14 +29,14 @@ export default function PomodoroTopBar() {
   if (!visible) return null;
 
   return (
-    <div className="sticky top-0 z-[60] w-full bg-amber-50/95 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 backdrop-blur supports-[backdrop-filter]:bg-amber-50/70 dark:supports-[backdrop-filter]:bg-amber-900/10">
+    <div className="sticky top-0 z-[60] w-full bg-[var(--warning)]/10 dark:bg-[var(--warning)]/20 border-b border-[var(--warning)]/30 dark:border-[var(--warning)]/30 backdrop-blur supports-[backdrop-filter]:bg-[var(--warning)]/20 dark:supports-[backdrop-filter]:bg-[var(--warning)]/10">
       <div className="max-w-6xl mx-auto px-6 sm:px-10 py-2 flex items-center gap-3">
-        <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
+        <div className="flex items-center gap-2 text-[var(--warning)]">
           {p.isBreak ? <Coffee size={14} /> : <Play size={14} />}
           <span className="text-xs font-semibold">ポモドーロ中</span>
         </div>
         <div className="text-xs tabular-nums">
-          <span className="px-1 py-0.5 rounded border border-amber-300/70 dark:border-amber-700/70 mr-2">{label}</span>
+          <span className="px-1 py-0.5 rounded border border-[var(--warning)]/50 mr-2">{label}</span>
           <span className="font-mono">{format(p.secondsLeft)}</span>
         </div>
         <div className="ml-auto flex items-center gap-2">

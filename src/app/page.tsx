@@ -59,7 +59,7 @@ export default function Home() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-fr">
         {/* 未完了 */}
-        <section className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col min-h-[320px]">
+        <section className="border rounded p-4 border-[var(--border)] flex flex-col min-h-[320px]">
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">未完了 ({incompleteToday.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs">
@@ -77,7 +77,7 @@ export default function Home() {
         </section>
 
         {/* 積み上げ済み (毎日) */}
-        <section className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col min-h-[320px]">
+        <section className="border rounded p-4 border-[var(--border)] flex flex-col min-h-[320px]">
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">積み上げ済み (毎日) ({dailyDoneFiltered.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs" />
@@ -93,7 +93,7 @@ export default function Home() {
         </section>
 
         {/* 完了済み (特定曜日) */}
-        <section className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col min-h-[320px]">
+        <section className="border rounded p-4 border-[var(--border)] flex flex-col min-h-[320px]">
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">完了済み (特定曜日) ({scheduledDoneFiltered.length})</h2>
           </div>
@@ -108,7 +108,7 @@ export default function Home() {
         </section>
 
         {/* 完了済み (積み上げ候補) */}
-        <section className="border rounded p-4 border-black/10 dark:border-white/10 flex flex-col min-h-[320px]">
+        <section className="border rounded p-4 border-[var(--border)] flex flex-col min-h-[320px]">
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">完了済み (積み上げ候補) ({backlogDoneFiltered.length})</h2>
           </div>

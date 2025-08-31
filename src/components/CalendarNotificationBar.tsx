@@ -88,7 +88,7 @@ export default function CalendarNotificationBar() {
   }
 
   return (
-    <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 shadow-sm">
+    <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-[var(--border)] shadow-sm">
       <div className="px-6 sm:px-10 py-2 max-w-6xl mx-auto">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
@@ -106,9 +106,9 @@ export default function CalendarNotificationBar() {
                 : "";
 
               return (
-                <div key={event.id} className="flex items-center gap-2 flex-shrink-0 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-md px-2 py-1">
-                  <Clock size={12} className="text-blue-600 dark:text-blue-400" />
-                  <span className="text-xs font-medium tabular-nums text-blue-700 dark:text-blue-300">{timeRange}</span>
+                <div key={event.id} className="flex items-center gap-2 flex-shrink-0 bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20 border border-[var(--primary)]/30 rounded-md px-2 py-1">
+                  <Clock size={12} className="text-[var(--primary)]" />
+                  <span className="text-xs font-medium tabular-nums text-[var(--primary)]">{timeRange}</span>
                   <span className="text-xs truncate max-w-28 text-gray-700 dark:text-gray-300" title={event.summary}>
                     {event.summary || "(無題)"}
                   </span>

@@ -162,7 +162,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
       {!isEditing ? (
         // 表示モード
         <div className="space-y-4">
-          <div className="border rounded p-4 border-black/10 dark:border-white/10">
+          <div className="border rounded p-4 border-[var(--border)]">
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-lg font-medium">{task.title}</h2>
               <button
@@ -236,7 +236,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
           <div className="flex gap-2">
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              className="px-4 py-2 bg-[var(--danger)] text-white rounded hover:opacity-90"
             >
               削除
             </button>
@@ -245,7 +245,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
       ) : (
         // 編集モード
         <div className="space-y-4">
-          <div className="border rounded p-4 border-black/10 dark:border-white/10">
+          <div className="border rounded p-4 border-[var(--border)]">
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">タイトル</label>
@@ -254,7 +254,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   onBlur={() => handleSave(true)}
-                  className="w-full border border-black/10 dark:border-white/10 rounded px-3 py-2 bg-transparent"
+                  className="w-full border border-[var(--border)] rounded px-3 py-2 bg-transparent"
                 />
               </div>
 
@@ -284,7 +284,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                     }
                   }}
                   onBlur={() => handleSave(true)}
-                  className="w-full border border-black/10 dark:border-white/10 rounded px-3 py-2 bg-transparent"
+                  className="w-full border border-[var(--border)] rounded px-3 py-2 bg-transparent"
                 >
                   <option value="daily">毎日</option>
                   <option value="backlog">積み上げ候補</option>
@@ -300,7 +300,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                   value={estimatedPomodoros}
                   onChange={(e) => setEstimatedPomodoros(parseInt(e.target.value) || 0)}
                   onBlur={() => handleSave(true)}
-                  className="w-full border border-black/10 dark:border-white/10 rounded px-3 py-2 bg-transparent"
+                  className="w-full border border-[var(--border)] rounded px-3 py-2 bg-transparent"
                 />
               </div>
 
@@ -310,7 +310,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                   value={milestoneId}
                   onChange={(e) => setMilestoneId(e.target.value)}
                   onBlur={() => handleSave(true)}
-                  className="w-full border border-black/10 dark:border-white/10 rounded px-3 py-2 bg-transparent"
+                  className="w-full border border-[var(--border)] rounded px-3 py-2 bg-transparent"
                 >
                   <option value="">未選択</option>
                   {milestones.map((m) => (
@@ -333,8 +333,8 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                           onClick={() => toggleDay(index)}
                           className={`px-3 py-1 rounded border ${
                             selectedDays.includes(index)
-                              ? "bg-blue-500 text-white border-blue-500"
-                              : "border-black/10 dark:border-white/10"
+                              ? "bg-[var(--primary)] text-white border-[var(--primary)]"
+                              : "border-[var(--border)]"
                           }`}
                         >
                           {label}
@@ -351,7 +351,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                         value={rangeStart}
                         onChange={(e) => setRangeStart(e.target.value)}
                         onBlur={() => handleSave(true)}
-                        className="border border-black/10 dark:border-white/10 rounded px-3 py-2 bg-transparent"
+                        className="border border-[var(--border)] rounded px-3 py-2 bg-transparent"
                       />
                       <span className="flex items-center">〜</span>
                       <input
@@ -359,7 +359,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                         value={rangeEnd}
                         onChange={(e) => setRangeEnd(e.target.value)}
                         onBlur={() => handleSave(true)}
-                        className="border border-black/10 dark:border-white/10 rounded px-3 py-2 bg-transparent"
+                        className="border border-[var(--border)] rounded px-3 py-2 bg-transparent"
                       />
                     </div>
                   </div>
@@ -373,7 +373,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                     <button
                       type="button"
                       onClick={addPlannedDate}
-                      className="px-3 py-1 text-sm border border-black/10 dark:border-white/10 rounded"
+                      className="px-3 py-1 text-sm border border-[var(--border)] rounded"
                     >
                       今日を追加
                     </button>
@@ -384,7 +384,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                             <span>{formatDate(date)}</span>
                             <button
                               onClick={() => { removePlannedDate(date); setTimeout(()=>handleSave(), 0); }}
-                              className="text-red-500 text-sm"
+                              className="text-[var(--danger)] text-sm"
                             >
                               削除
                             </button>
@@ -402,13 +402,13 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
             <button
               onClick={() => handleSave()}
               disabled={!title.trim()}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+              className="px-4 py-2 bg-[var(--primary)] text-white rounded hover:opacity-90 disabled:opacity-50"
             >
               保存
             </button>
             <button
               onClick={() => setIsEditing(false)}
-              className="px-4 py-2 border border-black/10 dark:border-white/10 rounded"
+              className="px-4 py-2 border border-[var(--border)] rounded"
             >
               キャンセル
             </button>
@@ -424,13 +424,13 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 border border-black/10 dark:border-white/10 rounded"
+                className="px-4 py-2 border border-[var(--border)] rounded"
               >
                 キャンセル
               </button>
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                className="px-4 py-2 bg-[var(--danger)] text-white rounded hover:opacity-90"
               >
                 削除
               </button>

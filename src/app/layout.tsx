@@ -62,6 +62,11 @@ export const metadata: Metadata = {
     apple: [{ url: "/unwavr-logo.svg" }],
   },
   category: "productivity",
+  // 動的テーマカラー（ライト/ダーク）
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#3b82f6" },
+    { media: "(prefers-color-scheme: dark)", color: "#60a5fa" },
+  ],
 };
 
 export default function RootLayout({

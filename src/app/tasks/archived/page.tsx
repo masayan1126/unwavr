@@ -122,7 +122,7 @@ export default function ArchivedTasksPage(): React.ReactElement {
                     <td className="px-2 py-1 text-xs opacity-80">{t.type}</td>
                     <td className="px-2 py-1 text-xs opacity-80">{t.archivedAt ? new Date(t.archivedAt).toLocaleDateString() : '-'}</td>
                     <td className="px-2 py-1">
-                      <button className="px-3 py-1.5 text-sm rounded-md border border-emerald-600 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-colors" onClick={() => restore(t)}>復元</button>
+                      <button className="px-3 py-1.5 text-sm rounded-md border border-[var(--success)] text-[var(--success)] hover:bg-[var(--success)] hover:text-white transition-colors" onClick={() => restore(t)}>復元</button>
                     </td>
                   </tr>
                 ))}

@@ -113,11 +113,11 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
 
   return (
     <>
-    <form onSubmit={onSubmit} className="flex flex-col gap-2 border border-black/10 dark:border-white/10 p-3 rounded-md w-full">
+    <form onSubmit={onSubmit} className="flex flex-col gap-2 border border-[var(--border)] p-3 rounded-md w-full">
       <div className="flex items-center justify-between gap-2">
         <div className="flex gap-2 items-center flex-1">
           <input
-            className={`flex-1 border border-black/10 dark:border-white/10 rounded px-2 py-1 bg-transparent ${listening ? "ring-2 ring-red-500/60" : ""}`}
+            className={`flex-1 border border-[var(--border)] rounded px-2 py-1 bg-transparent ${listening ? "ring-2 ring-[var(--danger)]/60" : ""}`}
             placeholder="タスク名"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -125,20 +125,20 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
           />
           <button
             type="button"
-            className={`inline-flex items-center justify-center px-3 py-1 rounded border text-xs shrink-0 whitespace-nowrap min-w-[84px] ${listening ? "bg-red-600 text-white border-red-600" : ""}`}
+            className={`inline-flex items-center justify-center px-3 py-1 rounded border text-xs shrink-0 whitespace-nowrap min-w-[84px] ${listening ? "bg-[var(--danger)] text-white border-[var(--danger)]" : ""}`}
             onClick={() => { setListening((v)=>!v); toggleSpeech(); }}
           >
             <Mic size={14} className="mr-1" />
             音声入力
           </button>
           {listening && (
-            <span className="inline-flex items-center gap-1 text-xs text-red-600">
-              <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
+            <span className="inline-flex items-center gap-1 text-xs text-[var(--danger)]">
+              <span className="w-2 h-2 rounded-full bg-[var(--danger)] animate-pulse" />
               音声入力中...
             </span>
           )}
           <select
-            className="border border-black/10 dark:border-white/10 rounded px-2 py-1 bg-transparent"
+            className="border border-[var(--border)] rounded px-2 py-1 bg-transparent"
             value={type}
             onChange={(e) => {
               const v = e.target.value as TaskType;
@@ -167,7 +167,7 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
         <div className="flex gap-2 items-center">
           <label className="text-sm">マイルストーン</label>
           <select
-            className="border border-black/10 dark:border-white/10 rounded px-2 py-1 bg-transparent"
+            className="border border-[var(--border)] rounded px-2 py-1 bg-transparent"
             value={milestoneId}
             onChange={(e) => setMilestoneId(e.target.value)}
             onBlur={performSave}
@@ -224,7 +224,7 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
             <div className="flex gap-2 items-center flex-wrap">
               <input
                 type="date"
-                className="border border-black/10 dark:border-white/10 rounded px-2 py-1 bg-transparent"
+                className="border border-[var(--border)] rounded px-2 py-1 bg-transparent"
                 value={rangeStart}
                 onChange={(e) => setRangeStart(e.target.value)}
                 onBlur={performSave}
@@ -232,7 +232,7 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
               <span>〜</span>
               <input
                 type="date"
-                className="border border-black/10 dark:border-white/10 rounded px-2 py-1 bg-transparent"
+                className="border border-[var(--border)] rounded px-2 py-1 bg-transparent"
                 value={rangeEnd}
                 onChange={(e) => setRangeEnd(e.target.value)}
                 onBlur={performSave}
@@ -292,7 +292,7 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
           <div className="flex gap-2 items-center flex-wrap">
             <input
               type="date"
-              className="border border-black/10 dark:border-white/10 rounded px-2 py-1 bg-transparent"
+              className="border border-[var(--border)] rounded px-2 py-1 bg-transparent"
               value={plannedDateInput}
               onChange={(e) => setPlannedDateInput(e.target.value)}
               onBlur={() => {

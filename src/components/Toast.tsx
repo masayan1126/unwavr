@@ -17,10 +17,10 @@ export default function Toast({ message, type = "info", onClose, durationMs = 30
   }, [onClose, durationMs]);
 
   const accent =
-    type === "success" ? "bg-emerald-500" :
-    type === "warning" ? "bg-amber-500" :
-    type === "error" ? "bg-rose-500" :
-    "bg-blue-500";
+    type === "success" ? "bg-[var(--success)]" :
+    type === "warning" ? "bg-[var(--warning)]" :
+    type === "error" ? "bg-[var(--danger)]" :
+    "bg-[var(--primary)]";
 
   const Icon =
     type === "success" ? CheckCircle2 :
@@ -30,8 +30,8 @@ export default function Toast({ message, type = "info", onClose, durationMs = 30
 
   const isError = type === "error";
   const baseContainer = "pointer-events-auto flex items-start gap-3 rounded-lg backdrop-blur shadow-lg px-4 py-3 max-w-xs border";
-  const normalContainer = "border-black/10 dark:border-white/10 bg-white/90 dark:bg-neutral-900/90";
-  const errorContainer = "bg-rose-600 text-white border-rose-700";
+  const normalContainer = "border-[var(--border)] bg-white/90 dark:bg-neutral-900/90";
+  const errorContainer = "bg-[var(--danger)] text-white border-[var(--danger)]";
 
   const posCls = position === "top" ? "top-4" : "bottom-4";
 

@@ -14,8 +14,8 @@ export default function OverdueNotificationBar() {
     <Link
       href={{ pathname: "/tasks/overdue" }}
       className="block px-4 py-2 text-sm border rounded-md 
-                 bg-amber-50 text-amber-900 border-amber-200
-                 dark:bg-amber-900/20 dark:text-amber-100 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+                 bg-[var(--warning)]/10 text-[var(--warning)] border-[var(--warning)]/30
+                 dark:bg-[var(--warning)]/20 dark:text-[var(--warning)] dark:border-[var(--warning)]/30 hover:bg-[var(--warning)]/15 dark:hover:bg-[var(--warning)]/25 transition-colors"
       role="status"
       aria-live="polite"
     >
