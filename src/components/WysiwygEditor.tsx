@@ -48,19 +48,19 @@ export default function WysiwygEditor({ value, onChange, className, onBlur }: Wy
 
   return (
     <div className={`${className ?? ""} flex flex-col`}>
-      <div className="flex flex-wrap gap-2 mb-2 shrink-0">
-        <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().setParagraph().run()}>P</button>
-        <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}>H1</button>
-        <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}>H2</button>
-        <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}>H3</button>
-        <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleBold().run()}>B</button>
-        <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleItalic().run()}>I</button>
-        <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleUnderline().run()}>U</button>
-        <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleBulletList().run()}>• List</button>
-        <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleOrderedList().run()}>1. List</button>
-        <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleCode().run()}>{"< >"}</button>
-      </div>
-      <div className="flex-1 min-h-0 overflow-y-auto">
+      <div className="flex-1 min-h-0 max-h-[60vh] overflow-y-auto">
+        <div className="sticky top-0 z-10 bg-background border-b border-black/10 dark:border-white/10 flex flex-wrap gap-2 p-2 shrink-0">
+          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().setParagraph().run()}>P</button>
+          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}>H1</button>
+          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}>H2</button>
+          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}>H3</button>
+          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleBold().run()}>B</button>
+          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleItalic().run()}>I</button>
+          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleUnderline().run()}>U</button>
+          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleBulletList().run()}>• List</button>
+          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleOrderedList().run()}>1. List</button>
+          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleCode().run()}>{"< >"}</button>
+        </div>
         <EditorContent editor={editor} className="tiptap prose prose-sm max-w-none dark:prose-invert w-full min-h-[300px]" />
       </div>
     </div>
