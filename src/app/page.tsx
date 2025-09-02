@@ -34,6 +34,7 @@ export default function Home() {
     return () => window.clearInterval(id);
   }, []);
   const [openCreate, setOpenCreate] = useState(false);
+  const defaultCreateType: "backlog" = "backlog";
   return (
     <div className="min-h-screen p-6 sm:p-10 max-w-6xl mx-auto flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -132,7 +133,7 @@ export default function Home() {
       </div>
 
       {/* AddQiitaZenn は案内文削除のため一時的に非表示 */}
-      <TaskCreateDialog open={openCreate} onClose={() => setOpenCreate(false)} />
+      <TaskCreateDialog open={openCreate} onClose={() => setOpenCreate(false)} defaultType={defaultCreateType} />
     </div>
   );
 }

@@ -9,20 +9,26 @@ import { X } from "lucide-react";
 
 type TaskFormProps = {
   onSubmitted?: (mode: 'close' | 'keep') => void;
+  defaultType?: TaskType;
 };
 
-export default function TaskForm({ onSubmitted }: TaskFormProps) {
+export default function TaskForm({ onSubmitted, defaultType }: TaskFormProps) {
   const addTask = useAppStore((s) => s.addTask);
   const milestones = useAppStore((s) => s.milestones);
   const [title, setTitle] = useState("");
-  const [type, setType] = useState<TaskType>("backlog");
+  const [type, setType] = useState<TaskType>(defaultType ?? "backlog");
   const [desc, setDesc] = useState("");
   const [scheduled, setScheduled] = useState<Scheduled | undefined>(undefined);
   const [rangeStart, setRangeStart] = useState<string>("");
   const [rangeEnd, setRangeEnd] = useState<string>("");
   const [milestoneId, setMilestoneId] = useState<string>("");
   const [plannedDateInput, setPlannedDateInput] = useState<string>("");
-  const [plannedDates, setPlannedDates] = useState<number[]>([(() => { const d = new Date(); d.setUTCHours(0,0,0,0); return d.getTime(); })()]);
+  const [plannedDates, setPlannedDates] = useState<number[]>([(() => {
+    const d = new Date();
+    d.setUTCHours(0,0,0,0);
+    const today = d.getTime();
+    return (defaultType ?? "backlog") === "backlog" ? today : undefined as unknown as number;
+  })()].filter((v) => typeof v === "number") as number[]);
   const [listening, setListening] = useState(false);
   const isSubmittingRef = useRef(false);
   const [draftTaskId, setDraftTaskId] = useState<string | undefined>(undefined);
@@ -150,8 +156,8 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
             onBlur={performSave}
           >
             <option value="daily">毎日</option>
-            <option value="backlog">不定期（積み上げ候補）</option>
-            <option value="scheduled">特定曜日だけ</option>
+            <option value="backlog">積み上げ候補</option>
+            <option value="scheduled">特定曜日</option>
           </select>
         </div>
         <div className="text-xs text-right truncate max-w-[40%]">
@@ -184,7 +190,6 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <label className="text-sm">詳細</label>
-          
         </div>
         <WysiwygEditor
           value={desc}
@@ -342,8 +347,8 @@ export default function TaskForm({ onSubmitted }: TaskFormProps) {
         </div>
       )}
       <div className="flex justify-end gap-2">
-        <button type="button" className="px-3 py-1 rounded border text-sm" onClick={() => { performSave(); setTimeout(()=>{ if (onSubmitted) onSubmitted('keep'); }, 0); }}>続けて追加する</button>
-        <button type="submit" className="px-3 py-1 rounded bg-foreground text-background text-sm">追加</button>
+        <button type="button" className="btn" onClick={() => { performSave(); setTimeout(()=>{ if (onSubmitted) onSubmitted('keep'); }, 0); }}>続けて追加</button>
+        <button type="submit" className="btn btn-primary">追加</button>
       </div>
     </form>
     

@@ -134,7 +134,7 @@ export default function Sidebar() {
                 }`}
               >
                 <ListTodo size={16} />
-                <span className="truncate">毎日積み上げ</span>
+                <span className="truncate">毎日</span>
               </Link>
               <Link
                 href="/tasks/scheduled"
@@ -143,7 +143,7 @@ export default function Sidebar() {
                 }`}
               >
                 <CalendarDays size={16} />
-                <span className="truncate">特定曜日だけ積み上げ</span>
+                <span className="truncate">特定曜日</span>
               </Link>
               <Link
                 href="/backlog"

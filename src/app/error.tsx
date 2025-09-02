@@ -14,8 +14,8 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
           <div className="text-xs opacity-60 mb-6">エラーID: {error.digest}</div>
         )}
         <div className="flex gap-3 justify-center">
-          <button onClick={() => reset()} className="px-4 py-2 rounded border text-sm">再試行</button>
-          <Link href="/" className="px-4 py-2 rounded bg-foreground text-background text-sm">ホームへ戻る</Link>
+          <button onClick={() => reset()} className="btn">再試行</button>
+          <Link href="/" className="btn btn-primary">ホームへ戻る</Link>
         </div>
       </div>
     </div>

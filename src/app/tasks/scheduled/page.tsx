@@ -28,7 +28,7 @@ export default function ScheduledTasksPage() {
   return (
     <div className="p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">特定曜日だけ積み上げ</h1>
+        <h1 className="text-xl font-semibold">特定曜日</h1>
         <button
           type="button"
           className="px-3 py-1.5 rounded border text-sm flex items-center gap-2"
@@ -78,7 +78,7 @@ export default function ScheduledTasksPage() {
           <TaskList title="特定曜日" tasks={pageItems} tableMode showCreatedColumn={false} showPlannedColumn={false} showScheduledColumn showTypeColumn showMilestoneColumn={false} sortKey={sortKey} sortAsc={sortAsc} filterStatus={filterStatus} enableSelection />
         </>
       )}
-      <TaskCreateDialog open={openCreate} onClose={() => setOpenCreate(false)} />
+      <TaskCreateDialog open={openCreate} onClose={() => setOpenCreate(false)} defaultType="scheduled" />
     </div>
   );
 }

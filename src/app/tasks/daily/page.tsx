@@ -28,7 +28,7 @@ export default function DailyTasksPage() {
   return (
     <div className="p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">毎日積み上げ</h1>
+        <h1 className="text-xl font-semibold">毎日</h1>
         <button
           type="button"
           className="px-3 py-1.5 rounded border text-sm flex items-center gap-2"
@@ -74,10 +74,10 @@ export default function DailyTasksPage() {
               </div>
             </div>
           </div>
-          <TaskList title="毎日積み上げ" tasks={pageItems} tableMode showCreatedColumn={false} showPlannedColumn={false} showTypeColumn showMilestoneColumn={false} sortKey={sortKey} sortAsc={sortAsc} filterStatus={filterStatus} enableSelection />
+          <TaskList title="毎日" tasks={pageItems} tableMode showCreatedColumn={false} showPlannedColumn={false} showTypeColumn showMilestoneColumn={false} sortKey={sortKey} sortAsc={sortAsc} filterStatus={filterStatus} enableSelection />
         </>
       )}
-      <TaskCreateDialog open={openCreate} onClose={() => setOpenCreate(false)} />
+      <TaskCreateDialog open={openCreate} onClose={() => setOpenCreate(false)} defaultType="daily" />
     </div>
   );
 }

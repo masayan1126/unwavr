@@ -12,8 +12,8 @@ export default function NotFound() {
           お探しのページは存在しないか、移動した可能性があります。
         </p>
         <div className="flex gap-3 justify-center">
-          <Link href="/" className="px-4 py-2 rounded border text-sm">ホームへ戻る</Link>
-          <Link href="/tasks" className="px-4 py-2 rounded bg-foreground text-background text-sm">タスクを見る</Link>
+          <Link href="/" className="btn">ホームへ戻る</Link>
+          <Link href="/tasks" className="btn btn-primary">タスクを見る</Link>
         </div>
       </div>
     </div>

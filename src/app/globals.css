@@ -120,6 +120,37 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--muted-foreground);
 }
 
+/* Unified UI utilities */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem; /* px-3 py-2 */
+  border: 1px solid var(--border);
+  border-radius: 0.5rem; /* rounded */
+  font-size: 0.875rem; /* text-sm */
+  background: transparent;
+}
+.btn-primary {
+  background: var(--foreground);
+  color: var(--background);
+  border-color: var(--foreground);
+}
+.btn-danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.btn-block { width: 100%; }
+.btn-icon-gap { gap: 0.5rem; }
+
+.dialog-card {
+  width: 92vw;
+  max-width: 720px;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--card);
+}
+
 /* すべてのクリック可能要素は指カーソルに */
 a, button, [role="button"], input[type="button"], input[type="submit"], input[type="reset"], label, summary {
   cursor: pointer;

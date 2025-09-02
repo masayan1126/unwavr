@@ -113,7 +113,7 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
           type={task.type}
           label={
             task.type === "daily"
-              ? "毎日積み上げ"
+              ? "毎日"
               : task.type === "scheduled"
               ? (scheduledDaysLabel ? `特定曜日（${scheduledDaysLabel}）` : "特定曜日")
               : isPlannedToday
@@ -564,10 +564,10 @@ export default function TaskList({
         {enableSelection && (
           <div className="flex items-center gap-2 text-xs">
             <span className="opacity-70">{Object.values(selected).filter(Boolean).length} 件選択中</span>
-            <button className="px-2 py-1 rounded border disabled:opacity-50" onClick={bulkComplete} disabled={Object.values(selected).every((v)=>!v)}>完了</button>
-            <button className="px-2 py-1 rounded border disabled:opacity-50" onClick={bulkMarkIncomplete} disabled={Object.values(selected).every((v)=>!v)}>未完了に戻す</button>
-            <button className="px-2 py-1 rounded border disabled:opacity-50" onClick={bulkArchiveDaily} disabled={Object.values(selected).every((v)=>!v)}>アーカイブ（毎日）</button>
-            <button className="px-2 py-1 rounded border text-[var(--danger)] border-[var(--danger)] disabled:opacity-50" onClick={bulkDelete} disabled={Object.values(selected).every((v)=>!v)}>削除</button>
+            <button className="btn" onClick={bulkComplete} disabled={Object.values(selected).every((v)=>!v)}>完了</button>
+            <button className="btn" onClick={bulkMarkIncomplete} disabled={Object.values(selected).every((v)=>!v)}>未完了に戻す</button>
+            <button className="btn" onClick={bulkArchiveDaily} disabled={Object.values(selected).every((v)=>!v)}>アーカイブ（毎日）</button>
+            <button className="btn btn-danger" onClick={bulkDelete} disabled={Object.values(selected).every((v)=>!v)}>削除</button>
           </div>
         )}
       </div>
@@ -674,9 +674,9 @@ export default function TaskList({
                     onChange={(e) => setFormType(e.target.value as "daily" | "scheduled" | "backlog")}
                     onBlur={() => saveEdit(true)}
                   >
-                    <option value="daily">毎日積み上げ</option>
+                    <option value="daily">毎日</option>
                     <option value="scheduled">特定曜日</option>
-                    <option value="backlog">バックログ</option>
+                    <option value="backlog">積み上げ候補</option>
                   </select>
                 </div>
 
@@ -773,7 +773,7 @@ export default function TaskList({
 
             <div className="flex justify-between items-center pt-6 border-t border-black/10 dark:border-white/10">
               <button 
-                className="px-6 py-3 rounded-lg border text-sm text-[var(--danger)] border-[var(--danger)] hover:bg-[var(--danger)] hover:text-white transition-colors"
+                className="btn btn-danger"
                 onClick={async () => {
                   if (!editingTask) return;
                   if (editingTask.type === "daily") {
@@ -788,8 +788,8 @@ export default function TaskList({
                 {editingTask.type === "daily" ? "アーカイブ" : "削除"}
               </button>
               <div className="flex gap-3">
-                <button className="px-6 py-3 rounded-lg border text-sm" onClick={closeEdit}>キャンセル</button>
-                <button className="px-6 py-3 rounded-lg bg-foreground text-background text-sm" onClick={() => saveEdit()}>保存</button>
+                <button className="btn" onClick={closeEdit}>キャンセル</button>
+                <button className="btn btn-primary" onClick={() => saveEdit()}>保存</button>
               </div>
             </div>
           </div>
