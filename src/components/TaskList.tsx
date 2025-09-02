@@ -206,7 +206,7 @@ export default function TaskList({
   const ctxMenuRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!ctxTask) return;
-    const close = (ev?: MouseEvent) => {
+    const close = (ev?: Event) => {
       if (ev && ctxMenuRef.current && ctxMenuRef.current.contains(ev.target as Node)) return;
       setCtxTask(null); setCtxPos(null);
     };
