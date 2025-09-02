@@ -34,7 +34,7 @@ export default function Home() {
     return () => window.clearInterval(id);
   }, []);
   const [openCreate, setOpenCreate] = useState(false);
-  const defaultCreateType: "backlog" = "backlog";
+  const defaultCreateType = "backlog" as const;
   return (
     <div className="min-h-screen p-6 sm:p-10 max-w-6xl mx-auto flex flex-col gap-6">
       <div className="flex items-center justify-between">
