@@ -31,7 +31,7 @@ function TypeBadge({ type, label }: { type: "daily" | "scheduled" | "backlog"; l
   );
 }
 
-function TaskRow({ task, onEdit }: { task: Task; onEdit: (task: Task) => void }) {
+function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task) => void; onContext: (e: React.MouseEvent, task: Task) => void }) {
   const toggle = useAppStore((s) => s.toggleTask);
   const toggleDailyToday = useAppStore((s) => s.toggleDailyDoneForToday);
   
@@ -56,9 +56,12 @@ function TaskRow({ task, onEdit }: { task: Task; onEdit: (task: Task) => void })
   })();
 
   return (
-    <div className={`flex items-center gap-2 py-1 min-w-0 ${
+    <div
+      className={`flex items-center gap-2 py-1 min-w-0 ${
       task.completed ? "bg-[var(--success)]/10 dark:bg-[var(--success)]/20 rounded" : ""
-    }`}>
+    }`}
+      onContextMenu={(e) => { e.preventDefault(); onContext(e, task); }}
+    >
       {task.type === "daily" ? (
         <button
           type="button"
@@ -198,6 +201,27 @@ export default function TaskList({
     saveTimerRef.current = window.setTimeout(() => saveEdit(true), delay);
   };
   const [showDescOverlay, setShowDescOverlay] = useState(false);
+  const [ctxTask, setCtxTask] = useState<Task | null>(null);
+  const [ctxPos, setCtxPos] = useState<{ x: number; y: number } | null>(null);
+  const ctxMenuRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!ctxTask) return;
+    const close = (ev?: MouseEvent) => {
+      if (ev && ctxMenuRef.current && ctxMenuRef.current.contains(ev.target as Node)) return;
+      setCtxTask(null); setCtxPos(null);
+    };
+    const onEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
+    document.addEventListener('mousedown', close);
+    window.addEventListener('scroll', close, { passive: true } as AddEventListenerOptions);
+    window.addEventListener('resize', close);
+    document.addEventListener('keydown', onEsc);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      window.removeEventListener('scroll', close);
+      window.removeEventListener('resize', close);
+      document.removeEventListener('keydown', onEsc);
+    };
+  }, [ctxTask]);
 
   useEffect(() => {
     // 音声認識セットアップは hook に委譲
@@ -417,9 +441,10 @@ export default function TaskList({
               return (
                 <tr
                   key={t.id}
-                  className={`border-t border-black/5 dark:border-white/5 ${
+                  className={`border-t border-black/5 dark:border-white/5 transition-colors ${
                     t.completed ? "bg-[var(--success)]/10 dark:bg-[var(--success)]/20" : ""
-                  }`}
+                  } hover:bg-black/5 dark:hover:bg-white/5`}
+                  onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setCtxTask(t); setCtxPos({ x: e.clientX, y: e.clientY }); }}
                 >
                   {enableSelection && (
                     <td className="px-2 py-1">
@@ -554,8 +579,8 @@ export default function TaskList({
             <div className="text-sm opacity-60 py-2">タスクなし</div>
           ) : (
             tasks.map((t) => (
-              <div key={t.id} className="flex items-center gap-2 py-1">
-                <TaskRow task={t} onEdit={openEdit} />
+              <div key={t.id} className="flex items-center gap-2 py-1" onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setCtxTask(t); setCtxPos({ x: e.clientX, y: e.clientY }); }}>
+                <TaskRow task={t} onEdit={openEdit} onContext={(e)=>{ e.preventDefault(); e.stopPropagation(); setCtxTask(t); setCtxPos({ x: e.clientX, y: e.clientY }); }} />
                 {showType && (t.type === "daily" || t.type === "scheduled") && (
                   <span className="text-[10px] opacity-70 border rounded px-1 py-0.5 whitespace-nowrap">
                     {t.type === "daily" ? "毎日" : "特定曜日"}
@@ -771,6 +796,42 @@ export default function TaskList({
         </div>
       )}
 
+      {ctxTask && ctxPos && (
+        <div className="fixed z-[1000]" style={{ top: ctxPos.y, left: ctxPos.x }}>
+          <div
+            ref={ctxMenuRef}
+            className="min-w-40 bg-background text-foreground border border-black/10 dark:border-white/10 rounded shadow-lg p-1"
+            onMouseDown={(e) => { e.stopPropagation(); }}
+            onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          >
+            <button
+              type="button"
+              className="w-full text-left px-3 py-2 rounded hover:bg-black/5 dark:hover:bg-white/10 text-sm"
+              onClick={() => {
+                useAppStore.getState().duplicateTask(ctxTask.id);
+                setCtxTask(null); setCtxPos(null);
+              }}
+            >複製</button>
+            <button
+              type="button"
+              className="w-full text-left px-3 py-2 rounded hover:bg-black/5 dark:hover:bg-white/10 text-sm"
+              onClick={() => {
+                openEdit(ctxTask);
+                setCtxTask(null); setCtxPos(null);
+              }}
+            >編集</button>
+            <button
+              type="button"
+              className="w-full text-left px-3 py-2 rounded hover:bg-black/5 dark:hover:bg-white/10 text-sm text-[var(--danger)]"
+              onClick={async () => {
+                const ok = await confirm('このタスクを削除しますか？', { tone: 'danger', confirmText: '削除' });
+                if (ok) removeTask(ctxTask.id);
+                setCtxTask(null); setCtxPos(null);
+              }}
+            >削除</button>
+          </div>
+        </div>
+      )}
       
     </div>
   );

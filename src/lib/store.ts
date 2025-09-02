@@ -89,6 +89,7 @@ export type AppState = {
   incrementTaskPomodoro: (taskId: string) => void;
   removeTask: (taskId: string) => void;
   updateTask: (taskId: string, update: Partial<Omit<Task, "id" | "createdAt">>) => void;
+  duplicateTask: (taskId: string) => string;
   completeTasks: (taskIds: string[]) => void;
   resetDailyDoneForToday: (taskIds: string[]) => void;
   archiveDailyTasks: (taskIds: string[]) => void;
@@ -340,6 +341,26 @@ export const useAppStore = create<AppState>()(
           fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update) }).catch(() => {});
           return { tasks };
         }),
+      duplicateTask: (taskId) => {
+        let createdId = '';
+        set((state) => {
+          const source = state.tasks.find((t) => t.id === taskId);
+          if (!source) return state;
+          const copy: Task = {
+            ...source,
+            id: createTaskId(),
+            createdAt: Date.now(),
+            completed: false,
+            completedPomodoros: 0,
+            // 「(複製)」をタイトルに付与（重複回避・識別のため）
+            title: source.title ? `${source.title} (複製)` : '(複製)'
+          } as Task;
+          createdId = copy.id;
+          fetch('/api/db/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(copy) }).catch(() => {});
+          return { tasks: [...state.tasks, copy] };
+        });
+        return createdId;
+      },
       archiveDailyTask: (taskId) =>
         set((state) => {
           const now = Date.now();

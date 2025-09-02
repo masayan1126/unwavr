@@ -6,6 +6,7 @@ import { useAppStore } from "@/lib/store";
 import SectionLoader from "@/components/SectionLoader";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
+import TaskCreateDialog from "@/components/TaskCreateDialog";
 
 export default function ScheduledTasksPage() {
   const tasks = useAppStore((s) => s.tasks);
@@ -17,6 +18,7 @@ export default function ScheduledTasksPage() {
   const [sortKey, setSortKey] = useState<"title" | "createdAt" | "scheduled" | "type" | "milestone">("createdAt");
   const [sortAsc, setSortAsc] = useState<boolean>(false);
   const [filterStatus, setFilterStatus] = useState<"all" | "completed" | "incomplete">("all");
+  const [openCreate, setOpenCreate] = useState(false);
   const total = scheduled.length;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const pageItems = useMemo(() => {
@@ -30,7 +32,7 @@ export default function ScheduledTasksPage() {
         <button
           type="button"
           className="px-3 py-1.5 rounded border text-sm flex items-center gap-2"
-          onClick={() => router.push({ pathname: "/tasks", query: { new: "1" } } as unknown as string)}
+          onClick={() => setOpenCreate(true)}
         >
           <Plus size={16} /> タスク追加
         </button>
@@ -76,6 +78,7 @@ export default function ScheduledTasksPage() {
           <TaskList title="特定曜日" tasks={pageItems} tableMode showCreatedColumn={false} showPlannedColumn={false} showScheduledColumn showTypeColumn showMilestoneColumn={false} sortKey={sortKey} sortAsc={sortAsc} filterStatus={filterStatus} enableSelection />
         </>
       )}
+      <TaskCreateDialog open={openCreate} onClose={() => setOpenCreate(false)} />
     </div>
   );
 }

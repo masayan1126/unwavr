@@ -82,6 +82,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         <AuthHydrator />
         {/* Pomodoro ticker: requestAnimationFrameで常時進行（バックグラウンドでもcatch-up可能）*/}
         <PomodoroTicker />
+        <MotionBlurDuringScroll />
       </ConfirmProvider>
     </SessionProvider>
   );
@@ -107,4 +108,28 @@ function PomodoroTicker() {
 
 // GlobalBgmPlayer removed per request
 
+
+function MotionBlurDuringScroll() {
+  useEffect(() => {
+    let timer = 0 as unknown as number;
+    const onScroll = () => {
+      const el = document.documentElement;
+      if (!el.classList.contains('motion-blur-active')) {
+        el.classList.add('motion-blur-active');
+      }
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        el.classList.remove('motion-blur-active');
+      }, 140);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      const el = document.documentElement;
+      el.classList.remove('motion-blur-active');
+      window.clearTimeout(timer);
+    };
+  }, []);
+  return null;
+}
 

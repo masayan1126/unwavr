@@ -15,14 +15,14 @@ export default function LayoutChrome({ children }: { children: ReactNode }): Rea
 
   if (isStandaloneEditor) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen motion-scope">
         <main className="min-h-screen">{children}</main>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen motion-scope">
       <div className="hidden md:block">
         <SidebarConditional />
       </div>

@@ -52,6 +52,16 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Motion blur effect (subtle) applied during scroll interactions */
+@media (prefers-reduced-motion: no-preference) {
+  .motion-scope {
+    transition: filter 120ms ease-out;
+  }
+  html.motion-blur-active .motion-scope {
+    filter: blur(0.5px);
+  }
+}
+
 /* Simple demo animations used in /unwavr page */
 @keyframes highlight {
   0% { background: transparent; }

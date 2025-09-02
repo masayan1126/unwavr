@@ -4,6 +4,7 @@ import TaskList from "@/components/TaskList";
 import { useTodayTasks } from "@/hooks/useTodayTasks";
 import WeatherWidget from "@/components/WeatherWidget";
 import { Plus, RefreshCw } from "lucide-react";
+import TaskCreateDialog from "@/components/TaskCreateDialog";
 import { useConfirm } from "@/components/Providers";
 import { useAppStore } from "@/lib/store";
 import SectionLoader from "@/components/SectionLoader";
@@ -32,6 +33,7 @@ export default function Home() {
     const id = window.setInterval(update, 10000);
     return () => window.clearInterval(id);
   }, []);
+  const [openCreate, setOpenCreate] = useState(false);
   return (
     <div className="min-h-screen p-6 sm:p-10 max-w-6xl mx-auto flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -63,7 +65,13 @@ export default function Home() {
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">未完了 ({incompleteToday.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs">
-              <Link href={{ pathname: "/tasks", query: { new: "1" } }} className="inline-flex items-center gap-2 px-3 py-1.5 rounded border text-sm"><Plus size={16} />タスク追加</Link>
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenCreate(true); }}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded border text-sm"
+              >
+                <Plus size={16} />タスク追加
+              </button>
             </div>
           </div>
           {hydrating ? (
@@ -124,6 +132,7 @@ export default function Home() {
       </div>
 
       {/* AddQiitaZenn は案内文削除のため一時的に非表示 */}
+      <TaskCreateDialog open={openCreate} onClose={() => setOpenCreate(false)} />
     </div>
   );
 }
