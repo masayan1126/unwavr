@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
 import TaskList from "@/components/TaskList";
+import TaskDialog from "@/components/TaskCreateDialog";
+import TaskForm from "@/components/TaskForm";
 import { useTodayTasks } from "@/hooks/useTodayTasks";
 import WeatherWidget from "@/components/WeatherWidget";
 import { Plus, RefreshCw } from "lucide-react";
@@ -133,7 +135,9 @@ export default function Home() {
       </div>
 
       {/* AddQiitaZenn は案内文削除のため一時的に非表示 */}
-      <TaskCreateDialog open={openCreate} onClose={() => setOpenCreate(false)} defaultType={defaultCreateType} />
+      <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規タスク">
+        <TaskForm defaultType={defaultCreateType} onSubmitted={(mode)=>{ if (mode==='close') setOpenCreate(false); }} />
+      </TaskDialog>
     </div>
   );
 }

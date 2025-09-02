@@ -3,6 +3,8 @@ import { useState, useMemo, Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import TaskList from "@/components/TaskList";
+import TaskDialog from "@/components/TaskCreateDialog";
+import TaskForm from "@/components/TaskForm";
 import { useAppStore } from "@/lib/store";
 import { TaskType } from "@/lib/types";
 import SectionLoader from "@/components/SectionLoader";
@@ -227,7 +229,9 @@ function TasksPageInner() {
         )}
       </div>
 
-      <TaskCreateDialog open={openCreate} onClose={()=>setOpenCreate(false)} />
+      <TaskDialog open={openCreate} onClose={()=>setOpenCreate(false)} title="新規タスク">
+        <TaskForm onSubmitted={(mode)=>{ if (mode==='close') setOpenCreate(false); }} />
+      </TaskDialog>
     </div>
   );
 }

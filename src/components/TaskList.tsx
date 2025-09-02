@@ -6,6 +6,8 @@ import { useConfirm } from "@/components/Providers";
 import { CalendarDays, ListTodo, Archive, Loader2, X, Mic } from "lucide-react";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import WysiwygEditor from "@/components/WysiwygEditor";
+import TaskDialog from "@/components/TaskCreateDialog";
+import TaskForm, { type TaskFormHandle } from "@/components/TaskForm";
 
 // 文字列を20字で省略するユーティリティ関数
 function truncateText(text: string, maxLength: number = 20): string {
@@ -178,7 +180,8 @@ export default function TaskList({
   const milestoneOptions = useMemo(() => milestones.map((m) => ({ id: m.id, title: m.title })), [milestones]);
 
   const [editingId, setEditingId] = useState<string | null>(null);
-  const editingTask = useMemo(() => tasks.find((t) => t.id === editingId), [editingId, tasks]);
+  const storeTasks = useAppStore((s) => s.tasks);
+  const editingTask = useMemo(() => storeTasks.find((t) => t.id === editingId), [editingId, storeTasks]);
   const [formTitle, setFormTitle] = useState("");
   const [formDescription, setFormDescription] = useState("");
   const [formType, setFormType] = useState<"daily" | "scheduled" | "backlog">("backlog");
@@ -204,6 +207,7 @@ export default function TaskList({
   const [ctxTask, setCtxTask] = useState<Task | null>(null);
   const [ctxPos, setCtxPos] = useState<{ x: number; y: number } | null>(null);
   const ctxMenuRef = useRef<HTMLDivElement | null>(null);
+  const formRef = useRef<TaskFormHandle | null>(null);
   useEffect(() => {
     if (!ctxTask) return;
     const close = (ev?: Event) => {
@@ -230,13 +234,14 @@ export default function TaskList({
   // 表示カラムに合わせたグリッドはテーブルレイアウトを使用しているため未使用の計算を削除
 
   function openEdit(t: Task) {
-    setEditingId(t.id);
-    setFormTitle(t.title);
-    setFormDescription(t.description ?? "");
-    setFormType(t.type);
-    setFormEst(t.estimatedPomodoros ?? 0);
-    setFormMilestoneId(t.milestoneId ?? "");
-    const firstPlanned = (t.plannedDates ?? [])[0];
+    const latest = useAppStore.getState().tasks.find((x) => x.id === t.id) ?? t;
+    setEditingId(latest.id);
+    setFormTitle(latest.title);
+    setFormDescription(latest.description ?? "");
+    setFormType(latest.type);
+    setFormEst(latest.estimatedPomodoros ?? 0);
+    setFormMilestoneId(latest.milestoneId ?? "");
+    const firstPlanned = (latest.plannedDates ?? [])[0];
     if (firstPlanned != null) {
       const d = new Date(firstPlanned);
       const y = d.getFullYear();
@@ -558,7 +563,7 @@ export default function TaskList({
   );
 
   return (
-    <div className="border border-[var(--border)] rounded-md p-3">
+    <div className="border border-[var(--border)] rounded-md p-2">
       <div className="flex items-center justify-between mb-2">
         <div className="text-xs uppercase tracking-wide opacity-70">{title}</div>
         {enableSelection && (
@@ -600,200 +605,14 @@ export default function TaskList({
       )}
 
       {editingTask && (
-        <div
-          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              // バックドロップクリック時もまず保存してから閉じる
-              saveEdit(true);
-              closeEdit();
-            }
-          }}
-        >
-          <div className="w-full max-w-4xl bg-background text-foreground rounded border border-[var(--border)] px-8 py-12 my-8 flex flex-col gap-6 max-h-[90vh] overflow-y-auto"
-               onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <div className="text-xl font-semibold">タスク詳細</div>
-              <button
-                type="button"
-                className="p-2 rounded hover:bg-black/5 dark:hover:bg-white/10"
-                onClick={closeEdit}
-                aria-label="閉じる"
-                title="閉じる"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="flex items-center gap-3 text-xs min-h-[20px]">
-              {isSaving ? (
-                <span className="inline-flex items-center gap-1 opacity-80">
-                  <Loader2 size={14} className="animate-spin" /> 更新中です...
-                </span>
-              ) : lastSavedAt ? (
-                <span className="opacity-70">更新完了: {new Date(lastSavedAt).toLocaleTimeString()}</span>
-              ) : null}
-            </div>
-            
-            <div className="grid grid-cols-12 gap-8 items-start">
-              <div className="space-y-6 col-span-12 lg:col-span-8">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium block">タイトル</label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      className={`flex-1 border rounded-lg px-4 py-3 bg-transparent border-black/10 dark:border-white/10 ${listening ? "ring-2 ring-red-500/60" : ""}`}
-                      value={formTitle}
-                      onChange={(e) => setFormTitle(e.target.value)}
-                      onBlur={() => saveEdit(true)}
-                    />
-                    <button
-                      type="button"
-                      className={`px-4 py-3 rounded-lg border text-sm whitespace-nowrap inline-flex items-center ${listening ? "bg-red-600 text-white border-red-600" : ""}`}
-                      onClick={() => { setListening((v)=>!v); toggleSpeech(); }}
-                    >
-                      <Mic size={16} className="mr-2" /> 音声入力
-                    </button>
-                  </div>
-                  {listening && (
-                    <span className="inline-flex items-center gap-1 text-xs text-red-600">
-                      <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
-                      音声入力中...
-                    </span>
-                  )}
-                </div>
-                
-                
-              </div>
-              
-              <div className="space-y-6 col-span-12 lg:col-span-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium block">タスクタイプ</label>
-                  <select
-                    className="w-full border rounded-lg px-3 py-2 bg-transparent border-black/10 dark:border-white/10"
-                    value={formType}
-                    onChange={(e) => setFormType(e.target.value as "daily" | "scheduled" | "backlog")}
-                    onBlur={() => saveEdit(true)}
-                  >
-                    <option value="daily">毎日</option>
-                    <option value="scheduled">特定曜日</option>
-                    <option value="backlog">積み上げ候補</option>
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium block">見積ポモ</label>
-                    <input
-                      type="number"
-                      min={0}
-                      className="w-full border rounded-lg px-3 py-2 bg-transparent border-black/10 dark:border-white/10"
-                      value={Number.isFinite(formEst) ? formEst : 0}
-                      onChange={(e) => setFormEst(Number(e.target.value))}
-                      onBlur={() => saveEdit(true)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium block">マイルストーン</label>
-                    <select
-                      className="w-full border rounded-lg px-3 py-2 bg-transparent border-black/10 dark:border-white/10"
-                      value={formMilestoneId}
-                      onChange={(e) => setFormMilestoneId(e.target.value)}
-                      onBlur={() => saveEdit(true)}
-                    >
-                      <option value="">未設定</option>
-                      {milestoneOptions.map((m) => (
-                        <option key={m.id} value={m.id}>{m.title}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {formType === "scheduled" && (
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium block">曜日設定</label>
-                    <div className="flex flex-wrap gap-2">
-                      {["日", "月", "火", "水", "木", "金", "土"].map((day, index) => (
-                        <button
-                          key={day}
-                          type="button"
-                          className={`px-3 py-2 rounded-lg border text-sm ${
-                            formScheduledDays.includes(index)
-                              ? "bg-foreground text-background"
-                              : "bg-transparent"
-                          }`}
-                          onClick={() => {
-                            setFormScheduledDays(prev =>
-                              prev.includes(index)
-                                ? prev.filter(d => d !== index)
-                                : [...prev, index].sort()
-                            );
-                          }}
-                        >
-                          {day}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {formType === "backlog" && (
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium block">実行日</label>
-                    <div className="flex gap-3 items-center flex-wrap">
-                      <input
-                        type="date"
-                        className="border border-black/10 dark:border-white/10 rounded-lg px-3 py-2 bg-transparent"
-                        value={formPlannedDateInput}
-                        onChange={(e) => setFormPlannedDateInput(e.target.value)}
-                        onBlur={() => saveEdit(true)}
-                        title="保存ボタンでこの日付が実行日に設定されます"
-                      />
-                      <button
-                        type="button"
-                        className="px-4 py-2 rounded-lg border text-sm whitespace-nowrap"
-                        onClick={() => { setFormPlannedDateInput(""); setFormPlannedDate(null); }}
-                      >
-                        クリア
-                      </button>
-                    </div>
-                    <div className="text-xs opacity-70">保存ボタンで実行日が更新されます（1つだけ保持）</div>
-                  </div>
-                )}
-              </div>
-              {/* 詳細（全幅） */}
-              <div className="space-y-2 col-span-12">
-                <label className="text-sm font平均">詳細</label>
-                <WysiwygEditor
-                  value={formDescription}
-                  onChange={(html) => { setFormDescription(html); scheduleSave(); }}
-                  onBlur={() => saveEdit(true)}
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center pt-6 border-t border-black/10 dark:border-white/10">
-              <button 
-                className="btn btn-danger"
-                onClick={async () => {
-                  if (!editingTask) return;
-                  if (editingTask.type === "daily") {
-                    const ok = await confirm('この毎日タスクをアーカイブしますか？（削除はしません）', { tone: 'default', confirmText: 'アーカイブ' });
-                    if (ok) { useAppStore.getState().archiveDailyTask(editingTask.id); closeEdit(); }
-                  } else {
-                    const ok = await confirm('このタスクを削除しますか？', { tone: 'danger', confirmText: '削除' });
-                    if (ok) { removeTask(editingTask.id); closeEdit(); }
-                  }
-                }}
-              >
-                {editingTask.type === "daily" ? "アーカイブ" : "削除"}
-              </button>
-              <div className="flex gap-3">
-                <button className="btn" onClick={closeEdit}>キャンセル</button>
-                <button className="btn btn-primary" onClick={() => saveEdit()}>保存</button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <TaskDialog open title="タスク詳細" onBeforeClose={() => { formRef.current?.save(); }} onClose={() => { closeEdit(); }}>
+          <TaskForm
+            ref={formRef}
+            task={editingTask}
+            onCancel={() => { formRef.current?.save(); closeEdit(); }}
+            onSubmitted={() => { closeEdit(); }}
+          />
+        </TaskDialog>
       )}
 
       {ctxTask && ctxPos && (

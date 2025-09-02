@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
 import TaskList from "@/components/TaskList";
+import TaskDialog from "@/components/TaskCreateDialog";
+import TaskForm from "@/components/TaskForm";
 import { useMemo, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import SectionLoader from "@/components/SectionLoader";
@@ -77,7 +79,9 @@ export default function DailyTasksPage() {
           <TaskList title="毎日" tasks={pageItems} tableMode showCreatedColumn={false} showPlannedColumn={false} showTypeColumn showMilestoneColumn={false} sortKey={sortKey} sortAsc={sortAsc} filterStatus={filterStatus} enableSelection />
         </>
       )}
-      <TaskCreateDialog open={openCreate} onClose={() => setOpenCreate(false)} defaultType="daily" />
+      <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規タスク">
+        <TaskForm defaultType="daily" onSubmitted={(mode)=>{ if (mode==='close') setOpenCreate(false); }} />
+      </TaskDialog>
     </div>
   );
 }

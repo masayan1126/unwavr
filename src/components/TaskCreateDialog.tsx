@@ -1,28 +1,35 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import TaskForm from "./TaskForm";
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  defaultType?: "daily" | "scheduled" | "backlog";
+  title?: string;
+  children: React.ReactNode;
+  onBeforeClose?: () => void | Promise<void>;
 };
 
-export default function TaskCreateDialog({ open, onClose, defaultType }: Props): React.ReactElement | null {
+export default function TaskDialog({ open, onClose, title = "タスク", children, onBeforeClose }: Props): React.ReactElement | null {
   const [shown, setShown] = useState(false);
   useEffect(() => { if (open) { setShown(true); } }, [open]);
   if (!open) return null;
-  const handleClose = () => {
+  const handleClose = async () => {
     setShown(false);
-    setTimeout(() => onClose(), 180);
+    try {
+      if (onBeforeClose) {
+        await onBeforeClose();
+      }
+    } finally {
+      setTimeout(() => onClose(), 180);
+    }
   };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={handleClose}>
       <div className={`absolute inset-0 bg-black/50 transition-opacity duration-200 ${shown ? "opacity-100" : "opacity-0"}`} />
       <div className={`relative z-10 dialog-card mx-4 text-foreground shadow-xl transition-all duration-200 ease-out transform max-h-[85vh] overflow-y-auto ${shown ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-2 scale-95"}`} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-black/10 dark:border-white/10">
-          <h2 className="text-sm font-medium">新規タスク</h2>
+          <h2 className="text-sm font-medium">{title}</h2>
           <button
             type="button"
             className="p-2 rounded hover:bg-black/5 dark:hover:bg-white/10"
@@ -34,7 +41,7 @@ export default function TaskCreateDialog({ open, onClose, defaultType }: Props):
           </button>
         </div>
         <div className="p-4">
-          <TaskForm defaultType={defaultType} onSubmitted={(mode)=>{ if (mode === 'close') handleClose(); }} />
+          {children}
         </div>
       </div>
     </div>

@@ -11,7 +11,7 @@ type WysiwygEditorProps = {
   value: string;
   onChange: (nextHtml: string) => void;
   className?: string;
-  onBlur?: () => void;
+  onBlur?: (latestHtml: string) => void;
 };
 
 export default function WysiwygEditor({ value, onChange, className, onBlur }: WysiwygEditorProps): ReactElement {
@@ -33,7 +33,7 @@ export default function WysiwygEditor({ value, onChange, className, onBlur }: Wy
       },
       handleDOMEvents: {
         blur: () => {
-          if (onBlur) onBlur();
+          if (onBlur) onBlur(editor?.getHTML() ?? "");
           return false;
         },
       },

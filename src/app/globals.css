@@ -145,7 +145,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .dialog-card {
   width: 92vw;
-  max-width: 720px;
+  max-width: 960px;
   border: 1px solid var(--border);
   border-radius: 0.75rem;
   background: var(--card);

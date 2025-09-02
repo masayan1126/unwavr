@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import TaskList from "@/components/TaskList";
+import TaskDialog from "@/components/TaskCreateDialog";
+import TaskForm from "@/components/TaskForm";
 import { useAppStore } from "@/lib/store";
 import { Filter as FilterIcon } from "lucide-react";
 import SectionLoader from "@/components/SectionLoader";
@@ -206,7 +208,9 @@ export default function BacklogPage() {
           />
         </>
       )}
-      <TaskCreateDialog open={openCreate} onClose={() => setOpenCreate(false)} />
+      <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規タスク">
+        <TaskForm onSubmitted={(mode)=>{ if (mode==='close') setOpenCreate(false); }} />
+      </TaskDialog>
     </div>
   );
 }
