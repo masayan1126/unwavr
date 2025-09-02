@@ -417,8 +417,9 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
       )}
 
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md mx-4">
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="absolute inset-0 bg-black/50 transition-all duration-300 opacity-100 backdrop-blur-[2px]" />
+          <div className="relative z-10 bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md mx-4 transition-all duration-300 ease-out [filter:blur(0px)]">
             <h3 className="text-lg font-medium mb-4">タスクを削除しますか？</h3>
             <p className="text-sm opacity-70 mb-6">この操作は取り消せません。</p>
             <div className="flex gap-2 justify-end">

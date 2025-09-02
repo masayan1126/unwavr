@@ -366,9 +366,23 @@ function TaskFormInner({ onSubmitted, defaultType, task, onCancel }: TaskFormPro
                   type="date"
                   className="border border-[var(--border)] rounded px-2 py-1 bg-transparent"
                   value={plannedDateInput}
-                  onChange={(e) => setPlannedDateInput(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setPlannedDateInput(val);
+                    if (!val) {
+                      setPlannedDates([]);
+                      return;
+                    }
+                    const dt = new Date(val);
+                    if (isNaN(dt.getTime())) return;
+                    const stamp = Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate());
+                    setPlannedDates([stamp]);
+                  }}
                   onBlur={() => {
-                    if (!plannedDateInput) return;
+                    if (!plannedDateInput) {
+                      performSave();
+                      return;
+                    }
                     const dt = new Date(plannedDateInput);
                     if (isNaN(dt.getTime())) return;
                     const stamp = Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate());
