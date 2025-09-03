@@ -2,6 +2,7 @@
 import { SessionProvider, useSession } from "next-auth/react";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useAppStore } from "@/lib/store";
+import Toast from "@/components/Toast";
 
 function AuthHydrator() {
   const { status } = useSession();
@@ -74,15 +75,46 @@ function ConfirmProvider({ children }: { children: React.ReactNode }): React.Rea
   );
 }
 
+type ToastItem = { id: number; message: string; type?: "info" | "success" | "warning" | "error" };
+type ToastContextValue = {
+  show: (message: string, type?: "info" | "success" | "warning" | "error") => void;
+};
+const ToastContext = createContext<ToastContextValue | undefined>(undefined);
+export function useToast(): ToastContextValue {
+  const ctx = useContext(ToastContext);
+  if (!ctx) throw new Error('useToast must be used within ToastProvider');
+  return ctx;
+}
+
+function ToastProvider({ children }: { children: React.ReactNode }): React.ReactElement {
+  const [items, setItems] = useState<ToastItem[]>([]);
+  const show = useCallback((message: string, type?: "info" | "success" | "warning" | "error") => {
+    const id = Date.now() + Math.floor(Math.random() * 1000);
+    setItems((list) => [...list, { id, message, type }]);
+  }, []);
+  const remove = useCallback((id: number) => setItems((list) => list.filter((t) => t.id !== id)), []);
+  const value = useMemo(() => ({ show }), [show]);
+  return (
+    <ToastContext.Provider value={value}>
+      {children}
+      {items.map((t, i) => (
+        <Toast key={t.id} message={t.message} type={t.type} onClose={() => remove(t.id)} position="bottom" offsetPx={i * 72} />
+      ))}
+    </ToastContext.Provider>
+  );
+}
+
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       <ConfirmProvider>
-        {children}
-        <AuthHydrator />
-        {/* Pomodoro ticker: requestAnimationFrameで常時進行（バックグラウンドでもcatch-up可能）*/}
-        <PomodoroTicker />
-        <MotionBlurDuringScroll />
+        <ToastProvider>
+          {children}
+          <AuthHydrator />
+          {/* Pomodoro ticker: requestAnimationFrameで常時進行（バックグラウンドでもcatch-up可能）*/}
+          <PomodoroTicker />
+          <MotionBlurDuringScroll />
+        </ToastProvider>
       </ConfirmProvider>
     </SessionProvider>
   );

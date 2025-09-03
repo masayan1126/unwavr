@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { use } from "react";
+import { useToast } from "@/components/Providers";
 import { useAppStore } from "@/lib/store";
 import { TaskType, Scheduled } from "@/lib/types";
 import RichText from "@/components/RichText";
@@ -11,6 +12,7 @@ import WysiwygEditor from "@/components/WysiwygEditor";
 export default function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id } = use(params);
+  const toast = useToast();
   const searchParams = useSearchParams();
   const task = useAppStore((s) => s.tasks.find((t) => t.id === id));
   const updateTask = useAppStore((s) => s.updateTask);
@@ -103,11 +105,13 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
     if (!keepEditing) {
       setIsEditing(false);
     }
+    toast.show('タスクを保存しました', 'success');
   };
 
   const handleDelete = () => {
     removeTask(task.id);
     router.push("/");
+    toast.show('タスクを削除しました', 'success');
   };
 
   const toggleDay = (day: number) => {

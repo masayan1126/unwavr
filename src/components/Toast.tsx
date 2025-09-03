@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircle2, AlertTriangle, XCircle, Info } from "lucide-react";
 
 type ToastProps = {
@@ -8,12 +8,23 @@ type ToastProps = {
   onClose?: () => void;
   durationMs?: number;
   position?: "top" | "bottom";
+  offsetPx?: number;
 };
 
-export default function Toast({ message, type = "info", onClose, durationMs = 3000, position = "bottom" }: ToastProps) {
+export default function Toast({ message, type = "info", onClose, durationMs = 3000, position = "bottom", offsetPx = 0 }: ToastProps) {
+  const [shown, setShown] = useState(false);
   useEffect(() => {
-    const id = window.setTimeout(() => onClose?.(), durationMs);
-    return () => window.clearTimeout(id);
+    const inId = window.setTimeout(() => setShown(true), 0);
+    const outId = window.setTimeout(() => {
+      setShown(false);
+      // 退場アニメーション分の遅延後にアンマウント
+      const after = window.setTimeout(() => onClose?.(), 200);
+      return () => window.clearTimeout(after);
+    }, durationMs);
+    return () => {
+      window.clearTimeout(inId);
+      window.clearTimeout(outId);
+    };
   }, [onClose, durationMs]);
 
   const accent =
@@ -33,11 +44,15 @@ export default function Toast({ message, type = "info", onClose, durationMs = 30
   const normalContainer = "border-[var(--border)] bg-white/90 dark:bg-neutral-900/90";
   const errorContainer = "bg-[var(--danger)] text-white border-[var(--danger)]";
 
-  const posCls = position === "top" ? "top-4" : "bottom-4";
+  const posBase = position === "top" ? { top: 16 + offsetPx } : { bottom: 16 + offsetPx };
 
   return (
-    <div className={`fixed ${posCls} right-4 z-[1000] pointer-events-none`}>
-      <div role="alert" aria-live="assertive" className={`${baseContainer} ${isError ? errorContainer : normalContainer}`}>
+    <div className={`fixed right-4 z-[1000] pointer-events-none`} style={posBase}>
+      <div
+        role="alert"
+        aria-live="assertive"
+        className={`${baseContainer} ${isError ? errorContainer : normalContainer} transition-all duration-200 ease-out transform ${shown ? 'opacity-100 translate-y-0 scale-100 [filter:blur(0px)]' : `${position === 'top' ? '-translate-y-2' : 'translate-y-2'} opacity-0 scale-95 [filter:blur(2px)]`}`}
+      >
         <div className={`w-1 rounded-full ${accent}`} />
         <div className="flex items-start gap-2">
           <Icon size={18} className={`mt-0.5 ${isError ? 'text-white/90' : 'opacity-80'}`} />

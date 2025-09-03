@@ -6,6 +6,7 @@ import { useAppStore } from "@/lib/store";
 import { Loader2, Mic } from "lucide-react";
 import WysiwygEditor from "@/components/WysiwygEditor";
 import { X } from "lucide-react";
+import { useToast } from "@/components/Providers";
 
 export type TaskFormProps = {
   onSubmitted?: (mode: 'close' | 'keep') => void;
@@ -16,6 +17,7 @@ export type TaskFormProps = {
 export type TaskFormHandle = { save: () => void };
 
 function TaskFormInner({ onSubmitted, defaultType, task, onCancel }: TaskFormProps, ref: React.Ref<TaskFormHandle>) {
+  const toast = useToast();
   const addTask = useAppStore((s) => s.addTask);
   const milestones = useAppStore((s) => s.milestones);
   const [title, setTitle] = useState("");
@@ -144,6 +146,7 @@ function TaskFormInner({ onSubmitted, defaultType, task, onCancel }: TaskFormPro
       resetForm();
     }
     if (onSubmitted) onSubmitted('close');
+    toast.show(task ? 'タスクを保存しました' : 'タスクを追加しました', 'success');
   };
 
   const toggleWeekend = () => {
@@ -413,7 +416,7 @@ function TaskFormInner({ onSubmitted, defaultType, task, onCancel }: TaskFormPro
           </>
         ) : (
           <>
-            <button type="button" className="btn" onClick={() => { performSave(); setTimeout(()=>{ if (onSubmitted) onSubmitted('keep'); }, 0); }}>続けて追加</button>
+            <button type="button" className="btn" onClick={() => { performSave(); toast.show('タスクを追加しました', 'success'); setTimeout(()=>{ if (onSubmitted) onSubmitted('keep'); }, 0); }}>続けて追加</button>
             <button type="submit" className="btn btn-primary">追加</button>
           </>
         )}

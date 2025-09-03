@@ -297,7 +297,7 @@ export default function ImportExportPage() {
       <div className="border rounded p-4 border-[var(--border)] flex items-center justify-between">
         <div className="text-sm font-medium">エクスポート（CSV）</div>
         <button className="px-3 py-1 rounded bg-foreground text-background text-sm" onClick={exportCSV}>
-          ダウンロード
+          エクスポート
         </button>
       </div>
 

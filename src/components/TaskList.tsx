@@ -7,6 +7,7 @@ import { CalendarDays, ListTodo, Archive, Loader2, X, Mic } from "lucide-react";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import WysiwygEditor from "@/components/WysiwygEditor";
 import TaskDialog from "@/components/TaskCreateDialog";
+import { useToast } from "@/components/Providers";
 import TaskForm, { type TaskFormHandle } from "@/components/TaskForm";
 
 // 文字列を20字で省略するユーティリティ関数
@@ -36,6 +37,7 @@ function TypeBadge({ type, label }: { type: "daily" | "scheduled" | "backlog"; l
 function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task) => void; onContext: (e: React.MouseEvent, task: Task) => void }) {
   const toggle = useAppStore((s) => s.toggleTask);
   const toggleDailyToday = useAppStore((s) => s.toggleDailyDoneForToday);
+  const toast = useToast();
   
   const milestones = useAppStore((s) => s.milestones);
   const milestone = task.milestoneId ? milestones.find((m) => m.id === task.milestoneId) : undefined;
@@ -67,7 +69,7 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
       {task.type === "daily" ? (
         <button
           type="button"
-          onClick={() => toggleDailyToday(task.id)}
+          onClick={() => { toggleDailyToday(task.id); toast.show(`「${task.title}」を${isDailyDoneToday ? '未完了' : '完了'}にしました`, 'success'); }}
           title="今日実行済みにする"
           className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${
             isDailyDoneToday
@@ -84,7 +86,7 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
       ) : (
         <button
           type="button"
-          onClick={() => toggle(task.id)}
+          onClick={() => { toggle(task.id); toast.show(`「${task.title}」を${task.completed ? '未完了' : '完了'}にしました`, 'success'); }}
           title={task.completed ? "完了を解除" : "完了にする"}
           className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${
             task.completed
@@ -155,6 +157,7 @@ export default function TaskList({
   filterType = "all",
   filterStatus = "all",
   enableSelection = false,
+  enableBulkDueUpdate = false,
 }: {
   title: string;
   tasks: Task[];
@@ -171,9 +174,11 @@ export default function TaskList({
   filterType?: "all" | "daily" | "backlog" | "scheduled";
   filterStatus?: "all" | "completed" | "incomplete";
   enableSelection?: boolean;
+  enableBulkDueUpdate?: boolean;
 }) {
   const updateTask = useAppStore((s) => s.updateTask);
   const removeTask = useAppStore((s) => s.removeTask);
+  const toast = useToast();
   const milestones = useAppStore((s) => s.milestones);
   const toggleCompleted = useAppStore((s) => s.toggleTask);
   const toggleDailyToday = useAppStore((s) => s.toggleDailyDoneForToday);
@@ -313,6 +318,7 @@ export default function TaskList({
   }
 
   const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [bulkDateInput, setBulkDateInput] = useState<string>("");
   const onSelectAll = (checked: boolean) => {
     if (!enableSelection) return;
     setSelected(Object.fromEntries(filteredSorted.map((t) => [t.id, checked])));
@@ -378,6 +384,7 @@ export default function TaskList({
     const ids = filteredSorted.filter((t) => selected[t.id]).map((t) => t.id);
     completeTasks(ids);
     setSelected({});
+    toast.show(`${ids.length}件を完了にしました`, "success");
   }
   async function bulkMarkIncomplete() {
     if (Object.values(selected).every((v) => !v)) return;
@@ -386,6 +393,8 @@ export default function TaskList({
     const others = filteredSorted.filter((t) => selected[t.id] && t.type !== "daily");
     for (const t of others) updateTask(t.id, { completed: false });
     setSelected({});
+    const total = dailies.length + others.length;
+    toast.show(`${total}件を未完了に戻しました`, "success");
   }
   async function bulkArchiveDaily() {
     const dailies = filteredSorted.filter((t) => selected[t.id] && t.type === "daily").map((t) => t.id);
@@ -394,6 +403,7 @@ export default function TaskList({
     if (!ok) return;
     archiveDailyTasks(dailies);
     setSelected({});
+    toast.show(`${dailies.length}件をアーカイブしました`, "success");
   }
   async function bulkDelete() {
     const ids = filteredSorted.filter((t) => selected[t.id]).map((t) => t.id);
@@ -402,6 +412,25 @@ export default function TaskList({
     if (!ok) return;
     for (const id of ids) removeTask(id);
     setSelected({});
+    toast.show(`${ids.length}件を削除しました`, "success");
+  }
+
+  async function bulkUpdateDueDate() {
+    if (!enableBulkDueUpdate) return;
+    const ids = filteredSorted.filter((t) => selected[t.id]).map((t) => t.id);
+    if (!ids.length) return;
+    if (!bulkDateInput) return;
+    const dt = new Date(bulkDateInput);
+    if (isNaN(dt.getTime())) return;
+    const stamp = Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate());
+    for (const t of filteredSorted) {
+      if (!selected[t.id]) continue;
+      if (t.type === 'backlog') {
+        updateTask(t.id, { plannedDates: [stamp] });
+      }
+    }
+    setSelected({});
+    toast.show(`${ids.length}件の実行日を更新しました`, "success");
   }
 
   const tableView = (
@@ -461,7 +490,7 @@ export default function TaskList({
                       {isDaily ? (
                         <button
                           type="button"
-                          onClick={() => toggleDailyToday(t.id)}
+                          onClick={() => { toggleDailyToday(t.id); toast.show(`「${t.title}」を${isDailyDoneToday ? '未完了' : '完了'}にしました`, 'success'); }}
                           title="今日実行済みにする"
                           className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${
                             isDailyDoneToday
@@ -478,7 +507,7 @@ export default function TaskList({
                       ) : (
                         <button
                           type="button"
-                          onClick={() => toggleCompleted(t.id)}
+                          onClick={() => { toggleCompleted(t.id); toast.show(`「${t.title}」を${t.completed ? '未完了' : '完了'}にしました`, 'success'); }}
                           title={t.completed ? "完了を解除" : "完了にする"}
                           className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${
                             t.completed
@@ -573,6 +602,12 @@ export default function TaskList({
             <button className="btn" onClick={bulkMarkIncomplete} disabled={Object.values(selected).every((v)=>!v)}>未完了に戻す</button>
             <button className="btn" onClick={bulkArchiveDaily} disabled={Object.values(selected).every((v)=>!v)}>アーカイブ（毎日）</button>
             <button className="btn btn-danger" onClick={bulkDelete} disabled={Object.values(selected).every((v)=>!v)}>削除</button>
+            {enableBulkDueUpdate && (
+              <div className="flex items-center gap-1">
+                <input type="date" className="border rounded px-2 py-1 bg-transparent" value={bulkDateInput} onChange={(e)=>setBulkDateInput(e.target.value)} />
+                <button className="btn" onClick={bulkUpdateDueDate} disabled={Object.values(selected).every((v)=>!v) || !bulkDateInput}>実行日に設定</button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -628,6 +663,7 @@ export default function TaskList({
               className="w-full text-left px-3 py-2 rounded hover:bg-black/5 dark:hover:bg-white/10 text-sm"
               onClick={() => {
                 useAppStore.getState().duplicateTask(ctxTask.id);
+                toast.show(`「${ctxTask.title}」を複製しました`, 'success');
                 setCtxTask(null); setCtxPos(null);
               }}
             >複製</button>
@@ -645,6 +681,7 @@ export default function TaskList({
               onClick={async () => {
                 const ok = await confirm('このタスクを削除しますか？', { tone: 'danger', confirmText: '削除' });
                 if (ok) removeTask(ctxTask.id);
+                if (ok) toast.show(`「${ctxTask.title}」を削除しました`, 'success');
                 setCtxTask(null); setCtxPos(null);
               }}
             >削除</button>

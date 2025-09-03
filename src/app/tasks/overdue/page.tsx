@@ -20,7 +20,7 @@ export default function OverdueTasksPage() {
       {hydrating ? (
         <div>読み込み中...</div>
       ) : (
-        <TaskList title="期限切れ" tasks={overdue} tableMode showCreatedColumn showPlannedColumn showTypeColumn />
+        <TaskList title="期限切れ" tasks={overdue} tableMode showCreatedColumn showPlannedColumn showTypeColumn enableSelection enableBulkDueUpdate />
       )}
     </div>
   );
