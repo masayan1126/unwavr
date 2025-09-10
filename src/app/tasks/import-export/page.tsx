@@ -2,8 +2,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useAppStore } from "@/lib/store";
-import { useConfirm } from "@/components/Providers";
-import { TaskType, Scheduled, DateRange } from "@/lib/types";
+import { useConfirm, useToast } from "@/components/Providers";
+import { TaskType, Scheduled, DateRange, type Task } from "@/lib/types";
 
 type ImportResult = { imported: number; failed: number; errors: string[] };
 
@@ -46,6 +46,8 @@ export default function ImportExportPage() {
   const [result, setResult] = useState<ImportResult | null>(null);
   const dayLabels = ["日","月","火","水","木","金","土"] as const;
   const confirm = useConfirm();
+  const toast = useToast();
+  // エクスポート設定（固定出力: 列選択なし）
 
   function generateDemoData() {
     // Milestones
@@ -221,31 +223,15 @@ export default function ImportExportPage() {
     const summary = { imported: ok, failed: errors.length, errors };
     setResult(summary);
     addHistory({ fileName: file.name, ...summary, timestamp: Date.now() });
+    if (errors.length === 0) {
+      toast.show(`インポート完了: ${ok}件`, 'success');
+    } else {
+      toast.show(`インポート完了: 成功${ok}件 / 失敗${errors.length}件`, 'warning');
+    }
   }
 
   function exportCSV() {
-    // 日本語ヘッダーで出力
-    const header = ["タイトル", "説明", "種別", "曜日", "期間", "見積ポモ"]; 
-    const rows = tasks.map((t) => {
-      const daysRaw = (t.scheduled?.daysOfWeek ?? [])
-        .map((n) => (n >= 0 && n <= 6 ? dayLabels[n] : String(n)))
-        .join(";");
-      const days = daysRaw || "-"; // 空欄だと表計算で0になることがあるため見やすい表記に
-      const rangesRaw = (t.scheduled?.dateRanges ?? [])
-        .map((r) => `${formatDate(r.start)}..${formatDate(r.end)}`)
-        .join(";");
-      const ranges = rangesRaw || "-";
-      const esc = (v: string) => (v.includes(",") || v.includes("\n") ? `"${v.replaceAll('"', '""')}"` : v);
-      return [
-        esc(t.title ?? ""),
-        esc(t.description ?? ""),
-        t.type,
-        days,
-        ranges,
-        String(t.estimatedPomodoros ?? 0),
-      ].join(",");
-    });
-    const csv = [header.join(","), ...rows].join("\n");
+    const csv = generateCSV(tasks);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -253,6 +239,93 @@ export default function ImportExportPage() {
     a.download = `tasks_export_${Date.now()}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+    toast.show('CSVをエクスポートしました', 'success');
+  }
+
+  type ExportOptions = {};
+
+  function generateCSV(tasksList: Task[], opts?: ExportOptions): string {
+    const options: ExportOptions = opts ?? {};
+    const esc = (v: string): string => (v.includes(",") || v.includes("\n") || v.includes("\r") ? `"${v.replaceAll('"', '""')}"` : v);
+    const wrap = (v: string): string => {
+      const n = 20; // 固定の折り返し幅
+      if (!v || v.length <= n) return v;
+      const parts: string[] = [];
+      for (let i = 0; i < v.length; i += n) parts.push(v.slice(i, i + n));
+      return parts.join("\n");
+    };
+
+    const header: string[] = ["タイトル", "詳細", "タイプ", "設定されている曜日", "設定されている実行日"];
+
+    const rows = tasksList.map((t) => {
+      const cells: string[] = [];
+      const title = wrap(t.title ?? "");
+      const desc = wrap(t.description ?? "");
+      const typeLabel = t.type === "daily" ? "毎日" : t.type === "scheduled" ? "特定曜日" : "積み上げ候補";
+      cells.push(esc(title), esc(desc), esc(typeLabel));
+
+      const daysRaw = t.type === "scheduled"
+        ? (t.scheduled?.daysOfWeek ?? []).map((n) => (n >= 0 && n <= 6 ? dayLabels[n] : String(n))).join(";")
+        : "-";
+      const days = wrap(daysRaw || "-");
+      cells.push(esc(days));
+
+      const plannedRaw = t.type === "backlog"
+        ? (t.plannedDates ?? []).slice().sort((a,b)=>a-b).map((ts) => formatDate(ts)).join(";")
+        : "-";
+      const planned = wrap(plannedRaw || "-");
+      cells.push(esc(planned));
+      return cells.join(",");
+    });
+    const EOL = "\r\n";
+    return [header.join(","), ...rows].join(EOL);
+  }
+
+  async function exportCSVChooseFile(): Promise<void> {
+    const fileName = `tasks_export_${Date.now()}.csv`;
+    // Feature detection for File System Access API
+    const anyWindow = window as unknown as {
+      showSaveFilePicker?: (options?: unknown) => Promise<FileSystemFileHandle>;
+      showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle>;
+    };
+    const csv = generateCSV(tasks);
+    try {
+      if (anyWindow.showSaveFilePicker) {
+        const fileHandle = await anyWindow.showSaveFilePicker({
+          suggestedName: fileName,
+          types: [
+            {
+              description: 'CSV Files',
+              accept: { 'text/csv': ['.csv'] },
+            },
+          ],
+        } as unknown);
+        const writable = await fileHandle.createWritable();
+        await writable.write(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+        await writable.close();
+        toast.show(`CSVを保存しました: ${fileName}`, 'success');
+        return;
+      }
+      if (anyWindow.showDirectoryPicker) {
+        const dir = await anyWindow.showDirectoryPicker();
+        const fileHandle = await dir.getFileHandle(fileName, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+        await writable.close();
+        toast.show(`CSVを保存しました: ${fileName}`, 'success');
+        return;
+      }
+      exportCSV();
+      toast.show('ブラウザ未対応のため通常ダウンロードで出力しました', 'info');
+    } catch (e) {
+      const err = e as Error;
+      const message = err?.message ?? '保存に失敗しました';
+      if (message.toLowerCase().includes('abort') || message.toLowerCase().includes('cancel')) {
+        toast.show('保存をキャンセルしました', 'info');
+        return;
+      }
+      toast.show(message, 'error');
+    }
   }
 
   return (
@@ -288,17 +361,23 @@ export default function ImportExportPage() {
           </div>
         )}
         <div>
-          <a className="text-sm underline" href="/sample-tasks.csv" download>
+          <a className="text-sm underline" href="/sample-tasks.csv" download onClick={() => toast.show('サンプルCSVをダウンロードします', 'info')}>
             サンプルCSVをダウンロード
           </a>
         </div>
       </div>
 
-      <div className="border rounded p-4 border-[var(--border)] flex items-center justify-between">
+      <div className="border rounded p-4 border-[var(--border)] flex flex-col gap-3">
         <div className="text-sm font-medium">エクスポート（CSV）</div>
-        <button className="px-3 py-1 rounded bg-foreground text-background text-sm" onClick={exportCSV}>
-          エクスポート
-        </button>
+        <div className="flex flex-wrap items-center gap-3 text-xs" />
+        <div className="flex items-center gap-2">
+          <button className="px-3 py-1 rounded border text-sm" onClick={exportCSV}>
+            通常ダウンロード
+          </button>
+          <button className="px-3 py-1 rounded bg-foreground text-background text-sm" onClick={exportCSVChooseFile}>
+            保存先を選んでエクスポート
+          </button>
+        </div>
       </div>
 
       <div className="border rounded p-4 border-[var(--border)] flex items-center justify-between">
@@ -313,13 +392,13 @@ export default function ImportExportPage() {
                 const res = await fetch('/api/db/seed/engineer', { method: 'POST' });
                 if (!res.ok) {
                   const err = await res.json().catch(() => ({}));
-                  alert(`投入に失敗しました: ${err.error ?? res.statusText}`);
+                  toast.show(`投入に失敗: ${err.error ?? res.statusText}`, 'error');
                   return;
                 }
                 await hydrate();
-                alert('エンジニア向けサンプルを投入しました');
+                toast.show('エンジニア向けサンプルを投入しました', 'success');
               } catch {
-                alert('投入に失敗しました');
+                toast.show('投入に失敗しました', 'error');
               }
             }}
           >
@@ -331,7 +410,7 @@ export default function ImportExportPage() {
       <div className="border rounded p-4 border-[var(--border)] flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="text-sm font-medium">インポート履歴</div>
-          <button className="text-xs underline opacity-80" onClick={clearHistory}>履歴をすべて削除</button>
+          <button className="text-xs underline opacity-80" onClick={() => { clearHistory(); toast.show('履歴をすべて削除しました', 'success'); }}>履歴をすべて削除</button>
         </div>
         {history.length === 0 ? (
           <div className="text-sm opacity-70">履歴なし</div>
@@ -345,7 +424,7 @@ export default function ImportExportPage() {
                 </div>
                 <div className="text-xs">成功: {h.imported}</div>
                 <div className="text-xs">失敗: {h.failed}</div>
-                <button className="text-xs underline opacity-80" onClick={() => deleteHistory(h.id)}>
+                <button className="text-xs underline opacity-80" onClick={() => { deleteHistory(h.id); toast.show('履歴を削除しました', 'success'); }}>
                   削除
                 </button>
               </div>
@@ -364,7 +443,7 @@ export default function ImportExportPage() {
               const ok2 = await confirm('本当に全て削除しますか？この操作は取り消せません。', { tone: 'danger', confirmText: '削除' });
               if (ok2) {
                 clearAll();
-                alert('すべて削除しました');
+                toast.show('すべて削除しました', 'success');
               }
             }}
           >

@@ -5,6 +5,8 @@ import { Scheduled, TaskType, type Task } from "@/lib/types";
 import { useAppStore } from "@/lib/store";
 import { Loader2, Mic } from "lucide-react";
 import WysiwygEditor from "@/components/WysiwygEditor";
+import { copyDescriptionToClipboard, copyDescriptionWithFormat, type CopyFormat } from "@/lib/taskUtils";
+import { Copy, ChevronDown } from "lucide-react";
 import { X } from "lucide-react";
 import { useToast } from "@/components/Providers";
 
@@ -174,6 +176,40 @@ function TaskFormInner({ onSubmitted, defaultType, task, onCancel }: TaskFormPro
     performSave();
   };
 
+  function CopyMenu({ onCopy }: { onCopy: (format: CopyFormat) => void }) {
+    const [open, setOpen] = useState(false);
+    return (
+      <div className="relative inline-block text-left z-[1000]">
+        <button
+          type="button"
+          className="inline-flex items-center gap-1 px-2 py-1 rounded border text-xs"
+          onClick={() => setOpen((v) => !v)}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          title="説明をコピー"
+        >
+          <Copy size={14} />
+          コピー
+          <ChevronDown size={12} />
+        </button>
+        {open && (
+          <div className="absolute right-0 mt-1 w-40 rounded border bg-background text-foreground shadow-lg z-[1001]">
+            {(["markdown","text","html"] as CopyFormat[]).map((fmt) => (
+              <button
+                key={fmt}
+                type="button"
+                className="w-full text-left px-3 py-2 text-xs hover:bg-black/5 dark:hover:bg-white/10"
+                onClick={() => { onCopy(fmt); setOpen(false); }}
+              >
+                {fmt === 'text' ? 'テキストでコピー' : fmt === 'markdown' ? 'Markdownでコピー' : 'HTMLでコピー'}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <>
     <form ref={formRef} onSubmit={onSubmit} onBlur={handleFormBlur} className="flex flex-col gap-2 border border-[var(--border)] p-3 rounded-md w-full">
@@ -202,7 +238,7 @@ function TaskFormInner({ onSubmitted, defaultType, task, onCancel }: TaskFormPro
           )}
           {/* 種別セレクトは右カラムに統一 */}
         </div>
-        <div className="text-xs text-right truncate max-w-[40%]">
+        <div className="flex items-center gap-2 text-xs text-right truncate max-w-[40%] justify-end relative">
           {isSaving ? (
             <span className="inline-flex items-center gap-1 opacity-80"><Loader2 size={14} className="animate-spin" /> 更新中です...</span>
           ) : lastSavedAt ? (
@@ -215,6 +251,13 @@ function TaskFormInner({ onSubmitted, defaultType, task, onCancel }: TaskFormPro
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <label className="text-sm">詳細</label>
+              <CopyMenu
+                onCopy={async (fmt) => {
+                  if (!desc.trim()) { toast.show("説明がありません", "warning"); return; }
+                  await copyDescriptionWithFormat(desc, fmt);
+                  toast.show(`${fmt === 'markdown' ? 'Markdown' : fmt === 'html' ? 'HTML' : 'テキスト'}でコピーしました`, 'success');
+                }}
+              />
             </div>
             <WysiwygEditor
               value={desc}

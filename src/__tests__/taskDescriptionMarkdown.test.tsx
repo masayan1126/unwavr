@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import TaskDetail from "@/components/TaskDetail";
 
 jest.mock("next/navigation", () => ({
@@ -31,10 +31,28 @@ jest.mock("@/lib/store", () => {
   };
 });
 
+jest.mock("@/components/Providers", () => {
+  return {
+    __esModule: true,
+    useToast: () => ({ show: jest.fn() }),
+  };
+});
+
 describe("タスク詳細のリッチテキスト描画", () => {
   it("HTML見出しがレンダリングされる", () => {
     render(<TaskDetail taskId="t1" backHref="/" />);
     expect(screen.getByRole("heading", { name: "見出し" })).toBeInTheDocument();
+  });
+
+  it("説明をコピーボタンでクリップボードにコピーできる", async () => {
+    // @ts-expect-error - JSDOM で clipboard をモック
+    navigator.clipboard = { writeText: jest.fn().mockResolvedValue(undefined) };
+    render(<TaskDetail taskId="t1" backHref="/" />);
+    const btn = screen.getByRole("button", { name: "説明をコピー" });
+    fireEvent.click(btn);
+    await waitFor(() => {
+      expect(navigator.clipboard.writeText).toHaveBeenCalled();
+    });
   });
 });
 

@@ -7,6 +7,7 @@ import { useToast } from "@/components/Providers";
 import { useAppStore } from "@/lib/store";
 import { TaskType, Scheduled } from "@/lib/types";
 import RichText from "@/components/RichText";
+import { copyDescriptionWithFormat } from "@/lib/taskUtils";
 import WysiwygEditor from "@/components/WysiwygEditor";
 
 export default function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -15,6 +16,8 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   const toast = useToast();
   const searchParams = useSearchParams();
   const task = useAppStore((s) => s.tasks.find((t) => t.id === id));
+  const activeTaskId = useAppStore((s) => s.pomodoro.activeTaskId);
+  const setActiveTask = useAppStore((s) => s.setActiveTask);
   const updateTask = useAppStore((s) => s.updateTask);
   const removeTask = useAppStore((s) => s.removeTask);
   const milestones = useAppStore((s) => s.milestones);
@@ -155,7 +158,14 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   return (
     <div className="p-6 sm:p-10 max-w-3xl mx-auto flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">タスク詳細</h1>
+        <h1 className="text-xl font-semibold flex items-center gap-2">
+          タスク詳細
+          {task && activeTaskId === task.id && (
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/30">
+              着手中
+            </span>
+          )}
+        </h1>
         <div className="flex items-center gap-4">
           <Link className="text-sm underline opacity-80" href="/">
             ホーム
@@ -167,14 +177,42 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
         // 表示モード
         <div className="space-y-4">
           <div className="border rounded p-4 border-[var(--border)]">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-lg font-medium">{task.title}</h2>
-              <button
-                onClick={() => setIsEditing(true)}
-                className="text-sm underline opacity-80"
-              >
-                編集
-              </button>
+            <div className="flex items-center justify-between mb-2 gap-2">
+              <h2 className="text-lg font-medium flex items-center gap-2">
+                {task.title}
+                {activeTaskId === task.id && (
+                  <span className="inline-flex items-center gap-1.5 text-[10px] font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/30">
+                    着手中
+                  </span>
+                )}
+              </h2>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={async () => {
+                    if (task.description) {
+                      await copyDescriptionWithFormat(task.description, 'markdown');
+                      toast.show('Markdownでコピーしました', 'success');
+                    } else {
+                      toast.show('説明がありません', 'warning');
+                    }
+                  }}
+                  className="text-sm underline opacity-80"
+                >
+                  説明をコピー
+                </button>
+                <button
+                  onClick={() => setActiveTask(activeTaskId === task.id ? undefined : task.id)}
+                  className={`text-sm underline opacity-80 ${activeTaskId === task.id ? 'text-[var(--primary)]' : ''}`}
+                >
+                  {activeTaskId === task.id ? '着手中を解除' : '着手中に設定'}
+                </button>
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="text-sm underline opacity-80"
+                >
+                  編集
+                </button>
+              </div>
             </div>
             
             {task.description && (

@@ -3,7 +3,7 @@ import { useAppStore } from "@/lib/store";
 import { Task } from "@/lib/types";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useConfirm } from "@/components/Providers";
-import { CalendarDays, ListTodo, Archive, Loader2, X, Mic } from "lucide-react";
+import { CalendarDays, ListTodo, Archive, Loader2, X, Mic, Circle, CircleDot } from "lucide-react";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import WysiwygEditor from "@/components/WysiwygEditor";
 import TaskDialog from "@/components/TaskCreateDialog";
@@ -37,6 +37,8 @@ function TypeBadge({ type, label }: { type: "daily" | "scheduled" | "backlog"; l
 function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task) => void; onContext: (e: React.MouseEvent, task: Task) => void }) {
   const toggle = useAppStore((s) => s.toggleTask);
   const toggleDailyToday = useAppStore((s) => s.toggleDailyDoneForToday);
+  const activeTaskId = useAppStore((s) => s.pomodoro.activeTaskId);
+  const setActiveTask = useAppStore((s) => s.setActiveTask);
   const toast = useToast();
   
   const milestones = useAppStore((s) => s.milestones);
@@ -63,7 +65,7 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
     <div
       className={`flex items-center gap-2 py-1 min-w-0 ${
       task.completed ? "bg-[var(--success)]/10 dark:bg-[var(--success)]/20 rounded" : ""
-    }`}
+    } ${activeTaskId === task.id ? "ring-1 ring-[var(--primary)]/70 rounded bg-[var(--primary)]/5" : ""}`}
       onContextMenu={(e) => { e.preventDefault(); onContext(e, task); }}
     >
       {task.type === "daily" ? (
@@ -112,6 +114,21 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
         </button>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
+        {activeTaskId === task.id && (
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/30">
+            着手中
+          </span>
+        )}
+        <button
+          type="button"
+          className={`ml-1 p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 ${activeTaskId === task.id ? 'text-[var(--primary)]' : ''}`}
+          onMouseDown={(e) => { e.stopPropagation(); }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveTask(activeTaskId === task.id ? undefined : task.id); }}
+          title={activeTaskId === task.id ? '着手中を解除' : '着手中に設定'}
+          aria-label={activeTaskId === task.id ? '着手中を解除' : '着手中に設定'}
+        >
+          {activeTaskId === task.id ? <CircleDot size={14} /> : <Circle size={14} />}
+        </button>
         {/* 種別バッジ */}
         <TypeBadge
           type={task.type}
@@ -179,6 +196,7 @@ export default function TaskList({
   const updateTask = useAppStore((s) => s.updateTask);
   const removeTask = useAppStore((s) => s.removeTask);
   const toast = useToast();
+  const globalActiveTaskId = useAppStore((s) => s.pomodoro.activeTaskId);
   const milestones = useAppStore((s) => s.milestones);
   const toggleCompleted = useAppStore((s) => s.toggleTask);
   const toggleDailyToday = useAppStore((s) => s.toggleDailyDoneForToday);
@@ -472,12 +490,13 @@ export default function TaskList({
               const scheduledDays = t.type === "scheduled" ? (t.scheduled?.daysOfWeek ?? []) : [];
               const scheduledRanges = t.type === "scheduled" ? (t.scheduled?.dateRanges ?? []) : [];
               const dow = ["日","月","火","水","木","金","土"];
+              const isActive = globalActiveTaskId === t.id;
               return (
                 <tr
                   key={t.id}
                   className={`border-t border-black/5 dark:border-white/5 transition-colors ${
                     t.completed ? "bg-[var(--success)]/10 dark:bg-[var(--success)]/20" : ""
-                  } hover:bg-black/5 dark:hover:bg-white/5`}
+                  } ${isActive ? "ring-1 ring-[var(--primary)]/70 bg-[var(--primary)]/5" : ""} hover:bg-black/5 dark:hover:bg-white/5`}
                   onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setCtxTask(t); setCtxPos({ x: e.clientX, y: e.clientY }); }}
                 >
                   {enableSelection && (
@@ -527,7 +546,22 @@ export default function TaskList({
                         onClick={() => openEdit(t)}
                         title={t.title}
                       >
-                        <span className="text-sm font-medium">{truncateText(t.title, 20)}</span>
+                        <span className="text-sm font-medium flex items-center gap-2">
+                          {truncateText(t.title, 20)}
+                          {isActive && (
+                            <span className="inline-flex items-center gap-1.5 text-[10px] font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/30">着手中</span>
+                          )}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`ml-2 p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 ${isActive ? 'text-[var(--primary)]' : ''}`}
+                        onMouseDown={(e) => { e.stopPropagation(); }}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); useAppStore.getState().setActiveTask(isActive ? undefined : t.id); }}
+                        title={isActive ? '着手中を解除' : '着手中に設定'}
+                        aria-label={isActive ? '着手中を解除' : '着手中に設定'}
+                      >
+                        {isActive ? <CircleDot size={14} /> : <Circle size={14} />}
                       </button>
                     </div>
                   </td>

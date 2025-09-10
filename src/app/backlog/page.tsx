@@ -14,6 +14,7 @@ import TaskCreateDialog from "@/components/TaskCreateDialog";
 export default function BacklogPage() {
   const tasks = useAppStore((s) => s.tasks);
   const hydrating = useAppStore((s) => s.hydrating);
+  const milestones = useAppStore((s) => s.milestones);
   const backlog = useMemo(() => tasks.filter((t) => t.type === "backlog"), [tasks]);
   const router = useRouter();
   const [openCreate, setOpenCreate] = useState(false);
@@ -29,22 +30,78 @@ export default function BacklogPage() {
   const [pageCom, setPageCom] = useState(1);
   const [pageSizeInc, setPageSizeInc] = useState(10);
   const [pageSizeCom, setPageSizeCom] = useState(10);
-  const [sortKeyInc, setSortKeyInc] = useState<"title" | "createdAt" | "planned" | "type" | "milestone">("createdAt");
-  const [sortAscInc, setSortAscInc] = useState(false);
-  const [sortKeyCom, setSortKeyCom] = useState<"title" | "createdAt" | "planned" | "type" | "milestone">("createdAt");
-  const [sortAscCom, setSortAscCom] = useState(false);
+  const [sortKeyInc, setSortKeyInc] = useState<"title" | "createdAt" | "planned" | "type" | "milestone">("planned");
+  const [sortAscInc, setSortAscInc] = useState(true);
+  const [sortKeyCom, setSortKeyCom] = useState<"title" | "createdAt" | "planned" | "type" | "milestone">("planned");
+  const [sortAscCom, setSortAscCom] = useState(true);
   const totalInc = incompleteBacklog.length;
   const totalCom = completedBacklog.length;
   const totalPagesInc = Math.max(1, Math.ceil(totalInc / pageSizeInc));
   const totalPagesCom = Math.max(1, Math.ceil(totalCom / pageSizeCom));
+  const sortedIncompleteBacklog = useMemo(() => {
+    const list = incompleteBacklog.slice();
+    const dir = sortAscInc ? 1 : -1;
+    list.sort((a, b) => {
+      if (sortKeyInc === "title") {
+        return dir * (a.title ?? "").localeCompare(b.title ?? "");
+      }
+      if (sortKeyInc === "createdAt") {
+        return dir * ((a.createdAt ?? 0) - (b.createdAt ?? 0));
+      }
+      if (sortKeyInc === "planned") {
+        const pa = (a.plannedDates ?? []).slice().sort((x, y) => x - y)[0] ?? Number.MAX_SAFE_INTEGER;
+        const pb = (b.plannedDates ?? []).slice().sort((x, y) => x - y)[0] ?? Number.MAX_SAFE_INTEGER;
+        return dir * (pa - pb);
+      }
+      if (sortKeyInc === "type") {
+        const order: Record<string, number> = { daily: 0, scheduled: 1, backlog: 2 };
+        return dir * ((order[a.type] ?? 9) - (order[b.type] ?? 9));
+      }
+      if (sortKeyInc === "milestone") {
+        const ma = milestones.find((m) => m.id === a.milestoneId)?.title ?? "";
+        const mb = milestones.find((m) => m.id === b.milestoneId)?.title ?? "";
+        return dir * ma.localeCompare(mb);
+      }
+      return 0;
+    });
+    return list;
+  }, [incompleteBacklog, sortKeyInc, sortAscInc, milestones]);
+  const sortedCompletedBacklog = useMemo(() => {
+    const list = completedBacklog.slice();
+    const dir = sortAscCom ? 1 : -1;
+    list.sort((a, b) => {
+      if (sortKeyCom === "title") {
+        return dir * (a.title ?? "").localeCompare(b.title ?? "");
+      }
+      if (sortKeyCom === "createdAt") {
+        return dir * ((a.createdAt ?? 0) - (b.createdAt ?? 0));
+      }
+      if (sortKeyCom === "planned") {
+        const pa = (a.plannedDates ?? []).slice().sort((x, y) => x - y)[0] ?? Number.MAX_SAFE_INTEGER;
+        const pb = (b.plannedDates ?? []).slice().sort((x, y) => x - y)[0] ?? Number.MAX_SAFE_INTEGER;
+        return dir * (pa - pb);
+      }
+      if (sortKeyCom === "type") {
+        const order: Record<string, number> = { daily: 0, scheduled: 1, backlog: 2 };
+        return dir * ((order[a.type] ?? 9) - (order[b.type] ?? 9));
+      }
+      if (sortKeyCom === "milestone") {
+        const ma = milestones.find((m) => m.id === a.milestoneId)?.title ?? "";
+        const mb = milestones.find((m) => m.id === b.milestoneId)?.title ?? "";
+        return dir * ma.localeCompare(mb);
+      }
+      return 0;
+    });
+    return list;
+  }, [completedBacklog, sortKeyCom, sortAscCom, milestones]);
   const incItems = useMemo(() => {
     const offset = (pageInc - 1) * pageSizeInc;
-    return incompleteBacklog.slice(offset, offset + pageSizeInc);
-  }, [incompleteBacklog, pageInc, pageSizeInc]);
+    return sortedIncompleteBacklog.slice(offset, offset + pageSizeInc);
+  }, [sortedIncompleteBacklog, pageInc, pageSizeInc]);
   const comItems = useMemo(() => {
     const offset = (pageCom - 1) * pageSizeCom;
-    return completedBacklog.slice(offset, offset + pageSizeCom);
-  }, [completedBacklog, pageCom, pageSizeCom]);
+    return sortedCompletedBacklog.slice(offset, offset + pageSizeCom);
+  }, [sortedCompletedBacklog, pageCom, pageSizeCom]);
   
   return (
     <div className="p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-4">
@@ -157,8 +214,6 @@ export default function BacklogPage() {
             showPlannedColumn 
             showTypeColumn 
             showMilestoneColumn={false}
-            sortKey={sortKeyInc}
-            sortAsc={sortAscInc}
             enableSelection
           />
         </>
@@ -202,8 +257,6 @@ export default function BacklogPage() {
             showPlannedColumn 
             showTypeColumn 
             showMilestoneColumn={false}
-            sortKey={sortKeyCom}
-            sortAsc={sortAscCom}
             enableSelection
           />
         </>

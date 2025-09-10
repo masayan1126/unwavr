@@ -1,4 +1,4 @@
-import { getTodayUtc, isOverdue, getEarliestExecutionDate } from "@/lib/taskUtils";
+import { getTodayUtc, isOverdue, getEarliestExecutionDate, htmlToMarkdown } from "@/lib/taskUtils";
 import type { Task } from "@/lib/types";
 
 function makeTask(partial: Partial<Task>): Task {
@@ -81,6 +81,15 @@ describe("タスクユーティリティ taskUtils", () => {
       const task = makeTask({ type: "backlog", plannedDates: [now, now - 86400000, now + 86400000] });
       expect(getEarliestExecutionDate(task)).toBe(now - 86400000);
     });
+  });
+
+  it("HTMLをMarkdownに変換できる", () => {
+    const html = "<h1>見出し</h1><p>テキストと<a href='https://example.com'>リンク</a></p><ul><li>一</li><li>二</li></ul>";
+    const md = htmlToMarkdown(html);
+    expect(md).toContain("# 見出し");
+    expect(md).toContain("テキストと[リンク](https://example.com)");
+    expect(md).toContain("- 一");
+    expect(md).toContain("- 二");
   });
 });
 

@@ -40,7 +40,7 @@ export default function Toast({ message, type = "info", onClose, durationMs = 30
     Info;
 
   const isError = type === "error";
-  const baseContainer = "pointer-events-auto flex items-start gap-3 rounded-lg backdrop-blur shadow-lg px-4 py-3 max-w-xs border";
+  const baseContainer = "pointer-events-auto flex items-start gap-3 rounded-lg backdrop-blur shadow-lg px-4 py-3 w-[320px] sm:w-[360px] border";
   const normalContainer = "border-[var(--border)] bg-white/90 dark:bg-neutral-900/90";
   const errorContainer = "bg-[var(--danger)] text-white border-[var(--danger)]";
 
@@ -54,9 +54,9 @@ export default function Toast({ message, type = "info", onClose, durationMs = 30
         className={`${baseContainer} ${isError ? errorContainer : normalContainer} transition-all duration-200 ease-out transform ${shown ? 'opacity-100 translate-y-0 scale-100 [filter:blur(0px)]' : `${position === 'top' ? '-translate-y-2' : 'translate-y-2'} opacity-0 scale-95 [filter:blur(2px)]`}`}
       >
         <div className={`w-1 rounded-full ${accent}`} />
-        <div className="flex items-start gap-2">
+        <div className="flex items-start gap-2 flex-1 min-w-0">
           <Icon size={18} className={`mt-0.5 ${isError ? 'text-white/90' : 'opacity-80'}`} />
-          <div className="text-sm leading-6">{message}</div>
+          <div className="text-[13px] leading-6 truncate">{message}</div>
         </div>
       </div>
     </div>
