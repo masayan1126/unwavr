@@ -22,6 +22,19 @@ function parseDateRanges(input: string): DateRange[] {
   return ranges;
 }
 
+function parsePlannedDates(input: string): number[] {
+  if (!input.trim()) return [];
+  const out: number[] = [];
+  const parts = input.split(";").map((s) => s.trim()).filter(Boolean);
+  for (const part of parts) {
+    const d = new Date(part);
+    if (isNaN(d.getTime())) continue;
+    const stamp = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+    out.push(stamp);
+  }
+  return out.sort((a,b)=>a-b);
+}
+
 function formatDate(ts: number): string {
   const d = new Date(ts);
   const y = d.getFullYear();
@@ -177,7 +190,7 @@ export default function ImportExportPage() {
       return;
     }
     const header = lines[0].split(",").map((h) => h.trim());
-    // 日本語/英語ヘッダー双方を許容
+    // 日本語/英語ヘッダー双方を許容（後方互換: 旧フォーマットも受容）
     const headerIndex = (...names: string[]) => {
       for (const n of names) {
         const i = header.indexOf(n);
@@ -186,12 +199,18 @@ export default function ImportExportPage() {
       return -1;
     };
     const idx = {
-      title: headerIndex("title", "タイトル"),
-      description: headerIndex("description", "詳細"),
-      type: headerIndex("type", "種別"),
-      daysOfWeek: headerIndex("daysOfWeek", "曜日"),
-      dateRanges: headerIndex("dateRanges", "期間"),
-      estimatedPomodoros: headerIndex("estimatedPomodoros", "見積ポモ"),
+      // 共通
+      title: headerIndex("タイトル", "title"),
+      description: headerIndex("詳細", "description"),
+      // 種別（新: タイプ、日本語値 / 旧: 種別, 英語値）
+      type: headerIndex("タイプ", "種別", "type"),
+      // 特定曜日のタスク（新: 設定されている曜日 / 旧: 曜日）
+      daysOfWeek: headerIndex("設定されている曜日", "曜日", "daysOfWeek"),
+      // 積み上げ候補（新: 設定されている実行日）
+      plannedDates: headerIndex("設定されている実行日"),
+      // 旧フォーマット互換（期間/見積）
+      dateRanges: headerIndex("期間", "dateRanges"),
+      estimatedPomodoros: headerIndex("見積ポモ", "estimatedPomodoros"),
     };
     const errors: string[] = [];
     let ok = 0;
@@ -202,18 +221,44 @@ export default function ImportExportPage() {
       try {
         const title = (cells[idx.title] ?? "").trim();
         if (!title) throw new Error("タイトルが空です");
-        const typeStr = (cells[idx.type] ?? "backlog").trim() as TaskType;
         const description = (cells[idx.description] ?? "").trim() || undefined;
-        const est = parseInt((cells[idx.estimatedPomodoros] ?? "0").trim() || "0", 10);
+
+        // 種別の解釈（日本語/英語双方を受容）
+        const rawType = (cells[idx.type] ?? "").trim();
+        let typeStr: TaskType;
+        if (rawType === "毎日" || rawType.toLowerCase() === "daily") typeStr = "daily";
+        else if (rawType === "特定曜日" || rawType.toLowerCase() === "scheduled") typeStr = "scheduled";
+        else if (rawType === "積み上げ候補" || rawType.toLowerCase() === "backlog") typeStr = "backlog";
+        else typeStr = "backlog";
+
+        // 各列の解釈
+        const daysRaw = (idx.daysOfWeek !== -1 ? (cells[idx.daysOfWeek] ?? "").trim() : "");
+        const plannedRaw = (idx.plannedDates !== -1 ? (cells[idx.plannedDates] ?? "").trim() : "");
+        const rangesRaw = (idx.dateRanges !== -1 ? (cells[idx.dateRanges] ?? "").trim() : "");
+        const estRaw = (idx.estimatedPomodoros !== -1 ? (cells[idx.estimatedPomodoros] ?? "0").trim() : "0");
+
+        const estimated = parseInt(estRaw || "0", 10);
         let scheduled: Scheduled | undefined = undefined;
-        if (typeStr === "scheduled" || typeStr === "daily") {
-          const dows = (cells[idx.daysOfWeek] ?? "").trim();
-          const dr = (cells[idx.dateRanges] ?? "").trim();
-          const daysOfWeek = dows ? parseDaysOfWeek(dows) : [];
-          const dateRanges = parseDateRanges(dr);
+        let plannedDates: number[] | undefined = undefined;
+
+        if (typeStr === "scheduled") {
+          const daysOfWeek = daysRaw ? parseDaysOfWeek(daysRaw) : [];
+          const dateRanges = rangesRaw ? parseDateRanges(rangesRaw) : [];
           scheduled = { daysOfWeek, dateRanges: dateRanges.length ? dateRanges : undefined };
         }
-        addTask({ title, description, type: typeStr, scheduled, estimatedPomodoros: Number.isFinite(est) ? est : 0 });
+        if (typeStr === "backlog") {
+          const planned = plannedRaw ? parsePlannedDates(plannedRaw) : [];
+          plannedDates = planned.length ? planned : undefined;
+        }
+
+        addTask({
+          title,
+          description,
+          type: typeStr,
+          scheduled,
+          plannedDates,
+          estimatedPomodoros: Number.isFinite(estimated) ? estimated : 0,
+        });
         ok++;
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
@@ -247,33 +292,34 @@ export default function ImportExportPage() {
   function generateCSV(tasksList: Task[], opts?: ExportOptions): string {
     const options: ExportOptions = opts ?? {};
     const esc = (v: string): string => (v.includes(",") || v.includes("\n") || v.includes("\r") ? `"${v.replaceAll('"', '""')}"` : v);
-    const wrap = (v: string): string => {
-      const n = 20; // 固定の折り返し幅
+    const wrap = (v: string, n: number = 20): string => {
       if (!v || v.length <= n) return v;
       const parts: string[] = [];
       for (let i = 0; i < v.length; i += n) parts.push(v.slice(i, i + n));
-      return parts.join("\n");
+      // セル内改行も CRLF にして Excel 等での表示を安定化
+      return parts.join("\r\n");
     };
 
     const header: string[] = ["タイトル", "詳細", "タイプ", "設定されている曜日", "設定されている実行日"];
 
     const rows = tasksList.map((t) => {
       const cells: string[] = [];
-      const title = wrap(t.title ?? "");
-      const desc = wrap(t.description ?? "");
+      // タイトルは30文字、詳細は60文字で折り返し
+      const title = wrap(t.title ?? "", 30);
+      const desc = wrap(t.description ?? "", 60);
       const typeLabel = t.type === "daily" ? "毎日" : t.type === "scheduled" ? "特定曜日" : "積み上げ候補";
       cells.push(esc(title), esc(desc), esc(typeLabel));
 
       const daysRaw = t.type === "scheduled"
         ? (t.scheduled?.daysOfWeek ?? []).map((n) => (n >= 0 && n <= 6 ? dayLabels[n] : String(n))).join(";")
         : "-";
-      const days = wrap(daysRaw || "-");
+      const days = wrap(daysRaw || "-", 20);
       cells.push(esc(days));
 
       const plannedRaw = t.type === "backlog"
         ? (t.plannedDates ?? []).slice().sort((a,b)=>a-b).map((ts) => formatDate(ts)).join(";")
         : "-";
-      const planned = wrap(plannedRaw || "-");
+      const planned = wrap(plannedRaw || "-", 20);
       cells.push(esc(planned));
       return cells.join(",");
     });
@@ -339,7 +385,12 @@ export default function ImportExportPage() {
 
       <div className="border rounded p-4 border-[var(--border)] flex flex-col gap-3">
         <div className="text-sm font-medium">インポート（CSV）</div>
-        <div className="text-xs opacity-70">ヘッダー行を含むCSVを選択してください。対応列（日本語/英語どちらでも可）: タイトル(title), 詳細(description), 種別(type: daily/scheduled/backlog), 曜日(daysOfWeek: 1;3;5), 期間(dateRanges: 2025-01-01..2025-01-05;2025-05-01..2025-05-03), 見積ポモ(estimatedPomodoros)</div>
+        <div className="text-xs opacity-70">
+          ヘッダー行を含むCSVを選択してください。推奨フォーマット（日本語）:
+          タイトル, 詳細, タイプ(毎日/積み上げ候補/特定曜日), 設定されている曜日(例: 日;火;木), 設定されている実行日(例: 2025-05-10;2025-05-12)
+          <br />
+          後方互換として旧フォーマット（英語列名: title, description, type, daysOfWeek, dateRanges など）も受け付けます。
+        </div>
         <input
           type="file"
           accept=".csv,text/csv"
