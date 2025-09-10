@@ -35,6 +35,49 @@ function parsePlannedDates(input: string): number[] {
   return out.sort((a,b)=>a-b);
 }
 
+// 簡易CSVパーサ（引用符/改行対応、RFC4180準拠の基本挙動）
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = "";
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (i + 1 < text.length && text[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        field += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        row.push(field.trim());
+        field = "";
+      } else if (ch === '\n') {
+        row.push(field.trim());
+        if (row.some((c) => c.length > 0)) rows.push(row);
+        row = [];
+        field = "";
+      } else if (ch === '\r') {
+        // ignore CR (handle CRLF)
+      } else {
+        field += ch;
+      }
+    }
+  }
+  // push last field/row
+  row.push(field.trim());
+  if (row.some((c) => c.length > 0)) rows.push(row);
+  return rows;
+}
+
 function formatDate(ts: number): string {
   const d = new Date(ts);
   const y = d.getFullYear();
@@ -85,12 +128,12 @@ export default function ImportExportPage() {
 
   async function handleImport(file: File) {
     const text = await file.text();
-    const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
-    if (lines.length === 0) {
+    const rows = parseCsv(text);
+    if (rows.length === 0) {
       setResult({ imported: 0, failed: 0, errors: ["空のCSV"] });
       return;
     }
-    const header = lines[0].split(",").map((h) => h.trim());
+    const header = rows[0].map((h) => h.trim());
     // 日本語/英語ヘッダー双方を許容（後方互換: 旧フォーマットも受容）
     const headerIndex = (...names: string[]) => {
       for (const n of names) {
@@ -115,10 +158,9 @@ export default function ImportExportPage() {
     };
     const errors: string[] = [];
     let ok = 0;
-    for (let i = 1; i < lines.length; i++) {
-      const raw = lines[i];
-      if (!raw.trim()) continue;
-      const cells = raw.split(",");
+    for (let i = 1; i < rows.length; i++) {
+      const cells = rows[i];
+      if (!cells || cells.every((c) => c.trim() === "")) continue;
       try {
         const title = (cells[idx.title] ?? "").trim();
         if (!title) throw new Error("タイトルが空です");
