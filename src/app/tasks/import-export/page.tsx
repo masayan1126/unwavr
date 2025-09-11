@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import { useAppStore } from "@/lib/store";
 import { useConfirm, useToast } from "@/components/Providers";
@@ -103,6 +103,8 @@ export default function ImportExportPage() {
   const dayLabels = ["日","月","火","水","木","金","土"] as const;
   const confirm = useConfirm();
   const toast = useToast();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState<string>("");
   // エクスポート設定（固定出力: 列選択なし）
 
   
@@ -331,14 +333,32 @@ export default function ImportExportPage() {
           <br />
           後方互換として旧フォーマット（英語列名: title, description, type, daysOfWeek, dateRanges など）も受け付けます。
         </div>
-        <input
-          type="file"
-          accept=".csv,text/csv"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) handleImport(f);
-          }}
-        />
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            id="csv-file-input"
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (!f) return;
+              setSelectedFileName(f.name);
+              handleImport(f);
+            }}
+          />
+          <button
+            type="button"
+            className="px-3 py-1 rounded border text-sm"
+            onClick={() => fileInputRef.current?.click()}
+            aria-label="CSVファイルを選択"
+          >
+            CSVファイルを選択
+          </button>
+          {selectedFileName && (
+            <span className="text-xs opacity-80 truncate" title={selectedFileName}>{selectedFileName}</span>
+          )}
+        </div>
         {result && (
           <div className="text-sm">
             インポート: {result.imported}件 / 失敗: {result.failed}件
@@ -362,41 +382,74 @@ export default function ImportExportPage() {
         <div className="text-sm font-medium">エクスポート（CSV）</div>
         <div className="flex flex-wrap items-center gap-3 text-xs" />
         <div className="flex items-center gap-2">
-          <button className="px-3 py-1 rounded border text-sm" onClick={exportCSV}>
-            通常ダウンロード
-          </button>
           <button className="px-3 py-1 rounded bg-foreground text-background text-sm" onClick={exportCSVChooseFile}>
-            保存先を選んでエクスポート
+            エクスポート
           </button>
         </div>
       </div>
 
       <div className="border rounded p-4 border-[var(--border)] flex items-center justify-between">
-        <div className="text-sm font-medium">デモデータ / サンプル投入</div>
-        <div className="flex gap-2">
-          <button
-            className="px-3 py-1 rounded border text-sm"
-            onClick={async () => {
-              const ok = await confirm('エンジニア向けの実務的なサンプル（タスク/マイルストーン/ランチャー）をDBに投入します。続行しますか？', { confirmText: '投入' });
-              if (!ok) return;
-              try {
-                const res = await fetch('/api/db/seed/engineer', { method: 'POST' });
-                if (!res.ok) {
-                  const err = await res.json().catch(() => ({}));
-                  toast.show(`投入に失敗: ${err.error ?? res.statusText}`, 'error');
-                  return;
-                }
-                await hydrate();
-                toast.show('エンジニア向けサンプルを投入しました', 'success');
-              } catch {
-                toast.show('投入に失敗しました', 'error');
+        <div className="text-sm font-medium">サンプル投入（タスク）</div>
+        <button
+          className="px-3 py-1 rounded border text-sm"
+          onClick={async () => {
+            const ok = await confirm('サンプルのタスクをDBに投入します。続行しますか？', { confirmText: '投入' });
+            if (!ok) return;
+            try {
+              // 毎日タスク
+              for (let i = 0; i < 10; i++) {
+                addTask({
+                  title: `毎日タスク（サンプル）#${i + 1}`,
+                  description: i % 2 === 0 ? `説明: 習慣 ${i + 1}` : undefined,
+                  type: 'daily',
+                  estimatedPomodoros: (i % 4),
+                });
               }
-            }}
-          >
-            デモデータ投入
-          </button>
-        </div>
+              // 特定曜日タスク
+              const dowSets: number[][] = [[1,3,5],[2,4]];
+              for (let i = 0; i < 10; i++) {
+                const daysOfWeek = dowSets[i % dowSets.length];
+                const start = new Date();
+                start.setDate(start.getDate() + i);
+                start.setHours(0,0,0,0);
+                const end = new Date(start);
+                end.setDate(start.getDate() + 2);
+                addTask({
+                  title: `特定曜日タスク（サンプル）#${i + 1}`,
+                  description: i % 3 === 0 ? `説明: 集中 ${i + 1}` : undefined,
+                  type: 'scheduled',
+                  scheduled: {
+                    daysOfWeek,
+                    dateRanges: i % 2 === 0 ? [{ start: start.getTime(), end: end.getTime() }] : undefined,
+                  },
+                  estimatedPomodoros: (i % 3) + 1,
+                });
+              }
+              // 積み上げ候補タスク
+              for (let i = 0; i < 10; i++) {
+                const d = new Date();
+                d.setDate(d.getDate() + (i % 7));
+                const planned = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+                addTask({
+                  title: `積み上げ候補（サンプル）#${i + 1}`,
+                  description: i % 2 === 0 ? `説明: 後でやる ${i + 1}` : undefined,
+                  type: 'backlog',
+                  plannedDates: [planned],
+                  estimatedPomodoros: i % 3,
+                });
+              }
+              toast.show('タスクのサンプルを投入しました', 'success');
+              await hydrate();
+            } catch {
+              toast.show('投入に失敗しました', 'error');
+            }
+          }}
+        >
+          デモデータ投入
+        </button>
       </div>
+
+      
 
       <div className="border rounded p-4 border-[var(--border)] flex flex-col gap-3">
         <div className="flex items-center justify-between">
@@ -424,24 +477,7 @@ export default function ImportExportPage() {
         )}
       </div>
 
-      <div className="border rounded p-4 border-[var(--danger)]/30 bg-[var(--danger)]/5 flex flex-col gap-3">
-        <div className="text-sm font-medium text-[var(--danger)]">危険な操作</div>
-        <div className="text-xs opacity-80">タスク・マイルストーン・ランチャーの設定をすべて削除します。この操作は取り消せません。</div>
-        <div>
-          <button
-            className="px-3 py-2 rounded bg-[var(--danger)] text-white text-sm"
-            onClick={async () => {
-              const ok2 = await confirm('本当に全て削除しますか？この操作は取り消せません。', { tone: 'danger', confirmText: '削除' });
-              if (ok2) {
-                clearAll();
-                toast.show('すべて削除しました', 'success');
-              }
-            }}
-          >
-            すべて削除（タスク/マイルストーン/ランチャー）
-          </button>
-        </div>
-      </div>
+      
     </div>
   );
 }

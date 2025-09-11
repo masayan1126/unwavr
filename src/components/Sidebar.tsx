@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, ListTodo, Upload, Plus, ChevronLeft, ChevronRight, AlertTriangle, Home, Archive, Rocket, Target, Timer, Calendar, Music, Lock, MessageSquare } from "lucide-react";
+import { CalendarDays, ListTodo, Upload, Plus, ChevronLeft, ChevronRight, AlertTriangle, Home, Archive, Rocket, Target, Timer, Calendar, Music, Lock, MessageSquare, Settings } from "lucide-react";
 import AuthButtons from "@/components/AuthButtons";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
@@ -14,12 +14,12 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { href: "/", label: "ホーム", icon: <Home size={16} /> },
-  { href: "/tasks/import-export", label: "インポート/エクスポート", icon: <Upload size={16} /> },
   { href: "/launcher", label: "ランチャー", icon: <Rocket size={16} /> },
   { href: "/milestones", label: "マイルストーン", icon: <Target size={16} /> },
   { href: "/calendar", label: "カレンダー", icon: <Calendar size={16} /> },
   { href: "/assistant", label: "AIアシスタント", icon: <MessageSquare size={16} /> },
   { href: "/pricing", label: "料金プラン", icon: <span className="inline-block w-4 h-4">¥</span> },
+  { href: "/settings", label: "設定", icon: <Settings size={16} /> },
 ];
 
 export default function Sidebar() {
@@ -102,6 +102,19 @@ export default function Sidebar() {
             </Link>
           );
         })()}
+        {open && (
+          <div className="mt-1 flex flex-col gap-1">
+            <Link
+              href="/milestones/import-export"
+              className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                pathname.startsWith("/milestones/import-export") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+              }`}
+            >
+              <Upload size={16} />
+              <span className="truncate">インポート/エクスポート</span>
+            </Link>
+          </div>
+        )}
 
         {/* タスク（トップレベルのショートカット） */}
         {(() => {
@@ -155,6 +168,15 @@ export default function Sidebar() {
                 <span className="truncate">積み上げ候補</span>
               </Link>
               <Link
+                href="/tasks/import-export"
+                className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                  pathname.startsWith("/tasks/import-export") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                }`}
+              >
+                <Upload size={16} />
+                <span className="truncate">インポート/エクスポート</span>
+              </Link>
+              <Link
                 href="/tasks/incomplete"
                 className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
                   pathname.startsWith("/tasks/incomplete") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
@@ -200,6 +222,15 @@ export default function Sidebar() {
                 >
                   <Music size={16} />
                   <span className="truncate">BGMプレイリスト</span>
+                </Link>
+                <Link
+                  href="/bgm/import-export"
+                  className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                    pathname.startsWith("/bgm/import-export") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                  }`}
+                >
+                  <Upload size={16} />
+                  <span className="truncate">インポート/エクスポート</span>
                 </Link>
               </div>
             </>
