@@ -30,7 +30,7 @@
   - `--tag-scheduled`: `var(--warning)`
   - `--tag-backlog`: `#a78bfa`
 
-補足:
+補足：
 - `@theme inline` にて `--color-background`/`--color-foreground` を変数として再エクスポート。
 - 既定の `.card`, `.text-muted`, `.border` 等のヘルパーで参照。
 
