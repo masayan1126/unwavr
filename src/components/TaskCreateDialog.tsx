@@ -12,7 +12,26 @@ type Props = {
 
 export default function TaskDialog({ open, onClose, title = "タスク", children, onBeforeClose }: Props): React.ReactElement | null {
   const [shown, setShown] = useState(false);
-  useEffect(() => { if (open) { setShown(true); } }, [open]);
+  useEffect(() => {
+    if (open) {
+      setShown(true);
+      // 背面スクロールの抑止（iOS含む）
+      const prev = document.body.style.overflow;
+      const prevTop = document.body.style.top;
+      const scrollY = window.scrollY;
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      return () => {
+        document.body.style.overflow = prev;
+        document.body.style.position = '';
+        document.body.style.top = prevTop;
+        document.body.style.width = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [open]);
   if (!open) return null;
   const handleClose = async () => {
     setShown(false);

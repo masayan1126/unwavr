@@ -3,9 +3,9 @@
 
 :root {
   /* Softer light theme */
-  --background: #f9fafb; /* gray-50 */
-  --foreground: #1f2937; /* gray-800 */
-  --card: #ffffff;
+  --background: #13120A; /* custom background */
+  --foreground: #EDECEC; /* custom foreground */
+  --card: #13120A; /* align surfaces with background */
   --muted-foreground: #6b7280; /* gray-500 */
   --border: rgba(0,0,0,.08);
   /* Semantic color tokens */
@@ -30,9 +30,9 @@
 @media (prefers-color-scheme: dark) {
   :root {
     /* Softer dark theme */
-    --background: #0b0f14; /* softer than pure black */
-    --foreground: #e5e7eb; /* gray-200 */
-    --card: #0f141a;
+    --background: #13120A; /* custom background */
+    --foreground: #EDECEC; /* custom foreground */
+    --card: #13120A; /* align surfaces with background */
     --muted-foreground: #94a3b8; /* slate-400 */
     --border: rgba(255,255,255,.08);
     /* Dark theme semantic tokens (adjusted for contrast) */
@@ -130,6 +130,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 0.5rem; /* rounded */
   font-size: 0.875rem; /* text-sm */
   background: transparent;
+  transition: background-color 120ms ease, box-shadow 120ms ease;
 }
 .btn-primary {
   background: var(--foreground);
@@ -142,6 +143,24 @@ h1, h2, h3, h4, h5, h6 {
 }
 .btn-block { width: 100%; }
 .btn-icon-gap { gap: 0.5rem; }
+
+/* ボタンのホバー時もテーブル行と同等のホバー感を付与（背景色付きボタンは除外） */
+@media (hover: hover) {
+  .btn:hover {
+    background: rgba(0,0,0,0.05);
+  }
+  html.dark .btn:hover { background: rgba(255,255,255,0.08); }
+
+  /* 背景色（bg-*) が付与されていない素のボタンにのみ適用 */
+  button:hover:not(.btn-primary):not([class*="bg-"]),
+  a.button:hover:not(.btn-primary):not([class*="bg-"]) {
+    background: rgba(0,0,0,0.05);
+  }
+  html.dark button:hover:not(.btn-primary):not([class*="bg-"]),
+  html.dark a.button:hover:not(.btn-primary):not([class*="bg-"]) {
+    background: rgba(255,255,255,0.08);
+  }
+}
 
 .dialog-card {
   width: 92vw;

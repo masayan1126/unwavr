@@ -57,6 +57,7 @@ export default function WysiwygEditor({ value, onChange, className, onBlur }: Wy
           <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleBold().run()}>B</button>
           <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleItalic().run()}>I</button>
           <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleUnderline().run()}>U</button>
+          <button type="button" className="px-2 py-1 text-sm border rounded line-through" onClick={() => editor?.chain().focus().toggleStrike().run()}>S</button>
           <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleBulletList().run()}>• List</button>
           <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleOrderedList().run()}>1. List</button>
           <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleCode().run()}>{"< >"}</button>

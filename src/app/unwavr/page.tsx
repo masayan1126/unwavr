@@ -5,46 +5,41 @@ export default function UnwavrLanding() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="px-6 sm:px-10 py-16 md:py-24 bg-gradient-to-b from-black/5 to-transparent dark:from-white/5">
-        <div className="max-w-5xl mx-auto text-center flex flex-col items-center gap-5">
+      <section className="px-6 sm:px-10 py-16 md:py-24 lg:pt-16 bg-gradient-to-b from-black/5 to-transparent dark:from-white/5">
+        <div className="max-w-6xl mx-auto relative flex flex-col items-start gap-8 lg:gap-10">
+          {/* Top-right CTA */}
+          <Link
+            href="/"
+            className="hidden md:inline-flex absolute right-0 top-0 px-5 py-2 rounded-md border text-sm backdrop-blur-sm"
+            aria-label="今すぐ始める（右上）"
+          >
+            今すぐ始める
+          </Link>
           <div className="text-xs tracking-widest uppercase opacity-70">Unwavr</div>
-          <h1 className="text-3xl md:text-5xl font-extrabold leading-tight">
+          <h1 className="text-4xl md:text-6xl font-extrabold leading-tight">
             迷わず、今日を積む。
           </h1>
-          <p className="text-sm md:text-base opacity-80 max-w-2xl">
+          <p className="text-sm md:text-base opacity-80 max-w-xl md:max-w-2xl">
             急な成長はない。あるのは、静かな積み上げだけ。Unwavrは「ブレない・動じない・迷わない」ために、長期目標へコツコツ進む機能だけを搭載した、ミニマルな積み上げダッシュボードです。
           </p>
-          {/* Hero animation (product image) */}
-          <div className="w-full max-w-3xl rounded-lg overflow-hidden border">
-            <div className="aspect-video w-full bg-black/5 dark:bg-white/5">
+          <Link
+            href="/"
+            className="px-6 py-3 rounded-lg bg-foreground text-background text-base font-medium shadow-sm hover:shadow transition"
+          >
+            今すぐ始める
+          </Link>
+          <div className="w-full rounded-xl overflow-hidden border bg-black/5 dark:bg-white/5 shadow-xl">
+            <div className="w-full h-auto max-h-[40vh] md:max-h-[60vh] lg:max-h-[65vh]">
               {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-              <video
-                className="w-full h-full"
-                src="/Area.mp4"
-                playsInline
-                muted
-                autoPlay
-                loop
-                controls
-              >
-                お使いのブラウザは動画再生に対応していません。
-              </video>
+              <img src="/hero.jpg" alt="Unwavr プロダクトプレビュー" className="w-full h-full object-contain" />
             </div>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <span className="text-[11px] px-2 py-1 rounded-full border opacity-80">AI×開発で約1週間で構築</span>
-            <span className="text-[11px] px-2 py-1 rounded-full border opacity-80">フィードバック最速実装</span>
-          </div>
-          <div className="flex gap-3 mt-2">
-            <Link href="/" className="px-5 py-2 rounded bg-foreground text-background text-sm">今すぐ始める</Link>
-            <Link href="#features" className="px-5 py-2 rounded border text-sm">機能を見る</Link>
           </div>
         </div>
       </section>
 
       {/* Pillars */}
       <section className="px-6 sm:px-10 py-10">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="border rounded p-4 flex flex-col gap-2">
             <CalendarDays size={18} />
             <div className="text-sm font-medium">ブレない今日</div>
@@ -70,7 +65,7 @@ export default function UnwavrLanding() {
 
       {/* Value Proposition + Concept */}
       <section className="px-6 sm:px-10 py-10 border-t border-black/10 dark:border-white/10">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="border rounded p-4 flex flex-col gap-2">
             <div className="text-xs uppercase tracking-wider opacity-70">Value</div>
             <h2 className="text-xl font-semibold">AIを使った高速な開発と改善</h2>
@@ -95,7 +90,7 @@ export default function UnwavrLanding() {
 
       {/* Features */}
       <section id="features" className="px-6 sm:px-10 py-12 border-t border-black/10 dark:border-white/10">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="flex flex-col gap-3">
             <div className="text-xs uppercase tracking-wider opacity-70">Tasks</div>
             <h2 className="text-xl font-semibold">今日/毎日/特定曜日/候補を自動で整える</h2>
@@ -188,11 +183,11 @@ export default function UnwavrLanding() {
 
       {/* How it works (Lightweight animations) */}
       <section className="px-6 sm:px-10 py-12 border-t border-black/10 dark:border-white/10">
-        <div className="max-w-5xl mx-auto mb-6">
+        <div className="max-w-6xl mx-auto mb-6">
           <div className="text-xs uppercase tracking-wider opacity-70">How it works</div>
           <h2 className="text-xl font-semibold">操作イメージ（簡易アニメーション）</h2>
         </div>
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Tasks demo */}
           <div className="border rounded p-4 flex flex-col gap-3">
             <div className="text-sm font-medium">タスクの完了</div>
@@ -236,7 +231,7 @@ export default function UnwavrLanding() {
 
       {/* CTA */}
       <section className="px-6 sm:px-10 py-16">
-        <div className="max-w-5xl mx-auto border rounded p-6 md:p-10 text-center flex flex-col items-center gap-4">
+        <div className="max-w-6xl mx-auto border rounded p-6 md:p-10 text-center flex flex-col items-center gap-4">
           <div className="text-xs uppercase tracking-widest opacity-70">Start</div>
           <h3 className="text-2xl md:text-3xl font-bold">急がない。止まらない。Unwavrで今日を積む。</h3>
           <p className="text-sm opacity-80 max-w-2xl">誘惑に流されず、長期目標に向けた小さな前進を日々重ねるための道具箱。必要な機能だけ、まっすぐに。</p>

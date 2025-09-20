@@ -119,16 +119,7 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
             着手中
           </span>
         )}
-        <button
-          type="button"
-          className={`ml-1 p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 ${activeTaskId === task.id ? 'text-[var(--primary)]' : ''}`}
-          onMouseDown={(e) => { e.stopPropagation(); }}
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveTask(activeTaskId === task.id ? undefined : task.id); }}
-          title={activeTaskId === task.id ? '着手中を解除' : '着手中に設定'}
-          aria-label={activeTaskId === task.id ? '着手中を解除' : '着手中に設定'}
-        >
-          {activeTaskId === task.id ? <CircleDot size={14} /> : <Circle size={14} />}
-        </button>
+        {/* 着手中トグルは右クリックメニューへ移動 */}
         {/* 種別バッジ */}
         <TypeBadge
           type={task.type}
@@ -553,16 +544,7 @@ export default function TaskList({
                           )}
                         </span>
                       </button>
-                      <button
-                        type="button"
-                        className={`ml-2 p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 ${isActive ? 'text-[var(--primary)]' : ''}`}
-                        onMouseDown={(e) => { e.stopPropagation(); }}
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); useAppStore.getState().setActiveTask(isActive ? undefined : t.id); }}
-                        title={isActive ? '着手中を解除' : '着手中に設定'}
-                        aria-label={isActive ? '着手中を解除' : '着手中に設定'}
-                      >
-                        {isActive ? <CircleDot size={14} /> : <Circle size={14} />}
-                      </button>
+                      {/* 着手中トグルは右クリックメニューへ移動 */}
                     </div>
                   </td>
                   {showCreatedColumn && (
@@ -709,6 +691,16 @@ export default function TaskList({
                 setCtxTask(null); setCtxPos(null);
               }}
             >編集</button>
+            <button
+              type="button"
+              className="w-full text-left px-3 py-2 rounded hover:bg-black/5 dark:hover:bg-white/10 text-sm"
+              onClick={() => {
+                const isActive = useAppStore.getState().pomodoro.activeTaskId === ctxTask.id;
+                useAppStore.getState().setActiveTask(isActive ? undefined : ctxTask.id);
+                toast.show(isActive ? '着手中を解除しました' : '着手中に設定しました', 'success');
+                setCtxTask(null); setCtxPos(null);
+              }}
+            >{useAppStore.getState().pomodoro.activeTaskId === ctxTask.id ? '着手中を解除' : '着手中に設定'}</button>
             <button
               type="button"
               className="w-full text-left px-3 py-2 rounded hover:bg-black/5 dark:hover:bg-white/10 text-sm text-[var(--danger)]"

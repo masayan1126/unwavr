@@ -134,6 +134,8 @@ export type AppState = {
   setBgmMiniPos: (pos: { x: number; y: number }) => void;
 };
 
+const ACTIVE_TASK_STORAGE_KEY = 'pomodoro:activeTaskId';
+
 const defaultPomodoro: PomodoroState = {
   isRunning: false,
   isBreak: false,
@@ -194,7 +196,10 @@ export const useAppStore = create<AppState>()(
       importHistory: [],
       bgmCurrentTrackId: undefined,
       bgmMiniPos: undefined,
-      pomodoro: defaultPomodoro,
+      pomodoro: {
+        ...defaultPomodoro,
+        activeTaskId: (typeof window !== 'undefined' ? (localStorage.getItem(ACTIVE_TASK_STORAGE_KEY) || undefined) : undefined),
+      },
       bgmTracks: [],
       bgmGroups: [],
       setDataSource: (src) => set({ dataSource: src }),
@@ -626,7 +631,15 @@ export const useAppStore = create<AppState>()(
         }
       },
       setActiveTask: (taskId) =>
-        set((state) => ({ pomodoro: { ...state.pomodoro, activeTaskId: taskId } })),
+        set((state) => {
+          try {
+            if (typeof window !== 'undefined') {
+              if (taskId) localStorage.setItem(ACTIVE_TASK_STORAGE_KEY, taskId);
+              else localStorage.removeItem(ACTIVE_TASK_STORAGE_KEY);
+            }
+          } catch {}
+          return { pomodoro: { ...state.pomodoro, activeTaskId: taskId } };
+        }),
       startPomodoro: (isBreak) =>
         set((state) => {
           const nextIsBreak = Boolean(isBreak ?? state.pomodoro.isBreak);
