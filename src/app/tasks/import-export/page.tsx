@@ -388,65 +388,55 @@ export default function ImportExportPage() {
         </div>
       </div>
 
-      <div className="border rounded p-4 border-[var(--border)] flex items-center justify-between">
+      <div className="border rounded p-4 border-[var(--border)] flex flex-col gap-3">
         <div className="text-sm font-medium">サンプル投入（タスク）</div>
-        <button
-          className="px-3 py-1 rounded border text-sm"
-          onClick={async () => {
-            const ok = await confirm('サンプルのタスクをDBに投入します。続行しますか？', { confirmText: '投入' });
-            if (!ok) return;
-            try {
-              // 毎日タスク
-              for (let i = 0; i < 10; i++) {
-                addTask({
-                  title: `毎日タスク（サンプル）#${i + 1}`,
-                  description: i % 2 === 0 ? `説明: 習慣 ${i + 1}` : undefined,
-                  type: 'daily',
-                  estimatedPomodoros: (i % 4),
-                });
+        <div className="text-xs opacity-80">役割を選ぶと、毎日/積み上げ候補/特定曜日を含むリアルなサンプルをDBに投入します。</div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            className="px-3 py-1 rounded border text-sm"
+            onClick={async () => {
+              const ok = await confirm('エンジニア向けのサンプルを投入します。続行しますか？', { confirmText: '投入' });
+              if (!ok) return;
+              try {
+                await fetch('/api/db/seed/engineer', { method: 'POST' });
+                await hydrate();
+                toast.show('エンジニア向けサンプルを投入しました', 'success');
+              } catch {
+                toast.show('投入に失敗しました', 'error');
               }
-              // 特定曜日タスク
-              const dowSets: number[][] = [[1,3,5],[2,4]];
-              for (let i = 0; i < 10; i++) {
-                const daysOfWeek = dowSets[i % dowSets.length];
-                const start = new Date();
-                start.setDate(start.getDate() + i);
-                start.setHours(0,0,0,0);
-                const end = new Date(start);
-                end.setDate(start.getDate() + 2);
-                addTask({
-                  title: `特定曜日タスク（サンプル）#${i + 1}`,
-                  description: i % 3 === 0 ? `説明: 集中 ${i + 1}` : undefined,
-                  type: 'scheduled',
-                  scheduled: {
-                    daysOfWeek,
-                    dateRanges: i % 2 === 0 ? [{ start: start.getTime(), end: end.getTime() }] : undefined,
-                  },
-                  estimatedPomodoros: (i % 3) + 1,
-                });
+            }}
+          >エンジニア</button>
+
+          <button
+            className="px-3 py-1 rounded border text-sm"
+            onClick={async () => {
+              const ok = await confirm('デザイナー向けのサンプルを投入します。続行しますか？', { confirmText: '投入' });
+              if (!ok) return;
+              try {
+                await fetch('/api/db/seed/designer', { method: 'POST' });
+                await hydrate();
+                toast.show('デザイナー向けサンプルを投入しました', 'success');
+              } catch {
+                toast.show('投入に失敗しました', 'error');
               }
-              // 積み上げ候補タスク
-              for (let i = 0; i < 10; i++) {
-                const d = new Date();
-                d.setDate(d.getDate() + (i % 7));
-                const planned = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
-                addTask({
-                  title: `積み上げ候補（サンプル）#${i + 1}`,
-                  description: i % 2 === 0 ? `説明: 後でやる ${i + 1}` : undefined,
-                  type: 'backlog',
-                  plannedDates: [planned],
-                  estimatedPomodoros: i % 3,
-                });
+            }}
+          >デザイナー</button>
+
+          <button
+            className="px-3 py-1 rounded border text-sm"
+            onClick={async () => {
+              const ok = await confirm('動画クリエイター向けのサンプルを投入します。続行しますか？', { confirmText: '投入' });
+              if (!ok) return;
+              try {
+                await fetch('/api/db/seed/creator', { method: 'POST' });
+                await hydrate();
+                toast.show('動画クリエイター向けサンプルを投入しました', 'success');
+              } catch {
+                toast.show('投入に失敗しました', 'error');
               }
-              toast.show('タスクのサンプルを投入しました', 'success');
-              await hydrate();
-            } catch {
-              toast.show('投入に失敗しました', 'error');
-            }
-          }}
-        >
-          デモデータ投入
-        </button>
+            }}
+          >動画クリエイター</button>
+        </div>
       </div>
 
       
