@@ -1,5 +1,6 @@
 "use client";
 import { useAppStore } from "@/lib/store";
+import { getTodayDateInput } from "@/lib/taskUtils";
 import { Task } from "@/lib/types";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useConfirm } from "@/components/Providers";
@@ -327,7 +328,7 @@ export default function TaskList({
   }
 
   const [selected, setSelected] = useState<Record<string, boolean>>({});
-  const [bulkDateInput, setBulkDateInput] = useState<string>("");
+  const [bulkDateInput, setBulkDateInput] = useState<string>(() => getTodayDateInput());
   const onSelectAll = (checked: boolean) => {
     if (!enableSelection) return;
     setSelected(Object.fromEntries(filteredSorted.map((t) => [t.id, checked])));

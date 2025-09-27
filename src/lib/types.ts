@@ -36,6 +36,20 @@ export const TaskSchema = z.object({
 });
 export type Task = z.infer<typeof TaskSchema>;
 
+export const PomodoroStateSchema = z.object({
+  isRunning: z.boolean(),
+  isBreak: z.boolean(),
+  secondsLeft: z.number().int().min(0),
+  workDurationSec: z.number().int().min(1),
+  shortBreakSec: z.number().int().min(1),
+  longBreakSec: z.number().int().min(1),
+  cyclesUntilLongBreak: z.number().int().min(1),
+  completedWorkSessions: z.number().int().min(0),
+  activeTaskId: z.string().optional(),
+  lastTickAtMs: z.number().int().optional(),
+});
+export type PomodoroState = z.infer<typeof PomodoroStateSchema>;
+
 export const MilestoneSchema = z.object({
   id: z.string(),
   title: z.string().min(1),

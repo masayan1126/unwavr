@@ -1,6 +1,7 @@
 "use client";
 import { create } from "zustand";
-import { Task, Milestone, createTaskId, createMilestoneId, isTaskForToday } from "./types";
+import type { PomodoroState } from "./types";
+import { Task, Milestone, createTaskId, createMilestoneId, isTaskForToday, PomodoroStateSchema } from "./types";
 
 export type LauncherShortcut = {
   id: string;
@@ -26,19 +27,6 @@ export type ImportHistoryEntry = {
   failed: number;
   errors: string[];
   timestamp: number;
-};
-
-export type PomodoroState = {
-  isRunning: boolean;
-  isBreak: boolean;
-  secondsLeft: number;
-  workDurationSec: number;
-  shortBreakSec: number;
-  longBreakSec: number;
-  cyclesUntilLongBreak: number;
-  completedWorkSessions: number;
-  activeTaskId?: string;
-  lastTickAtMs?: number;
 };
 
 export type BgmTrack = {
@@ -136,6 +124,19 @@ export type AppState = {
 
 const ACTIVE_TASK_STORAGE_KEY = 'pomodoro:activeTaskId';
 
+function clearActiveTaskSideEffects(): void {
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(ACTIVE_TASK_STORAGE_KEY);
+    }
+  } catch {}
+}
+
+function includesActiveTask(activeId: string | undefined, ids: string[]): boolean {
+  if (!activeId) return false;
+  return ids.includes(activeId);
+}
+
 const defaultPomodoro: PomodoroState = {
   isRunning: false,
   isBreak: false,
@@ -196,10 +197,10 @@ export const useAppStore = create<AppState>()(
       importHistory: [],
       bgmCurrentTrackId: undefined,
       bgmMiniPos: undefined,
-      pomodoro: {
+      pomodoro: PomodoroStateSchema.parse({
         ...defaultPomodoro,
         activeTaskId: (typeof window !== 'undefined' ? (localStorage.getItem(ACTIVE_TASK_STORAGE_KEY) || undefined) : undefined),
-      },
+      }),
       bgmTracks: [],
       bgmGroups: [],
       setDataSource: (src) => set({ dataSource: src }),
@@ -292,7 +293,12 @@ export const useAppStore = create<AppState>()(
         set((state) => {
           const tasks = state.tasks.map((t) => (t.id === taskId ? { ...t, completed: !t.completed } : t));
           const changed = tasks.find((t) => t.id === taskId);
+          const justCompleted = Boolean(changed?.completed);
           if (changed) fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ completed: changed.completed }) }).catch(() => {});
+          if (justCompleted && includesActiveTask(state.pomodoro.activeTaskId, [taskId])) {
+            clearActiveTaskSideEffects();
+            return { tasks, pomodoro: { ...state.pomodoro, activeTaskId: undefined } };
+          }
           return { tasks };
         }),
       toggleDailyDoneForToday: (taskId) =>
@@ -409,6 +415,10 @@ export const useAppStore = create<AppState>()(
             }).catch(() => {});
             return next;
           });
+          if (includesActiveTask(state.pomodoro.activeTaskId, taskIds)) {
+            clearActiveTaskSideEffects();
+            return { tasks, pomodoro: { ...state.pomodoro, activeTaskId: undefined } };
+          }
           return { tasks };
         }),
       resetDailyDoneForToday: (taskIds) =>

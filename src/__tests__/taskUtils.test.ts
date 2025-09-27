@@ -1,4 +1,4 @@
-import { getTodayUtc, isOverdue, getEarliestExecutionDate, htmlToMarkdown } from "@/lib/taskUtils";
+import { getTodayUtc, isOverdue, getEarliestExecutionDate, htmlToMarkdown, getTodayDateInput } from "@/lib/taskUtils";
 import type { Task } from "@/lib/types";
 
 function makeTask(partial: Partial<Task>): Task {
@@ -26,6 +26,15 @@ describe("タスクユーティリティ taskUtils", () => {
       expect(d.getUTCHours()).toBe(0);
       expect(d.getUTCMinutes()).toBe(0);
       expect(d.getUTCSeconds()).toBe(0);
+    });
+  });
+
+  describe("getTodayDateInput", () => {
+    it("今日の日付をYYYY-MM-DDで返す", () => {
+      const actual = getTodayDateInput();
+      const now = new Date();
+      const expected = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      expect(actual).toBe(expected);
     });
   });
 
