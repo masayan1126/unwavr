@@ -65,8 +65,8 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
   return (
     <div
       className={`flex items-center gap-2 py-1 min-w-0 ${
-      task.completed ? "bg-[var(--success)]/10 dark:bg-[var(--success)]/20 rounded" : ""
-    } ${activeTaskId === task.id ? "ring-1 ring-[var(--primary)]/70 rounded bg-[var(--primary)]/5" : ""}`}
+      activeTaskId === task.id ? "ring-1 ring-[var(--primary)]/70 rounded bg-[var(--primary)]/5" : ""
+    }`}
       onContextMenu={(e) => { e.preventDefault(); onContext(e, task); }}
     >
       {task.type === "daily" ? (
@@ -77,7 +77,7 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
           className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${
             isDailyDoneToday
               ? "bg-[var(--primary)] border-[var(--primary)] text-white"
-              : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-blue-50 dark:hover:border-[var(--primary)] dark:hover:bg-blue-900/20"
+              : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:border-[var(--primary)] dark:hover:bg-[var(--primary)]/20"
           }`}
         >
           {isDailyDoneToday && (
@@ -93,8 +93,8 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
           title={task.completed ? "完了を解除" : "完了にする"}
           className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${
             task.completed
-              ? "bg-[var(--success)] border-[var(--success)] text-white"
-              : "border-[var(--border)] hover:border-[var(--success)] hover:bg-[var(--success)]/10 dark:hover:border-[var(--success)] dark:hover:bg-[var(--success)]/20"
+              ? "bg-[var(--primary)] border-[var(--primary)] text-white"
+              : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:border-[var(--primary)] dark:hover:bg-[var(--primary)]/20"
           }`}
         >
           {task.completed && (
@@ -155,7 +155,6 @@ export default function TaskList({
   showType = false,
   showPlannedDates = false,
   tableMode = false,
-  showCreatedColumn = true,
   showPlannedColumn = true,
   showScheduledColumn = false,
   showTypeColumn = true,
@@ -173,7 +172,6 @@ export default function TaskList({
   showType?: boolean;
   showPlannedDates?: boolean;
   tableMode?: boolean;
-  showCreatedColumn?: boolean;
   showPlannedColumn?: boolean;
   showScheduledColumn?: boolean;
   showTypeColumn?: boolean;
@@ -352,9 +350,6 @@ export default function TaskList({
         if (sortKey === "title") {
           return dir * (a.title ?? "").localeCompare(b.title ?? "");
         }
-        if (sortKey === "createdAt") {
-          return dir * ((a.createdAt ?? 0) - (b.createdAt ?? 0));
-        }
         if (sortKey === "planned") {
           const pa = (a.plannedDates ?? []).slice().sort((x, y) => x - y)[0] ?? Number.MAX_SAFE_INTEGER;
           const pb = (b.plannedDates ?? []).slice().sort((x, y) => x - y)[0] ?? Number.MAX_SAFE_INTEGER;
@@ -454,7 +449,6 @@ export default function TaskList({
               </th>
             )}
             <th className="text-left px-2 py-1">タイトル</th>
-            {showCreatedColumn && <th className="text-left px-2 py-1 w-[100px]">日付</th>}
             {showPlannedColumn && <th className="text-left px-2 py-1 w-[120px]">実行日</th>}
             {showScheduledColumn && <th className="text-left px-2 py-1 w-[160px]">設定（曜日/期間）</th>}
             {showTypeColumn && <th className="text-left px-2 py-1 w-[128px]">種別</th>}
@@ -464,11 +458,10 @@ export default function TaskList({
         <tbody className="align-top">
           {(filteredSorted.length === 0) ? (
             <tr>
-              <td className="px-2 py-2 text-sm opacity-60" colSpan={(enableSelection?1:0) + 1 + Number(showCreatedColumn) + Number(showPlannedColumn) + Number(showScheduledColumn) + Number(showTypeColumn) + Number(showMilestoneColumn)}>タスクなし</td>
+              <td className="px-2 py-2 text-sm opacity-60" colSpan={(enableSelection?1:0) + 1 + Number(showPlannedColumn) + Number(showScheduledColumn) + Number(showTypeColumn) + Number(showMilestoneColumn)}>タスクなし</td>
             </tr>
           ) : (
             filteredSorted.map((t) => {
-              const created = new Date(t.createdAt);
               const planned = t.type === "backlog" ? (t.plannedDates ?? []).slice().sort((a,b)=>a-b) : [];
               const milestone = milestones.find((m) => m.id === t.milestoneId);
               const isDaily = t.type === "daily";
@@ -487,8 +480,8 @@ export default function TaskList({
                 <tr
                   key={t.id}
                   className={`border-t border-black/5 dark:border-white/5 transition-colors ${
-                    t.completed ? "bg-[var(--success)]/10 dark:bg-[var(--success)]/20" : ""
-                  } ${isActive ? "ring-1 ring-[var(--primary)]/70 bg-[var(--primary)]/5" : ""} hover:bg-black/5 dark:hover:bg-white/5`}
+                    isActive ? "ring-1 ring-[var(--primary)]/70 bg-[var(--primary)]/5" : ""
+                  } hover:bg-black/5 dark:hover:bg-white/5`}
                   onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setCtxTask(t); setCtxPos({ x: e.clientX, y: e.clientY }); }}
                 >
                   {enableSelection && (
@@ -506,7 +499,7 @@ export default function TaskList({
                           className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${
                             isDailyDoneToday
                               ? "bg-[var(--primary)] border-[var(--primary)] text-white"
-                              : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-blue-50 dark:hover:border-[var(--primary)] dark:hover:bg-blue-900/20"
+                              : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:border-[var(--primary)] dark:hover:bg-[var(--primary)]/20"
                           }`}
                         >
                           {isDailyDoneToday && (
@@ -520,10 +513,10 @@ export default function TaskList({
                           type="button"
                           onClick={() => { toggleCompleted(t.id); toast.show(`「${t.title}」を${t.completed ? '未完了' : '完了'}にしました`, 'success'); }}
                           title={t.completed ? "完了を解除" : "完了にする"}
-                          className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${
-                            t.completed
-                              ? "bg-[var(--success)] border-[var(--success)] text-white"
-                              : "border-[var(--border)] hover:border-[var(--success)] hover:bg-[var(--success)]/10 dark:hover:border-[var(--success)] dark:hover:bg-[var(--success)]/20"
+          className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${
+            t.completed
+              ? "bg-[var(--primary)] border-[var(--primary)] text-white"
+              : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:border-[var(--primary)] dark:hover:bg-[var(--primary)]/20"
                           }`}
                         >
                           {t.completed && (
@@ -548,9 +541,6 @@ export default function TaskList({
                       {/* 着手中トグルは右クリックメニューへ移動 */}
                     </div>
                   </td>
-                  {showCreatedColumn && (
-                    <td className="px-2 py-1 w-[100px] text-xs opacity-80 whitespace-nowrap overflow-hidden">{created.toLocaleDateString()}</td>
-                  )}
                   {showPlannedColumn && (
                     <td className="px-2 py-1 w-[120px] overflow-hidden">
                       <div className="flex items-center gap-1 flex-wrap text-[10px] opacity-80">

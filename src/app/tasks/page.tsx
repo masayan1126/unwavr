@@ -188,7 +188,6 @@ function TasksPageInner() {
               tasks={baseFiltered.filter(t => t.type === "daily")} 
               showType 
               tableMode 
-              showCreatedColumn 
               showPlannedColumn={false}
               showTypeColumn
               showMilestoneColumn={false}
@@ -198,7 +197,6 @@ function TasksPageInner() {
               tasks={baseFiltered.filter(t => t.type === "backlog")} 
               showType 
               tableMode 
-              showCreatedColumn 
               showPlannedColumn
               showTypeColumn
               showMilestoneColumn={false}
@@ -208,7 +206,6 @@ function TasksPageInner() {
               tasks={baseFiltered.filter(t => t.type === "scheduled")} 
               showType 
               tableMode 
-              showCreatedColumn 
               showScheduledColumn
               showTypeColumn
               showMilestoneColumn={false}
@@ -220,7 +217,6 @@ function TasksPageInner() {
             tasks={filteredTasks} 
             showType 
             tableMode 
-            showCreatedColumn 
             showPlannedColumn={selectedType === "backlog"}
             showScheduledColumn={selectedType === "scheduled"}
             showTypeColumn

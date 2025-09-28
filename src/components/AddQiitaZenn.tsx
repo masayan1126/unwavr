@@ -30,11 +30,11 @@ export default function AddQiitaZenn() {
 
   if (isAdded) {
     return (
-      <div className="p-4 bg-[var(--success)]/10 dark:bg-[var(--success)]/20 border border-[var(--success)]/30 rounded-md">
-        <div className="text-sm text-[var(--success)]">
+      <div className="p-4 bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20 border border-[var(--primary)]/30 rounded-md">
+        <div className="text-sm text-[var(--primary)]">
           ✅ Qiita トレンドとZennがランチャーに追加されました！
         </div>
-        <div className="text-xs text-[var(--success)] mt-1">
+        <div className="text-xs text-[var(--primary)] mt-1">
           ランチャーページで確認できます。
         </div>
       </div>

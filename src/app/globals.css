@@ -10,11 +10,10 @@
   --border: rgba(0,0,0,.08);
   /* Semantic color tokens */
   --primary: #3b82f6; /* blue-500 */
-  --success: #10b981; /* emerald-500 as brand success base */
   --warning: #f59e0b; /* amber-500 */
   --danger: #ef4444; /* red-500 */
   /* Tag/Badge tokens */
-  --tag-daily: var(--primary);
+  --tag-daily: #16a34a; /* green-600 */
   --tag-scheduled: var(--warning);
   --tag-backlog: #8b5cf6; /* violet-500 */
 }
@@ -37,11 +36,10 @@
     --border: rgba(255,255,255,.08);
     /* Dark theme semantic tokens (adjusted for contrast) */
     --primary: #60a5fa; /* blue-400 */
-    --success: #34d399; /* emerald-400 */
     --warning: #fbbf24; /* amber-400 */
     --danger: #f87171; /* red-400 */
     /* Tag/Badge tokens */
-    --tag-daily: var(--primary);
+    --tag-daily: #4ade80; /* green-400 */
     --tag-scheduled: var(--warning);
     --tag-backlog: #a78bfa; /* violet-400 */
   }
@@ -71,7 +69,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Simple demo animations used in /unwavr page */
 @keyframes highlight {
   0% { background: transparent; }
-  10% { background: rgba(16,185,129,0.12); }
+  10% { background: rgba(59,130,246,0.12); }
   40% { background: transparent; }
   100% { background: transparent; }
 }

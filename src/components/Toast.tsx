@@ -28,7 +28,7 @@ export default function Toast({ message, type = "info", onClose, durationMs = 30
   }, [onClose, durationMs]);
 
   const accent =
-    type === "success" ? "bg-[var(--success)]" :
+    type === "success" ? "bg-[var(--primary)]" :
     type === "warning" ? "bg-[var(--warning)]" :
     type === "error" ? "bg-[var(--danger)]" :
     "bg-[var(--primary)]";

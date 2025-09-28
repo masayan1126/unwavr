@@ -84,7 +84,7 @@ export default function Milestones() {
       {importMessage && (
         <div className={`mb-3 p-2 rounded text-xs ${
           importMessage.type === 'success' 
-            ? 'bg-[var(--success)]/15 text-[var(--success)] dark:bg-[var(--success)]/20 dark:text-[var(--success)]' 
+            ? 'bg-[var(--primary)]/15 text-[var(--primary)] dark:bg-[var(--primary)]/20 dark:text-[var(--primary)]' 
             : 'bg-[var(--danger)]/15 text-[var(--danger)] dark:bg-[var(--danger)]/20 dark:text-[var(--danger)]'
         }`}>
           {importMessage.message}
