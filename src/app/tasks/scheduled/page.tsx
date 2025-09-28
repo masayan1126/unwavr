@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import PrimaryButton from "@/components/PrimaryButton";
 import TaskList from "@/components/TaskList";
 import TaskDialog from "@/components/TaskCreateDialog";
 import TaskForm from "@/components/TaskForm";
@@ -31,13 +32,11 @@ export default function ScheduledTasksPage() {
     <div className="p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">特定曜日</h1>
-        <button
-          type="button"
-          className="px-3 py-1.5 rounded border text-sm flex items-center gap-2 bg-[var(--primary)] text-[#0f172a] border-transparent hover:opacity-80"
+        <PrimaryButton
           onClick={() => setOpenCreate(true)}
-        >
-          <Plus size={16} /> タスク追加
-        </button>
+          label="タスク追加"
+          iconLeft={<Plus size={16} />}
+        />
       </div>
       {hydrating ? (
         <SectionLoader label="特定曜日タスクを読み込み中..." lines={5} />

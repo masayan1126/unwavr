@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PrimaryButton from "@/components/PrimaryButton";
 
 export default function NotFound() {
   return (
@@ -13,7 +14,7 @@ export default function NotFound() {
         </p>
         <div className="flex gap-3 justify-center">
           <Link href="/" className="btn">ホームへ戻る</Link>
-          <Link href="/tasks" className="btn btn-primary">タスクを見る</Link>
+        <PrimaryButton onClick={() => window.location.assign("/tasks")} label="タスクを見る" />
         </div>
       </div>
     </div>

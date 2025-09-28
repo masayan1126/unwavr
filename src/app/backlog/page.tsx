@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import TaskList from "@/components/TaskList";
+import PrimaryButton from "@/components/PrimaryButton";
 import TaskDialog from "@/components/TaskCreateDialog";
 import TaskForm from "@/components/TaskForm";
 import { useAppStore } from "@/lib/store";
@@ -108,13 +109,11 @@ export default function BacklogPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">積み上げ候補</h1>
         <div className="flex items-center gap-4">
-          <button
-            type="button"
-            className="px-3 py-1.5 rounded border text-sm flex items-center gap-2 bg-[var(--primary)] text-[#0f172a] border-transparent hover:opacity-80"
+          <PrimaryButton
             onClick={() => setOpenCreate(true)}
-          >
-            <Plus size={16} /> タスク追加
-          </button>
+            label="タスク追加"
+            iconLeft={<Plus size={16} />}
+          />
           <div className="relative">
             <button
               type="button"

@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import { useAppStore } from "@/lib/store";
 import { Play, Trash2, ChevronUp, ChevronDown, Plus, RefreshCw, Download } from "lucide-react";
+import PrimaryButton from "@/components/PrimaryButton";
 
 function extractVideoId(input: string): string | null {
   try {
@@ -251,9 +252,7 @@ export default function BgmPage() {
             <option key={g.id} value={g.id}>{g.name}</option>
           ))}
         </select>
-        <button className="px-3 py-2 text-sm rounded border flex items-center gap-2 justify-center bg-[var(--primary)] text-[#0f172a] border-transparent hover:opacity-80" onClick={addTrack}>
-          <Plus size={14} /> 追加
-        </button>
+        <PrimaryButton onClick={addTrack} label="追加" iconLeft={<Plus size={14} />} />
         <button className="px-3 py-2 text-sm rounded border hover:bg-black/5 dark:hover:bg-white/10" onClick={clear}>全クリア</button>
         <button
           className={`px-3 py-2 text-sm rounded border hover:bg-red-50 dark:hover:bg-red-900/20 ${deletingAll ? 'opacity-70' : ''}`}

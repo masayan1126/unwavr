@@ -5,6 +5,7 @@ import { Scheduled, TaskType, type Task } from "@/lib/types";
 import { useAppStore } from "@/lib/store";
 import { Loader2, Mic } from "lucide-react";
 import WysiwygEditor from "@/components/WysiwygEditor";
+import PrimaryButton from "@/components/PrimaryButton";
 import { copyDescriptionToClipboard, copyDescriptionWithFormat, type CopyFormat } from "@/lib/taskUtils";
 import { Copy, ChevronDown } from "lucide-react";
 import { X } from "lucide-react";
@@ -455,12 +456,12 @@ function TaskFormInner({ onSubmitted, defaultType, task, onCancel }: TaskFormPro
         {task ? (
           <>
             <button type="button" className="btn" onClick={() => { if (onCancel) onCancel(); }}>キャンセル</button>
-            <button type="submit" className="btn btn-primary" onClick={() => { if (latestDescRef.current !== desc) setDesc(latestDescRef.current); }}>保存</button>
+            <PrimaryButton onClick={() => { if (latestDescRef.current !== desc) setDesc(latestDescRef.current); }} label="保存" type="submit" />
           </>
         ) : (
           <>
             <button type="button" className="btn" onClick={() => { performSave(); toast.show('タスクを追加しました', 'success'); setTimeout(()=>{ if (onSubmitted) onSubmitted('keep'); }, 0); }}>続けて追加</button>
-            <button type="submit" className="btn btn-primary">追加</button>
+            <PrimaryButton label="追加" type="submit" />
           </>
         )}
       </div>

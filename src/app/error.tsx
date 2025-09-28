@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import PrimaryButton from "@/components/PrimaryButton";
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
@@ -15,7 +16,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         )}
         <div className="flex gap-3 justify-center">
           <button onClick={() => reset()} className="btn">再試行</button>
-          <Link href="/" className="btn btn-primary">ホームへ戻る</Link>
+        <PrimaryButton onClick={() => window.location.assign("/")} label="ホームへ戻る" />
         </div>
       </div>
     </div>

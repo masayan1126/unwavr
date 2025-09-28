@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import TaskList from "@/components/TaskList";
+import PrimaryButton from "@/components/PrimaryButton";
 import TaskDialog from "@/components/TaskCreateDialog";
 import TaskForm from "@/components/TaskForm";
 import { useTodayTasks } from "@/hooks/useTodayTasks";
@@ -68,13 +69,11 @@ export default function Home() {
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">未完了 ({incompleteToday.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs">
-              <button
-                type="button"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenCreate(true); }}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded border text-sm bg-[var(--primary)] text-[#0f172a] border-transparent hover:opacity-80"
-              >
-                <Plus size={16} />タスク追加
-              </button>
+              <PrimaryButton
+                onClick={() => setOpenCreate(true)}
+                label="タスク追加"
+                iconLeft={<Plus size={16} />}
+              />
             </div>
           </div>
           {hydrating ? (
