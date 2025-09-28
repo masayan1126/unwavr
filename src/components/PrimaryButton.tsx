@@ -5,7 +5,7 @@ import { forwardRef, type ReactNode } from "react";
 
 export type PrimaryButtonProps = {
   label: string;
-  onClick: () => void;
+  onClick?: () => void;
   type?: "button" | "submit" | "reset";
   disabled?: boolean;
   className?: string;

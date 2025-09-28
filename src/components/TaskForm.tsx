@@ -456,7 +456,7 @@ function TaskFormInner({ onSubmitted, defaultType, task, onCancel }: TaskFormPro
         {task ? (
           <>
             <button type="button" className="btn" onClick={() => { if (onCancel) onCancel(); }}>キャンセル</button>
-            <PrimaryButton onClick={() => { if (latestDescRef.current !== desc) setDesc(latestDescRef.current); }} label="保存" type="submit" />
+            <PrimaryButton label="保存" type="submit" />
           </>
         ) : (
           <>

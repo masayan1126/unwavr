@@ -154,6 +154,7 @@ export default function TaskList({
   tasks,
   showType = false,
   showPlannedDates = false,
+  showCreatedColumn = false,
   tableMode = false,
   showPlannedColumn = true,
   showScheduledColumn = false,
@@ -171,6 +172,7 @@ export default function TaskList({
   tasks: Task[];
   showType?: boolean;
   showPlannedDates?: boolean;
+  showCreatedColumn?: boolean;
   tableMode?: boolean;
   showPlannedColumn?: boolean;
   showScheduledColumn?: boolean;
@@ -473,6 +475,7 @@ export default function TaskList({
               </th>
             )}
             <th className="text-left px-2 py-1">タイトル</th>
+            {showCreatedColumn && <th className="text-left px-2 py-1 w-[120px]">作成日</th>}
             {showPlannedColumn && <th className="text-left px-2 py-1 w-[120px]">実行日</th>}
             {showScheduledColumn && <th className="text-left px-2 py-1 w-[160px]">設定（曜日/期間）</th>}
             {showTypeColumn && <th className="text-left px-2 py-1 w-[128px]">種別</th>}
@@ -482,7 +485,7 @@ export default function TaskList({
         <tbody className="align-top">
           {(filteredSorted.length === 0) ? (
             <tr>
-              <td className="px-2 py-2 text-sm opacity-60" colSpan={(enableSelection?1:0) + 1 + Number(showPlannedColumn) + Number(showScheduledColumn) + Number(showTypeColumn) + Number(showMilestoneColumn)}>タスクなし</td>
+              <td className="px-2 py-2 text-sm opacity-60" colSpan={(enableSelection?1:0) + 1 + Number(showCreatedColumn) + Number(showPlannedColumn) + Number(showScheduledColumn) + Number(showTypeColumn) + Number(showMilestoneColumn)}>タスクなし</td>
             </tr>
           ) : (
             filteredSorted.map((t) => {
@@ -565,6 +568,11 @@ export default function TaskList({
                       {/* 着手中トグルは右クリックメニューへ移動 */}
                     </div>
                   </td>
+                  {showCreatedColumn && (
+                    <td className="px-2 py-1 w-[120px] text-xs opacity-80 whitespace-nowrap">
+                      {new Date(t.createdAt).toLocaleDateString()}
+                    </td>
+                  )}
                   {showPlannedColumn && (
                     <td className="px-2 py-1 w-[120px] overflow-hidden">
                       <div className="flex items-center gap-1 flex-wrap text-[10px] opacity-80">
