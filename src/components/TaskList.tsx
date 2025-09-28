@@ -4,7 +4,7 @@ import { getTodayDateInput } from "@/lib/taskUtils";
 import { Task } from "@/lib/types";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useConfirm } from "@/components/Providers";
-import { CalendarDays, ListTodo, Archive, Loader2, X, Mic, Circle, CircleDot } from "lucide-react";
+import { CalendarDays, ListTodo, Archive, Loader2, X, Mic, Circle, CircleDot, ChevronDown } from "lucide-react";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import WysiwygEditor from "@/components/WysiwygEditor";
 import TaskDialog from "@/components/TaskCreateDialog";
@@ -20,10 +20,10 @@ function truncateText(text: string, maxLength: number = 20): string {
 function TypeBadge({ type, label }: { type: "daily" | "scheduled" | "backlog"; label?: string }) {
   const map = {
     // サイドバーと同一のアイコンに統一
-    daily: { label: "毎日", classes: "bg-[var(--tag-daily)]/10 text-[var(--tag-daily)] border-[var(--tag-daily)]/30", Icon: ListTodo },
-    scheduled: { label: "特定曜日", classes: "bg-[var(--tag-scheduled)]/10 text-[var(--tag-scheduled)] border-[var(--tag-scheduled)]/30", Icon: CalendarDays },
+    daily: { label: "毎日", classes: "bg-transparent text-white border-[var(--tag-daily)]", Icon: ListTodo },
+    scheduled: { label: "特定曜日", classes: "bg-transparent text-white border-[var(--tag-scheduled)]", Icon: CalendarDays },
     // 視認性向上＆重複回避のため積み上げ候補はArchiveアイコン
-    backlog: { label: "積み上げ候補", classes: "bg-[var(--tag-backlog)]/10 text-[var(--tag-backlog)] border-[var(--tag-backlog)]/30", Icon: Archive },
+    backlog: { label: "積み上げ候補", classes: "bg-transparent text-white border-[var(--tag-backlog)]", Icon: Archive },
   } as const;
   const info = map[type];
   const Icon = info.Icon;
@@ -327,6 +327,8 @@ export default function TaskList({
 
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [bulkDateInput, setBulkDateInput] = useState<string>(() => getTodayDateInput());
+  const [showBulkMenu, setShowBulkMenu] = useState(false);
+  const bulkMenuRef = useRef<HTMLDivElement | null>(null);
   const onSelectAll = (checked: boolean) => {
     if (!enableSelection) return;
     setSelected(Object.fromEntries(filteredSorted.map((t) => [t.id, checked])));
@@ -377,6 +379,28 @@ export default function TaskList({
 
   // selection state derived helpers
   const allChecked = enableSelection && filteredSorted.length > 0 && filteredSorted.every((t) => selected[t.id]);
+  const selectedCount = Object.values(selected).filter(Boolean).length;
+
+  useEffect(() => {
+    if (!showBulkMenu) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!bulkMenuRef.current) return;
+      if (!bulkMenuRef.current.contains(event.target as Node)) setShowBulkMenu(false);
+    };
+    const handleKeydown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setShowBulkMenu(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeydown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeydown);
+    };
+  }, [showBulkMenu]);
+
+  useEffect(() => {
+    if (selectedCount === 0) setShowBulkMenu(false);
+  }, [selectedCount]);
 
   // 一括操作
   const completeTasks = useAppStore((s) => s.completeTasks);
@@ -603,16 +627,37 @@ export default function TaskList({
       <div className="flex items-center justify-between mb-2">
         <div className="text-xs uppercase tracking-wide opacity-70">{title}</div>
         {enableSelection && (
-          <div className="flex items-center gap-2 text-xs">
-            <span className="opacity-70">{Object.values(selected).filter(Boolean).length} 件選択中</span>
-            <button className="btn" onClick={bulkComplete} disabled={Object.values(selected).every((v)=>!v)}>完了</button>
-            <button className="btn" onClick={bulkMarkIncomplete} disabled={Object.values(selected).every((v)=>!v)}>未完了に戻す</button>
-            <button className="btn" onClick={bulkArchiveDaily} disabled={Object.values(selected).every((v)=>!v)}>アーカイブ（毎日）</button>
-            <button className="btn btn-danger" onClick={bulkDelete} disabled={Object.values(selected).every((v)=>!v)}>削除</button>
-            {enableBulkDueUpdate && (
-              <div className="flex items-center gap-1">
-                <input type="date" className="border rounded px-2 py-1 bg-transparent" value={bulkDateInput} onChange={(e)=>setBulkDateInput(e.target.value)} />
-                <button className="btn" onClick={bulkUpdateDueDate} disabled={Object.values(selected).every((v)=>!v) || !bulkDateInput}>実行日に設定</button>
+          <div ref={bulkMenuRef} className="relative">
+            <button
+              type="button"
+              className={`inline-flex items-center gap-1 px-3 py-1.5 border rounded text-xs transition ${selectedCount === 0 ? "opacity-40 cursor-not-allowed" : "hover:opacity-80"}`}
+              onClick={() => {
+                if (selectedCount === 0) return;
+                setShowBulkMenu((prev) => !prev);
+              }}
+              aria-haspopup="true"
+              aria-expanded={showBulkMenu}
+            >
+              <span>{selectedCount} 件選択中</span>
+              <ChevronDown size={14} className={`transition-transform ${showBulkMenu ? "rotate-180" : ""}`} />
+            </button>
+            {showBulkMenu && (
+              <div className="absolute right-0 mt-2 w-56 bg-background text-foreground border border-black/10 dark:border-white/10 rounded-lg shadow-lg p-2 z-10">
+                <div className="flex flex-col gap-1 text-xs">
+                  <button className="w-full text-left px-3 py-2 rounded hover:bg-black/5 dark:hover:bg-white/10" onClick={bulkComplete}>完了</button>
+                  <button className="w-full text-left px-3 py-2 rounded hover:bg-black/5 dark:hover:bg-white/10" onClick={bulkMarkIncomplete}>未完了に戻す</button>
+                  <button className="w-full text-left px-3 py-2 rounded hover:bg-black/5 dark:hover:bg-white/10" onClick={bulkArchiveDaily}>アーカイブ（毎日）</button>
+                  <button className="w-full text-left px-3 py-2 rounded text-[var(--danger)] hover:bg-black/5 dark:hover:bg-white/10" onClick={bulkDelete}>削除</button>
+                </div>
+                {enableBulkDueUpdate && (
+                  <div className="mt-2 pt-2 border-t border-black/5 dark:border-white/10">
+                    <div className="text-[11px] mb-1 opacity-70">実行日に設定</div>
+                    <div className="flex items-center gap-1">
+                      <input type="date" className="flex-1 border rounded px-2 py-1 bg-transparent" value={bulkDateInput} onChange={(e)=>setBulkDateInput(e.target.value)} />
+                      <button className="btn" onClick={bulkUpdateDueDate} disabled={!bulkDateInput}>設定</button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -26,7 +26,7 @@ export default function MilestonesImportExportPage() {
       <div className="border rounded p-4 border-[var(--border)] flex items-center justify-between">
         <div className="text-sm font-medium">エクスポート（CSV）</div>
         <button
-          className="px-3 py-1 rounded bg-foreground text-background text-sm"
+          className="px-3 py-1.5 rounded text-sm bg-[var(--primary)] text-[#0f172a] border border-transparent hover:opacity-80"
           onClick={() => {
             exportMilestones();
             setExportHistory((arr) => [{ id: `exp_${Date.now()}`, timestamp: Date.now(), count: milestones.length }, ...arr]);

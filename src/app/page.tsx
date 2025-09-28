@@ -71,7 +71,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenCreate(true); }}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded border text-sm"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded border text-sm bg-[var(--primary)] text-[#0f172a] border-transparent hover:opacity-80"
               >
                 <Plus size={16} />タスク追加
               </button>

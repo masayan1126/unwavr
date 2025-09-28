@@ -110,7 +110,7 @@ export default function BacklogPage() {
         <div className="flex items-center gap-4">
           <button
             type="button"
-            className="px-3 py-1.5 rounded border text-sm flex items-center gap-2"
+            className="px-3 py-1.5 rounded border text-sm flex items-center gap-2 bg-[var(--primary)] text-[#0f172a] border-transparent hover:opacity-80"
             onClick={() => setOpenCreate(true)}
           >
             <Plus size={16} /> タスク追加

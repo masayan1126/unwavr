@@ -9,13 +9,13 @@
   --muted-foreground: #6b7280; /* gray-500 */
   --border: rgba(0,0,0,.08);
   /* Semantic color tokens */
-  --primary: #3b82f6; /* blue-500 */
-  --warning: #f59e0b; /* amber-500 */
+  --primary: #577BF1;
+  --warning: #F1D757;
   --danger: #ef4444; /* red-500 */
   /* Tag/Badge tokens */
-  --tag-daily: #16a34a; /* green-600 */
+  --tag-daily: #57F1A8;
   --tag-scheduled: var(--warning);
-  --tag-backlog: #8b5cf6; /* violet-500 */
+  --tag-backlog: #8B57F1;
 }
 
 @theme inline {
@@ -35,13 +35,13 @@
     --muted-foreground: #94a3b8; /* slate-400 */
     --border: rgba(255,255,255,.08);
     /* Dark theme semantic tokens (adjusted for contrast) */
-    --primary: #60a5fa; /* blue-400 */
-    --warning: #fbbf24; /* amber-400 */
+    --primary: #88A2FF;
+    --warning: #F1D757;
     --danger: #f87171; /* red-400 */
     /* Tag/Badge tokens */
-    --tag-daily: #4ade80; /* green-400 */
+    --tag-daily: #57F1A8;
     --tag-scheduled: var(--warning);
-    --tag-backlog: #a78bfa; /* violet-400 */
+    --tag-backlog: #8B57F1;
   }
 }
 
@@ -169,8 +169,59 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* すべてのクリック可能要素は指カーソルに */
-a, button, [role="button"], input[type="button"], input[type="submit"], input[type="reset"], label, summary {
+a,
+button,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+label,
+summary {
   cursor: pointer;
+  transition: opacity 120ms ease;
+}
+
+/* ホバー時はわずかに透明にしてクリック可能性を強調 */
+a:hover,
+a:focus-visible,
+button:not(:disabled):hover,
+button:not(:disabled):focus-visible,
+[role="button"]:hover,
+[role="button"]:focus-visible,
+input[type="button"]:hover,
+input[type="button"]:focus-visible,
+input[type="submit"]:hover,
+input[type="submit"]:focus-visible,
+input[type="reset"]:hover,
+input[type="reset"]:focus-visible,
+label:hover,
+summary:hover {
+  opacity: 0.82;
+}
+
+/* Submit 系ボタンはブランドカラーで統一 */
+button[type="submit"],
+input[type="submit"] {
+  background: var(--primary);
+  color: #0f172a;
+  border-color: var(--primary);
+  opacity: 1;
+}
+
+button[type="submit"]:hover,
+button[type="submit"]:focus-visible,
+input[type="submit"]:hover,
+input[type="submit"]:focus-visible {
+  opacity: 1;
+  background: #4668EC;
+  border-color: #4668EC;
+}
+
+button[type="submit"][disabled],
+input[type="submit"][disabled] {
+  background: rgba(87, 123, 241, 0.5);
+  border-color: rgba(87, 123, 241, 0.5);
+  color: rgba(15, 23, 42, 0.6);
 }
 
 /* Onboarding guide highlight (blinking) */

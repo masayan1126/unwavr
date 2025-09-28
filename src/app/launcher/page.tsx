@@ -24,7 +24,7 @@ export default function LauncherPage() {
             一括登録
           </button>
           <button
-            className="text-sm underline opacity-80"
+            className="px-3 py-1.5 rounded border text-sm flex items-center gap-2 bg-[var(--primary)] text-[#0f172a] border-transparent hover:opacity-80"
             onClick={() => exportLaunchers()}
             title="JSONとしてエクスポート"
           >

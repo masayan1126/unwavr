@@ -382,7 +382,7 @@ export default function ImportExportPage() {
         <div className="text-sm font-medium">エクスポート（CSV）</div>
         <div className="flex flex-wrap items-center gap-3 text-xs" />
         <div className="flex items-center gap-2">
-          <button className="px-3 py-1 rounded bg-foreground text-background text-sm" onClick={exportCSVChooseFile}>
+          <button className="px-3 py-1.5 rounded text-sm bg-[var(--primary)] text-[#0f172a] border border-transparent hover:opacity-80" onClick={exportCSVChooseFile}>
             エクスポート
           </button>
         </div>

@@ -58,7 +58,7 @@ export default function Milestones() {
         <div className="flex gap-2">
           <button
             onClick={handleExport}
-            className="px-3 py-1 rounded border text-xs hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="px-3 py-1.5 rounded border text-xs bg-[var(--primary)] text-[#0f172a] border-transparent disabled:opacity-50 hover:opacity-80"
             disabled={milestones.length === 0}
             title="CSV形式（日本語ヘッダー）でダウンロードします"
           >
