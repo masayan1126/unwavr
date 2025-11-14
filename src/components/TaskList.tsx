@@ -1,6 +1,6 @@
 "use client";
 import { useAppStore } from "@/lib/store";
-import { getTodayDateInput } from "@/lib/taskUtils";
+import { getTodayDateInput, getTomorrowDateInput } from "@/lib/taskUtils";
 import { Task } from "@/lib/types";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useConfirm } from "@/components/Providers";
@@ -464,6 +464,23 @@ export default function TaskList({
     toast.show(`${ids.length}件の実行日を更新しました`, "success");
   }
 
+  async function bulkPostponeToTomorrow() {
+    if (!enableBulkDueUpdate) return;
+    const ids = filteredSorted.filter((t) => selected[t.id] && t.type === 'backlog').map((t) => t.id);
+    if (!ids.length) return;
+    const tomorrowInput = getTomorrowDateInput();
+    const dt = new Date(tomorrowInput);
+    const stamp = Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate());
+    for (const t of filteredSorted) {
+      if (!selected[t.id]) continue;
+      if (t.type === 'backlog') {
+        updateTask(t.id, { plannedDates: [stamp] });
+      }
+    }
+    setSelected({});
+    toast.show(`${ids.length}件を明日に繰り越しました`, "success");
+  }
+
   const tableView = (
     <div className="overflow-x-auto">
       <table className="table-fixed w-full border-separate border-spacing-0">
@@ -658,13 +675,18 @@ export default function TaskList({
                   <button className="w-full text-left px-3 py-2 rounded text-[var(--danger)] hover:bg-black/5 dark:hover:bg-white/10" onClick={bulkDelete}>削除</button>
                 </div>
                 {enableBulkDueUpdate && (
-                  <div className="mt-2 pt-2 border-t border-black/5 dark:border-white/10">
-                    <div className="text-[11px] mb-1 opacity-70">実行日に設定</div>
-                    <div className="flex items-center gap-1">
-                      <input type="date" className="flex-1 border rounded px-2 py-1 bg-transparent" value={bulkDateInput} onChange={(e)=>setBulkDateInput(e.target.value)} />
-                      <button className="btn" onClick={bulkUpdateDueDate} disabled={!bulkDateInput}>設定</button>
+                  <>
+                    <div className="mt-2 pt-2 border-t border-black/5 dark:border-white/10">
+                      <button className="w-full text-left px-3 py-2 rounded hover:bg-black/5 dark:hover:bg-white/10 text-xs font-medium text-[var(--primary)]" onClick={bulkPostponeToTomorrow}>明日に繰り越す</button>
                     </div>
-                  </div>
+                    <div className="mt-2 pt-2 border-t border-black/5 dark:border-white/10">
+                      <div className="text-[11px] mb-1 opacity-70">実行日に設定</div>
+                      <div className="flex items-center gap-1">
+                        <input type="date" className="flex-1 border rounded px-2 py-1 bg-transparent" value={bulkDateInput} onChange={(e)=>setBulkDateInput(e.target.value)} />
+                        <button className="btn" onClick={bulkUpdateDueDate} disabled={!bulkDateInput}>設定</button>
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             )}
