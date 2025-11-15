@@ -1,5 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import type { ReactNode, ReactElement } from "react";
 import SidebarConditional from "@/components/SidebarConditional";
 import NotificationBars from "@/components/NotificationBars";
@@ -8,10 +9,39 @@ import GlobalLauncherBarConditional from "@/components/GlobalLauncherBarConditio
 import CookieConsentConditional from "@/components/CookieConsentConditional";
 import MobileTabBar from "@/components/MobileTabBar";
 import PomodoroTopBar from "@/components/PomodoroTopBar";
+import QuickAddTaskModal from "@/components/QuickAddTaskModal";
 
 export default function LayoutChrome({ children }: { children: ReactNode }): ReactElement {
   const pathname = usePathname();
   const isStandaloneEditor = /^\/tasks\/[^/]+\/description\/?$/.test(pathname ?? "");
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+
+  // グローバルショートカット: Cmd+K / Ctrl+K
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd+K (Mac) or Ctrl+K (Windows/Linux)
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        // モーダルが既に開いている場合はスキップ
+        if (isQuickAddOpen) return;
+
+        // フォーム要素にフォーカスがある場合はスキップ
+        const target = e.target as HTMLElement;
+        if (
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable
+        ) {
+          return;
+        }
+
+        e.preventDefault();
+        setIsQuickAddOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isQuickAddOpen]);
 
   if (isStandaloneEditor) {
     return (
@@ -35,6 +65,12 @@ export default function LayoutChrome({ children }: { children: ReactNode }): Rea
       <GlobalLauncherBarConditional />
       <CookieConsentConditional />
       <MobileTabBar />
+
+      {/* クイックタスク追加モーダル */}
+      <QuickAddTaskModal
+        isOpen={isQuickAddOpen}
+        onClose={() => setIsQuickAddOpen(false)}
+      />
     </div>
   );
 }
