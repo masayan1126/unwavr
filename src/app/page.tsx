@@ -6,11 +6,12 @@ import TaskDialog from "@/components/TaskCreateDialog";
 import TaskForm from "@/components/TaskForm";
 import { useTodayTasks } from "@/hooks/useTodayTasks";
 import WeatherWidget from "@/components/WeatherWidget";
+import NetworkSpeedIndicator from "@/components/NetworkSpeedIndicator";
 import { Plus, RefreshCw } from "lucide-react";
 import TaskCreateDialog from "@/components/TaskCreateDialog";
 import { useConfirm } from "@/components/Providers";
 import { useAppStore } from "@/lib/store";
-import SectionLoader from "@/components/SectionLoader";
+import HomePageSkeleton from "@/components/HomePageSkeleton";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -19,6 +20,7 @@ export default function Home() {
     dailyDoneFiltered,
     scheduledDoneFiltered,
     backlogDoneFiltered,
+    loading,
   } = useTodayTasks();
   const hydrateFromDb = useAppStore((s) => s.hydrateFromDb);
   const hydrating = useAppStore((s) => s.hydrating);
@@ -38,19 +40,36 @@ export default function Home() {
   }, []);
   const [openCreate, setOpenCreate] = useState(false);
   const defaultCreateType = "backlog" as const;
+
+  if (hydrating) {
+    return <HomePageSkeleton />;
+  }
+
   return (
     <div className="min-h-screen p-6 sm:p-10 max-w-6xl mx-auto flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">ホーム</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-base sm:text-lg md:text-xl font-medium tabular-nums">{nowLabel}</span>
-          <WeatherWidget variant="large" />
+      <header
+        className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-3 md:p-4 mb-6"
+        role="banner"
+        aria-label="サイトヘッダー"
+      >
+        <div className="flex items-center justify-between gap-2 md:gap-3">
+          <h1 className="text-xl font-semibold">ホーム</h1>
+          <div className="flex items-center gap-2 md:gap-3">
+            <NetworkSpeedIndicator />
+            <time
+              dateTime={new Date().toISOString()}
+              className="text-lg font-medium text-gray-700 dark:text-white text-center"
+            >
+              {nowLabel}
+            </time>
+            <WeatherWidget variant="large" />
+          </div>
         </div>
-      </div>
+      </header>
 
       <div className="flex justify-end">
         <button
-          className={`mt-1 px-2 py-1 rounded border flex items-center gap-2 ${hydrating ? "opacity-70" : ""}`}
+          className="mt-1 px-2 py-1 rounded border flex items-center gap-2"
           onClick={async () => {
             await hydrateFromDb();
           }}
@@ -76,11 +95,7 @@ export default function Home() {
               />
             </div>
           </div>
-          {hydrating ? (
-            <SectionLoader label="今日のタスクを読み込み中..." lines={5} />
-          ) : (
-            <TaskList title="" tasks={incompleteToday.slice(0,10)} showType tableMode showCreatedColumn={false} showPlannedColumn showTypeColumn showMilestoneColumn={false} enableSelection />
-          )}
+          <TaskList title="" tasks={incompleteToday.slice(0,10)} showType tableMode showCreatedColumn={false} showPlannedColumn showTypeColumn showMilestoneColumn={false} enableSelection />
           <div className="mt-2 text-right">
             <Link href={{ pathname: "/tasks", query: { daily: "1", backlogToday: "1", scheduledToday: "1", onlyIncomplete: "1" } }} className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
           </div>
@@ -92,11 +107,7 @@ export default function Home() {
             <h2 className="text-sm font-medium">積み上げ済み (毎日) ({dailyDoneFiltered.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs" />
           </div>
-          {hydrating ? (
-            <SectionLoader label="読み込み中..." lines={4} />
-          ) : (
-            <TaskList title="" tasks={dailyDoneFiltered.slice(0,10)} showType tableMode showCreatedColumn={false} showPlannedColumn={false} showTypeColumn showMilestoneColumn={false} enableSelection />
-          )}
+          <TaskList title="" tasks={dailyDoneFiltered.slice(0,10)} showType tableMode showCreatedColumn={false} showPlannedColumn={false} showTypeColumn showMilestoneColumn={false} enableSelection />
           <div className="mt-2 text-right">
             <Link href="/tasks/daily" className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
           </div>
@@ -107,11 +118,7 @@ export default function Home() {
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">完了済み (特定曜日) ({scheduledDoneFiltered.length})</h2>
           </div>
-          {hydrating ? (
-            <SectionLoader label="読み込み中..." lines={4} />
-          ) : (
-            <TaskList title="" tasks={scheduledDoneFiltered.slice(0,10)} showType tableMode showCreatedColumn={false} showPlannedColumn={false} showTypeColumn showMilestoneColumn={false} enableSelection />
-          )}
+          <TaskList title="" tasks={scheduledDoneFiltered.slice(0,10)} showType tableMode showCreatedColumn={false} showPlannedColumn={false} showTypeColumn showMilestoneColumn={false} enableSelection />
           <div className="mt-2 text-right">
             <Link href="/tasks/scheduled" className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
           </div>
@@ -122,11 +129,7 @@ export default function Home() {
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">完了済み (積み上げ候補) ({backlogDoneFiltered.length})</h2>
           </div>
-          {hydrating ? (
-            <SectionLoader label="読み込み中..." lines={4} />
-          ) : (
-            <TaskList title="" tasks={backlogDoneFiltered.slice(0,10)} showType tableMode showCreatedColumn={false} showPlannedColumn showTypeColumn showMilestoneColumn={false} enableSelection />
-          )}
+          <TaskList title="" tasks={backlogDoneFiltered.slice(0,10)} showType tableMode showCreatedColumn={false} showPlannedColumn showTypeColumn showMilestoneColumn={false} enableSelection />
           <div className="mt-2 text-right">
             <Link href="/backlog" className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
           </div>
