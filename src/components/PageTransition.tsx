@@ -1,6 +1,7 @@
 'use client'
 
-import { motion, Variants } from 'framer-motion'
+import { motion, Variants, AnimatePresence } from 'framer-motion'
+import { usePathname } from 'next/navigation'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 
 /**
@@ -61,6 +62,7 @@ export default function PageTransition({
   children,
   className = ''
 }: PageTransitionProps) {
+  const pathname = usePathname()
   const prefersReducedMotion = useReducedMotion()
 
   /**
@@ -87,18 +89,21 @@ export default function PageTransition({
   }
 
   return (
-    <motion.div
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      variants={variants}
-      transition={transition}
-      className={className}
-      style={{
-        willChange: 'transform, opacity',
-      }}
-    >
-      {children}
-    </motion.div>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={pathname}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        variants={variants}
+        transition={transition}
+        className={className}
+        style={{
+          willChange: 'transform, opacity',
+        }}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
   )
 }
