@@ -67,29 +67,32 @@ export default function PageTransition({
 
   /**
    * アニメーションバリアント定義
+   * パフォーマンス最適化:
+   * - exitアニメーションは透明度のみ（高速化）
+   * - Y軸移動を削減（10px）
+   * - アニメーション時間を短縮（0.2秒）
    */
   const variants: Variants = {
     initial: {
       opacity: prefersReducedMotion ? 1 : 0,
-      y: prefersReducedMotion ? 0 : 20,
+      y: prefersReducedMotion ? 0 : 10, // 20px → 10px に削減
     },
     animate: {
       opacity: 1,
       y: 0,
     },
     exit: {
-      opacity: prefersReducedMotion ? 1 : 0,
-      y: prefersReducedMotion ? 0 : -20,
+      opacity: 0, // Y軸移動なし（パフォーマンス向上）
     },
   }
 
   const transition = {
-    duration: prefersReducedMotion ? 0.1 : 0.3,
+    duration: prefersReducedMotion ? 0.05 : 0.2, // 0.3秒 → 0.2秒 に短縮
     ease: [0.4, 0, 0.2, 1] as const, // easeOut equivalent
   }
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="sync">
       <motion.div
         key={pathname}
         initial="initial"
@@ -99,7 +102,8 @@ export default function PageTransition({
         transition={transition}
         className={className}
         style={{
-          willChange: 'transform, opacity',
+          willChange: 'opacity',
+          position: 'relative',
         }}
       >
         {children}
