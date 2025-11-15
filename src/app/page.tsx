@@ -48,12 +48,11 @@ export default function Home() {
   return (
     <div className="min-h-screen p-6 sm:p-10 max-w-6xl mx-auto flex flex-col gap-6">
       <header
-        className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-3 md:p-4 mb-6"
         role="banner"
         aria-label="サイトヘッダー"
       >
         <div className="flex items-center justify-between gap-2 md:gap-3">
-          <h1 className="text-xl font-semibold">ホーム</h1>
+          <h1 className="text-xl font-semibold"></h1>
           <div className="flex items-center gap-2 md:gap-3">
             <NetworkSpeedIndicator />
             <time

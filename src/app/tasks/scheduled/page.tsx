@@ -6,7 +6,7 @@ import TaskDialog from "@/components/TaskCreateDialog";
 import TaskForm from "@/components/TaskForm";
 import { useMemo, useState } from "react";
 import { useAppStore } from "@/lib/store";
-import SectionLoader from "@/components/SectionLoader";
+import SimpleTaskListPageSkeleton from "@/components/SimpleTaskListPageSkeleton";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import TaskCreateDialog from "@/components/TaskCreateDialog";
@@ -28,6 +28,11 @@ export default function ScheduledTasksPage() {
     const offset = (page - 1) * pageSize;
     return scheduled.slice(offset, offset + pageSize);
   }, [scheduled, page, pageSize]);
+
+  if (hydrating) {
+    return <SimpleTaskListPageSkeleton />;
+  }
+
   return (
     <div className="p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -38,9 +43,7 @@ export default function ScheduledTasksPage() {
           iconLeft={<Plus size={16} />}
         />
       </div>
-      {hydrating ? (
-        <SectionLoader label="特定曜日タスクを読み込み中..." lines={5} />
-      ) : (
+      {(
         <>
           <div className="flex items-center justify-between mb-2">
             <div className="text-xs opacity-70">{page} / {totalPages}（全 {total} 件）</div>

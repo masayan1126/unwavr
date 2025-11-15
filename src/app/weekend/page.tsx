@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import TaskList from "@/components/TaskList";
 import { useAppStore } from "@/lib/store";
-import SectionLoader from "@/components/SectionLoader";
+import WeekendPageSkeleton from "@/components/WeekendPageSkeleton";
 
 export default function WeekendPage() {
   const tasks = useAppStore((s) => s.tasks);
@@ -17,15 +17,22 @@ export default function WeekendPage() {
       ),
     [tasks]
   );
+
+  if (hydrating) {
+    return <WeekendPageSkeleton />;
+  }
+
   return (
     <div className="p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">週末・連休向け</h1>
-        <Link className="text-sm underline opacity-80" href="/">
-          ホーム
-        </Link>
-      </div>
-      {hydrating ? <SectionLoader label="週末・連休向けタスクを読み込み中..." lines={5} /> : <TaskList title="週末・連休向け" tasks={weekend} />}
+      <header className="backdrop-blur-md bg-white/70 dark:bg-gray-800/70 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-5 md:p-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold">週末・連休向け</h1>
+          <Link className="text-sm underline opacity-80" href="/">
+            ホーム
+          </Link>
+        </div>
+      </header>
+      <TaskList title="週末・連休向け" tasks={weekend} />
     </div>
   );
 }

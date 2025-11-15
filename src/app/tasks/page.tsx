@@ -8,7 +8,7 @@ import PrimaryButton from "@/components/PrimaryButton";
 import TaskForm from "@/components/TaskForm";
 import { useAppStore } from "@/lib/store";
 import { TaskType } from "@/lib/types";
-import SectionLoader from "@/components/SectionLoader";
+import TasksPageSkeleton from "@/components/TasksPageSkeleton";
 import TaskCreateDialog from "@/components/TaskCreateDialog";
 import { isOverdue } from "@/lib/taskUtils";
 
@@ -115,21 +115,27 @@ function TasksPageInner() {
     scheduled: "特定曜日"
   };
 
+  if (hydrating) {
+    return <TasksPageSkeleton />;
+  }
+
   return (
     <div className="p-6 sm:p-10 max-w-6xl mx-auto flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">今日のタスク</h1>
-        <div className="flex items-center gap-4">
-          <PrimaryButton
-            onClick={() => setOpenCreate(true)}
-            label="タスク追加"
-            iconLeft={<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>}
-          />
-          <Link className="text-sm underline opacity-80" href="/">
-            ホーム
-          </Link>
+      <header className="backdrop-blur-md bg-white/70 dark:bg-gray-800/70 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-5 md:p-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold">今日のタスク</h1>
+          <div className="flex items-center gap-4">
+            <PrimaryButton
+              onClick={() => setOpenCreate(true)}
+              label="タスク追加"
+              iconLeft={<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>}
+            />
+            <Link className="text-sm underline opacity-80" href="/">
+              ホーム
+            </Link>
+          </div>
         </div>
-      </div>
+      </header>
 
       {/* フィルターと検索 */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
@@ -148,7 +154,7 @@ function TasksPageInner() {
             </button>
           ))}
         </div>
-        
+
         <div className="flex-1 sm:max-w-md">
           <input
             type="text"
@@ -182,9 +188,7 @@ function TasksPageInner() {
 
       {/* タスク一覧 */}
       <div className="space-y-6">
-        {hydrating ? (
-          <SectionLoader label="タスクを読み込み中..." lines={6} />
-        ) : selectedType === "all" ? (
+        {selectedType === "all" ? (
           <>
             <TaskList 
               title={`毎日タスク (${taskCounts.daily})`} 
@@ -237,7 +241,7 @@ function TasksPageInner() {
 
 export default function TasksPage() {
   return (
-    <Suspense fallback={<div className="p-6 sm:p-10 max-w-6xl mx-auto"><SectionLoader label="読み込み中..." lines={6} /></div>}>
+    <Suspense fallback={<TasksPageSkeleton />}>
       <TasksPageInner />
     </Suspense>
   );

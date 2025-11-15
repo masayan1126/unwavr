@@ -10,7 +10,6 @@ import CookieConsentConditional from "@/components/CookieConsentConditional";
 import MobileTabBar from "@/components/MobileTabBar";
 import PomodoroTopBar from "@/components/PomodoroTopBar";
 import QuickAddTaskModal from "@/components/QuickAddTaskModal";
-import PageTransition from "@/components/PageTransition";
 
 export default function LayoutChrome({ children }: { children: ReactNode }): ReactElement {
   const pathname = usePathname();
@@ -60,13 +59,8 @@ export default function LayoutChrome({ children }: { children: ReactNode }): Rea
       <div className="flex-1 min-w-0 flex flex-col">
         <PomodoroTopBar />
         <NotificationBars />
-        {/*
-          PageTransitionをmain直下に配置:
-          - ページ全体のコンテンツに対してフェードインアニメーションを適用
-          - スクロール可能領域の外側に配置することで、アニメーション中もスクロールが機能
-        */}
         <main className="flex-1 pb-16 md:pb-0">
-          <PageTransition>{children}</PageTransition>
+          {children}
         </main>
       </div>
       <OnboardingGuide />

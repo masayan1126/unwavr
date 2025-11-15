@@ -4,6 +4,13 @@ import { useAppStore } from "@/lib/store";
 import { isTaskForToday } from "@/lib/types";
 import { isOverdue } from "@/lib/taskUtils";
 
+type SectionLoadingState = {
+  incomplete: boolean;
+  dailyDone: boolean;
+  scheduledDone: boolean;
+  backlogDone: boolean;
+};
+
 function isDailyDoneToday(dailyDoneDates?: number[]) {
   const now = new Date();
   // ローカル日付の 00:00:00 を基準にする（ユーザー体験に合わせる）
@@ -15,8 +22,19 @@ function isDailyDoneToday(dailyDoneDates?: number[]) {
 
 export function useTodayTasks() {
   const tasks = useAppStore((s) => s.tasks);
+  const hydrating = useAppStore((s) => s.hydrating);
+
   // 日付が変わったら強制的に再評価するためのトリガ
   const [dateTick, setDateTick] = useState(0);
+
+  // 各セクションのローディング状態を管理
+  const [sectionLoading, setSectionLoading] = useState<SectionLoadingState>({
+    incomplete: true,
+    dailyDone: true,
+    scheduledDone: true,
+    backlogDone: true,
+  });
+
   // 次のローカル日付0時に再評価（以降も毎日）
   useEffect(() => {
     const now = new Date();
@@ -25,6 +43,43 @@ export function useTodayTasks() {
     const timer = setTimeout(() => setDateTick((v) => v + 1), delay);
     return () => clearTimeout(timer);
   }, [dateTick]);
+
+  // 段階的なローディング解除（staggered loading）
+  useEffect(() => {
+    if (hydrating) {
+      // hydratingがtrueになったら、すべてのセクションをローディング状態にリセット
+      setSectionLoading({
+        incomplete: true,
+        dailyDone: true,
+        scheduledDone: true,
+        backlogDone: true,
+      });
+    } else {
+      // hydratingがfalseになったら、段階的にローディングを解除
+      const timer1 = setTimeout(() => {
+        setSectionLoading((prev) => ({ ...prev, incomplete: false }));
+      }, 100);
+
+      const timer2 = setTimeout(() => {
+        setSectionLoading((prev) => ({ ...prev, dailyDone: false }));
+      }, 200);
+
+      const timer3 = setTimeout(() => {
+        setSectionLoading((prev) => ({ ...prev, scheduledDone: false }));
+      }, 300);
+
+      const timer4 = setTimeout(() => {
+        setSectionLoading((prev) => ({ ...prev, backlogDone: false }));
+      }, 400);
+
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+        clearTimeout(timer3);
+        clearTimeout(timer4);
+      };
+    }
+  }, [hydrating]);
 
   const [showIncomplete, setShowIncomplete] = useState(true);
   const [showCompleted, setShowCompleted] = useState(true);
@@ -95,6 +150,8 @@ export function useTodayTasks() {
     dailyDoneFiltered,
     scheduledDoneFiltered,
     backlogDoneFiltered,
+    // loading states
+    loading: sectionLoading,
     // filter states
     filterOpen,
     setFilterOpen,

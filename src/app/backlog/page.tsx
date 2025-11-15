@@ -7,7 +7,7 @@ import TaskDialog from "@/components/TaskCreateDialog";
 import TaskForm from "@/components/TaskForm";
 import { useAppStore } from "@/lib/store";
 import { Filter as FilterIcon } from "lucide-react";
-import SectionLoader from "@/components/SectionLoader";
+import BacklogPageSkeleton from "@/components/BacklogPageSkeleton";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import TaskCreateDialog from "@/components/TaskCreateDialog";
@@ -103,64 +103,70 @@ export default function BacklogPage() {
     const offset = (pageCom - 1) * pageSizeCom;
     return sortedCompletedBacklog.slice(offset, offset + pageSizeCom);
   }, [sortedCompletedBacklog, pageCom, pageSizeCom]);
-  
+
+  if (hydrating) {
+    return <BacklogPageSkeleton />;
+  }
+
   return (
     <div className="p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">積み上げ候補</h1>
-        <div className="flex items-center gap-4">
-          <PrimaryButton
-            onClick={() => setOpenCreate(true)}
-            label="タスク追加"
-            iconLeft={<Plus size={16} />}
-          />
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setFilterOpen((v) => !v)}
-              className="px-3 py-1.5 rounded border flex items-center gap-2"
-              aria-haspopup="dialog"
-              aria-expanded={filterOpen}
-            >
-              <FilterIcon size={16} /> フィルター
-            </button>
-            {filterOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setFilterOpen(false)} />
-                <div className="absolute right-0 mt-2 z-50 w-72 border rounded bg-background text-foreground shadow-lg p-3 flex flex-col gap-3">
-                  <div className="text-xs opacity-70">表示設定</div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <button
-                      type="button"
-                      onClick={() => setShowIncomplete((v) => !v)}
-                      className={`px-2 py-1 rounded-full border text-xs ${showIncomplete ? "bg-foreground text-background" : ""}`}
-                    >未完了</button>
-                    <button
-                      type="button"
-                      onClick={() => setShowCompleted((v) => !v)}
-                      className={`px-2 py-1 rounded-full border text-xs ${showCompleted ? "bg-foreground text-background" : ""}`}
-                    >実行済み</button>
+      <header className="backdrop-blur-md bg-white/70 dark:bg-gray-800/70 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-5 md:p-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold">積み上げ候補</h1>
+          <div className="flex items-center gap-4">
+            <PrimaryButton
+              onClick={() => setOpenCreate(true)}
+              label="タスク追加"
+              iconLeft={<Plus size={16} />}
+            />
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setFilterOpen((v) => !v)}
+                className="px-3 py-1.5 rounded border flex items-center gap-2"
+                aria-haspopup="dialog"
+                aria-expanded={filterOpen}
+              >
+                <FilterIcon size={16} /> フィルター
+              </button>
+              {filterOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setFilterOpen(false)} />
+                  <div className="absolute right-0 mt-2 z-50 w-72 border rounded bg-background text-foreground shadow-lg p-3 flex flex-col gap-3">
+                    <div className="text-xs opacity-70">表示設定</div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => setShowIncomplete((v) => !v)}
+                        className={`px-2 py-1 rounded-full border text-xs ${showIncomplete ? "bg-foreground text-background" : ""}`}
+                      >未完了</button>
+                      <button
+                        type="button"
+                        onClick={() => setShowCompleted((v) => !v)}
+                        className={`px-2 py-1 rounded-full border text-xs ${showCompleted ? "bg-foreground text-background" : ""}`}
+                      >実行済み</button>
+                    </div>
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        className="px-2 py-1 rounded border text-xs"
+                        onClick={() => {
+                          setShowIncomplete(true);
+                          setShowCompleted(true);
+                        }}
+                      >リセット</button>
+                      <button type="button" className="px-2 py-1 rounded bg-foreground text-background text-xs" onClick={() => setFilterOpen(false)}>閉じる</button>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      type="button"
-                      className="px-2 py-1 rounded border text-xs"
-                      onClick={() => {
-                        setShowIncomplete(true);
-                        setShowCompleted(true);
-                      }}
-                    >リセット</button>
-                    <button type="button" className="px-2 py-1 rounded bg-foreground text-background text-xs" onClick={() => setFilterOpen(false)}>閉じる</button>
-                  </div>
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
+            <Link className="text-sm underline opacity-80" href="/">
+              ホーム
+            </Link>
           </div>
-          <Link className="text-sm underline opacity-80" href="/">
-            ホーム
-          </Link>
         </div>
-      </div>
+      </header>
       
       {/* 適用中のフィルター表示 */}
       <div className="flex flex-wrap items-center gap-2 px-2 py-1 rounded border border-black/10 dark:border-white/10">
@@ -174,9 +180,7 @@ export default function BacklogPage() {
       </div>
       
       {/* 未完了の積み上げ候補 */}
-      {hydrating ? (
-        <SectionLoader label="積み上げ候補を読み込み中..." lines={6} />
-      ) : showIncomplete ? (
+      {showIncomplete ? (
         <>
           <div className="flex items-center justify-between mb-2">
             <div className="text-xs opacity-70">{pageInc} / {totalPagesInc}（全 {totalInc} 件）</div>
@@ -219,7 +223,7 @@ export default function BacklogPage() {
       ) : null}
       
       {/* 実行済みの積み上げ候補 */}
-      {showCompleted && !hydrating && completedBacklog.length > 0 && (
+      {showCompleted && completedBacklog.length > 0 && (
         <>
           <div className="flex items-center justify-between mb-2 mt-4">
             <div className="text-xs opacity-70">{pageCom} / {totalPagesCom}（全 {totalCom} 件）</div>

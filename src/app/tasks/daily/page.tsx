@@ -6,7 +6,7 @@ import TaskDialog from "@/components/TaskCreateDialog";
 import TaskForm from "@/components/TaskForm";
 import { useMemo, useState } from "react";
 import { useAppStore } from "@/lib/store";
-import SectionLoader from "@/components/SectionLoader";
+import SimpleTaskListPageSkeleton from "@/components/SimpleTaskListPageSkeleton";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import TaskCreateDialog from "@/components/TaskCreateDialog";
@@ -28,19 +28,24 @@ export default function DailyTasksPage() {
     const offset = (page - 1) * pageSize;
     return daily.slice(offset, offset + pageSize);
   }, [daily, page, pageSize]);
+
+  if (hydrating) {
+    return <SimpleTaskListPageSkeleton />;
+  }
+
   return (
     <div className="p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">毎日</h1>
-        <PrimaryButton
-          onClick={() => setOpenCreate(true)}
-          label="タスク追加"
-          iconLeft={<Plus size={16} />}
-        />
-      </div>
-      {hydrating ? (
-        <SectionLoader label="毎日タスクを読み込み中..." lines={5} />
-      ) : (
+      <header className="backdrop-blur-md bg-white/70 dark:bg-gray-800/70 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-5 md:p-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold">毎日</h1>
+          <PrimaryButton
+            onClick={() => setOpenCreate(true)}
+            label="タスク追加"
+            iconLeft={<Plus size={16} />}
+          />
+        </div>
+      </header>
+      {(
         <>
           <div className="flex items-center justify-between mb-2">
             <div className="text-xs opacity-70">{page} / {totalPages}（全 {total} 件）</div>

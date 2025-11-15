@@ -3,22 +3,26 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useConfirm } from "@/components/Providers";
 import { useAppStore } from "@/lib/store";
 import { Task } from "@/lib/types";
+import SimpleTaskListPageSkeleton from "@/components/SimpleTaskListPageSkeleton";
 
 export default function ArchivedTasksPage(): React.ReactElement {
   const [items, setItems] = useState<Task[]>([]);
   const [total, setTotal] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
+  const [loading, setLoading] = useState<boolean>(true);
   const { updateTask, hydrateFromDb } = useAppStore();
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil((total || 0) / pageSize)), [total, pageSize]);
 
   useEffect(() => {
+    setLoading(true);
     const offset = (page - 1) * pageSize;
     fetch(`/api/db/tasks?archived=only&limit=${pageSize}&offset=${offset}`, { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => { setItems((d.items ?? []) as Task[]); setTotal(Number(d.total ?? 0)); })
-      .catch(() => { setItems([]); setTotal(0); });
+      .catch(() => { setItems([]); setTotal(0); })
+      .finally(() => setLoading(false));
   }, [page, pageSize]);
 
   const restore = async (task: Task) => {
@@ -66,31 +70,37 @@ export default function ArchivedTasksPage(): React.ReactElement {
     return arr;
   }, [items, sortKey, sortAsc]);
 
+  if (loading) {
+    return <SimpleTaskListPageSkeleton />;
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">アーカイブ済みタスク</h1>
-        <div className="flex items-center gap-3">
-          <label className="text-sm flex items-center gap-2">
-            <span className="opacity-70">1ページあたり</span>
-            <select
-              className="border rounded px-2 py-1 bg-transparent"
-              value={pageSize}
-              onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
-            >
-              {[10,20,50,100].map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
-          </label>
-          <button
-            className="px-3 py-2 rounded border text-sm disabled:opacity-50"
-            onClick={bulkDelete}
-            disabled={selectedIds.length === 0}
-            title="選択したタスクを削除"
-          >選択削除</button>
+      <header className="backdrop-blur-md bg-white/70 dark:bg-gray-800/70 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-5 md:p-6 mb-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold">アーカイブ済みタスク</h1>
+          <div className="flex items-center gap-3">
+            <label className="text-sm flex items-center gap-2">
+              <span className="opacity-70">1ページあたり</span>
+              <select
+                className="border rounded px-2 py-1 bg-transparent"
+                value={pageSize}
+                onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+              >
+                {[10,20,50,100].map((n) => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            </label>
+            <button
+              className="px-3 py-2 rounded border text-sm disabled:opacity-50"
+              onClick={bulkDelete}
+              disabled={selectedIds.length === 0}
+              title="選択したタスクを削除"
+            >選択削除</button>
+          </div>
         </div>
-      </div>
+      </header>
       {items.length === 0 ? (
         <p className="text-sm text-black/60 dark:text-white/60">アーカイブ済みのタスクはありません。</p>
       ) : (
