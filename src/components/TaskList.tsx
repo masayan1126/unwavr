@@ -222,6 +222,8 @@ export default function TaskList({
   const [ctxTask, setCtxTask] = useState<Task | null>(null);
   const [ctxPos, setCtxPos] = useState<{ x: number; y: number } | null>(null);
   const ctxMenuRef = useRef<HTMLDivElement | null>(null);
+  const [editingPlannedTaskId, setEditingPlannedTaskId] = useState<string | null>(null);
+  const [tempPlannedDate, setTempPlannedDate] = useState<string>("");
   const formRef = useRef<TaskFormHandle | null>(null);
   useEffect(() => {
     if (!ctxTask) return;
@@ -481,6 +483,44 @@ export default function TaskList({
     toast.show(`${ids.length}件を明日に繰り越しました`, "success");
   }
 
+  function startEditPlannedDate(task: Task) {
+    if (task.type !== 'backlog') return;
+    setEditingPlannedTaskId(task.id);
+    const planned = (task.plannedDates ?? []).slice().sort((a,b)=>a-b);
+    if (planned.length > 0) {
+      const d = new Date(planned[0]);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      setTempPlannedDate(`${y}-${m}-${dd}`);
+    } else {
+      setTempPlannedDate(getTodayDateInput());
+    }
+  }
+
+  function savePlannedDate(taskId: string) {
+    if (!tempPlannedDate) {
+      setEditingPlannedTaskId(null);
+      return;
+    }
+    const dt = new Date(tempPlannedDate);
+    if (isNaN(dt.getTime())) {
+      toast.show('無効な日付です', 'error');
+      setEditingPlannedTaskId(null);
+      return;
+    }
+    const stamp = Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate());
+    updateTask(taskId, { plannedDates: [stamp] });
+    toast.show('実行日を更新しました', 'success');
+    setEditingPlannedTaskId(null);
+    setTempPlannedDate("");
+  }
+
+  function cancelEditPlannedDate() {
+    setEditingPlannedTaskId(null);
+    setTempPlannedDate("");
+  }
+
   const tableView = (
     <div className="overflow-x-auto">
       <table className="table-fixed w-full border-separate border-spacing-0">
@@ -592,13 +632,39 @@ export default function TaskList({
                   )}
                   {showPlannedColumn && (
                     <td className="px-2 py-1 w-[120px] overflow-hidden">
-                      <div className="flex items-center gap-1 flex-wrap text-[10px] opacity-80">
-                        {planned.length > 0 ? (
-                          <span className="border rounded px-1 py-0.5">{new Date(planned[0]).toLocaleDateString()}</span>
+                      {t.type === 'backlog' ? (
+                        editingPlannedTaskId === t.id ? (
+                          <input
+                            type="date"
+                            className="w-full border rounded px-1 py-0.5 text-[10px] bg-transparent"
+                            value={tempPlannedDate}
+                            onChange={(e) => setTempPlannedDate(e.target.value)}
+                            onBlur={() => savePlannedDate(t.id)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                savePlannedDate(t.id);
+                              } else if (e.key === 'Escape') {
+                                cancelEditPlannedDate();
+                              }
+                            }}
+                            autoFocus
+                          />
                         ) : (
+                          <div className="flex items-center gap-1 flex-wrap text-[10px] opacity-80">
+                            <button
+                              type="button"
+                              className="border rounded px-1 py-0.5 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                              onClick={() => startEditPlannedDate(t)}
+                            >
+                              {planned.length > 0 ? new Date(planned[0]).toLocaleDateString() : '日付を設定'}
+                            </button>
+                          </div>
+                        )
+                      ) : (
+                        <div className="flex items-center gap-1 flex-wrap text-[10px] opacity-80">
                           <span className="opacity-40">-</span>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </td>
                   )}
                   {showScheduledColumn && (
