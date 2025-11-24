@@ -9,6 +9,8 @@
   --sidebar: #F7F7F5;
   --muted-foreground: #787774;
   --border: #E9E9E7;
+  --popover: #FFFFFF;
+  --popover-foreground: #37352F;
 
   /* Semantic color tokens */
   --primary: #2383E2;
@@ -26,6 +28,8 @@
   --color-foreground: var(--foreground);
   --color-sidebar: var(--sidebar);
   --color-card: var(--card);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-border: var(--border);
   --font-sans: var(--font-inter), var(--font-noto-sans-jp), system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica Neue, Arial, "ヒラギノ角ゴ ProN", "Hiragino Kaku Gothic ProN", "メイリオ", Meiryo, "ＭＳ Ｐゴシック", "MS PGothic", sans-serif;
   --font-heading: var(--font-space-grotesk), var(--font-inter), var(--font-noto-sans-jp), system-ui, sans-serif;
@@ -40,7 +44,9 @@
     --card: #191919;
     --sidebar: #202020;
     --muted-foreground: #9B9A97;
-    --border: rgba(255,255,255,.09);
+    --border: rgba(255, 255, 255, .09);
+    --popover: #202020;
+    --popover-foreground: #D4D4D4;
 
     /* Dark theme semantic tokens */
     --primary: #2383E2;
@@ -61,7 +67,12 @@ body {
 }
 
 /* Headings use Space Grotesk forアクセント */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading);
 }
 
@@ -70,6 +81,7 @@ h1, h2, h3, h4, h5, h6 {
   .motion-scope {
     transition: filter 120ms ease-out;
   }
+
   html.motion-blur-active .motion-scope {
     filter: blur(0.5px);
   }
@@ -77,36 +89,95 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Simple demo animations used in /unwavr page */
 @keyframes highlight {
-  0% { background: transparent; }
-  10% { background: rgba(59,130,246,0.12); }
-  40% { background: transparent; }
-  100% { background: transparent; }
+  0% {
+    background: transparent;
+  }
+
+  10% {
+    background: rgba(59, 130, 246, 0.12);
+  }
+
+  40% {
+    background: transparent;
+  }
+
+  100% {
+    background: transparent;
+  }
 }
-.anim-highlight { animation: highlight 3.2s ease-in-out infinite; }
+
+.anim-highlight {
+  animation: highlight 3.2s ease-in-out infinite;
+}
 
 @keyframes checkpop {
-  0% { transform: scale(0.2); opacity: 0; }
-  15% { transform: scale(1.1); opacity: 1; }
-  25% { transform: scale(1); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+
+  15% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+
+  25% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
-.anim-check { animation: checkpop 3.2s ease-in-out infinite 0.4s; }
+
+.anim-check {
+  animation: checkpop 3.2s ease-in-out infinite 0.4s;
+}
 
 @keyframes spin360 {
-  0% { transform: rotate(0deg); }
-  70% { transform: rotate(340deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  70% {
+    transform: rotate(340deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
-.anim-spin { animation: spin360 4s linear infinite; transform-origin: 50% 50%; }
+
+.anim-spin {
+  animation: spin360 4s linear infinite;
+  transform-origin: 50% 50%;
+}
 
 @keyframes dragx {
-  0% { transform: translateX(0); }
-  45% { transform: translateX(120px); }
-  50% { transform: translateX(120px); }
-  95% { transform: translateX(0); }
-  100% { transform: translateX(0); }
+  0% {
+    transform: translateX(0);
+  }
+
+  45% {
+    transform: translateX(120px);
+  }
+
+  50% {
+    transform: translateX(120px);
+  }
+
+  95% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
 }
-.anim-drag { animation: dragx 4s ease-in-out infinite; }
+
+.anim-drag {
+  animation: dragx 4s ease-in-out infinite;
+}
 
 /* Generic surfaces */
 .card {
@@ -132,40 +203,55 @@ h1, h2, h3, h4, h5, h6 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 0.75rem; /* px-3 py-2 */
+  padding: 0.5rem 0.75rem;
+  /* px-3 py-2 */
   border: 1px solid var(--border);
-  border-radius: 0.5rem; /* rounded */
-  font-size: 0.875rem; /* text-sm */
+  border-radius: 0.5rem;
+  /* rounded */
+  font-size: 0.875rem;
+  /* text-sm */
   background: transparent;
   transition: background-color 120ms ease, box-shadow 120ms ease;
 }
+
 .btn-primary {
   background: var(--foreground);
   color: var(--background);
   border-color: var(--foreground);
 }
+
 .btn-danger {
   color: var(--danger);
   border-color: var(--danger);
 }
-.btn-block { width: 100%; }
-.btn-icon-gap { gap: 0.5rem; }
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-icon-gap {
+  gap: 0.5rem;
+}
 
 /* ボタンのホバー時もテーブル行と同等のホバー感を付与（背景色付きボタンは除外） */
 @media (hover: hover) {
   .btn:hover {
-    background: rgba(0,0,0,0.05);
+    background: rgba(0, 0, 0, 0.05);
   }
-  html.dark .btn:hover { background: rgba(255,255,255,0.08); }
+
+  html.dark .btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
 
   /* 背景色（bg-*) が付与されていない素のボタンにのみ適用 */
   button:hover:not(.btn-primary):not([class*="bg-"]),
   a.button:hover:not(.btn-primary):not([class*="bg-"]) {
-    background: rgba(0,0,0,0.05);
+    background: rgba(0, 0, 0, 0.05);
   }
+
   html.dark button:hover:not(.btn-primary):not([class*="bg-"]),
   html.dark a.button:hover:not(.btn-primary):not([class*="bg-"]) {
-    background: rgba(255,255,255,0.08);
+    background: rgba(255, 255, 255, 0.08);
   }
 }
 
@@ -241,7 +327,15 @@ input[type="submit"][disabled] {
 }
 
 @keyframes guide-blink {
-  0% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.6); }
-  50% { box-shadow: 0 0 0 6px rgba(234, 88, 12, 0.2); }
-  100% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.6);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(234, 88, 12, 0.2);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.0);
+  }
 }
