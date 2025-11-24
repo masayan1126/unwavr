@@ -49,22 +49,27 @@ export default function Sidebar() {
   if (status !== "authenticated") return null;
   return (
     <aside className="hidden md:flex border-r border-border h-[100svh] sticky top-0 bg-sidebar text-muted-foreground" style={{ width: open ? width : 48 }}>
-      <div className="flex flex-col p-4 gap-4 flex-1 overflow-y-auto">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 min-w-0">
-            <img src="/unwavr-logo.svg" alt="unwavr logo" className="w-5 h-5 shrink-0" />
-            <div className="text-base md:text-lg font-semibold tracking-wide truncate" title="unwavr">{open ? "unwavr" : ""}</div>
+      <div className="flex flex-col p-3 gap-6 flex-1 overflow-y-auto">
+        <div className="flex items-center justify-between px-2 pt-2">
+          <div className="flex items-center gap-3 min-w-0 group cursor-pointer">
+            <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+              <img src="/unwavr-logo.svg" alt="unwavr logo" className="w-5 h-5 shrink-0" />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <div className="text-sm font-bold tracking-tight text-foreground truncate" title="unwavr">{open ? "unwavr" : ""}</div>
+              {open && <div className="text-[10px] text-muted-foreground truncate">Workspace</div>}
+            </div>
           </div>
           <button
             aria-label={open ? "サイドバーを閉じる" : "サイドバーを開く"}
             title={open ? "閉じる" : "開く"}
-            className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10"
+            className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
             onClick={() => setOpen((v) => !v)}
           >
-            {open ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+            {open ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
           </button>
         </div>
-        <nav className="flex-1 flex flex-col gap-1">
+        <nav className="flex-1 flex flex-col gap-0.5">
           {/* ホーム */}
           {(() => {
             const item = navItems.find((n) => n.href === "/");
@@ -74,10 +79,14 @@ export default function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${active ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                className={`group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ${active
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
               >
-                {item.icon}
+                <span className={`transition-transform duration-200 ${active ? "scale-110" : "group-hover:scale-110"}`}>
+                  {item.icon}
+                </span>
                 {open && <span className="truncate">{item.label}</span>}
               </Link>
             );
@@ -92,11 +101,15 @@ export default function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${active ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                className={`group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ${active
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 data-guide-key="milestones"
               >
-                {item.icon}
+                <span className={`transition-transform duration-200 ${active ? "scale-110" : "group-hover:scale-110"}`}>
+                  {item.icon}
+                </span>
                 {open && <span className="truncate">{item.label}</span>}
               </Link>
             );
@@ -122,11 +135,15 @@ export default function Sidebar() {
             return (
               <Link
                 href="/tasks"
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${active ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                className={`group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ${active
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 data-guide-key="tasksTop"
               >
-                <ListTodo size={16} />
+                <span className={`transition-transform duration-200 ${active ? "scale-110" : "group-hover:scale-110"}`}>
+                  <ListTodo size={16} />
+                </span>
                 {open && <span className="truncate">タスク</span>}
               </Link>
             );
@@ -191,30 +208,40 @@ export default function Sidebar() {
           </div>
 
           {/* 集中 親メニュー */}
-          <div className="mt-2">
+          <div className="mt-4">
             {open && (
               <>
-                <div className="px-3 py-1 text-[11px] uppercase tracking-wide opacity-60">集中</div>
-                <div className="mt-1 flex flex-col gap-1">
+                <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">Focus</div>
+                <div className="flex flex-col gap-0.5">
                   <Link
                     href="/pomodoro"
-                    className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/pomodoro") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                    className={`group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ${pathname.startsWith("/pomodoro")
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}
                   >
-                    <Timer size={16} />
+                    <span className={`transition-transform duration-200 ${pathname.startsWith("/pomodoro") ? "scale-110" : "group-hover:scale-110"}`}>
+                      <Timer size={16} />
+                    </span>
                     <span className="truncate">ポモドーロ</span>
                   </Link>
                   <Link
                     href="/bgm"
-                    className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/bgm") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                    className={`group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ${pathname.startsWith("/bgm")
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}
                   >
-                    <Music size={16} />
+                    <span className={`transition-transform duration-200 ${pathname.startsWith("/bgm") ? "scale-110" : "group-hover:scale-110"}`}>
+                      <Music size={16} />
+                    </span>
                     <span className="truncate">BGMプレイリスト</span>
                   </Link>
                   <Link
                     href="/bgm/import-export"
-                    className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/bgm/import-export") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                    className={`group ml-6 flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ${pathname.startsWith("/bgm/import-export")
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}
                   >
                     <Upload size={16} />
@@ -255,10 +282,14 @@ export default function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${active ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                  className={`group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ${active
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                 >
-                  {item.icon}
+                  <span className={`transition-transform duration-200 ${active ? "scale-110" : "group-hover:scale-110"}`}>
+                    {item.icon}
+                  </span>
                   {open && <span className="truncate">{item.label}</span>}
                 </Link>
               );
