@@ -47,7 +47,7 @@ export default function Sidebar() {
   if (pathname.startsWith("/unwavr")) return null;
   if (status !== "authenticated") return null;
   return (
-    <aside className="hidden md:flex border-r border-black/10 dark:border-white/10 h-[100svh] sticky top-0" style={{ width: open ? width : 48 }}>
+    <aside className="hidden md:flex border-r border-border h-[100svh] sticky top-0 bg-sidebar text-muted-foreground" style={{ width: open ? width : 48 }}>
       <div className="flex flex-col p-4 gap-4 flex-1 overflow-y-auto">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
@@ -73,8 +73,8 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                active ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
+                active ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
               }`}
             >
               {item.icon}
@@ -92,8 +92,8 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                active ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
+                active ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
               }`}
               data-guide-key="milestones"
             >
@@ -106,8 +106,8 @@ export default function Sidebar() {
           <div className="mt-1 flex flex-col gap-1">
             <Link
               href="/milestones/import-export"
-              className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                pathname.startsWith("/milestones/import-export") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+              className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
+                pathname.startsWith("/milestones/import-export") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
               }`}
             >
               <Upload size={16} />
@@ -124,8 +124,8 @@ export default function Sidebar() {
           return (
             <Link
               href="/tasks"
-              className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                active ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
+                active ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
               }`}
               data-guide-key="tasksTop"
             >
@@ -142,8 +142,8 @@ export default function Sidebar() {
               
               <Link
                 href="/tasks/daily"
-                className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                  pathname.startsWith("/tasks/daily") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
+                  pathname.startsWith("/tasks/daily") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
                 }`}
               >
                 <ListTodo size={16} />
@@ -151,8 +151,8 @@ export default function Sidebar() {
               </Link>
               <Link
                 href="/tasks/scheduled"
-                className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                  pathname.startsWith("/tasks/scheduled") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
+                  pathname.startsWith("/tasks/scheduled") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
                 }`}
               >
                 <CalendarDays size={16} />
@@ -160,8 +160,8 @@ export default function Sidebar() {
               </Link>
               <Link
                 href="/backlog"
-                className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                  pathname.startsWith("/backlog") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
+                  pathname.startsWith("/backlog") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
                 }`}
               >
                 <Archive size={16} />
@@ -169,8 +169,8 @@ export default function Sidebar() {
               </Link>
               <Link
                 href="/tasks/import-export"
-                className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                  pathname.startsWith("/tasks/import-export") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
+                  pathname.startsWith("/tasks/import-export") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
                 }`}
               >
                 <Upload size={16} />
@@ -178,8 +178,8 @@ export default function Sidebar() {
               </Link>
               <Link
                 href="/tasks/incomplete"
-                className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                  pathname.startsWith("/tasks/incomplete") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
+                  pathname.startsWith("/tasks/incomplete") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
                 }`}
               >
                 <AlertTriangle size={16} />
@@ -188,8 +188,8 @@ export default function Sidebar() {
               
               <Link
                 href="/tasks/archived"
-                className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                  pathname.startsWith("/tasks/archived") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
+                  pathname.startsWith("/tasks/archived") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
                 }`}
               >
                 <Archive size={16} />
@@ -207,8 +207,8 @@ export default function Sidebar() {
               <div className="mt-1 flex flex-col gap-1">
                 <Link
                   href="/pomodoro"
-                  className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                    pathname.startsWith("/pomodoro") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                  className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
+                    pathname.startsWith("/pomodoro") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
                   }`}
                 >
                   <Timer size={16} />
@@ -216,8 +216,8 @@ export default function Sidebar() {
                 </Link>
                 <Link
                   href="/bgm"
-                  className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                    pathname.startsWith("/bgm") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                  className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
+                    pathname.startsWith("/bgm") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
                   }`}
                 >
                   <Music size={16} />
@@ -225,8 +225,8 @@ export default function Sidebar() {
                 </Link>
                 <Link
                   href="/bgm/import-export"
-                  className={`ml-6 flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                    pathname.startsWith("/bgm/import-export") ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                  className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
+                    pathname.startsWith("/bgm/import-export") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
                   }`}
                 >
                   <Upload size={16} />
@@ -249,8 +249,8 @@ export default function Sidebar() {
                   return (
                     <div
                       key={item.href}
-                      className={`flex items-center gap-2 px-3 py-2 rounded text-sm opacity-70 cursor-not-allowed select-none ${
-                        active ? "bg-foreground text-background/80" : "bg-transparent"
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm opacity-70 cursor-not-allowed select-none ${
+                        active ? "bg-black/5 dark:bg-white/5 text-foreground/80" : "bg-transparent"
                       }`}
                       title="Googleログインが必要です"
                       aria-disabled
@@ -268,8 +268,8 @@ export default function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
-                    active ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/10"
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
+                    active ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
                   }`}
                 >
                   {item.icon}

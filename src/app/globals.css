@@ -2,25 +2,31 @@
 @plugin "@tailwindcss/typography";
 
 :root {
-  /* Softer light theme */
-  --background: #13120A; /* custom background */
-  --foreground: #EDECEC; /* custom foreground */
-  --card: #13120A; /* align surfaces with background */
-  --muted-foreground: #6b7280; /* gray-500 */
-  --border: rgba(0,0,0,.08);
+  /* Notion-like Light Theme */
+  --background: #FFFFFF;
+  --foreground: #37352F;
+  --card: #FFFFFF;
+  --sidebar: #F7F7F5;
+  --muted-foreground: #787774;
+  --border: #E9E9E7;
+
   /* Semantic color tokens */
-  --primary: #577BF1;
-  --warning: #F1D757;
-  --danger: #ef4444; /* red-500 */
+  --primary: #2383E2;
+  --warning: #D9730D;
+  --danger: #EB5757;
+
   /* Tag/Badge tokens */
-  --tag-daily: #57F1A8;
-  --tag-scheduled: var(--warning);
-  --tag-backlog: #8B57F1;
+  --tag-daily: #E3E2E0;
+  --tag-scheduled: #FDECC8;
+  --tag-backlog: #F3E0E0;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-sidebar: var(--sidebar);
+  --color-card: var(--card);
+  --color-border: var(--border);
   --font-sans: var(--font-inter), var(--font-noto-sans-jp), system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica Neue, Arial, "ヒラギノ角ゴ ProN", "Hiragino Kaku Gothic ProN", "メイリオ", Meiryo, "ＭＳ Ｐゴシック", "MS PGothic", sans-serif;
   --font-heading: var(--font-space-grotesk), var(--font-inter), var(--font-noto-sans-jp), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -28,20 +34,23 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Softer dark theme */
-    --background: #13120A; /* custom background */
-    --foreground: #EDECEC; /* custom foreground */
-    --card: #13120A; /* align surfaces with background */
-    --muted-foreground: #94a3b8; /* slate-400 */
-    --border: rgba(255,255,255,.08);
-    /* Dark theme semantic tokens (adjusted for contrast) */
-    --primary: #88A2FF;
-    --warning: #F1D757;
-    --danger: #f87171; /* red-400 */
+    /* Notion-like Dark Theme */
+    --background: #191919;
+    --foreground: #D4D4D4;
+    --card: #191919;
+    --sidebar: #202020;
+    --muted-foreground: #9B9A97;
+    --border: rgba(255,255,255,.09);
+
+    /* Dark theme semantic tokens */
+    --primary: #2383E2;
+    --warning: #D9730D;
+    --danger: #EB5757;
+
     /* Tag/Badge tokens */
-    --tag-daily: #57F1A8;
-    --tag-scheduled: var(--warning);
-    --tag-backlog: #8B57F1;
+    --tag-daily: #37352F;
+    --tag-scheduled: #5A4428;
+    --tag-backlog: #5A302D;
   }
 }
 

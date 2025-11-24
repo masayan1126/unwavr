@@ -56,7 +56,7 @@ export default function LayoutChrome({ children }: { children: ReactNode }): Rea
       <div className="hidden md:block">
         <SidebarConditional />
       </div>
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="flex-1 min-w-0 flex flex-col bg-background">
         <PomodoroTopBar />
         <NotificationBars />
         <main className="flex-1 pb-16 md:pb-0">

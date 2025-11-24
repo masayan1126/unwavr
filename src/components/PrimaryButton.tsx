@@ -21,7 +21,7 @@ const PrimaryButton = forwardRef<HTMLButtonElement, PrimaryButtonProps>(
       onClick={onClick}
       disabled={disabled}
       className={clsx(
-        "px-3 py-1.5 rounded border text-sm flex items-center gap-2 bg-[var(--primary)] text-[#0f172a] border-transparent",
+        "px-3 py-1.5 rounded-sm border text-sm flex items-center gap-2 bg-[var(--primary)] text-white border-transparent shadow-sm",
         "hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed",
         className,
       )}

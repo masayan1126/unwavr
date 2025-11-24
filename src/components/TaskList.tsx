@@ -4,7 +4,7 @@ import { getTodayDateInput, getTomorrowDateInput } from "@/lib/taskUtils";
 import { Task } from "@/lib/types";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useConfirm } from "@/components/Providers";
-import { CalendarDays, ListTodo, Archive, Loader2, X, Mic, Circle, CircleDot, ChevronDown } from "lucide-react";
+import { CalendarDays, ListTodo, Archive, Loader2, X, Mic, Circle, CircleDot, ChevronDown, CheckCircle2, Trash2, ArrowRight, Calendar } from "lucide-react";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import WysiwygEditor from "@/components/WysiwygEditor";
 import TaskDialog from "@/components/TaskCreateDialog";
@@ -19,17 +19,15 @@ function truncateText(text: string, maxLength: number = 20): string {
 
 function TypeBadge({ type, label }: { type: "daily" | "scheduled" | "backlog"; label?: string }) {
   const map = {
-    // サイドバーと同一のアイコンに統一
-    daily: { label: "毎日", classes: "bg-transparent text-white border-[var(--tag-daily)]", Icon: ListTodo },
-    scheduled: { label: "特定曜日", classes: "bg-transparent text-white border-[var(--tag-scheduled)]", Icon: CalendarDays },
-    // 視認性向上＆重複回避のため積み上げ候補はArchiveアイコン
-    backlog: { label: "積み上げ候補", classes: "bg-transparent text-white border-[var(--tag-backlog)]", Icon: Archive },
+    daily: { label: "毎日", classes: "bg-[var(--tag-daily)] text-foreground", Icon: ListTodo },
+    scheduled: { label: "特定曜日", classes: "bg-[var(--tag-scheduled)] text-foreground", Icon: CalendarDays },
+    backlog: { label: "積み上げ候補", classes: "bg-[var(--tag-backlog)] text-foreground", Icon: Archive },
   } as const;
   const info = map[type];
   const Icon = info.Icon;
   return (
-    <span className={`inline-flex items-center gap-1.5 text-[10px] font-medium border rounded-full px-2 py-0.5 whitespace-nowrap ${info.classes}`}>
-      <Icon size={12} className="shrink-0" />
+    <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium rounded px-1.5 py-0.5 whitespace-nowrap ${info.classes}`}>
+      <Icon size={12} className="shrink-0 opacity-70" />
       {label ?? info.label}
     </span>
   );
@@ -41,10 +39,10 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
   const activeTaskId = useAppStore((s) => s.pomodoro.activeTaskId);
   const setActiveTask = useAppStore((s) => s.setActiveTask);
   const toast = useToast();
-  
+
   const milestones = useAppStore((s) => s.milestones);
   const milestone = task.milestoneId ? milestones.find((m) => m.id === task.milestoneId) : undefined;
-  const dowShort = ["日","月","火","水","木","金","土"] as const;
+  const dowShort = ["日", "月", "火", "水", "木", "金", "土"] as const;
   const scheduledDaysLabel = task.type === "scheduled" && (task.scheduled?.daysOfWeek?.length ?? 0) > 0
     ? task.scheduled!.daysOfWeek.map((d) => dowShort[d]).join("・")
     : undefined;
@@ -64,9 +62,8 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
 
   return (
     <div
-      className={`flex items-center gap-2 py-1 min-w-0 ${
-      activeTaskId === task.id ? "ring-1 ring-[var(--primary)]/70 rounded bg-[var(--primary)]/5" : ""
-    }`}
+      className={`flex items-center gap-2 py-1 min-w-0 ${activeTaskId === task.id ? "ring-1 ring-[var(--primary)]/70 rounded bg-[var(--primary)]/5" : ""
+        }`}
       onContextMenu={(e) => { e.preventDefault(); onContext(e, task); }}
     >
       {task.type === "daily" ? (
@@ -74,11 +71,10 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
           type="button"
           onClick={() => { toggleDailyToday(task.id); toast.show(`「${task.title}」を${isDailyDoneToday ? '未完了' : '完了'}にしました`, 'success'); }}
           title="今日実行済みにする"
-          className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${
-            isDailyDoneToday
-              ? "bg-[var(--primary)] border-[var(--primary)] text-white"
-              : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:border-[var(--primary)] dark:hover:bg-[var(--primary)]/20"
-          }`}
+          className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${isDailyDoneToday
+            ? "bg-[var(--primary)] border-[var(--primary)] text-white"
+            : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:border-[var(--primary)] dark:hover:bg-[var(--primary)]/20"
+            }`}
         >
           {isDailyDoneToday && (
             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -91,11 +87,10 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
           type="button"
           onClick={() => { toggle(task.id); toast.show(`「${task.title}」を${task.completed ? '未完了' : '完了'}にしました`, 'success'); }}
           title={task.completed ? "完了を解除" : "完了にする"}
-          className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${
-            task.completed
-              ? "bg-[var(--primary)] border-[var(--primary)] text-white"
-              : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:border-[var(--primary)] dark:hover:bg-[var(--primary)]/20"
-          }`}
+          className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${task.completed
+            ? "bg-[var(--primary)] border-[var(--primary)] text-white"
+            : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:border-[var(--primary)] dark:hover:bg-[var(--primary)]/20"
+            }`}
         >
           {task.completed && (
             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -128,10 +123,10 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
             task.type === "daily"
               ? "毎日"
               : task.type === "scheduled"
-              ? (scheduledDaysLabel ? `特定曜日（${scheduledDaysLabel}）` : "特定曜日")
-              : isPlannedToday
-              ? "今日やる"
-              : "積み上げ候補"
+                ? (scheduledDaysLabel ? `特定曜日（${scheduledDaysLabel}）` : "特定曜日")
+                : isPlannedToday
+                  ? "今日やる"
+                  : "積み上げ候補"
           }
         />
         {task.estimatedPomodoros != null && (
@@ -205,7 +200,7 @@ export default function TaskList({
   const [formPlannedDateInput, setFormPlannedDateInput] = useState<string>("");
   const [formPlannedDate, setFormPlannedDate] = useState<number | null>(null);
   const [formScheduledDays, setFormScheduledDays] = useState<number[]>([]);
-  const [formScheduledRanges, setFormScheduledRanges] = useState<{start: number, end: number}[]>([]);
+  const [formScheduledRanges, setFormScheduledRanges] = useState<{ start: number, end: number }[]>([]);
   const [listening, setListening] = useState(false);
   const { toggle: toggleSpeech } = useSpeechRecognition({
     onResult: (txt) => setFormTitle((prev) => (prev ? prev + " " + txt : txt)),
@@ -486,7 +481,7 @@ export default function TaskList({
   function startEditPlannedDate(task: Task) {
     if (task.type !== 'backlog') return;
     setEditingPlannedTaskId(task.id);
-    const planned = (task.plannedDates ?? []).slice().sort((a,b)=>a-b);
+    const planned = (task.plannedDates ?? []).slice().sort((a, b) => a - b);
     if (planned.length > 0) {
       const d = new Date(planned[0]);
       const y = d.getFullYear();
@@ -525,52 +520,51 @@ export default function TaskList({
     <div className="overflow-x-auto">
       <table className="table-fixed w-full border-separate border-spacing-0">
         <thead>
-          <tr className="text-[12px] font-medium opacity-70">
+          <tr className="text-[12px] font-medium text-muted-foreground border-b border-border/50">
             {enableSelection && (
-              <th className="w-[36px] text-left px-2 py-1">
-                <input type="checkbox" checked={allChecked} onChange={(e)=>onSelectAll(e.target.checked)} />
+              <th className="w-[36px] text-left px-2 py-2 font-normal">
+                <input type="checkbox" checked={allChecked} onChange={(e) => onSelectAll(e.target.checked)} className="accent-primary" />
               </th>
             )}
-            <th className="text-left px-2 py-1">タイトル</th>
-            {showCreatedColumn && <th className="text-left px-2 py-1 w-[120px]">作成日</th>}
-            {showPlannedColumn && <th className="text-left px-2 py-1 w-[120px]">実行日</th>}
-            {showScheduledColumn && <th className="text-left px-2 py-1 w-[160px]">設定（曜日/期間）</th>}
-            {showTypeColumn && <th className="text-left px-2 py-1 w-[128px]">種別</th>}
-            {showMilestoneColumn && <th className="text-left px-2 py-1 w-[160px]">マイルストーン</th>}
+            <th className="text-left px-2 py-2 font-normal">タイトル</th>
+            {showCreatedColumn && <th className="text-left px-2 py-2 w-[120px] font-normal">作成日</th>}
+            {showPlannedColumn && <th className="text-left px-2 py-2 w-[120px] font-normal">実行日</th>}
+            {showScheduledColumn && <th className="text-left px-2 py-2 w-[160px] font-normal">設定（曜日/期間）</th>}
+            {showTypeColumn && <th className="text-left px-2 py-2 w-[128px] font-normal">種別</th>}
+            {showMilestoneColumn && <th className="text-left px-2 py-2 w-[160px] font-normal">マイルストーン</th>}
           </tr>
         </thead>
         <tbody className="align-top">
           {(filteredSorted.length === 0) ? (
             <tr>
-              <td className="px-2 py-2 text-sm opacity-60" colSpan={(enableSelection?1:0) + 1 + Number(showCreatedColumn) + Number(showPlannedColumn) + Number(showScheduledColumn) + Number(showTypeColumn) + Number(showMilestoneColumn)}>タスクなし</td>
+              <td className="px-2 py-2 text-sm opacity-60" colSpan={(enableSelection ? 1 : 0) + 1 + Number(showCreatedColumn) + Number(showPlannedColumn) + Number(showScheduledColumn) + Number(showTypeColumn) + Number(showMilestoneColumn)}>タスクなし</td>
             </tr>
           ) : (
             filteredSorted.map((t) => {
-              const planned = t.type === "backlog" ? (t.plannedDates ?? []).slice().sort((a,b)=>a-b) : [];
+              const planned = t.type === "backlog" ? (t.plannedDates ?? []).slice().sort((a, b) => a - b) : [];
               const milestone = milestones.find((m) => m.id === t.milestoneId);
               const isDaily = t.type === "daily";
               const isDailyDoneToday = (() => {
                 if (!isDaily) return false;
                 const d = new Date();
-                d.setUTCHours(0,0,0,0);
+                d.setUTCHours(0, 0, 0, 0);
                 const today = d.getTime();
                 return (t.dailyDoneDates ?? []).includes(today);
               })();
               const scheduledDays = t.type === "scheduled" ? (t.scheduled?.daysOfWeek ?? []) : [];
               const scheduledRanges = t.type === "scheduled" ? (t.scheduled?.dateRanges ?? []) : [];
-              const dow = ["日","月","火","水","木","金","土"];
+              const dow = ["日", "月", "火", "水", "木", "金", "土"];
               const isActive = globalActiveTaskId === t.id;
               return (
                 <tr
                   key={t.id}
-                  className={`border-t border-black/5 dark:border-white/5 transition-colors ${
-                    isActive ? "ring-1 ring-[var(--primary)]/70 bg-[var(--primary)]/5" : ""
-                  } hover:bg-black/5 dark:hover:bg-white/5`}
+                  className={`border-b border-border/40 transition-colors ${isActive ? "bg-primary/5" : ""
+                    } hover:bg-black/5 dark:hover:bg-white/5 group`}
                   onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setCtxTask(t); setCtxPos({ x: e.clientX, y: e.clientY }); }}
                 >
                   {enableSelection && (
                     <td className="px-2 py-1">
-                      <input type="checkbox" checked={!!selected[t.id]} onChange={(e)=>onSelectOne(t.id, e.target.checked)} />
+                      <input type="checkbox" checked={!!selected[t.id]} onChange={(e) => onSelectOne(t.id, e.target.checked)} />
                     </td>
                   )}
                   <td className="px-2 py-1 overflow-hidden">
@@ -580,11 +574,10 @@ export default function TaskList({
                           type="button"
                           onClick={() => { toggleDailyToday(t.id); toast.show(`「${t.title}」を${isDailyDoneToday ? '未完了' : '完了'}にしました`, 'success'); }}
                           title="今日実行済みにする"
-                          className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${
-                            isDailyDoneToday
-                              ? "bg-[var(--primary)] border-[var(--primary)] text-white"
-                              : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:border-[var(--primary)] dark:hover:bg-[var(--primary)]/20"
-                          }`}
+                          className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${isDailyDoneToday
+                            ? "bg-[var(--primary)] border-[var(--primary)] text-white"
+                            : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:border-[var(--primary)] dark:hover:bg-[var(--primary)]/20"
+                            }`}
                         >
                           {isDailyDoneToday && (
                             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -597,11 +590,10 @@ export default function TaskList({
                           type="button"
                           onClick={() => { toggleCompleted(t.id); toast.show(`「${t.title}」を${t.completed ? '未完了' : '完了'}にしました`, 'success'); }}
                           title={t.completed ? "完了を解除" : "完了にする"}
-          className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${
-            t.completed
-              ? "bg-[var(--primary)] border-[var(--primary)] text-white"
-              : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:border-[var(--primary)] dark:hover:bg-[var(--primary)]/20"
-                          }`}
+                          className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${t.completed
+                            ? "bg-[var(--primary)] border-[var(--primary)] text-white"
+                            : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:border-[var(--primary)] dark:hover:bg-[var(--primary)]/20"
+                            }`}
                         >
                           {t.completed && (
                             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -610,8 +602,8 @@ export default function TaskList({
                           )}
                         </button>
                       )}
-                      <button 
-                        className={`text-left truncate flex-1 max-w-full ${t.completed ? "line-through opacity-60" : ""}`} 
+                      <button
+                        className={`text-left truncate flex-1 max-w-full ${t.completed ? "line-through opacity-60" : ""}`}
                         onClick={() => openEdit(t)}
                         title={t.title}
                       >
@@ -693,8 +685,8 @@ export default function TaskList({
                           t.type === "daily"
                             ? "毎日"
                             : t.type === "scheduled"
-                            ? "特定曜日"
-                            : "積み上げ候補"
+                              ? "特定曜日"
+                              : "積み上げ候補"
                         }
                       />
                     </td>
@@ -714,14 +706,17 @@ export default function TaskList({
   );
 
   return (
-    <div className="border border-[var(--border)] rounded-md p-2">
+    <div className="rounded-md">
       <div className="flex items-center justify-between mb-2">
         <div className="text-xs uppercase tracking-wide opacity-70">{title}</div>
         {enableSelection && (
           <div ref={bulkMenuRef} className="relative">
             <button
               type="button"
-              className={`inline-flex items-center gap-1 px-3 py-1.5 border rounded text-xs transition ${selectedCount === 0 ? "opacity-40 cursor-not-allowed" : "hover:opacity-80"}`}
+              className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${selectedCount > 0
+                  ? "text-primary bg-primary/10 hover:bg-primary/20"
+                  : "text-muted-foreground opacity-50 cursor-not-allowed"
+                }`}
               onClick={() => {
                 if (selectedCount === 0) return;
                 setShowBulkMenu((prev) => !prev);
@@ -729,27 +724,52 @@ export default function TaskList({
               aria-haspopup="true"
               aria-expanded={showBulkMenu}
             >
-              <span>{selectedCount} 件選択中</span>
-              <ChevronDown size={14} className={`transition-transform ${showBulkMenu ? "rotate-180" : ""}`} />
+              <span>{selectedCount} 選択</span>
+              <ChevronDown size={12} className={`transition-transform ${showBulkMenu ? "rotate-180" : ""}`} />
             </button>
             {showBulkMenu && (
-              <div className="absolute right-0 mt-2 w-56 bg-background text-foreground border border-black/10 dark:border-white/10 rounded-lg shadow-lg p-2 z-10">
-                <div className="flex flex-col gap-1 text-xs">
-                  <button className="w-full text-left px-3 py-2 rounded hover:bg-black/5 dark:hover:bg-white/10" onClick={bulkComplete}>完了</button>
-                  <button className="w-full text-left px-3 py-2 rounded hover:bg-black/5 dark:hover:bg-white/10" onClick={bulkMarkIncomplete}>未完了に戻す</button>
-                  <button className="w-full text-left px-3 py-2 rounded hover:bg-black/5 dark:hover:bg-white/10" onClick={bulkArchiveDaily}>アーカイブ（毎日）</button>
-                  <button className="w-full text-left px-3 py-2 rounded text-[var(--danger)] hover:bg-black/5 dark:hover:bg-white/10" onClick={bulkDelete}>削除</button>
+              <div className="absolute right-0 mt-1 w-48 bg-popover text-popover-foreground border border-border rounded-md shadow-lg p-1 z-50 animate-in fade-in zoom-in-95 duration-100">
+                <div className="flex flex-col gap-0.5">
+                  <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-sm text-xs hover:bg-accent hover:text-accent-foreground transition-colors" onClick={bulkComplete}>
+                    <CheckCircle2 size={14} className="opacity-70" />
+                    <span>完了にする</span>
+                  </button>
+                  <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-sm text-xs hover:bg-accent hover:text-accent-foreground transition-colors" onClick={bulkMarkIncomplete}>
+                    <Circle size={14} className="opacity-70" />
+                    <span>未完了に戻す</span>
+                  </button>
+                  <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-sm text-xs hover:bg-accent hover:text-accent-foreground transition-colors" onClick={bulkArchiveDaily}>
+                    <Archive size={14} className="opacity-70" />
+                    <span>アーカイブ (毎日)</span>
+                  </button>
+                  <div className="h-px bg-border/50 my-1" />
+                  <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-sm text-xs text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors" onClick={bulkDelete}>
+                    <Trash2 size={14} className="opacity-70" />
+                    <span>削除</span>
+                  </button>
                 </div>
                 {enableBulkDueUpdate && (
                   <>
-                    <div className="mt-2 pt-2 border-t border-black/5 dark:border-white/10">
-                      <button className="w-full text-left px-3 py-2 rounded hover:bg-black/5 dark:hover:bg-white/10 text-xs font-medium text-[var(--primary)]" onClick={bulkPostponeToTomorrow}>明日に繰り越す</button>
-                    </div>
-                    <div className="mt-2 pt-2 border-t border-black/5 dark:border-white/10">
-                      <div className="text-[11px] mb-1 opacity-70">実行日に設定</div>
-                      <div className="flex items-center gap-1">
-                        <input type="date" className="flex-1 border rounded px-2 py-1 bg-transparent" value={bulkDateInput} onChange={(e)=>setBulkDateInput(e.target.value)} />
-                        <button className="btn" onClick={bulkUpdateDueDate} disabled={!bulkDateInput}>設定</button>
+                    <div className="h-px bg-border/50 my-1" />
+                    <div className="px-2 py-1">
+                      <div className="text-[10px] font-medium text-muted-foreground mb-1.5">日付変更</div>
+                      <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-sm text-xs hover:bg-accent hover:text-accent-foreground transition-colors mb-1" onClick={bulkPostponeToTomorrow}>
+                        <ArrowRight size={14} className="opacity-70" />
+                        <span>明日に繰り越し</span>
+                      </button>
+                      <div className="flex items-center gap-1 mt-1">
+                        <div className="relative flex-1">
+                          <Calendar size={12} className="absolute left-2 top-1/2 -translate-y-1/2 opacity-50" />
+                          <input
+                            type="date"
+                            className="w-full border-none bg-accent/50 rounded px-2 pl-6 py-1 text-[10px] focus:ring-1 focus:ring-primary"
+                            value={bulkDateInput}
+                            onChange={(e) => setBulkDateInput(e.target.value)}
+                          />
+                        </div>
+                        <button className="px-2 py-1 rounded-sm bg-primary text-primary-foreground text-[10px] hover:opacity-90" onClick={bulkUpdateDueDate} disabled={!bulkDateInput}>
+                          設定
+                        </button>
                       </div>
                     </div>
                   </>
@@ -768,7 +788,7 @@ export default function TaskList({
           ) : (
             tasks.map((t) => (
               <div key={t.id} className="flex items-center gap-2 py-1" onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setCtxTask(t); setCtxPos({ x: e.clientX, y: e.clientY }); }}>
-                <TaskRow task={t} onEdit={openEdit} onContext={(e)=>{ e.preventDefault(); e.stopPropagation(); setCtxTask(t); setCtxPos({ x: e.clientX, y: e.clientY }); }} />
+                <TaskRow task={t} onEdit={openEdit} onContext={(e) => { e.preventDefault(); e.stopPropagation(); setCtxTask(t); setCtxPos({ x: e.clientX, y: e.clientY }); }} />
                 {showType && (t.type === "daily" || t.type === "scheduled") && (
                   <span className="text-[10px] opacity-70 border rounded px-1 py-0.5 whitespace-nowrap">
                     {t.type === "daily" ? "毎日" : "特定曜日"}
@@ -776,7 +796,7 @@ export default function TaskList({
                 )}
                 {showPlannedDates && t.type === "backlog" && (t.plannedDates?.length ?? 0) > 0 && (
                   <div className="flex items-center gap-1 flex-wrap text-[10px] opacity-70">
-                    {t.plannedDates!.slice().sort((a,b)=>a-b).map((d) => (
+                    {t.plannedDates!.slice().sort((a, b) => a - b).map((d) => (
                       <span key={d} className="border rounded px-1 py-0.5">{new Date(d).toLocaleDateString()}</span>
                     ))}
                   </div>
@@ -846,7 +866,7 @@ export default function TaskList({
           </div>
         </div>
       )}
-      
+
     </div>
   );
 }
