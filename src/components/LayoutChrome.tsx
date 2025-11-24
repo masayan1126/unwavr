@@ -10,11 +10,17 @@ import CookieConsentConditional from "@/components/CookieConsentConditional";
 import MobileTabBar from "@/components/MobileTabBar";
 import PomodoroTopBar from "@/components/PomodoroTopBar";
 import QuickAddTaskModal from "@/components/QuickAddTaskModal";
+import { useAppStore } from "@/lib/store";
 
 export default function LayoutChrome({ children }: { children: ReactNode }): ReactElement {
   const pathname = usePathname();
   const isStandaloneEditor = /^\/tasks\/[^/]+\/description\/?$/.test(pathname ?? "");
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const fontSize = useAppStore((s) => s.fontSize);
+
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${fontSize}%`;
+  }, [fontSize]);
 
   // グローバルショートカット: Cmd+K / Ctrl+K
   useEffect(() => {

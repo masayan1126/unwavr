@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarDays, ListTodo, Upload, Plus, ChevronLeft, ChevronRight, AlertTriangle, Home, Archive, Rocket, Target, Timer, Calendar, Music, Lock, MessageSquare, Settings } from "lucide-react";
+import { useAppStore } from "@/lib/store";
 import AuthButtons from "@/components/AuthButtons";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
@@ -64,178 +65,165 @@ export default function Sidebar() {
           </button>
         </div>
         <nav className="flex-1 flex flex-col gap-1">
-        {/* ホーム */}
-        {(() => {
-          const item = navItems.find((n) => n.href === "/");
-          if (!item) return null;
-          const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
-                active ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-              }`}
-            >
-              {item.icon}
-              {open && <span className="truncate">{item.label}</span>}
-            </Link>
-          );
-        })()}
-
-        {/* マイルストーン */}
-        {(() => {
-          const item = navItems.find((n) => n.href === "/milestones");
-          if (!item) return null;
-          const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
-                active ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-              }`}
-              data-guide-key="milestones"
-            >
-              {item.icon}
-              {open && <span className="truncate">{item.label}</span>}
-            </Link>
-          );
-        })()}
-        {open && (
-          <div className="mt-1 flex flex-col gap-1">
-            <Link
-              href="/milestones/import-export"
-              className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
-                pathname.startsWith("/milestones/import-export") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-              }`}
-            >
-              <Upload size={16} />
-              <span className="truncate">インポート/エクスポート</span>
-            </Link>
-          </div>
-        )}
-
-        {/* タスク（トップレベルのショートカット） */}
-        {(() => {
-          const isImportExport = pathname.startsWith("/tasks/import-export");
-          const isBacklog = pathname === "/backlog" || pathname.startsWith("/backlog/");
-          const active = !isImportExport && (pathname === "/tasks" || pathname.startsWith("/tasks/") || isBacklog);
-          return (
-            <Link
-              href="/tasks"
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
-                active ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-              }`}
-              data-guide-key="tasksTop"
-            >
-              <ListTodo size={16} />
-              {open && <span className="truncate">タスク</span>}
-            </Link>
-          );
-        })()}
-
-        {/* タスク 親メニュー（復活） */}
-        <div className="mt-1">
-          {open && tasksOpen && (
-            <div id="sidebar-tasks-submenu" className="mt-1 flex flex-col gap-1">
-              
+          {/* ホーム */}
+          {(() => {
+            const item = navItems.find((n) => n.href === "/");
+            if (!item) return null;
+            const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+            return (
               <Link
-                href="/tasks/daily"
-                className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
-                  pathname.startsWith("/tasks/daily") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-                }`}
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${active ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                  }`}
               >
-                <ListTodo size={16} />
-                <span className="truncate">毎日</span>
+                {item.icon}
+                {open && <span className="truncate">{item.label}</span>}
               </Link>
+            );
+          })()}
+
+          {/* マイルストーン */}
+          {(() => {
+            const item = navItems.find((n) => n.href === "/milestones");
+            if (!item) return null;
+            const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+            return (
               <Link
-                href="/tasks/scheduled"
-                className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
-                  pathname.startsWith("/tasks/scheduled") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-                }`}
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${active ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                  }`}
+                data-guide-key="milestones"
               >
-                <CalendarDays size={16} />
-                <span className="truncate">特定曜日</span>
+                {item.icon}
+                {open && <span className="truncate">{item.label}</span>}
               </Link>
+            );
+          })()}
+          {open && (
+            <div className="mt-1 flex flex-col gap-1">
               <Link
-                href="/backlog"
-                className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
-                  pathname.startsWith("/backlog") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-                }`}
-              >
-                <Archive size={16} />
-                <span className="truncate">積み上げ候補</span>
-              </Link>
-              <Link
-                href="/tasks/import-export"
-                className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
-                  pathname.startsWith("/tasks/import-export") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-                }`}
+                href="/milestones/import-export"
+                className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/milestones/import-export") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                  }`}
               >
                 <Upload size={16} />
                 <span className="truncate">インポート/エクスポート</span>
               </Link>
-              <Link
-                href="/tasks/incomplete"
-                className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
-                  pathname.startsWith("/tasks/incomplete") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-                }`}
-              >
-                <AlertTriangle size={16} />
-                <span className="truncate">未完了タスク</span>
-              </Link>
-              
-              <Link
-                href="/tasks/archived"
-                className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
-                  pathname.startsWith("/tasks/archived") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-                }`}
-              >
-                <Archive size={16} />
-                <span className="truncate">アーカイブ</span>
-              </Link>
             </div>
           )}
-        </div>
 
-        {/* 集中 親メニュー */}
-        <div className="mt-2">
-          {open && (
-            <>
-              <div className="px-3 py-1 text-[11px] uppercase tracking-wide opacity-60">集中</div>
-              <div className="mt-1 flex flex-col gap-1">
-                <Link
-                  href="/pomodoro"
-                  className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
-                    pathname.startsWith("/pomodoro") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+          {/* タスク（トップレベルのショートカット） */}
+          {(() => {
+            const isImportExport = pathname.startsWith("/tasks/import-export");
+            const isBacklog = pathname === "/backlog" || pathname.startsWith("/backlog/");
+            const active = !isImportExport && (pathname === "/tasks" || pathname.startsWith("/tasks/") || isBacklog);
+            return (
+              <Link
+                href="/tasks"
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${active ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
                   }`}
+                data-guide-key="tasksTop"
+              >
+                <ListTodo size={16} />
+                {open && <span className="truncate">タスク</span>}
+              </Link>
+            );
+          })()}
+
+          {/* タスク 親メニュー（復活） */}
+          <div className="mt-1">
+            {open && tasksOpen && (
+              <div id="sidebar-tasks-submenu" className="mt-1 flex flex-col gap-1">
+
+                <Link
+                  href="/tasks/daily"
+                  className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/tasks/daily") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                    }`}
                 >
-                  <Timer size={16} />
-                  <span className="truncate">ポモドーロ</span>
+                  <ListTodo size={16} />
+                  <span className="truncate">毎日</span>
                 </Link>
                 <Link
-                  href="/bgm"
-                  className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
-                    pathname.startsWith("/bgm") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-                  }`}
+                  href="/tasks/scheduled"
+                  className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/tasks/scheduled") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                    }`}
                 >
-                  <Music size={16} />
-                  <span className="truncate">BGMプレイリスト</span>
+                  <CalendarDays size={16} />
+                  <span className="truncate">特定曜日</span>
                 </Link>
                 <Link
-                  href="/bgm/import-export"
-                  className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
-                    pathname.startsWith("/bgm/import-export") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-                  }`}
+                  href="/backlog"
+                  className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/backlog") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                    }`}
+                >
+                  <Archive size={16} />
+                  <span className="truncate">積み上げ候補</span>
+                </Link>
+                <Link
+                  href="/tasks/import-export"
+                  className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/tasks/import-export") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                    }`}
                 >
                   <Upload size={16} />
                   <span className="truncate">インポート/エクスポート</span>
                 </Link>
+                <Link
+                  href="/tasks/incomplete"
+                  className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/tasks/incomplete") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                    }`}
+                >
+                  <AlertTriangle size={16} />
+                  <span className="truncate">未完了タスク</span>
+                </Link>
+
+                <Link
+                  href="/tasks/archived"
+                  className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/tasks/archived") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                    }`}
+                >
+                  <Archive size={16} />
+                  <span className="truncate">アーカイブ</span>
+                </Link>
               </div>
-            </>
-          )}
-        </div>
+            )}
+          </div>
+
+          {/* 集中 親メニュー */}
+          <div className="mt-2">
+            {open && (
+              <>
+                <div className="px-3 py-1 text-[11px] uppercase tracking-wide opacity-60">集中</div>
+                <div className="mt-1 flex flex-col gap-1">
+                  <Link
+                    href="/pomodoro"
+                    className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/pomodoro") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                      }`}
+                  >
+                    <Timer size={16} />
+                    <span className="truncate">ポモドーロ</span>
+                  </Link>
+                  <Link
+                    href="/bgm"
+                    className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/bgm") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                      }`}
+                  >
+                    <Music size={16} />
+                    <span className="truncate">BGMプレイリスト</span>
+                  </Link>
+                  <Link
+                    href="/bgm/import-export"
+                    className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/bgm/import-export") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                      }`}
+                  >
+                    <Upload size={16} />
+                    <span className="truncate">インポート/エクスポート</span>
+                  </Link>
+                </div>
+              </>
+            )}
+          </div>
 
           {/* 残りのメニュー（ホーム/マイルストーン以外） */}
           {navItems
@@ -249,9 +237,8 @@ export default function Sidebar() {
                   return (
                     <div
                       key={item.href}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm opacity-70 cursor-not-allowed select-none ${
-                        active ? "bg-black/5 dark:bg-white/5 text-foreground/80" : "bg-transparent"
-                      }`}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm opacity-70 cursor-not-allowed select-none ${active ? "bg-black/5 dark:bg-white/5 text-foreground/80" : "bg-transparent"
+                        }`}
                       title="Googleログインが必要です"
                       aria-disabled
                     >
@@ -268,15 +255,15 @@ export default function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
-                    active ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-                  }`}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${active ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                    }`}
                 >
                   {item.icon}
                   {open && <span className="truncate">{item.label}</span>}
                 </Link>
               );
             })}
+
           {open && (
             <div className="mt-3 pt-3 border-t border-black/10 dark:border-white/10 text-[12px] opacity-80 flex flex-col gap-1">
               <Link href="/terms" className="hover:underline">利用規約</Link>
@@ -285,11 +272,11 @@ export default function Sidebar() {
           )}
         </nav>
         <div className="mt-auto flex flex-col gap-3">
-        <AuthButtons />
+          <AuthButtons />
           {open && (
             <Link
-          href="/unwavr"
-          className="text-[11px] opacity-70 hover:opacity-100 underline underline-offset-4"
+              href="/unwavr"
+              className="text-[11px] opacity-70 hover:opacity-100 underline underline-offset-4"
             >
               プロダクトサイト
             </Link>

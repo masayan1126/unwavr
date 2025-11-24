@@ -4,7 +4,7 @@ import { getTodayDateInput, getTomorrowDateInput } from "@/lib/taskUtils";
 import { Task } from "@/lib/types";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useConfirm } from "@/components/Providers";
-import { CalendarDays, ListTodo, Archive, Loader2, X, Mic, Circle, CircleDot, ChevronDown, CheckCircle2, Trash2, ArrowRight, Calendar } from "lucide-react";
+import { CalendarDays, ListTodo, Archive, Loader2, X, Mic, Circle, CircleDot, ChevronDown, CheckCircle2, Trash2, ArrowRight, Calendar, Copy, Edit, Play, Pause } from "lucide-react";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import WysiwygEditor from "@/components/WysiwygEditor";
 import TaskDialog from "@/components/TaskCreateDialog";
@@ -62,7 +62,7 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
 
   return (
     <div
-      className={`flex items-center gap-2 py-1 min-w-0 ${activeTaskId === task.id ? "ring-1 ring-[var(--primary)]/70 rounded bg-[var(--primary)]/5" : ""
+      className={`flex items-center gap-2 py-1 min-w-0 transition-colors ${activeTaskId === task.id ? "bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20 rounded-md -mx-2 px-2" : ""
         }`}
       onContextMenu={(e) => { e.preventDefault(); onContext(e, task); }}
     >
@@ -527,8 +527,8 @@ export default function TaskList({
                   type="button"
                   onClick={() => onSelectAll(!allChecked)}
                   className={`w-4 h-4 rounded-[4px] border transition-all flex items-center justify-center ${allChecked
-                      ? "bg-primary border-primary text-primary-foreground"
-                      : "border-muted-foreground/40 hover:border-primary/60 bg-transparent"
+                    ? "bg-primary border-primary text-primary-foreground"
+                    : "border-muted-foreground/40 hover:border-primary/60 bg-transparent"
                     }`}
                 >
                   {allChecked && <CheckCircle2 size={10} strokeWidth={3} />}
@@ -567,7 +567,7 @@ export default function TaskList({
               return (
                 <tr
                   key={t.id}
-                  className={`border-b border-border/40 transition-colors ${isActive ? "bg-primary/5" : ""
+                  className={`border-b border-border/40 transition-colors ${isActive ? "bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20" : ""
                     } hover:bg-black/5 dark:hover:bg-white/5 group`}
                   onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setCtxTask(t); setCtxPos({ x: e.clientX, y: e.clientY }); }}
                 >
@@ -577,8 +577,8 @@ export default function TaskList({
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onSelectOne(t.id, !selected[t.id]); }}
                         className={`w-4 h-4 rounded-[4px] border transition-all flex items-center justify-center ${selected[t.id]
-                            ? "bg-primary border-primary text-primary-foreground"
-                            : "border-muted-foreground/30 hover:border-primary/60 bg-transparent"
+                          ? "bg-primary border-primary text-primary-foreground"
+                          : "border-muted-foreground/30 hover:border-primary/60 bg-transparent"
                           }`}
                       >
                         {selected[t.id] && <CheckCircle2 size={10} strokeWidth={3} />}
@@ -840,47 +840,69 @@ export default function TaskList({
         <div className="fixed z-[1000]" style={{ top: ctxPos.y, left: ctxPos.x }}>
           <div
             ref={ctxMenuRef}
-            className="min-w-40 bg-background text-foreground border border-black/10 dark:border-white/10 rounded shadow-lg p-1"
+            className="min-w-[180px] bg-popover text-popover-foreground border border-border rounded-lg shadow-xl p-1.5 animate-in fade-in zoom-in-95 duration-100"
             onMouseDown={(e) => { e.stopPropagation(); }}
             onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
           >
             <button
               type="button"
-              className="w-full text-left px-3 py-2 rounded hover:bg-black/5 dark:hover:bg-white/10 text-sm"
+              className="flex items-center gap-2.5 w-full text-left px-2.5 py-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors text-sm"
               onClick={() => {
                 useAppStore.getState().duplicateTask(ctxTask.id);
                 toast.show(`「${ctxTask.title}」を複製しました`, 'success');
                 setCtxTask(null); setCtxPos(null);
               }}
-            >複製</button>
+            >
+              <Copy size={15} className="opacity-70" />
+              <span>複製</span>
+            </button>
             <button
               type="button"
-              className="w-full text-left px-3 py-2 rounded hover:bg-black/5 dark:hover:bg-white/10 text-sm"
+              className="flex items-center gap-2.5 w-full text-left px-2.5 py-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors text-sm"
               onClick={() => {
                 openEdit(ctxTask);
                 setCtxTask(null); setCtxPos(null);
               }}
-            >編集</button>
+            >
+              <Edit size={15} className="opacity-70" />
+              <span>編集</span>
+            </button>
             <button
               type="button"
-              className="w-full text-left px-3 py-2 rounded hover:bg-black/5 dark:hover:bg-white/10 text-sm"
+              className="flex items-center gap-2.5 w-full text-left px-2.5 py-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors text-sm"
               onClick={() => {
                 const isActive = useAppStore.getState().pomodoro.activeTaskId === ctxTask.id;
                 useAppStore.getState().setActiveTask(isActive ? undefined : ctxTask.id);
                 toast.show(isActive ? '着手中を解除しました' : '着手中に設定しました', 'success');
                 setCtxTask(null); setCtxPos(null);
               }}
-            >{useAppStore.getState().pomodoro.activeTaskId === ctxTask.id ? '着手中を解除' : '着手中に設定'}</button>
+            >
+              {useAppStore.getState().pomodoro.activeTaskId === ctxTask.id ? (
+                <>
+                  <Pause size={15} className="opacity-70" />
+                  <span>着手中を解除</span>
+                </>
+              ) : (
+                <>
+                  <Play size={15} className="opacity-70" />
+                  <span>着手中に設定</span>
+                </>
+              )}
+            </button>
+            <div className="h-px bg-border/50 my-1" />
             <button
               type="button"
-              className="w-full text-left px-3 py-2 rounded hover:bg-black/5 dark:hover:bg-white/10 text-sm text-[var(--danger)]"
+              className="flex items-center gap-2.5 w-full text-left px-2.5 py-2 rounded-md hover:bg-destructive/10 hover:text-destructive transition-colors text-sm text-destructive"
               onClick={async () => {
                 const ok = await confirm('このタスクを削除しますか？', { tone: 'danger', confirmText: '削除' });
                 if (ok) removeTask(ctxTask.id);
                 if (ok) toast.show(`「${ctxTask.title}」を削除しました`, 'success');
                 setCtxTask(null); setCtxPos(null);
               }}
-            >削除</button>
+            >
+              <Trash2 size={15} className="opacity-70" />
+              <span>削除</span>
+            </button>
           </div>
         </div>
       )}
