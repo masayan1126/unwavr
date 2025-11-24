@@ -121,14 +121,14 @@ function TasksPageInner() {
 
   return (
     <div className="p-6 sm:p-10 max-w-6xl mx-auto flex flex-col gap-6">
-      <header className="backdrop-blur-md bg-white/70 dark:bg-gray-800/70 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-5 md:p-6">
+      <header className="bg-[var(--sidebar)] rounded-xl shadow-sm p-5 md:p-6">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold">今日のタスク</h1>
           <div className="flex items-center gap-4">
             <PrimaryButton
               onClick={() => setOpenCreate(true)}
               label="タスク追加"
-              iconLeft={<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>}
+              iconLeft={<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus"><path d="M5 12h14" /><path d="M12 5v14" /></svg>}
             />
             <Link className="text-sm underline opacity-80" href="/">
               ホーム
@@ -144,11 +144,10 @@ function TasksPageInner() {
             <button
               key={type}
               onClick={() => setSelectedType(type)}
-              className={`px-3 py-1 rounded border text-sm ${
-                selectedType === type
+              className={`px-3 py-1 rounded border text-sm ${selectedType === type
                   ? "bg-[var(--primary)] text-white border-[var(--primary)]"
                   : "border-black/10 dark:border-white/10"
-              }`}
+                }`}
             >
               {typeLabels[type]} ({taskCounts[type]})
             </button>
@@ -168,19 +167,19 @@ function TasksPageInner() {
 
       {/* 統計情報 */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="border rounded p-3 border-black/10 dark:border-white/10">
+        <div className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
           <div className="text-sm opacity-60">総タスク数</div>
           <div className="text-lg font-semibold">{taskCounts.all}</div>
         </div>
-        <div className="border rounded p-3 border-black/10 dark:border-white/10">
+        <div className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
           <div className="text-sm opacity-60">毎日タスク</div>
           <div className="text-lg font-semibold">{taskCounts.daily}</div>
         </div>
-        <div className="border rounded p-3 border-black/10 dark:border-white/10">
+        <div className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
           <div className="text-sm opacity-60">積み上げ候補</div>
           <div className="text-lg font-semibold">{taskCounts.backlog}</div>
         </div>
-        <div className="border rounded p-3 border-black/10 dark:border-white/10">
+        <div className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
           <div className="text-sm opacity-60">特定日タスク</div>
           <div className="text-lg font-semibold">{taskCounts.scheduled}</div>
         </div>
@@ -190,50 +189,58 @@ function TasksPageInner() {
       <div className="space-y-6">
         {selectedType === "all" ? (
           <>
-            <TaskList 
-              title={`毎日タスク (${taskCounts.daily})`} 
-              tasks={baseFiltered.filter(t => t.type === "daily")} 
-              showType 
-              tableMode 
-              showPlannedColumn={false}
-              showTypeColumn
-              showMilestoneColumn={false}
-            />
-            <TaskList 
-              title={`積み上げ候補 (${taskCounts.backlog})`} 
-              tasks={baseFiltered.filter(t => t.type === "backlog")} 
-              showType 
-              tableMode 
-              showPlannedColumn
-              showTypeColumn
-              showMilestoneColumn={false}
-            />
-            <TaskList 
-              title={`特定曜日 (${taskCounts.scheduled})`} 
-              tasks={baseFiltered.filter(t => t.type === "scheduled")} 
-              showType 
-              tableMode 
-              showScheduledColumn
-              showTypeColumn
-              showMilestoneColumn={false}
-            />
+            <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+              <TaskList
+                title={`毎日タスク (${taskCounts.daily})`}
+                tasks={baseFiltered.filter(t => t.type === "daily")}
+                showType
+                tableMode
+                showPlannedColumn={false}
+                showTypeColumn
+                showMilestoneColumn={false}
+              />
+            </section>
+            <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+              <TaskList
+                title={`積み上げ候補 (${taskCounts.backlog})`}
+                tasks={baseFiltered.filter(t => t.type === "backlog")}
+                showType
+                tableMode
+                showPlannedColumn
+                showTypeColumn
+                showMilestoneColumn={false}
+              />
+            </section>
+            <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+              <TaskList
+                title={`特定曜日 (${taskCounts.scheduled})`}
+                tasks={baseFiltered.filter(t => t.type === "scheduled")}
+                showType
+                tableMode
+                showScheduledColumn
+                showTypeColumn
+                showMilestoneColumn={false}
+              />
+            </section>
           </>
         ) : (
-          <TaskList 
-            title={`${typeLabels[selectedType]} (${filteredTasks.length})`} 
-            tasks={filteredTasks} 
-            showType 
-            tableMode 
-            showPlannedColumn={selectedType === "backlog"}
-            showScheduledColumn={selectedType === "scheduled"}
-            showTypeColumn
-            showMilestoneColumn={false}
-          />
+          <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+            <TaskList
+              title={`${typeLabels[selectedType]} (${filteredTasks.length})`}
+              tasks={filteredTasks}
+              showType
+              tableMode
+              showPlannedColumn={selectedType === "backlog"}
+              showScheduledColumn={selectedType === "scheduled"}
+              showTypeColumn
+              showMilestoneColumn={false}
+            />
+          </section>
         )}
       </div>
 
-      <TaskDialog open={openCreate} onClose={()=>setOpenCreate(false)} title="新規タスク">
-        <TaskForm onSubmitted={(mode)=>{ if (mode==='close') setOpenCreate(false); }} />
+      <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規タスク">
+        <TaskForm onSubmitted={(mode) => { if (mode === 'close') setOpenCreate(false); }} />
       </TaskDialog>
     </div>
   );

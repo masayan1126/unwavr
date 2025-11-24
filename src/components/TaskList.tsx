@@ -71,9 +71,9 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
           type="button"
           onClick={() => { toggleDailyToday(task.id); toast.show(`「${task.title}」を${isDailyDoneToday ? '未完了' : '完了'}にしました`, 'success'); }}
           title="今日実行済みにする"
-          className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${isDailyDoneToday
-            ? "bg-[var(--primary)] border-[var(--primary)] text-white"
-            : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:border-[var(--primary)] dark:hover:bg-[var(--primary)]/20"
+          className={`w-5 h-5 rounded-full border transition-all duration-200 flex items-center justify-center hover:scale-105 ${isDailyDoneToday
+            ? "bg-primary border-primary text-primary-foreground"
+            : "border-muted-foreground/40 hover:border-primary hover:bg-primary/10 dark:hover:bg-primary/20"
             }`}
         >
           {isDailyDoneToday && (
@@ -87,9 +87,9 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
           type="button"
           onClick={() => { toggle(task.id); toast.show(`「${task.title}」を${task.completed ? '未完了' : '完了'}にしました`, 'success'); }}
           title={task.completed ? "完了を解除" : "完了にする"}
-          className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${task.completed
-            ? "bg-[var(--primary)] border-[var(--primary)] text-white"
-            : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:border-[var(--primary)] dark:hover:bg-[var(--primary)]/20"
+          className={`w-5 h-5 rounded-full border transition-all duration-200 flex items-center justify-center hover:scale-105 ${task.completed
+            ? "bg-primary border-primary text-primary-foreground"
+            : "border-muted-foreground/40 hover:border-primary hover:bg-primary/10 dark:hover:bg-primary/20"
             }`}
         >
           {task.completed && (
@@ -523,7 +523,16 @@ export default function TaskList({
           <tr className="text-[12px] font-medium text-muted-foreground border-b border-border/50">
             {enableSelection && (
               <th className="w-[36px] text-left px-2 py-2 font-normal">
-                <input type="checkbox" checked={allChecked} onChange={(e) => onSelectAll(e.target.checked)} className="accent-primary" />
+                <button
+                  type="button"
+                  onClick={() => onSelectAll(!allChecked)}
+                  className={`w-4 h-4 rounded-[4px] border transition-all flex items-center justify-center ${allChecked
+                      ? "bg-primary border-primary text-primary-foreground"
+                      : "border-muted-foreground/40 hover:border-primary/60 bg-transparent"
+                    }`}
+                >
+                  {allChecked && <CheckCircle2 size={10} strokeWidth={3} />}
+                </button>
               </th>
             )}
             <th className="text-left px-2 py-2 font-normal">タイトル</th>
@@ -564,7 +573,16 @@ export default function TaskList({
                 >
                   {enableSelection && (
                     <td className="px-2 py-1">
-                      <input type="checkbox" checked={!!selected[t.id]} onChange={(e) => onSelectOne(t.id, e.target.checked)} />
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onSelectOne(t.id, !selected[t.id]); }}
+                        className={`w-4 h-4 rounded-[4px] border transition-all flex items-center justify-center ${selected[t.id]
+                            ? "bg-primary border-primary text-primary-foreground"
+                            : "border-muted-foreground/30 hover:border-primary/60 bg-transparent"
+                          }`}
+                      >
+                        {selected[t.id] && <CheckCircle2 size={10} strokeWidth={3} />}
+                      </button>
                     </td>
                   )}
                   <td className="px-2 py-1 overflow-hidden">
@@ -574,9 +592,9 @@ export default function TaskList({
                           type="button"
                           onClick={() => { toggleDailyToday(t.id); toast.show(`「${t.title}」を${isDailyDoneToday ? '未完了' : '完了'}にしました`, 'success'); }}
                           title="今日実行済みにする"
-                          className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${isDailyDoneToday
-                            ? "bg-[var(--primary)] border-[var(--primary)] text-white"
-                            : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:border-[var(--primary)] dark:hover:bg-[var(--primary)]/20"
+                          className={`w-5 h-5 rounded-full border transition-all duration-200 flex items-center justify-center hover:scale-105 ${isDailyDoneToday
+                            ? "bg-primary border-primary text-primary-foreground"
+                            : "border-muted-foreground/40 hover:border-primary hover:bg-primary/10 dark:hover:bg-primary/20"
                             }`}
                         >
                           {isDailyDoneToday && (
@@ -590,9 +608,9 @@ export default function TaskList({
                           type="button"
                           onClick={() => { toggleCompleted(t.id); toast.show(`「${t.title}」を${t.completed ? '未完了' : '完了'}にしました`, 'success'); }}
                           title={t.completed ? "完了を解除" : "完了にする"}
-                          className={`w-4 h-4 rounded border-2 transition-all duration-200 flex items-center justify-center hover:scale-110 ${t.completed
-                            ? "bg-[var(--primary)] border-[var(--primary)] text-white"
-                            : "border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:border-[var(--primary)] dark:hover:bg-[var(--primary)]/20"
+                          className={`w-5 h-5 rounded-full border transition-all duration-200 flex items-center justify-center hover:scale-105 ${t.completed
+                            ? "bg-primary border-primary text-primary-foreground"
+                            : "border-muted-foreground/40 hover:border-primary hover:bg-primary/10 dark:hover:bg-primary/20"
                             }`}
                         >
                           {t.completed && (
@@ -714,8 +732,8 @@ export default function TaskList({
             <button
               type="button"
               className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${selectedCount > 0
-                  ? "text-primary bg-primary/10 hover:bg-primary/20"
-                  : "text-muted-foreground opacity-50 cursor-not-allowed"
+                ? "text-primary bg-primary/10 hover:bg-primary/20"
+                : "text-muted-foreground opacity-50 cursor-not-allowed"
                 }`}
               onClick={() => {
                 if (selectedCount === 0) return;

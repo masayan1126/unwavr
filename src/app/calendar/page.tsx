@@ -71,7 +71,7 @@ export default function CalendarPage() {
     })
       .then((r) => r.json())
       .then((d) => setEvents(d.items ?? []))
-      .catch(() => {});
+      .catch(() => { });
     // Google Tasks (ToDo) も取得（締切のあるものは日付に表示）
     // fetch(`/api/tasks`, { headers: { Authorization: `Bearer ${accessToken}` } })
     //   .then((r) => r.json())
@@ -255,7 +255,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="p-4 border rounded">
+    <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm font-semibold">カレンダー（Google同期）</div>
         <div className="flex items-center gap-2 text-sm">
@@ -276,7 +276,7 @@ export default function CalendarPage() {
       </div>
 
       <div className="grid grid-cols-7 text-xs mb-1 opacity-70">
-        {["日","月","火","水","木","金","土"].map((w) => (
+        {["日", "月", "火", "水", "木", "金", "土"].map((w) => (
           <div key={w} className="px-2 py-1 text-center">{w}</div>
         ))}
       </div>
@@ -343,7 +343,7 @@ export default function CalendarPage() {
                   });
                   const json = await res.json();
                   setEvents(json.items ?? []);
-                } catch {}
+                } catch { }
               }}
               onDragLeave={() => {
                 setDragOverKey(null);

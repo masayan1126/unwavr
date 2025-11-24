@@ -23,7 +23,7 @@ export default function BacklogPage() {
   const [showIncomplete, setShowIncomplete] = useState(true);
   const [showCompleted, setShowCompleted] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
-  
+
   // 実行済みと未完了に分ける
   const incompleteBacklog = useMemo(() => backlog.filter((t) => !t.completed), [backlog]);
   const completedBacklog = useMemo(() => backlog.filter((t) => t.completed), [backlog]);
@@ -110,7 +110,7 @@ export default function BacklogPage() {
 
   return (
     <div className="p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-4">
-      <header className="backdrop-blur-md bg-white/70 dark:bg-gray-800/70 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-5 md:p-6">
+      <header className="bg-[var(--sidebar)] rounded-xl shadow-sm p-5 md:p-6">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold">積み上げ候補</h1>
           <div className="flex items-center gap-4">
@@ -167,9 +167,9 @@ export default function BacklogPage() {
           </div>
         </div>
       </header>
-      
+
       {/* 適用中のフィルター表示 */}
-      <div className="flex flex-wrap items-center gap-2 px-2 py-1 rounded border border-black/10 dark:border-white/10">
+      <div className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-xl bg-[var(--sidebar)] shadow-sm">
         <span className="text-[11px] opacity-70 mr-1">適用中</span>
         {showIncomplete && (
           <span className="px-2 py-0.5 rounded-full border">未完了</span>
@@ -178,7 +178,7 @@ export default function BacklogPage() {
           <span className="px-2 py-0.5 rounded-full border">実行済み</span>
         )}
       </div>
-      
+
       {/* 未完了の積み上げ候補 */}
       {showIncomplete ? (
         <>
@@ -187,41 +187,43 @@ export default function BacklogPage() {
             <div className="flex items-center gap-2 text-sm">
               <label className="flex items-center gap-2">
                 <span className="opacity-70">ソート</span>
-                <select className="border rounded px-2 py-1 bg-transparent" value={sortKeyInc} onChange={(e)=>setSortKeyInc(e.target.value as "title" | "createdAt" | "planned" | "type" | "milestone")}>
+                <select className="border rounded px-2 py-1 bg-transparent" value={sortKeyInc} onChange={(e) => setSortKeyInc(e.target.value as "title" | "createdAt" | "planned" | "type" | "milestone")}>
                   <option value="createdAt">日付</option>
                   <option value="title">タイトル</option>
                   <option value="planned">実行日</option>
                   <option value="type">種別</option>
                   <option value="milestone">マイルストーン</option>
                 </select>
-                <button className="px-2 py-1 rounded border" onClick={()=>setSortAscInc(v=>!v)}>{sortAscInc? '昇順' : '降順'}</button>
+                <button className="px-2 py-1 rounded border" onClick={() => setSortAscInc(v => !v)}>{sortAscInc ? '昇順' : '降順'}</button>
               </label>
               <label className="flex items-center gap-2">
                 <span className="opacity-70">1ページあたり</span>
-                <select className="border rounded px-2 py-1 bg-transparent" value={pageSizeInc} onChange={(e)=>{ setPageSizeInc(Number(e.target.value)); setPageInc(1); }}>
-                  {[10,20,50,100].map(n => (<option key={n} value={n}>{n}</option>))}
+                <select className="border rounded px-2 py-1 bg-transparent" value={pageSizeInc} onChange={(e) => { setPageSizeInc(Number(e.target.value)); setPageInc(1); }}>
+                  {[10, 20, 50, 100].map(n => (<option key={n} value={n}>{n}</option>))}
                 </select>
               </label>
               <div className="flex items-center gap-2">
-                <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={pageInc<=1} onClick={()=>setPageInc(p=>Math.max(1,p-1))}>前へ</button>
-                <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={pageInc>=totalPagesInc} onClick={()=>setPageInc(p=>Math.min(totalPagesInc,p+1))}>次へ</button>
+                <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={pageInc <= 1} onClick={() => setPageInc(p => Math.max(1, p - 1))}>前へ</button>
+                <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={pageInc >= totalPagesInc} onClick={() => setPageInc(p => Math.min(totalPagesInc, p + 1))}>次へ</button>
               </div>
             </div>
           </div>
-          <TaskList 
-            title={`未完了 (${incItems.length})`}
-            tasks={incItems} 
-            showPlannedDates 
-            tableMode 
-            showCreatedColumn={false} 
-            showPlannedColumn 
-            showTypeColumn 
-            showMilestoneColumn={false}
-            enableSelection
-          />
+          <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+            <TaskList
+              title={`未完了 (${incItems.length})`}
+              tasks={incItems}
+              showPlannedDates
+              tableMode
+              showCreatedColumn={false}
+              showPlannedColumn
+              showTypeColumn
+              showMilestoneColumn={false}
+              enableSelection
+            />
+          </section>
         </>
       ) : null}
-      
+
       {/* 実行済みの積み上げ候補 */}
       {showCompleted && completedBacklog.length > 0 && (
         <>
@@ -230,42 +232,44 @@ export default function BacklogPage() {
             <div className="flex items-center gap-2 text-sm">
               <label className="flex items-center gap-2">
                 <span className="opacity-70">ソート</span>
-                <select className="border rounded px-2 py-1 bg-transparent" value={sortKeyCom} onChange={(e)=>setSortKeyCom(e.target.value as "title" | "createdAt" | "planned" | "type" | "milestone")}>
+                <select className="border rounded px-2 py-1 bg-transparent" value={sortKeyCom} onChange={(e) => setSortKeyCom(e.target.value as "title" | "createdAt" | "planned" | "type" | "milestone")}>
                   <option value="createdAt">日付</option>
                   <option value="title">タイトル</option>
                   <option value="planned">実行日</option>
                   <option value="type">種別</option>
                   <option value="milestone">マイルストーン</option>
                 </select>
-                <button className="px-2 py-1 rounded border" onClick={()=>setSortAscCom(v=>!v)}>{sortAscCom? '昇順' : '降順'}</button>
+                <button className="px-2 py-1 rounded border" onClick={() => setSortAscCom(v => !v)}>{sortAscCom ? '昇順' : '降順'}</button>
               </label>
               <label className="flex items-center gap-2">
                 <span className="opacity-70">1ページあたり</span>
-                <select className="border rounded px-2 py-1 bg-transparent" value={pageSizeCom} onChange={(e)=>{ setPageSizeCom(Number(e.target.value)); setPageCom(1); }}>
-                  {[10,20,50,100].map(n => (<option key={n} value={n}>{n}</option>))}
+                <select className="border rounded px-2 py-1 bg-transparent" value={pageSizeCom} onChange={(e) => { setPageSizeCom(Number(e.target.value)); setPageCom(1); }}>
+                  {[10, 20, 50, 100].map(n => (<option key={n} value={n}>{n}</option>))}
                 </select>
               </label>
               <div className="flex items-center gap-2">
-                <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={pageCom<=1} onClick={()=>setPageCom(p=>Math.max(1,p-1))}>前へ</button>
-                <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={pageCom>=totalPagesCom} onClick={()=>setPageCom(p=>Math.min(totalPagesCom,p+1))}>次へ</button>
+                <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={pageCom <= 1} onClick={() => setPageCom(p => Math.max(1, p - 1))}>前へ</button>
+                <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={pageCom >= totalPagesCom} onClick={() => setPageCom(p => Math.min(totalPagesCom, p + 1))}>次へ</button>
               </div>
             </div>
           </div>
-          <TaskList 
-            title={`実行済み (${comItems.length})`} 
-            tasks={comItems} 
-            showPlannedDates 
-            tableMode 
-            showCreatedColumn={false} 
-            showPlannedColumn 
-            showTypeColumn 
-            showMilestoneColumn={false}
-            enableSelection
-          />
+          <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+            <TaskList
+              title={`実行済み (${comItems.length})`}
+              tasks={comItems}
+              showPlannedDates
+              tableMode
+              showCreatedColumn={false}
+              showPlannedColumn
+              showTypeColumn
+              showMilestoneColumn={false}
+              enableSelection
+            />
+          </section>
         </>
       )}
       <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規タスク">
-        <TaskForm onSubmitted={(mode)=>{ if (mode==='close') setOpenCreate(false); }} />
+        <TaskForm onSubmitted={(mode) => { if (mode === 'close') setOpenCreate(false); }} />
       </TaskDialog>
     </div>
   );

@@ -78,7 +78,7 @@ export default function BgmPage() {
     const title = isUngrouped ? "未分類" : group?.name ?? "グループ";
     const list = grouped.get(groupId) ?? [];
     return (
-      <div key={groupId ?? "__ungrouped"} className={`border rounded-lg overflow-hidden bg-background shadow-sm ${dragOverGroupId === (groupId ?? "__ungrouped") ? "ring-2 ring-[var(--primary)]/50" : ""}`}
+      <div key={groupId ?? "__ungrouped"} className={`rounded-xl overflow-hidden bg-[var(--sidebar)] shadow-sm ${dragOverGroupId === (groupId ?? "__ungrouped") ? "ring-2 ring-[var(--primary)]/50" : ""}`}
         onDragOver={(e) => {
           e.preventDefault();
           setDragOverGroupId(groupId ?? "__ungrouped");
@@ -128,7 +128,7 @@ export default function BgmPage() {
                   const sameGroup = src?.groupId === (groupId ?? undefined);
                   if (!sameGroup) setTrackGroup(srcId, groupId);
                   moveWithinGroup(srcId, t.id);
-                } catch {}
+                } catch { }
               }}
             >
               <div className="flex items-center gap-3 min-w-0">
@@ -192,7 +192,7 @@ export default function BgmPage() {
           const data = await res.json();
           if (data?.title) useTitle = data.title as string;
         }
-      } catch {}
+      } catch { }
     }
     add({ videoId: vid, title: useTitle || "(無題)", url: url.trim(), groupId: selectedGroupId || undefined });
     setUrl("");
@@ -201,7 +201,7 @@ export default function BgmPage() {
 
   const play = (id: string) => {
     setCurrentId(id);
-    try { useAppStore.getState().playBgmTrack(id); } catch {}
+    try { useAppStore.getState().playBgmTrack(id); } catch { }
   };
 
   const idxOf = (id: string) => tracks.findIndex((t) => t.id === id);

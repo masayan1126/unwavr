@@ -12,7 +12,7 @@ export default function LauncherForm() {
   } = useLauncherForm();
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-3 border border-black/10 dark:border-white/10 p-3 rounded-md">
+    <form onSubmit={submit} className="flex flex-col gap-3 bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <label className="text-sm">種類</label>
         <select

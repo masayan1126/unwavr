@@ -110,8 +110,8 @@ export default function LauncherGrid() {
         const list = groups.map.get(c.id) ?? [];
         if (list.length === 0) return null;
         return (
-          <section key={c.id} className="mb-4">
-            <h2 className="text-sm font-medium mb-2 flex items-center gap-2 justify-between">
+          <section key={c.id} className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm mb-4">
+            <h2 className="text-sm font-medium mb-4 flex items-center gap-2 justify-between">
               <span className="flex items-center gap-2">
                 <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: c.color ?? "#888" }} />
                 {c.name}
@@ -132,7 +132,7 @@ export default function LauncherGrid() {
                       href={sc.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="group relative flex flex-col items-center gap-2 p-3 border rounded hover:opacity-90 transition"
+                      className="group relative flex flex-col items-center gap-2 p-3 bg-card rounded-lg shadow-sm hover:opacity-90 transition"
                       style={style}
                       title={sc.label}
                     >
@@ -175,7 +175,7 @@ export default function LauncherGrid() {
                   ) : (
                     <div
                       key={sc.id}
-                      className="group relative flex flex-col items-center gap-2 p-3 border rounded hover:opacity-90 transition cursor-default"
+                      className="group relative flex flex-col items-center gap-2 p-3 bg-card rounded-lg shadow-sm hover:opacity-90 transition cursor-default"
                       style={style}
                       title={sc.label}
                     >
@@ -196,7 +196,7 @@ export default function LauncherGrid() {
                             onClick={async () => {
                               try {
                                 await navigator.clipboard.writeText(sc.url);
-                              } catch {}
+                              } catch { }
                             }}
                           >
                             スキームをコピー
@@ -208,7 +208,7 @@ export default function LauncherGrid() {
                             onClick={async () => {
                               try {
                                 await navigator.clipboard.writeText(sc.nativePath!);
-                              } catch {}
+                              } catch { }
                             }}
                           >
                             パスをコピー
@@ -236,8 +236,8 @@ export default function LauncherGrid() {
         );
       })}
 
-      <section className="mb-2">
-        <h2 className="text-sm font-medium mb-2 flex items-center justify-between">
+      <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm mb-2">
+        <h2 className="text-sm font-medium mb-4 flex items-center justify-between">
           <span>未分類</span>
           <span className="flex items-center gap-2">
             <button className="text-[10px] underline opacity-80" onClick={() => selectCategoryAll(undefined)}>全選択</button>
@@ -249,7 +249,7 @@ export default function LauncherGrid() {
             <div className="text-sm opacity-70 col-span-full">ショートカットがありません。下のフォームから追加してください。</div>
           ) : (
             groups.rest.map((sc) => {
-                const Ico = (Icons as unknown as Record<string, LucideIcon>)[sc.iconName];
+              const Ico = (Icons as unknown as Record<string, LucideIcon>)[sc.iconName];
               const style = { backgroundColor: `${sc.color ?? "#0ea5e9"}20`, borderColor: sc.color ?? "#0ea5e9" } as React.CSSProperties;
               return (
                 sc.kind === "web" ? (
@@ -258,7 +258,7 @@ export default function LauncherGrid() {
                     href={sc.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="group relative flex flex-col items-center gap-2 p-3 border rounded hover:opacity-90 transition"
+                    className="group relative flex flex-col items-center gap-2 p-3 bg-card rounded-lg shadow-sm hover:opacity-90 transition"
                     style={style}
                     title={sc.label}
                   >
@@ -301,7 +301,7 @@ export default function LauncherGrid() {
                 ) : (
                   <div
                     key={sc.id}
-                    className="group relative flex flex-col items-center gap-2 p-3 border rounded hover:opacity-90 transition cursor-default"
+                    className="group relative flex flex-col items-center gap-2 p-3 bg-card rounded-lg shadow-sm hover:opacity-90 transition cursor-default"
                     style={style}
                     title={sc.label}
                   >
@@ -322,7 +322,7 @@ export default function LauncherGrid() {
                           onClick={async () => {
                             try {
                               await navigator.clipboard.writeText(sc.url);
-                            } catch {}
+                            } catch { }
                           }}
                         >
                           スキームをコピー
@@ -334,7 +334,7 @@ export default function LauncherGrid() {
                           onClick={async () => {
                             try {
                               await navigator.clipboard.writeText(sc.nativePath!);
-                            } catch {}
+                            } catch { }
                           }}
                         >
                           パスをコピー

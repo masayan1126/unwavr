@@ -29,7 +29,7 @@ export default function Pomodoro() {
       if (audioRef.current.state === 'suspended') {
         void audioRef.current.resume();
       }
-    } catch {}
+    } catch { }
   };
 
   const playPattern = (freqs: number[]) => {
@@ -66,7 +66,7 @@ export default function Pomodoro() {
           // 明瞭な上昇3連（作業再開）
           playPattern([1200, 1400, 1600]);
         }
-      } catch {}
+      } catch { }
       prevIsBreakForSoundRef.current = s.isBreak;
     }
   }, [s.isBreak, s.isRunning]);
@@ -97,12 +97,12 @@ export default function Pomodoro() {
       for (let i = 0; i < diff; i++) {
         playPattern(pattern);
       }
-    } catch {}
+    } catch { }
     prevCompletedRef.current = curr;
   }, [s.completedWorkSessions, s.cyclesUntilLongBreak, s.isRunning]);
 
   return (
-    <div className="border border-black/10 dark:border-white/10 rounded-md p-3">
+    <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
       {toastQueue.length > 0 && (
         <NoticeToast
           message={toastQueue[0]}

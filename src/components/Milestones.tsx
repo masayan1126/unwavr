@@ -27,7 +27,7 @@ export default function Milestones() {
     reader.onload = (e) => {
       const content = e.target?.result as string;
       const result = importMilestones(content);
-      
+
       if (result.success) {
         setImportMessage({
           type: 'success',
@@ -52,7 +52,7 @@ export default function Milestones() {
   };
 
   return (
-    <div className="border border-black/10 dark:border-white/10 rounded-md p-3">
+    <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
       <div className="flex items-center justify-between mb-2">
         <div className="text-xs uppercase tracking-wide opacity-70">マイルストーン</div>
         <div className="flex gap-2">
@@ -82,11 +82,10 @@ export default function Milestones() {
       </div>
 
       {importMessage && (
-        <div className={`mb-3 p-2 rounded text-xs ${
-          importMessage.type === 'success' 
-            ? 'bg-[var(--primary)]/15 text-[var(--primary)] dark:bg-[var(--primary)]/20 dark:text-[var(--primary)]' 
+        <div className={`mb-3 p-2 rounded text-xs ${importMessage.type === 'success'
+            ? 'bg-[var(--primary)]/15 text-[var(--primary)] dark:bg-[var(--primary)]/20 dark:text-[var(--primary)]'
             : 'bg-[var(--danger)]/15 text-[var(--danger)] dark:bg-[var(--danger)]/20 dark:text-[var(--danger)]'
-        }`}>
+          }`}>
           {importMessage.message}
         </div>
       )}

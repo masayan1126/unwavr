@@ -106,13 +106,13 @@ export default function WeatherPage() {
   const fetchWeatherData = async (lat: number, lon: number) => {
     try {
       console.log('Fetching weather data for:', { lat, lon });
-      
+
       // APIプロキシエンドポイントを使用
       const url = `/api/weather?lat=${lat}&lon=${lon}`;
-      
+
       console.log('Request URL:', url);
-      
-      const res = await fetch(url, { 
+
+      const res = await fetch(url, {
         method: 'GET',
         cache: "no-store",
         headers: {
@@ -120,20 +120,20 @@ export default function WeatherPage() {
           'Content-Type': 'application/json'
         }
       });
-      
+
       console.log('Response status:', res.status);
-      
+
       if (!res.ok) {
         const errorData = await res.json();
         console.error('API Error Response:', errorData);
         throw new Error(`HTTP error! status: ${res.status}, message: ${errorData.error || 'Unknown error'}`);
       }
-      
+
       const responseData = await res.json();
       const data = responseData.data;
       console.log('API Response data:', data);
       console.log('API Source:', responseData.source);
-      
+
       if (responseData.source === 'openweathermap') {
         // OpenWeatherMap API レスポンス
         setCurrent({
@@ -143,23 +143,23 @@ export default function WeatherPage() {
           humidity: data.main?.humidity,
           windSpeed: data.wind?.speed
         });
-        
+
         // 週間予報も取得
         const forecastUrl = `/api/weather/forecast?lat=${lat}&lon=${lon}`;
         console.log('Fetching forecast from:', forecastUrl);
-        
-        const forecastRes = await fetch(forecastUrl, { 
+
+        const forecastRes = await fetch(forecastUrl, {
           method: 'GET',
-          cache: "no-store" 
+          cache: "no-store"
         });
-        
+
         if (!forecastRes.ok) {
           console.warn('Forecast API failed, using current weather only');
         } else {
           const forecastResponseData = await forecastRes.json();
           const forecastData = forecastResponseData.data;
           console.log('Forecast data:', forecastData);
-          
+
           // 5日間の予報を日別に集約
           type ForecastItem = { dt: number; main: { temp: number }; weather?: Array<{ id?: number }> };
           const list: ForecastItem[] = Array.isArray(forecastData.list) ? forecastData.list : [];
@@ -179,7 +179,7 @@ export default function WeatherPage() {
             }
             return acc;
           }, []);
-          
+
           setDaily(dailyData?.slice(0, 7) ?? []);
         }
       } else {
@@ -190,7 +190,7 @@ export default function WeatherPage() {
           humidity: data?.current?.relative_humidity_2m,
           windSpeed: data?.current?.wind_speed_10m
         });
-        
+
         const days: Daily[] = (data?.daily?.time ?? []).map((t: string, i: number) => ({
           date: t,
           code: data?.daily?.weather_code?.[i],
@@ -199,7 +199,7 @@ export default function WeatherPage() {
         }));
         setDaily(days);
       }
-      
+
       setLastUpdated(new Date());
       setIsDefaultLocation(false);
     } catch (error) {
@@ -208,9 +208,9 @@ export default function WeatherPage() {
         message: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined
       });
-      
+
       let errorMessage = "天気の取得に失敗しました";
-      
+
       if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
         errorMessage = "ネットワーク接続エラーです。インターネット接続を確認してください。";
       } else if (error instanceof Error) {
@@ -222,7 +222,7 @@ export default function WeatherPage() {
           errorMessage = "サーバーエラーです。しばらく待ってから再試行してください。";
         }
       }
-      
+
       setErr(errorMessage);
     }
   };
@@ -233,7 +233,7 @@ export default function WeatherPage() {
       setLoading(false);
       return;
     }
-    
+
     navigator.geolocation.getCurrentPosition(
       async (p) => {
         const lat = p.coords.latitude;
@@ -264,12 +264,12 @@ export default function WeatherPage() {
             }
           })()
         };
-        
+
         console.error('Geolocation error details:', errorDetails);
-        
+
         let errorMessage = "位置情報の許可が必要です";
         const errorCode = geolocationError.code;
-        
+
         switch (errorCode) {
           case geolocationError.PERMISSION_DENIED:
             errorMessage = "位置情報の許可が拒否されました。ブラウザの設定で位置情報を許可してください。";
@@ -284,16 +284,16 @@ export default function WeatherPage() {
             errorMessage = `位置情報エラーが発生しました (コード: ${errorCode})。ブラウザの設定を確認してください。`;
             break;
         }
-        
+
         console.log('Setting geolocation error state:', { errorMessage, errorCode });
-        
+
         // 位置情報エラーの場合、デフォルト位置で天気を取得
         setIsDefaultLocation(true);
         fetchWeatherData(DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lon);
         setLoading(false);
       },
-      { 
-        enableHighAccuracy: true, 
+      {
+        enableHighAccuracy: true,
         timeout: 15000,
         maximumAge: 300000 // 5分間キャッシュ
       }
@@ -302,10 +302,10 @@ export default function WeatherPage() {
 
   const handleRefresh = async () => {
     if (!navigator.geolocation) return;
-    
+
     setLoading(true);
     setErr(null);
-    
+
     navigator.geolocation.getCurrentPosition(
       async (p) => {
         const lat = p.coords.latitude;
@@ -336,12 +336,12 @@ export default function WeatherPage() {
             }
           })()
         };
-        
+
         console.error('Geolocation error on refresh:', errorDetails);
-        
+
         let errorMessage = "位置情報の取得に失敗しました";
         const errorCode = geolocationError.code;
-        
+
         switch (errorCode) {
           case geolocationError.PERMISSION_DENIED:
             errorMessage = "位置情報の許可が拒否されました。ブラウザの設定で位置情報を許可してください。";
@@ -356,7 +356,7 @@ export default function WeatherPage() {
             errorMessage = `位置情報エラーが発生しました (コード: ${errorCode})。ブラウザの設定を確認してください。`;
             break;
         }
-        
+
         console.log('Setting geolocation error state on refresh:', { errorMessage, errorCode });
         setErr(errorMessage);
         setLoading(false);
@@ -387,7 +387,7 @@ export default function WeatherPage() {
           </Link>
         </div>
       </div>
-            {loading ? (
+      {loading ? (
         <div className="text-sm opacity-70">取得中...</div>
       ) : err ? (
         <div className="text-sm opacity-70">{err}</div>
@@ -404,7 +404,7 @@ export default function WeatherPage() {
               </p>
             </div>
           )}
-          <section className="border rounded p-4 border-black/10 dark:border-white/10">
+          <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
             <div className="text-sm font-medium mb-2">現在</div>
             <div className="flex items-center gap-3 text-lg">
               {(() => {
@@ -440,7 +440,7 @@ export default function WeatherPage() {
               </div>
             )}
           </section>
-          <section className="border rounded p-4 border-black/10 dark:border-white/10">
+          <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
             <div className="text-sm font-medium mb-3">週間</div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {daily.slice(0, 7).map((d) => {
@@ -448,7 +448,7 @@ export default function WeatherPage() {
                 const date = new Date(d.date);
                 const label = `${date.getMonth() + 1}/${date.getDate()}`;
                 return (
-                  <div key={d.date} className="border rounded p-3 flex flex-col items-center gap-1">
+                  <div key={d.date} className="bg-card rounded-lg p-3 shadow-sm flex flex-col items-center gap-1">
                     <div className="text-sm">{label}</div>
                     <span className="inline-flex items-center justify-center w-8 h-8 rounded border" style={{ backgroundColor: bg, borderColor: accent }}>
                       <Icon size={16} color={accent} />

@@ -16,7 +16,7 @@ export default function SettingsPage() {
         </Link>
       </div>
 
-      <div className="border rounded p-4 border-[var(--danger)]/30 bg-[var(--danger)]/5 flex flex-col gap-3">
+      <div className="bg-[var(--danger)]/5 rounded-xl p-5 flex flex-col gap-3">
         <div className="text-sm font-medium text-[var(--danger)]">危険な操作</div>
         <div className="text-xs opacity-80">タスク・マイルストーン・ランチャーの設定をすべて削除します。この操作は取り消せません。</div>
         <div>
