@@ -1,6 +1,7 @@
 "use client";
 import { useLauncherForm } from "@/hooks/useLauncher";
 import IconPicker from "@/components/IconPicker";
+import PrimaryButton from "@/components/PrimaryButton";
 
 export default function LauncherForm() {
   const {
@@ -43,7 +44,7 @@ export default function LauncherForm() {
           onChange={(e) => setUrl(e.target.value)}
         />
         {linkType === "app" && (
-          <button type="button" className="px-3 py-2 rounded border text-xs w-full sm:w-auto" onClick={pickNativeApp}>
+          <button type="button" className="px-3 py-2 rounded-[3px] border text-xs w-full sm:w-auto hover:bg-black/5 dark:hover:bg-white/10 transition-colors" onClick={pickNativeApp}>
             アプリ登録
           </button>
         )}
@@ -81,7 +82,7 @@ export default function LauncherForm() {
       </div>
       <IconPicker value={iconName} onChange={setIconName} />
       <div className="flex justify-end">
-        <button className="px-3 py-2 rounded bg-foreground text-background text-sm w-full sm:w-auto">追加</button>
+        <PrimaryButton label="追加" type="submit" className="w-full sm:w-auto" />
       </div>
 
       {showHelp && (
@@ -109,7 +110,7 @@ export default function LauncherForm() {
                 <button
                   key={i.scheme}
                   type="button"
-                  className="px-2 py-1 rounded border"
+                  className="px-2 py-1 rounded-[3px] border hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
                   onClick={() => {
                     setLinkType("app");
                     setUrl(i.scheme);

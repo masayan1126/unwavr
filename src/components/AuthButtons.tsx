@@ -5,7 +5,7 @@ import { LogOut } from "lucide-react";
 function GoogleIcon({ size = 14 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
-      <path fill="#EA4335" d="M12 10.2v3.6h5.1c-.2 1.2-1.5 3.6-5.1 3.6-3.1 0-5.7-2.6-5.7-5.7S8.9 6 12 6c1.8 0 3 .8 3.7 1.5l2.5-2.5C16.8 3.6 14.6 2.7 12 2.7 6.9 2.7 2.7 6.9 2.7 12S6.9 21.3 12 21.3c6 0 9.3-4.2 9.3-8.4 0-.6-.1-1-.2-1.5H12z"/>
+      <path fill="#EA4335" d="M12 10.2v3.6h5.1c-.2 1.2-1.5 3.6-5.1 3.6-3.1 0-5.7-2.6-5.7-5.7S8.9 6 12 6c1.8 0 3 .8 3.7 1.5l2.5-2.5C16.8 3.6 14.6 2.7 12 2.7 6.9 2.7 2.7 6.9 2.7 12S6.9 21.3 12 21.3c6 0 9.3-4.2 9.3-8.4 0-.6-.1-1-.2-1.5H12z" />
     </svg>
   );
 }
@@ -18,7 +18,7 @@ export default function AuthButtons() {
     return (
       <button
         onClick={() => signIn("google")}
-        className="flex items-center gap-2 px-3 py-1 rounded border text-sm hover:bg-black/5 dark:hover:bg-white/10"
+        className="flex items-center gap-2 px-3 py-1 rounded-[3px] border text-sm hover:bg-black/5 dark:hover:bg-white/10"
         title="Googleでログイン"
       >
         <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-white">
@@ -41,7 +41,7 @@ export default function AuthButtons() {
       </span>
       <button
         onClick={() => signOut()}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-md border text-sm whitespace-nowrap hover:bg-black/5 dark:hover:bg-white/10"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-[3px] border text-sm whitespace-nowrap hover:bg-black/5 dark:hover:bg-white/10"
         title="ログアウト"
       >
         <LogOut size={16} />

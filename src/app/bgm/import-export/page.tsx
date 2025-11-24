@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { useToast } from "@/components/Providers";
+import PrimaryButton from "@/components/PrimaryButton";
 
 function downloadText(filename: string, text: string): void {
   const blob = new Blob([text], { type: "application/json;charset=utf-8;" });
@@ -84,9 +85,7 @@ export default function BgmImportExportPage() {
 
       <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex items-center justify-between">
         <div className="text-sm font-medium">エクスポート（JSON）</div>
-        <button className="px-3 py-1.5 rounded text-sm bg-[var(--primary)] text-[#0f172a] border border-transparent hover:opacity-80" onClick={exportJson}>
-          エクスポート
-        </button>
+        <PrimaryButton label="エクスポート" onClick={exportJson} />
       </div>
 
       <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
@@ -100,13 +99,13 @@ export default function BgmImportExportPage() {
         />
         <div className="flex items-center gap-2">
           <button
-            className={`px-3 py-1 rounded border text-sm ${importing ? "opacity-70" : ""}`}
+            className={`px-3 py-1 rounded-[3px] border text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-colors ${importing ? "opacity-70" : ""}`}
             disabled={importing}
             onClick={() => importJson(text)}
           >
             インポート
           </button>
-          <button className="px-3 py-1 rounded border text-sm" onClick={() => setText("")}>クリア</button>
+          <button className="px-3 py-1 rounded-[3px] border text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-colors" onClick={() => setText("")}>クリア</button>
         </div>
       </div>
     </div>

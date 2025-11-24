@@ -53,7 +53,7 @@ export default function SettingsPage() {
         <div className="text-xs opacity-80">タスク・マイルストーン・ランチャーの設定をすべて削除します。この操作は取り消せません。</div>
         <div>
           <button
-            className="px-3 py-2 rounded bg-[var(--danger)] text-white text-sm"
+            className="px-3 py-2 rounded-[3px] bg-[var(--danger)] text-white text-sm hover:opacity-90 transition-opacity"
             onClick={async () => {
               const ok = await confirm('本当に全て削除しますか？この操作は取り消せません。', { tone: 'danger', confirmText: '削除' });
               if (!ok) return;

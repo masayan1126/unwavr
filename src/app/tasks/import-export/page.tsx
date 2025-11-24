@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useAppStore } from "@/lib/store";
 import { useConfirm, useToast } from "@/components/Providers";
 import { TaskType, Scheduled, DateRange, type Task } from "@/lib/types";
+import PrimaryButton from "@/components/PrimaryButton";
 
 type ImportResult = { imported: number; failed: number; errors: string[] };
 
@@ -349,7 +350,7 @@ export default function ImportExportPage() {
           />
           <button
             type="button"
-            className="px-3 py-1 rounded border text-sm"
+            className="px-3 py-1 rounded-[3px] border text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
             onClick={() => fileInputRef.current?.click()}
             aria-label="CSVファイルを選択"
           >
@@ -382,9 +383,7 @@ export default function ImportExportPage() {
         <div className="text-sm font-medium">エクスポート（CSV）</div>
         <div className="flex flex-wrap items-center gap-3 text-xs" />
         <div className="flex items-center gap-2">
-          <button className="px-3 py-1.5 rounded text-sm bg-[var(--primary)] text-[#0f172a] border border-transparent hover:opacity-80" onClick={exportCSVChooseFile}>
-            エクスポート
-          </button>
+          <PrimaryButton label="エクスポート" onClick={exportCSVChooseFile} />
         </div>
       </div>
 
@@ -393,7 +392,7 @@ export default function ImportExportPage() {
         <div className="text-xs opacity-80">役割を選ぶと、毎日/積み上げ候補/特定曜日を含むリアルなサンプルをDBに投入します。</div>
         <div className="flex flex-wrap items-center gap-2">
           <button
-            className="px-3 py-1 rounded border text-sm"
+            className="px-3 py-1 rounded-[3px] border text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
             onClick={async () => {
               const ok = await confirm('エンジニア向けのサンプルを投入します。続行しますか？', { confirmText: '投入' });
               if (!ok) return;
@@ -408,7 +407,7 @@ export default function ImportExportPage() {
           >エンジニア</button>
 
           <button
-            className="px-3 py-1 rounded border text-sm"
+            className="px-3 py-1 rounded-[3px] border text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
             onClick={async () => {
               const ok = await confirm('デザイナー向けのサンプルを投入します。続行しますか？', { confirmText: '投入' });
               if (!ok) return;
@@ -423,7 +422,7 @@ export default function ImportExportPage() {
           >デザイナー</button>
 
           <button
-            className="px-3 py-1 rounded border text-sm"
+            className="px-3 py-1 rounded-[3px] border text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
             onClick={async () => {
               const ok = await confirm('動画クリエイター向けのサンプルを投入します。続行しますか？', { confirmText: '投入' });
               if (!ok) return;

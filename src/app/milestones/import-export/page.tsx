@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useAppStore } from "@/lib/store";
 import { useToast, useConfirm } from "@/components/Providers";
 import { useState } from "react";
+import PrimaryButton from "@/components/PrimaryButton";
 
 export default function MilestonesImportExportPage() {
   const exportMilestones = useAppStore((s) => s.exportMilestones);
@@ -25,16 +26,14 @@ export default function MilestonesImportExportPage() {
 
       <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex items-center justify-between">
         <div className="text-sm font-medium">エクスポート（CSV）</div>
-        <button
-          className="px-3 py-1.5 rounded text-sm bg-[var(--primary)] text-[#0f172a] border border-transparent hover:opacity-80"
+        <PrimaryButton
+          label="エクスポート"
           onClick={() => {
             exportMilestones();
             setExportHistory((arr) => [{ id: `exp_${Date.now()}`, timestamp: Date.now(), count: milestones.length }, ...arr]);
             toast.show('CSVをエクスポートしました', 'success');
           }}
-        >
-          エクスポート
-        </button>
+        />
       </div>
 
       <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
@@ -43,7 +42,7 @@ export default function MilestonesImportExportPage() {
         <textarea className="border rounded p-2 h-40 bg-transparent text-sm" placeholder="CSV または JSON を貼り付け" value={text} onChange={(e) => setText(e.target.value)} />
         <div className="flex items-center gap-2">
           <button
-            className="px-3 py-1 rounded border text-sm"
+            className="px-3 py-1 rounded-[3px] border text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
             onClick={() => {
               const res = importMilestones(text);
               setResult(res);
@@ -58,7 +57,7 @@ export default function MilestonesImportExportPage() {
               }
             }}
           >インポート</button>
-          <button className="px-3 py-1 rounded border text-sm" onClick={() => setText("")}>クリア</button>
+          <button className="px-3 py-1 rounded-[3px] border text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-colors" onClick={() => setText("")}>クリア</button>
         </div>
         {result && (
           <div className="text-sm">
@@ -74,7 +73,7 @@ export default function MilestonesImportExportPage() {
 
       <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex items-center justify-between">
         <div className="text-sm font-medium">サンプル投入（マイルストーン）</div>
-        <button className="px-3 py-1 rounded border text-sm" onClick={async () => {
+        <button className="px-3 py-1 rounded-[3px] border text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-colors" onClick={async () => {
           const ok = await confirm('サンプルのマイルストーンをDBに投入します。続行しますか？', { confirmText: '投入' });
           if (!ok) return;
           try {

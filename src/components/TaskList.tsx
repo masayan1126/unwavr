@@ -731,7 +731,7 @@ export default function TaskList({
           <div ref={bulkMenuRef} className="relative">
             <button
               type="button"
-              className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${selectedCount > 0
+              className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-[3px] text-xs font-medium transition-colors ${selectedCount > 0
                 ? "text-primary bg-primary/10 hover:bg-primary/20"
                 : "text-muted-foreground opacity-50 cursor-not-allowed"
                 }`}

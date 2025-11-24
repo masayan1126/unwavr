@@ -63,7 +63,7 @@ export default function Sidebar() {
           <button
             aria-label={open ? "サイドバーを閉じる" : "サイドバーを開く"}
             title={open ? "閉じる" : "開く"}
-            className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+            className="p-1.5 rounded-[3px] text-muted-foreground hover:bg-muted hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
             onClick={() => setOpen((v) => !v)}
           >
             {open ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
