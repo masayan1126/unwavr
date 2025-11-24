@@ -23,6 +23,7 @@
     "@tiptap/extension-underline": "^3.2.2",
     "@tiptap/react": "^3.2.2",
     "@tiptap/starter-kit": "^3.2.2",
+    "@tiptap/suggestion": "^3.11.0",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -36,6 +37,7 @@
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "resend": "^3.5.0",
+    "tippy.js": "^6.3.7",
     "zod": "^4.0.17",
     "zustand": "^5.0.7"
   },

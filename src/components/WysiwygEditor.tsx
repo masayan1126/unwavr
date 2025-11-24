@@ -6,6 +6,8 @@ import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import Heading from "@tiptap/extension-heading";
+import { SlashCommand } from "./SlashCommand/extension";
+import "tippy.js/dist/tippy.css";
 
 type WysiwygEditorProps = {
   value: string;
@@ -21,6 +23,7 @@ export default function WysiwygEditor({ value, onChange, className, onBlur }: Wy
       Underline,
       Link.configure({ openOnClick: false }),
       Heading.configure({ levels: [1, 2, 3] }),
+      SlashCommand,
     ],
     content: value || "",
     immediatelyRender: false,
