@@ -82,14 +82,14 @@ export default function BgmImportExportPage() {
         <Link className="text-sm underline opacity-80" href="/bgm">一覧へ戻る</Link>
       </div>
 
-      <div className="border rounded p-4 border-[var(--border)] flex items-center justify-between">
+      <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex items-center justify-between">
         <div className="text-sm font-medium">エクスポート（JSON）</div>
         <button className="px-3 py-1.5 rounded text-sm bg-[var(--primary)] text-[#0f172a] border border-transparent hover:opacity-80" onClick={exportJson}>
           エクスポート
         </button>
       </div>
 
-      <div className="border rounded p-4 border-[var(--border)] flex flex-col gap-3">
+      <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
         <div className="text-sm font-medium">インポート（JSON）</div>
         <div className="text-xs opacity-70">groups, tracks を含むJSONを貼り付けてください。</div>
         <textarea

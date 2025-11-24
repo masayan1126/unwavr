@@ -23,7 +23,7 @@ export default function MilestonesImportExportPage() {
         <Link className="text-sm underline opacity-80" href="/milestones">一覧へ戻る</Link>
       </div>
 
-      <div className="border rounded p-4 border-[var(--border)] flex items-center justify-between">
+      <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex items-center justify-between">
         <div className="text-sm font-medium">エクスポート（CSV）</div>
         <button
           className="px-3 py-1.5 rounded text-sm bg-[var(--primary)] text-[#0f172a] border border-transparent hover:opacity-80"
@@ -37,10 +37,10 @@ export default function MilestonesImportExportPage() {
         </button>
       </div>
 
-      <div className="border rounded p-4 border-[var(--border)] flex flex-col gap-3">
+      <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
         <div className="text-sm font-medium">インポート（CSV/JSON）</div>
         <div className="text-xs opacity-70">CSV推奨ヘッダー: タイトル,目標,現在,期限（YYYY-MM-DD）</div>
-        <textarea className="border rounded p-2 h-40 bg-transparent text-sm" placeholder="CSV または JSON を貼り付け" value={text} onChange={(e)=>setText(e.target.value)} />
+        <textarea className="border rounded p-2 h-40 bg-transparent text-sm" placeholder="CSV または JSON を貼り付け" value={text} onChange={(e) => setText(e.target.value)} />
         <div className="flex items-center gap-2">
           <button
             className="px-3 py-1 rounded border text-sm"
@@ -72,7 +72,7 @@ export default function MilestonesImportExportPage() {
         )}
       </div>
 
-      <div className="border rounded p-4 border-[var(--border)] flex items-center justify-between">
+      <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex items-center justify-between">
         <div className="text-sm font-medium">サンプル投入（マイルストーン）</div>
         <button className="px-3 py-1 rounded border text-sm" onClick={async () => {
           const ok = await confirm('サンプルのマイルストーンをDBに投入します。続行しますか？', { confirmText: '投入' });
@@ -93,7 +93,7 @@ export default function MilestonesImportExportPage() {
         }}>デモデータ投入</button>
       </div>
 
-      <div className="border rounded p-4 border-[var(--border)] flex flex-col gap-3">
+      <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="text-sm font-medium">インポート履歴</div>
           <button className="text-xs underline opacity-80" onClick={() => setImportHistory([])}>履歴をすべて削除</button>
@@ -116,7 +116,7 @@ export default function MilestonesImportExportPage() {
         )}
       </div>
 
-      <div className="border rounded p-4 border-[var(--border)] flex flex-col gap-3">
+      <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="text-sm font-medium">エクスポート履歴</div>
           <button className="text-xs underline opacity-80" onClick={() => setExportHistory([])}>履歴をすべて削除</button>

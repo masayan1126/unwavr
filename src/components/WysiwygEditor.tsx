@@ -29,7 +29,7 @@ export default function WysiwygEditor({ value, onChange, className, onBlur }: Wy
     },
     editorProps: {
       attributes: {
-        class: "prose prose-sm max-w-none dark:prose-invert w-full h-full min-h-[300px] p-3 border rounded-lg border-black/10 dark:border-white/10 focus:outline-none bg-transparent",
+        class: "prose prose-sm max-w-none dark:prose-invert w-full h-full min-h-[300px] p-4 focus:outline-none bg-transparent",
       },
       handleDOMEvents: {
         blur: () => {
@@ -47,24 +47,38 @@ export default function WysiwygEditor({ value, onChange, className, onBlur }: Wy
   }, [value, editor]);
 
   return (
-    <div className={`${className ?? ""} flex flex-col`}>
-      <div className="flex-1 min-h-0 max-h-[60vh] overflow-y-auto">
-        <div className="sticky top-0 z-10 bg-background border-b border-black/10 dark:border-white/10 flex flex-wrap gap-2 p-2 shrink-0">
-          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().setParagraph().run()}>P</button>
-          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}>H1</button>
-          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}>H2</button>
-          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}>H3</button>
-          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleBold().run()}>B</button>
-          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleItalic().run()}>I</button>
-          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleUnderline().run()}>U</button>
-          <button type="button" className="px-2 py-1 text-sm border rounded line-through" onClick={() => editor?.chain().focus().toggleStrike().run()}>S</button>
-          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleBulletList().run()}>• List</button>
-          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleOrderedList().run()}>1. List</button>
-          <button type="button" className="px-2 py-1 text-sm border rounded" onClick={() => editor?.chain().focus().toggleCode().run()}>{"< >"}</button>
+    <div className={`${className ?? ""} flex flex-col border border-black/10 dark:border-white/10 rounded-xl overflow-hidden bg-card shadow-sm focus-within:ring-2 focus-within:ring-[var(--primary)]/20 transition-all`}>
+      <div className="flex-1 min-h-0 max-h-[60vh] overflow-y-auto flex flex-col">
+        <div className="sticky top-0 z-10 bg-muted/50 backdrop-blur-sm border-b border-black/5 dark:border-white/5 flex flex-wrap gap-1 p-2 shrink-0">
+          <ToolbarButton onClick={() => editor?.chain().focus().setParagraph().run()} label="P" isActive={editor?.isActive('paragraph')} />
+          <ToolbarButton onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()} label="H1" isActive={editor?.isActive('heading', { level: 1 })} />
+          <ToolbarButton onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} label="H2" isActive={editor?.isActive('heading', { level: 2 })} />
+          <ToolbarButton onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()} label="H3" isActive={editor?.isActive('heading', { level: 3 })} />
+          <div className="w-px h-4 bg-black/10 dark:bg-white/10 mx-1 self-center" />
+          <ToolbarButton onClick={() => editor?.chain().focus().toggleBold().run()} label="B" isActive={editor?.isActive('bold')} />
+          <ToolbarButton onClick={() => editor?.chain().focus().toggleItalic().run()} label="I" isActive={editor?.isActive('italic')} />
+          <ToolbarButton onClick={() => editor?.chain().focus().toggleUnderline().run()} label="U" isActive={editor?.isActive('underline')} />
+          <ToolbarButton onClick={() => editor?.chain().focus().toggleStrike().run()} label="S" isActive={editor?.isActive('strike')} />
+          <div className="w-px h-4 bg-black/10 dark:bg-white/10 mx-1 self-center" />
+          <ToolbarButton onClick={() => editor?.chain().focus().toggleBulletList().run()} label="• List" isActive={editor?.isActive('bulletList')} />
+          <ToolbarButton onClick={() => editor?.chain().focus().toggleOrderedList().run()} label="1. List" isActive={editor?.isActive('orderedList')} />
+          <ToolbarButton onClick={() => editor?.chain().focus().toggleCode().run()} label="< >" isActive={editor?.isActive('code')} />
         </div>
-        <EditorContent editor={editor} className="tiptap prose prose-sm max-w-none dark:prose-invert w-full min-h-[300px]" />
+        <EditorContent editor={editor} className="tiptap prose prose-sm max-w-none dark:prose-invert w-full min-h-[300px] flex-1" />
       </div>
     </div>
+  );
+}
+
+function ToolbarButton({ onClick, label, isActive }: { onClick: () => void, label: string, isActive?: boolean }) {
+  return (
+    <button
+      type="button"
+      className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors ${isActive ? "bg-[var(--primary)] text-white" : "hover:bg-black/5 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground"}`}
+      onClick={onClick}
+    >
+      {label}
+    </button>
   );
 }
 

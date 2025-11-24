@@ -35,55 +35,61 @@ export default function ScheduledTasksPage() {
 
   return (
     <div className="p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">特定曜日</h1>
-        <PrimaryButton
-          onClick={() => setOpenCreate(true)}
-          label="タスク追加"
-          iconLeft={<Plus size={16} />}
-        />
-      </div>
+      <header className="bg-[var(--sidebar)] rounded-xl shadow-sm p-5 md:p-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold">特定曜日</h1>
+          <PrimaryButton
+            onClick={() => setOpenCreate(true)}
+            label="タスク追加"
+            iconLeft={<Plus size={16} />}
+          />
+        </div>
+      </header>
       {(
         <>
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-xs opacity-70">{page} / {totalPages}（全 {total} 件）</div>
-            <div className="flex items-center gap-2 text-sm">
-              <label className="flex items-center gap-2">
-                <span className="opacity-70">ソート</span>
-                <select className="border rounded px-2 py-1 bg-transparent" value={sortKey} onChange={(e)=>setSortKey(e.target.value as "title" | "createdAt" | "scheduled" | "type" | "milestone")}>
-                  <option value="createdAt">日付</option>
-                  <option value="title">タイトル</option>
-                  <option value="scheduled">設定（曜日/期間）</option>
-                  <option value="type">種別</option>
-                  <option value="milestone">マイルストーン</option>
-                </select>
-                <button className="px-2 py-1 rounded border" onClick={()=>setSortAsc(v=>!v)}>{sortAsc? '昇順' : '降順'}</button>
-              </label>
-              <label className="flex items-center gap-2">
-                <span className="opacity-70">ステータス</span>
-                <select className="border rounded px-2 py-1 bg-transparent" value={filterStatus} onChange={(e)=>{ setFilterStatus(e.target.value as "all" | "completed" | "incomplete"); setPage(1); }}>
-                  <option value="all">すべて</option>
-                  <option value="incomplete">未完了</option>
-                  <option value="completed">完了</option>
-                </select>
-              </label>
-              <label className="flex items-center gap-2">
-                <span className="opacity-70">1ページあたり</span>
-                <select className="border rounded px-2 py-1 bg-transparent" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}>
-                  {[10,20,50,100].map(n => (<option key={n} value={n}>{n}</option>))}
-                </select>
-              </label>
-              <div className="flex items-center gap-2">
-                <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={page <= 1} onClick={() => setPage((p)=>Math.max(1,p-1))}>前へ</button>
-                <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={page >= totalPages} onClick={() => setPage((p)=>Math.min(totalPages,p+1))}>次へ</button>
+          <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm mb-4">
+            <div className="flex items-center justify-between">
+              <div className="text-xs opacity-70">{page} / {totalPages}（全 {total} 件）</div>
+              <div className="flex items-center gap-2 text-sm">
+                <label className="flex items-center gap-2">
+                  <span className="opacity-70">ソート</span>
+                  <select className="border rounded px-2 py-1 bg-transparent" value={sortKey} onChange={(e) => setSortKey(e.target.value as "title" | "createdAt" | "scheduled" | "type" | "milestone")}>
+                    <option value="createdAt">日付</option>
+                    <option value="title">タイトル</option>
+                    <option value="scheduled">設定（曜日/期間）</option>
+                    <option value="type">種別</option>
+                    <option value="milestone">マイルストーン</option>
+                  </select>
+                  <button className="px-2 py-1 rounded border" onClick={() => setSortAsc(v => !v)}>{sortAsc ? '昇順' : '降順'}</button>
+                </label>
+                <label className="flex items-center gap-2">
+                  <span className="opacity-70">ステータス</span>
+                  <select className="border rounded px-2 py-1 bg-transparent" value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value as "all" | "completed" | "incomplete"); setPage(1); }}>
+                    <option value="all">すべて</option>
+                    <option value="incomplete">未完了</option>
+                    <option value="completed">完了</option>
+                  </select>
+                </label>
+                <label className="flex items-center gap-2">
+                  <span className="opacity-70">1ページあたり</span>
+                  <select className="border rounded px-2 py-1 bg-transparent" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}>
+                    {[10, 20, 50, 100].map(n => (<option key={n} value={n}>{n}</option>))}
+                  </select>
+                </label>
+                <div className="flex items-center gap-2">
+                  <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>前へ</button>
+                  <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>次へ</button>
+                </div>
               </div>
             </div>
           </div>
-          <TaskList title="特定曜日" tasks={pageItems} tableMode showCreatedColumn={false} showPlannedColumn={false} showScheduledColumn showTypeColumn showMilestoneColumn={false} sortKey={sortKey} sortAsc={sortAsc} filterStatus={filterStatus} enableSelection />
+          <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+            <TaskList title="特定曜日" tasks={pageItems} tableMode showCreatedColumn={false} showPlannedColumn={false} showScheduledColumn showTypeColumn showMilestoneColumn={false} sortKey={sortKey} sortAsc={sortAsc} filterStatus={filterStatus} enableSelection />
+          </section>
         </>
       )}
       <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規タスク">
-        <TaskForm defaultType="scheduled" onSubmitted={(mode)=>{ if (mode==='close') setOpenCreate(false); }} />
+        <TaskForm defaultType="scheduled" onSubmitted={(mode) => { if (mode === 'close') setOpenCreate(false); }} />
       </TaskDialog>
     </div>
   );

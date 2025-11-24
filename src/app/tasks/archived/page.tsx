@@ -30,7 +30,7 @@ export default function ArchivedTasksPage(): React.ReactElement {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ archived: false, archivedAt: null }),
-    }).catch(() => {});
+    }).catch(() => { });
     setItems((prev) => prev.filter((t) => t.id !== task.id));
     updateTask(task.id, { archived: false, archivedAt: undefined });
     hydrateFromDb();
@@ -47,7 +47,7 @@ export default function ArchivedTasksPage(): React.ReactElement {
     const ok = await confirm(`${selectedIds.length}件を削除しますか？この操作は取り消せません。`, { tone: 'danger', confirmText: '削除' });
     if (!ok) return;
     // 個別DELETE（RLS適用のため）
-    await Promise.all(selectedIds.map((id) => fetch(`/api/db/tasks/${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => {})));
+    await Promise.all(selectedIds.map((id) => fetch(`/api/db/tasks/${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => { })));
     setItems((prev) => prev.filter((t) => !selectedIds.includes(t.id)));
     setSelected({});
     hydrateFromDb();
@@ -76,7 +76,7 @@ export default function ArchivedTasksPage(): React.ReactElement {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <header className="backdrop-blur-md bg-white/70 dark:bg-gray-800/70 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-5 md:p-6 mb-6">
+      <header className="bg-[var(--sidebar)] rounded-xl shadow-sm p-5 md:p-6 mb-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">アーカイブ済みタスク</h1>
           <div className="flex items-center gap-3">
@@ -87,7 +87,7 @@ export default function ArchivedTasksPage(): React.ReactElement {
                 value={pageSize}
                 onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
               >
-                {[10,20,50,100].map((n) => (
+                {[10, 20, 50, 100].map((n) => (
                   <option key={n} value={n}>{n}</option>
                 ))}
               </select>
@@ -104,7 +104,7 @@ export default function ArchivedTasksPage(): React.ReactElement {
       {items.length === 0 ? (
         <p className="text-sm text-black/60 dark:text-white/60">アーカイブ済みのタスクはありません。</p>
       ) : (
-        <div className="space-y-3">
+        <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm space-y-3">
           <div className="flex items-center gap-2">
             <label className="text-sm flex items-center gap-2"><input type="checkbox" checked={allChecked} onChange={(e) => toggleAll(e.target.checked)} /> 全選択</label>
             <span className="text-xs opacity-70">{selectedIds.length} 件選択中</span>
@@ -115,11 +115,11 @@ export default function ArchivedTasksPage(): React.ReactElement {
                 <tr className="text-[12px] font-medium opacity-70">
                   <th className="w-[40px] px-2 py-1 text-left"></th>
                   <th className="px-2 py-1 text-left">タイトル
-                    <button className="ml-2 text-[11px] underline opacity-70" onClick={() => { setSortKey('title'); setSortAsc((v)=> sortKey==='title' ? !v : true); }}>並び替え{sortKey==='title' ? (sortAsc ? '▲' : '▼') : ''}</button>
+                    <button className="ml-2 text-[11px] underline opacity-70" onClick={() => { setSortKey('title'); setSortAsc((v) => sortKey === 'title' ? !v : true); }}>並び替え{sortKey === 'title' ? (sortAsc ? '▲' : '▼') : ''}</button>
                   </th>
                   <th className="w-[120px] px-2 py-1 text-left">種別</th>
                   <th className="w-[140px] px-2 py-1 text-left">アーカイブ日
-                    <button className="ml-2 text-[11px] underline opacity-70" onClick={() => { setSortKey('archivedAt'); setSortAsc((v)=> sortKey==='archivedAt' ? !v : false); }}>並び替え{sortKey==='archivedAt' ? (sortAsc ? '▲' : '▼') : ''}</button>
+                    <button className="ml-2 text-[11px] underline opacity-70" onClick={() => { setSortKey('archivedAt'); setSortAsc((v) => sortKey === 'archivedAt' ? !v : false); }}>並び替え{sortKey === 'archivedAt' ? (sortAsc ? '▲' : '▼') : ''}</button>
                   </th>
                   <th className="w-[120px] px-2 py-1 text-left">操作</th>
                 </tr>

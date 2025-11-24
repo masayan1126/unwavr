@@ -87,7 +87,7 @@ export default function Home() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-fr">
         {/* 未完了 */}
-        <section className="flex flex-col min-h-[320px] md:col-span-2 bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+        <section className="relative flex flex-col min-h-[320px] md:col-span-2 bg-[var(--sidebar)] rounded-xl p-5 pb-10 shadow-sm">
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">未完了 ({incompleteToday.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs">
@@ -103,41 +103,41 @@ export default function Home() {
             </div>
           </div>
           <TaskList title="" tasks={incompleteToday.slice(0, 10)} showType tableMode showCreatedColumn={false} showPlannedColumn showTypeColumn showMilestoneColumn={false} enableSelection />
-          <div className="mt-2 text-right">
+          <div className="absolute bottom-3 right-5">
             <Link href={{ pathname: "/tasks", query: { daily: "1", backlogToday: "1", scheduledToday: "1", onlyIncomplete: "1" } }} className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
           </div>
         </section>
 
         {/* 積み上げ済み (毎日) */}
-        <section className="flex flex-col min-h-[320px] bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+        <section className="relative flex flex-col min-h-[320px] bg-[var(--sidebar)] rounded-xl p-5 pb-10 shadow-sm">
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">積み上げ済み (毎日) ({dailyDoneFiltered.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs" />
           </div>
           <TaskList title="" tasks={dailyDoneFiltered.slice(0, 10)} showType tableMode showCreatedColumn={false} showPlannedColumn={false} showTypeColumn showMilestoneColumn={false} enableSelection />
-          <div className="mt-2 text-right">
+          <div className="absolute bottom-3 right-5">
             <Link href="/tasks/daily" className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
           </div>
         </section>
 
         {/* 完了済み (特定曜日) */}
-        <section className="flex flex-col min-h-[320px] bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+        <section className="relative flex flex-col min-h-[320px] bg-[var(--sidebar)] rounded-xl p-5 pb-10 shadow-sm">
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">完了済み (特定曜日) ({scheduledDoneFiltered.length})</h2>
           </div>
           <TaskList title="" tasks={scheduledDoneFiltered.slice(0, 10)} showType tableMode showCreatedColumn={false} showPlannedColumn={false} showTypeColumn showMilestoneColumn={false} enableSelection />
-          <div className="mt-2 text-right">
+          <div className="absolute bottom-3 right-5">
             <Link href="/tasks/scheduled" className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
           </div>
         </section>
 
         {/* 完了済み (積み上げ候補) */}
-        <section className="flex flex-col min-h-[320px] md:col-span-2 bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+        <section className="relative flex flex-col min-h-[320px] md:col-span-2 bg-[var(--sidebar)] rounded-xl p-5 pb-10 shadow-sm">
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">完了済み (積み上げ候補) ({backlogDoneFiltered.length})</h2>
           </div>
           <TaskList title="" tasks={backlogDoneFiltered.slice(0, 10)} showType tableMode showCreatedColumn={false} showPlannedColumn showTypeColumn showMilestoneColumn={false} enableSelection />
-          <div className="mt-2 text-right">
+          <div className="absolute bottom-3 right-5">
             <Link href="/backlog" className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
           </div>
         </section>

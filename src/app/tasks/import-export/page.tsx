@@ -32,7 +32,7 @@ function parsePlannedDates(input: string): number[] {
     const stamp = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
     out.push(stamp);
   }
-  return out.sort((a,b)=>a-b);
+  return out.sort((a, b) => a - b);
 }
 
 // 簡易CSVパーサ（引用符/改行対応、RFC4180準拠の基本挙動）
@@ -100,14 +100,14 @@ export default function ImportExportPage() {
   const clearAll = useAppStore((s) => s.clearTasksMilestonesLaunchers);
   const hydrate = useAppStore((s) => s.hydrateFromDb);
   const [result, setResult] = useState<ImportResult | null>(null);
-  const dayLabels = ["日","月","火","水","木","金","土"] as const;
+  const dayLabels = ["日", "月", "火", "水", "木", "金", "土"] as const;
   const confirm = useConfirm();
   const toast = useToast();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedFileName, setSelectedFileName] = useState<string>("");
   // エクスポート設定（固定出力: 列選択なし）
 
-  
+
 
   function parseDaysOfWeek(input: string): number[] {
     const parts = input
@@ -259,7 +259,7 @@ export default function ImportExportPage() {
       cells.push(esc(days));
 
       const plannedRaw = t.type === "backlog"
-        ? (t.plannedDates ?? []).slice().sort((a,b)=>a-b).map((ts) => formatDate(ts)).join(";")
+        ? (t.plannedDates ?? []).slice().sort((a, b) => a - b).map((ts) => formatDate(ts)).join(";")
         : "-";
       const planned = wrap(plannedRaw || "-", 20);
       cells.push(esc(planned));
@@ -325,7 +325,7 @@ export default function ImportExportPage() {
         </Link>
       </div>
 
-      <div className="border rounded p-4 border-[var(--border)] flex flex-col gap-3">
+      <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
         <div className="text-sm font-medium">インポート（CSV）</div>
         <div className="text-xs opacity-70">
           ヘッダー行を含むCSVを選択してください。推奨フォーマット（日本語）:
@@ -378,7 +378,7 @@ export default function ImportExportPage() {
         </div>
       </div>
 
-      <div className="border rounded p-4 border-[var(--border)] flex flex-col gap-3">
+      <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
         <div className="text-sm font-medium">エクスポート（CSV）</div>
         <div className="flex flex-wrap items-center gap-3 text-xs" />
         <div className="flex items-center gap-2">
@@ -388,7 +388,7 @@ export default function ImportExportPage() {
         </div>
       </div>
 
-      <div className="border rounded p-4 border-[var(--border)] flex flex-col gap-3">
+      <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
         <div className="text-sm font-medium">サンプル投入（タスク）</div>
         <div className="text-xs opacity-80">役割を選ぶと、毎日/積み上げ候補/特定曜日を含むリアルなサンプルをDBに投入します。</div>
         <div className="flex flex-wrap items-center gap-2">
@@ -439,9 +439,9 @@ export default function ImportExportPage() {
         </div>
       </div>
 
-      
 
-      <div className="border rounded p-4 border-[var(--border)] flex flex-col gap-3">
+
+      <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="text-sm font-medium">インポート履歴</div>
           <button className="text-xs underline opacity-80" onClick={() => { clearHistory(); toast.show('履歴をすべて削除しました', 'success'); }}>履歴をすべて削除</button>
@@ -467,7 +467,7 @@ export default function ImportExportPage() {
         )}
       </div>
 
-      
+
     </div>
   );
 }
