@@ -5,7 +5,7 @@
  */
 export default function HomePageSkeleton() {
   return (
-    <div className="min-h-screen p-6 sm:p-10 max-w-6xl mx-auto flex flex-col gap-6">
+    <div className="min-h-screen p-6 sm:p-10 max-w-[1400px] mx-auto flex flex-col gap-6">
       {/* ヘッダー */}
       <div className="flex items-center justify-between">
         <div className="h-7 w-24 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
