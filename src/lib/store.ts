@@ -199,7 +199,7 @@ export const useAppStore = create<AppState>()(
     importHistory: [],
     bgmCurrentTrackId: undefined,
     bgmMiniPos: undefined,
-    fontSize: 100,
+    fontSize: (typeof window !== 'undefined' ? Number(localStorage.getItem("fontSize") || 100) : 100),
     pomodoro: PomodoroStateSchema.parse({
       ...defaultPomodoro,
       activeTaskId: (typeof window !== 'undefined' ? (localStorage.getItem(ACTIVE_TASK_STORAGE_KEY) || undefined) : undefined),
@@ -266,7 +266,10 @@ export const useAppStore = create<AppState>()(
       }
       return {} as Partial<AppState>;
     })(),
-    setFontSize: (size) => set({ fontSize: size }),
+    setFontSize: (size) => {
+      if (typeof window !== 'undefined') localStorage.setItem("fontSize", String(size));
+      set({ fontSize: size });
+    },
     clearTasks: () => set({ tasks: [] }),
     clearMilestones: () => set({ milestones: [] }),
     clearLaunchers: () => set({ launcherShortcuts: [], launcherCategories: [], launcherOnboarded: false }),

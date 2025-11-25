@@ -840,7 +840,7 @@ export default function TaskList({
         <div className="fixed z-[1000]" style={{ top: ctxPos.y, left: ctxPos.x }}>
           <div
             ref={ctxMenuRef}
-            className="min-w-[180px] bg-popover text-popover-foreground border border-border rounded-lg shadow-xl p-1.5 animate-in fade-in zoom-in-95 duration-100"
+            className="min-w-[12rem] bg-popover text-popover-foreground border border-border rounded-lg shadow-xl p-1.5 animate-in fade-in zoom-in-95 duration-100"
             onMouseDown={(e) => { e.stopPropagation(); }}
             onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
           >

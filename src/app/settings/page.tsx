@@ -32,15 +32,28 @@ export default function SettingsPage() {
           </div>
           <div className="flex items-center gap-3 pt-1">
             <span className="text-xs opacity-60 font-medium">A</span>
-            <input
-              type="range"
-              min="80"
-              max="120"
-              step="5"
-              value={useAppStore((s) => s.fontSize)}
-              onChange={(e) => useAppStore.getState().setFontSize(Number(e.target.value))}
-              className="flex-1 h-1.5 bg-black/10 dark:bg-white/10 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-sm hover:[&::-webkit-slider-thumb]:scale-110 transition-all"
-            />
+            <div className="flex-1 relative h-6 flex items-center">
+              <input
+                type="range"
+                min="80"
+                max="120"
+                step="5"
+                list="fontsize-markers"
+                value={useAppStore((s) => s.fontSize)}
+                onChange={(e) => useAppStore.getState().setFontSize(Number(e.target.value))}
+                className="w-full h-1.5 bg-black/10 dark:bg-white/10 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-sm hover:[&::-webkit-slider-thumb]:scale-110 transition-all relative z-10"
+              />
+              <datalist id="fontsize-markers" className="absolute w-full flex justify-between px-[6px] pointer-events-none top-1/2 -translate-y-1/2">
+                {[80, 85, 90, 95, 100, 105, 110, 115, 120].map((val) => (
+                  <option key={val} value={val} className="w-1 h-1 rounded-full bg-black/20 dark:bg-white/20" label={val === 100 ? "|" : ""} />
+                ))}
+              </datalist>
+              <div className="absolute w-full flex justify-between px-[6px] pointer-events-none h-1 top-1/2 -translate-y-1/2">
+                {[...Array(9)].map((_, i) => (
+                  <div key={i} className={`w-1 h-1 rounded-full ${i === 4 ? "bg-primary/50 w-1.5 h-1.5 -ml-[1px]" : "bg-black/10 dark:bg-white/10"}`} />
+                ))}
+              </div>
+            </div>
             <span className="text-lg opacity-80 font-medium">A</span>
           </div>
           <p className="text-xs opacity-60 mt-1">

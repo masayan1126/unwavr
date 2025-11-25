@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useAppStore } from "@/lib/store";
 import { useToast, useConfirm } from "@/components/Providers";
 import { useState } from "react";
-import PrimaryButton from "@/components/PrimaryButton";
+import { Download, Upload, Database } from "lucide-react";
 
 export default function MilestonesImportExportPage() {
   const exportMilestones = useAppStore((s) => s.exportMilestones);
@@ -26,14 +26,17 @@ export default function MilestonesImportExportPage() {
 
       <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex items-center justify-between">
         <div className="text-sm font-medium">エクスポート（CSV）</div>
-        <PrimaryButton
-          label="エクスポート"
+        <button
           onClick={() => {
             exportMilestones();
             setExportHistory((arr) => [{ id: `exp_${Date.now()}`, timestamp: Date.now(), count: milestones.length }, ...arr]);
             toast.show('CSVをエクスポートしました', 'success');
           }}
-        />
+          className="group flex items-center gap-1.5 px-3 py-1.5 bg-[#2383E2] dark:bg-[#2383E2] text-white text-sm font-medium rounded-[3px] shadow-sm hover:bg-[#2383E2]/90 transition-all"
+        >
+          <Download size={16} strokeWidth={2.5} />
+          <span>エクスポート</span>
+        </button>
       </div>
 
       <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
@@ -42,7 +45,7 @@ export default function MilestonesImportExportPage() {
         <textarea className="border rounded p-2 h-40 bg-transparent text-sm" placeholder="CSV または JSON を貼り付け" value={text} onChange={(e) => setText(e.target.value)} />
         <div className="flex items-center gap-2">
           <button
-            className="px-3 py-1 rounded-[3px] border text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            className="group flex items-center gap-1.5 px-3 py-1.5 bg-[#2383E2] dark:bg-[#2383E2] text-white text-sm font-medium rounded-[3px] shadow-sm hover:bg-[#2383E2]/90 transition-all"
             onClick={() => {
               const res = importMilestones(text);
               setResult(res);
@@ -56,8 +59,11 @@ export default function MilestonesImportExportPage() {
                 toast.show(res.errors?.[0] ?? 'インポート失敗', 'error');
               }
             }}
-          >インポート</button>
-          <button className="px-3 py-1 rounded-[3px] border text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-colors" onClick={() => setText("")}>クリア</button>
+          >
+            <Upload size={16} strokeWidth={2.5} />
+            <span>インポート</span>
+          </button>
+          <button className="px-3 py-1.5 rounded-[3px] border text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-colors" onClick={() => setText("")}>クリア</button>
         </div>
         {result && (
           <div className="text-sm">
@@ -73,23 +79,29 @@ export default function MilestonesImportExportPage() {
 
       <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex items-center justify-between">
         <div className="text-sm font-medium">サンプル投入（マイルストーン）</div>
-        <button className="px-3 py-1 rounded-[3px] border text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-colors" onClick={async () => {
-          const ok = await confirm('サンプルのマイルストーンをDBに投入します。続行しますか？', { confirmText: '投入' });
-          if (!ok) return;
-          try {
-            const samples = [
-              { title: 'React学習100時間', targetUnits: 100, currentUnits: 30 },
-              { title: '読書20冊', targetUnits: 20, currentUnits: 5 },
-            ];
-            for (const m of samples) {
-              await fetch('/api/db/milestones', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(m) });
+        <button
+          className="group flex items-center gap-1.5 px-3 py-1.5 bg-[#2383E2] dark:bg-[#2383E2] text-white text-sm font-medium rounded-[3px] shadow-sm hover:bg-[#2383E2]/90 transition-all"
+          onClick={async () => {
+            const ok = await confirm('サンプルのマイルストーンをDBに投入します。続行しますか？', { confirmText: '投入' });
+            if (!ok) return;
+            try {
+              const samples = [
+                { title: 'React学習100時間', targetUnits: 100, currentUnits: 30 },
+                { title: '読書20冊', targetUnits: 20, currentUnits: 5 },
+              ];
+              for (const m of samples) {
+                await fetch('/api/db/milestones', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(m) });
+              }
+              await hydrateFromDb();
+              toast.show('サンプルを投入しました', 'success');
+            } catch {
+              toast.show('投入に失敗しました', 'error');
             }
-            await hydrateFromDb();
-            toast.show('サンプルを投入しました', 'success');
-          } catch {
-            toast.show('投入に失敗しました', 'error');
-          }
-        }}>デモデータ投入</button>
+          }}
+        >
+          <Database size={16} strokeWidth={2.5} />
+          <span>デモデータ投入</span>
+        </button>
       </div>
 
       <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
