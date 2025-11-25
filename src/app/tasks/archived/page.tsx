@@ -4,6 +4,8 @@ import { useConfirm } from "@/components/Providers";
 import { useAppStore } from "@/lib/store";
 import { Task } from "@/lib/types";
 import SimpleTaskListPageSkeleton from "@/components/SimpleTaskListPageSkeleton";
+import StylishSelect from "@/components/StylishSelect";
+import FilterBar from "@/components/FilterBar";
 
 export default function ArchivedTasksPage(): React.ReactElement {
   const [items, setItems] = useState<Task[]>([]);
@@ -80,24 +82,25 @@ export default function ArchivedTasksPage(): React.ReactElement {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">アーカイブ済みタスク</h1>
           <div className="flex items-center gap-3">
-            <label className="text-sm flex items-center gap-2">
-              <span className="opacity-70">1ページあたり</span>
-              <select
-                className="border rounded px-2 py-1 bg-transparent"
+            <FilterBar>
+              <StylishSelect
+                label="1ページあたり"
                 value={pageSize}
-                onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+                onChange={(v) => {
+                  setPageSize(Number(v));
+                  setPage(1);
+                }}
+                options={[10, 20, 50, 100].map((n) => ({ value: n, label: String(n) }))}
+              />
+              <button
+                className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 transition-colors"
+                onClick={bulkDelete}
+                disabled={selectedIds.length === 0}
+                title="選択したタスクを削除"
               >
-                {[10, 20, 50, 100].map((n) => (
-                  <option key={n} value={n}>{n}</option>
-                ))}
-              </select>
-            </label>
-            <button
-              className="px-3 py-2 rounded border text-sm disabled:opacity-50"
-              onClick={bulkDelete}
-              disabled={selectedIds.length === 0}
-              title="選択したタスクを削除"
-            >選択削除</button>
+                選択削除
+              </button>
+            </FilterBar>
           </div>
         </div>
       </header>

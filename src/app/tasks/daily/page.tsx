@@ -10,6 +10,8 @@ import SimpleTaskListPageSkeleton from "@/components/SimpleTaskListPageSkeleton"
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import TaskCreateDialog from "@/components/TaskCreateDialog";
+import StylishSelect from "@/components/StylishSelect";
+import FilterBar from "@/components/FilterBar";
 
 export default function DailyTasksPage() {
   const tasks = useAppStore((s) => s.tasks);
@@ -48,36 +50,63 @@ export default function DailyTasksPage() {
           <div className="mb-4 px-1">
             <div className="flex items-center justify-between">
               <div className="text-xs opacity-70">{page} / {totalPages}（全 {total} 件）</div>
-              <div className="flex items-center gap-2 text-sm">
-                <label className="flex items-center gap-2">
-                  <span className="opacity-70">ソート</span>
-                  <select className="border rounded px-2 py-1 bg-transparent" value={sortKey} onChange={(e) => setSortKey(e.target.value as "title" | "createdAt" | "type" | "milestone")}>
-                    <option value="createdAt">日付</option>
-                    <option value="title">タイトル</option>
-                    <option value="type">種別</option>
-                    <option value="milestone">マイルストーン</option>
-                  </select>
-                  <button className="px-2 py-1 rounded border" onClick={() => setSortAsc(v => !v)}>{sortAsc ? '昇順' : '降順'}</button>
-                </label>
-                <label className="flex items-center gap-2">
-                  <span className="opacity-70">ステータス</span>
-                  <select className="border rounded px-2 py-1 bg-transparent" value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value as "all" | "completed" | "incomplete"); setPage(1); }}>
-                    <option value="all">すべて</option>
-                    <option value="incomplete">未完了</option>
-                    <option value="completed">完了</option>
-                  </select>
-                </label>
-                <label className="flex items-center gap-2">
-                  <span className="opacity-70">1ページあたり</span>
-                  <select className="border rounded px-2 py-1 bg-transparent" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}>
-                    {[10, 20, 50, 100].map(n => (<option key={n} value={n}>{n}</option>))}
-                  </select>
-                </label>
-                <div className="flex items-center gap-2">
-                  <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>前へ</button>
-                  <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>次へ</button>
+              <FilterBar>
+                <StylishSelect
+                  label="ソート"
+                  value={sortKey}
+                  onChange={(v) => setSortKey(v as any)}
+                  options={[
+                    { value: "createdAt", label: "日付" },
+                    { value: "title", label: "タイトル" },
+                    { value: "type", label: "種別" },
+                    { value: "milestone", label: "マイルストーン" },
+                  ]}
+                />
+                <button
+                  className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                  onClick={() => setSortAsc((v) => !v)}
+                >
+                  {sortAsc ? "昇順" : "降順"}
+                </button>
+                <StylishSelect
+                  label="ステータス"
+                  value={filterStatus}
+                  onChange={(v) => {
+                    setFilterStatus(v as any);
+                    setPage(1);
+                  }}
+                  options={[
+                    { value: "all", label: "すべて" },
+                    { value: "incomplete", label: "未完了" },
+                    { value: "completed", label: "完了" },
+                  ]}
+                />
+                <StylishSelect
+                  label="1ページあたり"
+                  value={pageSize}
+                  onChange={(v) => {
+                    setPageSize(Number(v));
+                    setPage(1);
+                  }}
+                  options={[10, 20, 50, 100].map((n) => ({ value: n, label: String(n) }))}
+                />
+                <div className="flex items-center gap-2 ml-auto">
+                  <button
+                    className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 transition-colors"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  >
+                    前へ
+                  </button>
+                  <button
+                    className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 transition-colors"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  >
+                    次へ
+                  </button>
                 </div>
-              </div>
+              </FilterBar>
             </div>
           </div>
           <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">

@@ -11,6 +11,9 @@ import BacklogPageSkeleton from "@/components/BacklogPageSkeleton";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import TaskCreateDialog from "@/components/TaskCreateDialog";
+import StylishSelect from "@/components/StylishSelect";
+import FilterBar from "@/components/FilterBar";
+import FilterChip from "@/components/FilterChip";
 
 export default function BacklogPage() {
   const tasks = useAppStore((s) => s.tasks);
@@ -168,13 +171,17 @@ export default function BacklogPage() {
 
       {/* 適用中のフィルター表示 */}
       <div className="flex flex-wrap items-center gap-2 px-1 py-2 mb-2">
-        <span className="text-[11px] opacity-70 mr-1">適用中</span>
-        {showIncomplete && (
-          <span className="px-2 py-0.5 rounded-full border">未完了</span>
-        )}
-        {showCompleted && (
-          <span className="px-2 py-0.5 rounded-full border">実行済み</span>
-        )}
+        <span className="text-[11px] opacity-70 mr-1">表示切替</span>
+        <FilterChip
+          label="未完了"
+          active={showIncomplete}
+          onClick={() => setShowIncomplete((v) => !v)}
+        />
+        <FilterChip
+          label="実行済み"
+          active={showCompleted}
+          onClick={() => setShowCompleted((v) => !v)}
+        />
       </div>
 
       {/* 未完了の積み上げ候補 */}
@@ -182,29 +189,51 @@ export default function BacklogPage() {
         <>
           <div className="flex items-center justify-between mb-2">
             <div className="text-xs opacity-70">{pageInc} / {totalPagesInc}（全 {totalInc} 件）</div>
-            <div className="flex items-center gap-2 text-sm">
-              <label className="flex items-center gap-2">
-                <span className="opacity-70">ソート</span>
-                <select className="border rounded px-2 py-1 bg-transparent" value={sortKeyInc} onChange={(e) => setSortKeyInc(e.target.value as "title" | "createdAt" | "planned" | "type" | "milestone")}>
-                  <option value="createdAt">日付</option>
-                  <option value="title">タイトル</option>
-                  <option value="planned">実行日</option>
-                  <option value="type">種別</option>
-                  <option value="milestone">マイルストーン</option>
-                </select>
-                <button className="px-2 py-1 rounded border" onClick={() => setSortAscInc(v => !v)}>{sortAscInc ? '昇順' : '降順'}</button>
-              </label>
-              <label className="flex items-center gap-2">
-                <span className="opacity-70">1ページあたり</span>
-                <select className="border rounded px-2 py-1 bg-transparent" value={pageSizeInc} onChange={(e) => { setPageSizeInc(Number(e.target.value)); setPageInc(1); }}>
-                  {[10, 20, 50, 100].map(n => (<option key={n} value={n}>{n}</option>))}
-                </select>
-              </label>
-              <div className="flex items-center gap-2">
-                <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={pageInc <= 1} onClick={() => setPageInc(p => Math.max(1, p - 1))}>前へ</button>
-                <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={pageInc >= totalPagesInc} onClick={() => setPageInc(p => Math.min(totalPagesInc, p + 1))}>次へ</button>
+            <FilterBar>
+              <StylishSelect
+                label="ソート"
+                value={sortKeyInc}
+                onChange={(v) => setSortKeyInc(v as any)}
+                options={[
+                  { value: "createdAt", label: "日付" },
+                  { value: "title", label: "タイトル" },
+                  { value: "planned", label: "実行日" },
+                  { value: "type", label: "種別" },
+                  { value: "milestone", label: "マイルストーン" },
+                ]}
+              />
+              <button
+                className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                onClick={() => setSortAscInc((v) => !v)}
+              >
+                {sortAscInc ? "昇順" : "降順"}
+              </button>
+              <StylishSelect
+                label="1ページあたり"
+                value={pageSizeInc}
+                onChange={(v) => {
+                  setPageSizeInc(Number(v));
+                  setPageInc(1);
+                }}
+                options={[10, 20, 50, 100].map((n) => ({ value: n, label: String(n) }))}
+              />
+              <div className="flex items-center gap-2 ml-auto">
+                <button
+                  className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 transition-colors"
+                  disabled={pageInc <= 1}
+                  onClick={() => setPageInc((p) => Math.max(1, p - 1))}
+                >
+                  前へ
+                </button>
+                <button
+                  className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 transition-colors"
+                  disabled={pageInc >= totalPagesInc}
+                  onClick={() => setPageInc((p) => Math.min(totalPagesInc, p + 1))}
+                >
+                  次へ
+                </button>
               </div>
-            </div>
+            </FilterBar>
           </div>
           <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
             <TaskList

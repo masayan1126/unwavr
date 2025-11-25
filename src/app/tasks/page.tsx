@@ -121,7 +121,7 @@ function TasksPageInner() {
 
   return (
     <div className="p-6 sm:p-10 max-w-6xl mx-auto flex flex-col gap-6">
-      <header className="bg-[var(--sidebar)] rounded-xl shadow-sm p-5 md:p-6">
+      <header className="mb-6">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold">今日のタスク</h1>
           <div className="flex items-center gap-4">
