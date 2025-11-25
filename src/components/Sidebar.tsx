@@ -46,7 +46,7 @@ export default function Sidebar() {
     localStorage.setItem("sidebar:tasks:o", tasksOpen ? "1" : "0");
   }, [width, open, tasksOpen]);
   if (pathname.startsWith("/unwavr")) return null;
-  if (status !== "authenticated") return null;
+  if (status === "unauthenticated") return null;
   return (
     <aside className="hidden md:flex border-r border-border h-[100svh] sticky top-0 bg-sidebar text-muted-foreground" style={{ width: open ? width : 48 }}>
       <div className="flex flex-col p-3 gap-6 flex-1 overflow-y-auto">
