@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import TaskList from "@/components/TaskList";
-import PrimaryButton from "@/components/PrimaryButton";
+import AddTaskButton from "@/components/AddTaskButton";
 import TaskDialog from "@/components/TaskCreateDialog";
 import TaskForm from "@/components/TaskForm";
 import { useAppStore } from "@/lib/store";
@@ -110,14 +110,12 @@ export default function BacklogPage() {
 
   return (
     <div className="p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-4">
-      <header className="bg-[var(--sidebar)] rounded-xl shadow-sm p-5 md:p-6">
+      <header className="mb-2">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold">積み上げ候補</h1>
           <div className="flex items-center gap-4">
-            <PrimaryButton
+            <AddTaskButton
               onClick={() => setOpenCreate(true)}
-              label="タスク追加"
-              iconLeft={<Plus size={16} />}
             />
             <div className="relative">
               <button
@@ -169,7 +167,7 @@ export default function BacklogPage() {
       </header>
 
       {/* 適用中のフィルター表示 */}
-      <div className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-xl bg-[var(--sidebar)] shadow-sm">
+      <div className="flex flex-wrap items-center gap-2 px-1 py-2 mb-2">
         <span className="text-[11px] opacity-70 mr-1">適用中</span>
         {showIncomplete && (
           <span className="px-2 py-0.5 rounded-full border">未完了</span>

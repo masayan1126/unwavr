@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import TaskList from "@/components/TaskList";
 import TaskDialog from "@/components/TaskCreateDialog";
-import PrimaryButton from "@/components/PrimaryButton";
+import AddTaskButton from "@/components/AddTaskButton";
 import TaskForm from "@/components/TaskForm";
 import { useAppStore } from "@/lib/store";
 import { TaskType } from "@/lib/types";
@@ -125,10 +125,8 @@ function TasksPageInner() {
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold">今日のタスク</h1>
           <div className="flex items-center gap-4">
-            <PrimaryButton
+            <AddTaskButton
               onClick={() => setOpenCreate(true)}
-              label="タスク追加"
-              iconLeft={<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus"><path d="M5 12h14" /><path d="M12 5v14" /></svg>}
             />
             <Link className="text-sm underline opacity-80" href="/">
               ホーム
@@ -145,8 +143,8 @@ function TasksPageInner() {
               key={type}
               onClick={() => setSelectedType(type)}
               className={`px-3 py-1 rounded border text-sm ${selectedType === type
-                  ? "bg-[var(--primary)] text-white border-[var(--primary)]"
-                  : "border-black/10 dark:border-white/10"
+                ? "bg-[var(--primary)] text-white border-[var(--primary)]"
+                : "border-black/10 dark:border-white/10"
                 }`}
             >
               {typeLabels[type]} ({taskCounts[type]})

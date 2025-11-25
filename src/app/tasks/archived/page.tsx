@@ -76,7 +76,7 @@ export default function ArchivedTasksPage(): React.ReactElement {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <header className="bg-[var(--sidebar)] rounded-xl shadow-sm p-5 md:p-6 mb-6">
+      <header className="mb-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">アーカイブ済みタスク</h1>
           <div className="flex items-center gap-3">
@@ -104,7 +104,7 @@ export default function ArchivedTasksPage(): React.ReactElement {
       {items.length === 0 ? (
         <p className="text-sm text-black/60 dark:text-white/60">アーカイブ済みのタスクはありません。</p>
       ) : (
-        <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm space-y-3">
+        <div className="space-y-3">
           <div className="flex items-center gap-2">
             <label className="text-sm flex items-center gap-2"><input type="checkbox" checked={allChecked} onChange={(e) => toggleAll(e.target.checked)} /> 全選択</label>
             <span className="text-xs opacity-70">{selectedIds.length} 件選択中</span>

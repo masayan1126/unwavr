@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import PrimaryButton from "@/components/PrimaryButton";
+import AddTaskButton from "@/components/AddTaskButton";
 import TaskList from "@/components/TaskList";
 import TaskDialog from "@/components/TaskCreateDialog";
 import TaskForm from "@/components/TaskForm";
@@ -35,19 +35,17 @@ export default function ScheduledTasksPage() {
 
   return (
     <div className="p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-4">
-      <header className="bg-[var(--sidebar)] rounded-xl shadow-sm p-5 md:p-6">
+      <header className="mb-2">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold">特定曜日</h1>
-          <PrimaryButton
+          <AddTaskButton
             onClick={() => setOpenCreate(true)}
-            label="タスク追加"
-            iconLeft={<Plus size={16} />}
           />
         </div>
       </header>
       {(
         <>
-          <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm mb-4">
+          <div className="mb-4 px-1">
             <div className="flex items-center justify-between">
               <div className="text-xs opacity-70">{page} / {totalPages}（全 {total} 件）</div>
               <div className="flex items-center gap-2 text-sm">
