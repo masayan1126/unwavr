@@ -16,7 +16,7 @@ const AddTaskButton = forwardRef<HTMLButtonElement, AddTaskButtonProps>(
                 ref={ref}
                 onClick={onClick}
                 className={clsx(
-                    "group flex items-center gap-2 px-5 py-2.5 rounded-md",
+                    "group flex items-center gap-2 px-3 py-1.5 rounded-[3px]",
                     "bg-[var(--primary)] text-white shadow-md transition-all duration-200",
                     "hover:bg-[var(--primary)]/90 hover:shadow-lg hover:scale-[1.02] active:scale-95",
                     className

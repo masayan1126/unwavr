@@ -124,11 +124,11 @@ export default function BacklogPage() {
               <button
                 type="button"
                 onClick={() => setFilterOpen((v) => !v)}
-                className="px-3 py-1.5 rounded border flex items-center gap-2"
+                className="px-3 py-1.5 rounded-lg border text-sm flex items-center gap-2 bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                 aria-haspopup="dialog"
                 aria-expanded={filterOpen}
               >
-                <FilterIcon size={16} /> フィルター
+                <FilterIcon size={14} className="opacity-70" /> フィルター
               </button>
               {filterOpen && (
                 <>
@@ -256,29 +256,51 @@ export default function BacklogPage() {
         <>
           <div className="flex items-center justify-between mb-2 mt-4">
             <div className="text-xs opacity-70">{pageCom} / {totalPagesCom}（全 {totalCom} 件）</div>
-            <div className="flex items-center gap-2 text-sm">
-              <label className="flex items-center gap-2">
-                <span className="opacity-70">ソート</span>
-                <select className="border rounded px-2 py-1 bg-transparent" value={sortKeyCom} onChange={(e) => setSortKeyCom(e.target.value as "title" | "createdAt" | "planned" | "type" | "milestone")}>
-                  <option value="createdAt">日付</option>
-                  <option value="title">タイトル</option>
-                  <option value="planned">実行日</option>
-                  <option value="type">種別</option>
-                  <option value="milestone">マイルストーン</option>
-                </select>
-                <button className="px-2 py-1 rounded border" onClick={() => setSortAscCom(v => !v)}>{sortAscCom ? '昇順' : '降順'}</button>
-              </label>
-              <label className="flex items-center gap-2">
-                <span className="opacity-70">1ページあたり</span>
-                <select className="border rounded px-2 py-1 bg-transparent" value={pageSizeCom} onChange={(e) => { setPageSizeCom(Number(e.target.value)); setPageCom(1); }}>
-                  {[10, 20, 50, 100].map(n => (<option key={n} value={n}>{n}</option>))}
-                </select>
-              </label>
-              <div className="flex items-center gap-2">
-                <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={pageCom <= 1} onClick={() => setPageCom(p => Math.max(1, p - 1))}>前へ</button>
-                <button className="px-2 py-1 rounded border text-sm disabled:opacity-50" disabled={pageCom >= totalPagesCom} onClick={() => setPageCom(p => Math.min(totalPagesCom, p + 1))}>次へ</button>
+            <FilterBar>
+              <StylishSelect
+                label="ソート"
+                value={sortKeyCom}
+                onChange={(v) => setSortKeyCom(v as any)}
+                options={[
+                  { value: "createdAt", label: "日付" },
+                  { value: "title", label: "タイトル" },
+                  { value: "planned", label: "実行日" },
+                  { value: "type", label: "種別" },
+                  { value: "milestone", label: "マイルストーン" },
+                ]}
+              />
+              <button
+                className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                onClick={() => setSortAscCom((v) => !v)}
+              >
+                {sortAscCom ? "昇順" : "降順"}
+              </button>
+              <StylishSelect
+                label="1ページあたり"
+                value={pageSizeCom}
+                onChange={(v) => {
+                  setPageSizeCom(Number(v));
+                  setPageCom(1);
+                }}
+                options={[10, 20, 50, 100].map((n) => ({ value: n, label: String(n) }))}
+              />
+              <div className="flex items-center gap-2 ml-auto">
+                <button
+                  className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 transition-colors"
+                  disabled={pageCom <= 1}
+                  onClick={() => setPageCom((p) => Math.max(1, p - 1))}
+                >
+                  前へ
+                </button>
+                <button
+                  className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 transition-colors"
+                  disabled={pageCom >= totalPagesCom}
+                  onClick={() => setPageCom((p) => Math.min(totalPagesCom, p + 1))}
+                >
+                  次へ
+                </button>
               </div>
-            </div>
+            </FilterBar>
           </div>
           <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
             <TaskList
