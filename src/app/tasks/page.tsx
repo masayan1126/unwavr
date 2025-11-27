@@ -42,7 +42,7 @@ function TasksPageInner() {
     <div className="p-6 sm:p-10 max-w-6xl mx-auto flex flex-col gap-6">
       <header className="mb-6">
         <div className="flex items-center justify-between">
-          <H1>今日のタスク</H1>
+          <H1>すべてのタスク</H1>
           <div className="flex items-center gap-4">
             <AddTaskButton
               onClick={() => setOpenCreate(true)}
