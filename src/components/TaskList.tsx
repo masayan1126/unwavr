@@ -13,8 +13,10 @@ import TaskForm, { type TaskFormHandle } from "@/components/TaskForm";
 
 // 文字列を20字で省略するユーティリティ関数
 function truncateText(text: string, maxLength: number = 20): string {
-  if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength) + "...";
+  // Strip HTML tags
+  const stripped = text.replace(/<[^>]*>?/gm, '');
+  if (stripped.length <= maxLength) return stripped;
+  return stripped.slice(0, maxLength) + "...";
 }
 
 function TypeBadge({ type, label }: { type: "daily" | "scheduled" | "backlog"; label?: string }) {
@@ -818,7 +820,7 @@ export default function TaskList({
           ) : (
             tasks.map((t) => (
               <div key={t.id} className="flex items-center gap-2 py-1" onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setCtxTask(t); setCtxPos({ x: e.clientX, y: e.clientY }); }}>
-                <TaskRow task={t} onEdit={openEdit} onContext={(e) => { e.preventDefault(); e.stopPropagation(); setCtxTask(t); setCtxPos({ x: e.clientX, y: e.clientY }); }} />
+                <TaskRow task={t} onEdit={openEdit} onContext={(e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); setCtxTask(t); setCtxPos({ x: e.clientX, y: e.clientY }); }} />
                 {showType && (t.type === "daily" || t.type === "scheduled") && (
                   <span className="text-[10px] opacity-70 border rounded px-1 py-0.5 whitespace-nowrap">
                     {t.type === "daily" ? "毎日" : "特定曜日"}
