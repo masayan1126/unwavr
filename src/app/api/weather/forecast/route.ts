@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   try {
     const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=ja`;
 
-    console.log('Weather forecast API proxy request:', { url });
+
 
     const response = await fetch(url, {
       method: 'GET',
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     }
 
     const data = await response.json();
-    console.log('Weather forecast API response received');
+
 
     return NextResponse.json({
       data,

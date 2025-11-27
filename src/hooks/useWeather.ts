@@ -38,14 +38,14 @@ export function useWeather() {
 
   const fetchWeatherData = async (lat: number, lon: number, isDefault = false) => {
     try {
-      console.log('Fetching weather data for:', { lat, lon, isDefault });
-      
+
+
       // APIプロキシエンドポイントを使用
       const url = `/api/weather?lat=${lat}&lon=${lon}`;
-      
-      console.log('Request URL:', url);
-      
-      const res = await fetch(url, { 
+
+
+
+      const res = await fetch(url, {
         method: 'GET',
         cache: "no-store",
         headers: {
@@ -53,20 +53,19 @@ export function useWeather() {
           'Content-Type': 'application/json'
         }
       });
-      
-      console.log('Response status:', res.status);
-      
+
+
+
       if (!res.ok) {
         const errorData = await res.json();
         console.error('API Error Response:', errorData);
         throw new Error(`HTTP error! status: ${res.status}, message: ${errorData.error || 'Unknown error'}`);
       }
-      
+
       const responseData = await res.json();
       const data = responseData.data;
-      console.log('API Response data:', data);
-      console.log('API Source:', responseData.source);
-      
+
+
       if (responseData.source === 'openweathermap') {
         // OpenWeatherMap API レスポンス
         setState({
@@ -97,9 +96,9 @@ export function useWeather() {
         message: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined
       });
-      
+
       let errorMessage = "天気の取得に失敗しました";
-      
+
       if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
         errorMessage = "ネットワーク接続エラーです。インターネット接続を確認してください。";
       } else if (error instanceof Error) {
@@ -111,30 +110,30 @@ export function useWeather() {
           errorMessage = "サーバーエラーです。しばらく待ってから再試行してください。";
         }
       }
-      
+
       setState({ loading: false, error: errorMessage, isDefaultLocation: isDefault });
     }
   };
 
   useEffect(() => {
     let canceled = false;
-    
+
     // 位置情報の許可状態を確認
     if (navigator.permissions) {
       navigator.permissions.query({ name: 'geolocation' }).then((permissionStatus) => {
-        console.log('Geolocation permission status:', permissionStatus.state);
+
         permissionStatus.onchange = () => {
-          console.log('Geolocation permission changed to:', permissionStatus.state);
+
         };
       });
     }
-    
+
     if (!navigator.geolocation) {
-      console.log('Geolocation not supported, using default location');
+
       fetchWeatherData(DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lon, true);
       return;
     }
-    
+
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         if (canceled) return;
@@ -155,12 +154,12 @@ export function useWeather() {
           cookieEnabled: navigator.cookieEnabled,
           onLine: navigator.onLine
         };
-        
+
         console.error('Geolocation error details:', errorDetails);
-        
+
         let errorMessage = "位置情報の許可が必要です";
         const errorCode = geolocationError.code;
-        
+
         switch (errorCode) {
           case geolocationError.PERMISSION_DENIED:
             errorMessage = "位置情報の許可が拒否されました。ブラウザの設定で位置情報を許可してください。";
@@ -175,22 +174,22 @@ export function useWeather() {
             errorMessage = `位置情報エラーが発生しました (コード: ${errorCode})。ブラウザの設定を確認してください。`;
             break;
         }
-        
-        console.log('Geolocation error occurred:', { errorMessage, errorCode });
-        
+
+
+
         // 位置情報エラーの場合、デフォルト位置で天気を取得
         if (!canceled) {
-          console.log('Falling back to default location due to geolocation error');
+
           fetchWeatherData(DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lon, true);
         }
       },
-      { 
+      {
         enableHighAccuracy: false, // より確実に位置情報を取得するためfalseに変更
         timeout: 10000, // タイムアウトを短縮
         maximumAge: 600000 // 10分間キャッシュ
       }
     );
-    
+
     return () => {
       canceled = true;
     };

@@ -26,7 +26,7 @@ function TypeBadge({ type, label }: { type: "daily" | "scheduled" | "backlog"; l
   const info = map[type];
   const Icon = info.Icon;
   return (
-    <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium rounded px-1.5 py-0.5 whitespace-nowrap ${info.classes}`}>
+    <span className={`inline-flex items-center gap-1.5 text-xxs font-medium rounded px-1.5 py-0.5 whitespace-nowrap ${info.classes}`}>
       <Icon size={12} className="shrink-0 opacity-70" />
       {label ?? info.label}
     </span>
@@ -111,7 +111,7 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
         {activeTaskId === task.id && (
-          <span className="inline-flex items-center gap-1.5 text-[10px] font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/30">
+          <span className="inline-flex items-center gap-1.5 text-xxs font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/30">
             着手中
           </span>
         )}
@@ -135,7 +135,7 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
           </div>
         )}
         {milestone && (
-          <div className="text-[10px] opacity-70 border rounded px-1 py-0.5" title={milestone.title}>
+          <div className="text-xxs opacity-70 border rounded px-1 py-0.5" title={milestone.title}>
             {truncateText(milestone.title, 20)}
           </div>
         )}
@@ -505,6 +505,16 @@ export default function TaskList({
       return;
     }
     const stamp = Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate());
+
+    // 変更がない場合は更新しない
+    const currentTask = storeTasks.find((t) => t.id === taskId);
+    const currentPlanned = (currentTask?.plannedDates ?? [])[0];
+    if (currentPlanned === stamp) {
+      setEditingPlannedTaskId(null);
+      setTempPlannedDate("");
+      return;
+    }
+
     updateTask(taskId, { plannedDates: [stamp] });
     toast.show('実行日を更新しました', 'success');
     setEditingPlannedTaskId(null);
@@ -520,7 +530,7 @@ export default function TaskList({
     <div className="overflow-x-auto">
       <table className="table-fixed w-full border-separate border-spacing-0">
         <thead>
-          <tr className="text-[12px] font-medium text-muted-foreground border-b border-border/50">
+          <tr className="text-xs font-medium text-muted-foreground border-b border-border/50">
             {enableSelection && (
               <th className="w-[36px] text-left px-2 py-2 font-normal">
                 <button
@@ -628,7 +638,7 @@ export default function TaskList({
                         <span className="text-sm font-medium flex items-center gap-2">
                           {truncateText(t.title, 20)}
                           {isActive && (
-                            <span className="inline-flex items-center gap-1.5 text-[10px] font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/30">着手中</span>
+                            <span className="inline-flex items-center gap-1.5 text-xxs font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/30">着手中</span>
                           )}
                         </span>
                       </button>
@@ -646,7 +656,7 @@ export default function TaskList({
                         editingPlannedTaskId === t.id ? (
                           <input
                             type="date"
-                            className="w-full border rounded px-1 py-0.5 text-[10px] bg-transparent"
+                            className="w-full border rounded px-1 py-0.5 text-xxs bg-transparent"
                             value={tempPlannedDate}
                             onChange={(e) => setTempPlannedDate(e.target.value)}
                             onBlur={() => savePlannedDate(t.id)}
@@ -660,7 +670,7 @@ export default function TaskList({
                             autoFocus
                           />
                         ) : (
-                          <div className="flex items-center gap-1 flex-wrap text-[10px] opacity-80">
+                          <div className="flex items-center gap-1 flex-wrap text-xxs opacity-80">
                             <button
                               type="button"
                               className="border rounded px-1 py-0.5 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
@@ -770,7 +780,7 @@ export default function TaskList({
                   <>
                     <div className="h-px bg-border/50 my-1" />
                     <div className="px-2 py-1">
-                      <div className="text-[10px] font-medium text-muted-foreground mb-1.5">日付変更</div>
+                      <div className="text-xxs font-medium text-muted-foreground mb-1.5">日付変更</div>
                       <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-sm text-xs hover:bg-accent hover:text-accent-foreground transition-colors mb-1" onClick={bulkPostponeToTomorrow}>
                         <ArrowRight size={14} className="opacity-70" />
                         <span>明日に繰り越し</span>
@@ -780,12 +790,12 @@ export default function TaskList({
                           <Calendar size={12} className="absolute left-2 top-1/2 -translate-y-1/2 opacity-50" />
                           <input
                             type="date"
-                            className="w-full border-none bg-accent/50 rounded px-2 pl-6 py-1 text-[10px] focus:ring-1 focus:ring-primary"
+                            className="w-full border-none bg-accent/50 rounded px-2 pl-6 py-1 text-xxs focus:ring-1 focus:ring-primary"
                             value={bulkDateInput}
                             onChange={(e) => setBulkDateInput(e.target.value)}
                           />
                         </div>
-                        <button className="px-2 py-1 rounded-sm bg-primary text-primary-foreground text-[10px] hover:opacity-90" onClick={bulkUpdateDueDate} disabled={!bulkDateInput}>
+                        <button className="px-2 py-1 rounded-sm bg-primary text-primary-foreground text-xxs hover:opacity-90" onClick={bulkUpdateDueDate} disabled={!bulkDateInput}>
                           設定
                         </button>
                       </div>

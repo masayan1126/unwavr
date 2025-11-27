@@ -57,7 +57,7 @@ export default function Sidebar() {
             </div>
             <div className="flex flex-col min-w-0">
               <div className="text-sm font-bold tracking-tight text-foreground truncate" title="unwavr">{open ? "unwavr" : ""}</div>
-              {open && <div className="text-[10px] text-muted-foreground truncate">Workspace</div>}
+              {open && <div className="text-xxs text-muted-foreground truncate">Workspace</div>}
             </div>
           </div>
           <button
@@ -211,7 +211,7 @@ export default function Sidebar() {
           <div className="mt-4">
             {open && (
               <>
-                <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">Focus</div>
+                <div className="px-3 py-1.5 text-xxs uppercase tracking-wider text-muted-foreground/60 font-semibold">Focus</div>
                 <div className="flex flex-col gap-0.5">
                   <Link
                     href="/pomodoro"
@@ -296,7 +296,7 @@ export default function Sidebar() {
             })}
 
           {open && (
-            <div className="mt-3 pt-3 border-t border-black/10 dark:border-white/10 text-[12px] opacity-80 flex flex-col gap-1">
+            <div className="mt-3 pt-3 border-t border-black/10 dark:border-white/10 text-xs opacity-80 flex flex-col gap-1">
               <Link href="/terms" className="hover:underline">利用規約</Link>
               <Link href="/privacy" className="hover:underline">プライバシーポリシー</Link>
             </div>
@@ -307,12 +307,12 @@ export default function Sidebar() {
           {open && (
             <Link
               href="/unwavr"
-              className="text-[11px] opacity-70 hover:opacity-100 underline underline-offset-4"
+              className="text-xxs opacity-70 hover:opacity-100 underline underline-offset-4"
             >
               プロダクトサイト
             </Link>
           )}
-          {open && <div className="text-[10px] opacity-60">v0.1.0</div>}
+          {open && <div className="text-xxs opacity-60">v0.1.0</div>}
         </div>
       </div>
       {open && (

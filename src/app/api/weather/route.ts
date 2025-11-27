@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
       url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;
     }
 
-    console.log('Weather API proxy request:', { url, isOpenWeatherMap });
+
 
     async function tryFetch(u: string, attempts: number = 2): Promise<Response> {
       let lastErr: unknown;
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
     }
 
     const data = await response.json();
-    console.log('Weather API response received');
+
 
     return NextResponse.json({
       data,
@@ -76,8 +76,8 @@ export async function GET(req: NextRequest) {
       const fallbackUrl = apiKey
         ? `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`
         : (process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY
-            ? `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}&units=metric&lang=ja`
-            : '');
+          ? `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}&units=metric&lang=ja`
+          : '');
       if (!fallbackUrl) throw error;
       const res2 = await fetch(fallbackUrl, { headers: { 'Accept': 'application/json', 'User-Agent': 'unwavr-weather-app/1.0' } });
       if (res2.ok) {

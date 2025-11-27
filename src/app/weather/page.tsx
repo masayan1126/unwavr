@@ -105,12 +105,12 @@ export default function WeatherPage() {
 
   const fetchWeatherData = async (lat: number, lon: number) => {
     try {
-      console.log('Fetching weather data for:', { lat, lon });
+
 
       // APIプロキシエンドポイントを使用
       const url = `/api/weather?lat=${lat}&lon=${lon}`;
 
-      console.log('Request URL:', url);
+
 
       const res = await fetch(url, {
         method: 'GET',
@@ -121,7 +121,7 @@ export default function WeatherPage() {
         }
       });
 
-      console.log('Response status:', res.status);
+
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -131,8 +131,7 @@ export default function WeatherPage() {
 
       const responseData = await res.json();
       const data = responseData.data;
-      console.log('API Response data:', data);
-      console.log('API Source:', responseData.source);
+
 
       if (responseData.source === 'openweathermap') {
         // OpenWeatherMap API レスポンス
@@ -146,7 +145,7 @@ export default function WeatherPage() {
 
         // 週間予報も取得
         const forecastUrl = `/api/weather/forecast?lat=${lat}&lon=${lon}`;
-        console.log('Fetching forecast from:', forecastUrl);
+
 
         const forecastRes = await fetch(forecastUrl, {
           method: 'GET',
@@ -158,7 +157,7 @@ export default function WeatherPage() {
         } else {
           const forecastResponseData = await forecastRes.json();
           const forecastData = forecastResponseData.data;
-          console.log('Forecast data:', forecastData);
+
 
           // 5日間の予報を日別に集約
           type ForecastItem = { dt: number; main: { temp: number }; weather?: Array<{ id?: number }> };
@@ -285,7 +284,7 @@ export default function WeatherPage() {
             break;
         }
 
-        console.log('Setting geolocation error state:', { errorMessage, errorCode });
+
 
         // 位置情報エラーの場合、デフォルト位置で天気を取得
         setIsDefaultLocation(true);
@@ -357,7 +356,7 @@ export default function WeatherPage() {
             break;
         }
 
-        console.log('Setting geolocation error state on refresh:', { errorMessage, errorCode });
+
         setErr(errorMessage);
         setLoading(false);
       },
