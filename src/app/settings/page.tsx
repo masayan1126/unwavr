@@ -2,7 +2,7 @@
 import { useAppStore } from "@/lib/store";
 import Link from "next/link";
 import { useToast, useConfirm } from "@/components/Providers";
-import { Type } from "lucide-react";
+import { Type, Database } from "lucide-react";
 
 export default function SettingsPage() {
   const clearAll = useAppStore((s) => s.clearTasksMilestonesLaunchers);
@@ -59,6 +59,19 @@ export default function SettingsPage() {
           <p className="text-xs opacity-60 mt-1">
             アプリケーション全体の文字サイズを調整します（標準: 100%）
           </p>
+        </div>
+      </div>
+
+      <div className="bg-card border border-black/10 dark:border-white/10 rounded-xl p-5 flex flex-col gap-4 shadow-sm">
+        <div className="flex items-center gap-2 border-b border-black/5 dark:border-white/5 pb-3">
+          <Database size={18} className="opacity-70" />
+          <h2 className="font-medium">データ管理</h2>
+        </div>
+        <div className="text-sm">
+          <p className="opacity-80 mb-3">タスク、マイルストーン、BGM設定のインポート・エクスポートが行えます。</p>
+          <Link href="/settings/data" className="inline-flex items-center justify-center px-4 py-2 rounded-[3px] bg-primary text-primary-foreground text-sm hover:opacity-90 transition-opacity">
+            データ管理画面へ
+          </Link>
         </div>
       </div>
       <div className="bg-[var(--danger)]/5 rounded-xl p-5 flex flex-col gap-3">

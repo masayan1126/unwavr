@@ -33,18 +33,20 @@ function TypeBadge({ type, label }: { type: "daily" | "scheduled" | "backlog"; l
   );
 }
 
-function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task) => void; onContext: (e: React.MouseEvent, task: Task) => void }) {
+import { Reorder } from "framer-motion";
+import { GripVertical } from "lucide-react";
+
+function TaskRow({ task, onEdit, onContext, enableSelection, selected, onSelectOne, showCreatedColumn, showPlannedColumn, showScheduledColumn, showTypeColumn, showMilestoneColumn, editingPlannedTaskId, tempPlannedDate, setTempPlannedDate, savePlannedDate, cancelEditPlannedDate, startEditPlannedDate }: any) {
   const toggle = useAppStore((s) => s.toggleTask);
   const toggleDailyToday = useAppStore((s) => s.toggleDailyDoneForToday);
-  const activeTaskId = useAppStore((s) => s.pomodoro.activeTaskId);
-  const setActiveTask = useAppStore((s) => s.setActiveTask);
+  const activeTaskIds = useAppStore((s) => s.pomodoro.activeTaskIds);
   const toast = useToast();
 
   const milestones = useAppStore((s) => s.milestones);
   const milestone = task.milestoneId ? milestones.find((m) => m.id === task.milestoneId) : undefined;
   const dowShort = ["日", "月", "火", "水", "木", "金", "土"] as const;
   const scheduledDaysLabel = task.type === "scheduled" && (task.scheduled?.daysOfWeek?.length ?? 0) > 0
-    ? task.scheduled!.daysOfWeek.map((d) => dowShort[d]).join("・")
+    ? task.scheduled!.daysOfWeek.map((d: number) => dowShort[d]).join("・")
     : undefined;
   const isDailyDoneToday = (() => {
     if (task.type !== "daily") return false;
@@ -60,87 +62,185 @@ function TaskRow({ task, onEdit, onContext }: { task: Task; onEdit: (task: Task)
     return (task.plannedDates ?? []).includes(todayUtc);
   })();
 
+  const planned = task.type === "backlog" ? (task.plannedDates ?? []).slice().sort((a: number, b: number) => a - b) : [];
+  const scheduledDays = task.type === "scheduled" ? (task.scheduled?.daysOfWeek ?? []) : [];
+  const scheduledRanges = task.type === "scheduled" ? (task.scheduled?.dateRanges ?? []) : [];
+  const dow = ["日", "月", "火", "水", "木", "金", "土"];
+  const isActive = activeTaskIds.includes(task.id);
+  const activeIndex = activeTaskIds.indexOf(task.id);
+
   return (
-    <div
-      className={`flex items-center gap-2 py-1 min-w-0 transition-colors ${activeTaskId === task.id ? "bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20 rounded-md -mx-2 px-2" : ""
-        }`}
-      onContextMenu={(e) => { e.preventDefault(); onContext(e, task); }}
-    >
-      {task.type === "daily" ? (
-        <button
-          type="button"
-          onClick={() => { toggleDailyToday(task.id); toast.show(`「${task.title}」を${isDailyDoneToday ? '未完了' : '完了'}にしました`, 'success'); }}
-          title="今日実行済みにする"
-          className={`w-5 h-5 rounded-full border transition-all duration-200 flex items-center justify-center hover:scale-105 ${isDailyDoneToday
-            ? "bg-primary border-primary text-primary-foreground"
-            : "border-muted-foreground/40 hover:border-primary hover:bg-primary/10 dark:hover:bg-primary/20"
-            }`}
-        >
-          {isDailyDoneToday && (
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-          )}
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={() => { toggle(task.id); toast.show(`「${task.title}」を${task.completed ? '未完了' : '完了'}にしました`, 'success'); }}
-          title={task.completed ? "完了を解除" : "完了にする"}
-          className={`w-5 h-5 rounded-full border transition-all duration-200 flex items-center justify-center hover:scale-105 ${task.completed
-            ? "bg-primary border-primary text-primary-foreground"
-            : "border-muted-foreground/40 hover:border-primary hover:bg-primary/10 dark:hover:bg-primary/20"
-            }`}
-        >
-          {task.completed && (
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-          )}
-        </button>
-      )}
-      <div className="flex items-center gap-2 min-w-0 flex-1">
-        <button
-          className={`text-left flex-1 min-w-0 ${task.completed ? "line-through opacity-60" : ""}`}
-          onClick={() => onEdit(task)}
-          title={task.title}
-        >
-          <div className="text-sm font-medium truncate">{truncateText(task.title, 20)}</div>
-          {task.description && <div className="text-xs opacity-70 truncate">{truncateText(task.description, 20)}</div>}
-        </button>
-      </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
-        {activeTaskId === task.id && (
-          <span className="inline-flex items-center gap-1.5 text-xxs font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/30">
-            着手中
-          </span>
-        )}
-        {/* 着手中トグルは右クリックメニューへ移動 */}
-        {/* 種別バッジ */}
-        <TypeBadge
-          type={task.type}
-          label={
-            task.type === "daily"
-              ? "毎日"
-              : task.type === "scheduled"
-                ? (scheduledDaysLabel ? `特定曜日（${scheduledDaysLabel}）` : "特定曜日")
-                : isPlannedToday
-                  ? "今日やる"
-                  : "積み上げ候補"
-          }
-        />
-        {task.estimatedPomodoros != null && (
-          <div className="text-xs opacity-70">
-            {task.completedPomodoros ?? 0}/{task.estimatedPomodoros}
+    <Reorder.Item value={task} id={task.id} className="relative">
+      <div
+        className={`flex items-center gap-2 py-2 px-2 min-w-0 transition-colors border-b border-border/40 hover:bg-black/5 dark:hover:bg-white/5 group ${isActive ? "bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20" : ""
+          }`}
+        onContextMenu={(e) => { e.preventDefault(); onContext(e, task); }}
+      >
+        <div className="cursor-grab active:cursor-grabbing p-1 opacity-0 group-hover:opacity-30 hover:!opacity-100 transition-opacity absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full">
+          <GripVertical size={14} />
+        </div>
+
+        {enableSelection && (
+          <div className="flex-shrink-0 w-[24px] flex justify-center">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onSelectOne(task.id, !selected); }}
+              className={`w-4 h-4 rounded-[4px] border transition-all flex items-center justify-center ${selected
+                ? "bg-primary border-primary text-primary-foreground"
+                : "border-muted-foreground/30 hover:border-primary/60 bg-transparent"
+                }`}
+            >
+              {selected && <CheckCircle2 size={10} strokeWidth={3} />}
+            </button>
           </div>
         )}
-        {milestone && (
-          <div className="text-xxs opacity-70 border rounded px-1 py-0.5" title={milestone.title}>
-            {truncateText(milestone.title, 20)}
+
+        <div className="flex-1 min-w-0 flex items-center gap-2 overflow-hidden">
+          <div className="flex-shrink-0">
+            {task.type === "daily" ? (
+              <button
+                type="button"
+                onClick={() => { toggleDailyToday(task.id); toast.show(`「${task.title}」を${isDailyDoneToday ? '未完了' : '完了'}にしました`, 'success'); }}
+                title="今日実行済みにする"
+                className={`w-5 h-5 rounded-full border transition-all duration-200 flex items-center justify-center hover:scale-105 ${isDailyDoneToday
+                  ? "bg-primary border-primary text-primary-foreground"
+                  : "border-muted-foreground/40 hover:border-primary hover:bg-primary/10 dark:hover:bg-primary/20"
+                  }`}
+              >
+                {isDailyDoneToday && (
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => { toggle(task.id); toast.show(`「${task.title}」を${task.completed ? '未完了' : '完了'}にしました`, 'success'); }}
+                title={task.completed ? "完了を解除" : "完了にする"}
+                className={`w-5 h-5 rounded-full border transition-all duration-200 flex items-center justify-center hover:scale-105 ${task.completed
+                  ? "bg-primary border-primary text-primary-foreground"
+                  : "border-muted-foreground/40 hover:border-primary hover:bg-primary/10 dark:hover:bg-primary/20"
+                  }`}
+              >
+                {task.completed && (
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </button>
+            )}
+          </div>
+
+          <button
+            className={`text-left flex-1 min-w-0 ${task.completed ? "line-through opacity-60" : ""}`}
+            onClick={() => onEdit(task)}
+            title={task.title}
+          >
+            <div className="text-sm font-medium truncate flex items-center gap-2">
+              {truncateText(task.title, 20)}
+              {isActive && (
+                <span className="inline-flex items-center gap-1.5 text-xxs font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/30">
+                  着手中 #{activeIndex + 1}
+                </span>
+              )}
+            </div>
+            {task.description && <div className="text-xs opacity-70 truncate">{truncateText(task.description, 20)}</div>}
+          </button>
+        </div>
+
+        {/* Columns */}
+        {showCreatedColumn && (
+          <div className="w-[120px] text-xs opacity-80 whitespace-nowrap flex-shrink-0 px-2">
+            {new Date(task.createdAt).toLocaleDateString()}
           </div>
         )}
+        {showPlannedColumn && (
+          <div className="w-[120px] overflow-hidden flex-shrink-0 px-2">
+            {task.type === 'backlog' ? (
+              editingPlannedTaskId === task.id ? (
+                <input
+                  type="date"
+                  className="w-full border rounded px-1 py-0.5 text-xxs bg-transparent"
+                  value={tempPlannedDate}
+                  onChange={(e: any) => setTempPlannedDate(e.target.value)}
+                  onBlur={() => savePlannedDate(task.id)}
+                  onKeyDown={(e: any) => {
+                    if (e.key === 'Enter') {
+                      savePlannedDate(task.id);
+                    } else if (e.key === 'Escape') {
+                      cancelEditPlannedDate();
+                    }
+                  }}
+                  autoFocus
+                />
+              ) : (
+                <div className="flex items-center gap-1 flex-wrap text-xxs opacity-80">
+                  <button
+                    type="button"
+                    className="border rounded px-1 py-0.5 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                    onClick={() => startEditPlannedDate(task)}
+                  >
+                    {planned.length > 0 ? new Date(planned[0]).toLocaleDateString() : '日付を設定'}
+                  </button>
+                </div>
+              )
+            ) : (
+              <div className="flex items-center gap-1 flex-wrap text-[10px] opacity-80">
+                <span className="opacity-40">-</span>
+              </div>
+            )}
+          </div>
+        )}
+        {showScheduledColumn && (
+          <div className="w-[160px] overflow-hidden flex-shrink-0 px-2">
+            <div className="flex items-center gap-1 flex-wrap text-[10px] opacity-80">
+              {scheduledDays.length > 0 && (
+                <span className="border rounded px-1 py-0.5">{scheduledDays.map((d: number) => dow[d]).join("・")}</span>
+              )}
+              {scheduledRanges.length > 0 ? (
+                scheduledRanges.map((r: any, idx: number) => (
+                  <span key={`${r.start}-${r.end}-${idx}`} className="border rounded px-1 py-0.5">
+                    {new Date(r.start).toLocaleDateString()}〜{new Date(r.end).toLocaleDateString()}
+                  </span>
+                ))
+              ) : scheduledDays.length === 0 ? (
+                <span className="opacity-40">-</span>
+              ) : null}
+            </div>
+          </div>
+        )}
+        {showTypeColumn && (
+          <div className="w-[128px] whitespace-nowrap flex-shrink-0 px-2">
+            <TypeBadge
+              type={task.type}
+              label={
+                task.type === "daily"
+                  ? "毎日"
+                  : task.type === "scheduled"
+                    ? (scheduledDaysLabel ? `特定曜日（${scheduledDaysLabel}）` : "特定曜日")
+                    : isPlannedToday
+                      ? "今日やる"
+                      : "積み上げ候補"
+              }
+            />
+          </div>
+        )}
+        {showMilestoneColumn && (
+          <div className="w-[160px] text-xs opacity-80 truncate flex-shrink-0 px-2" title={milestone?.title}>
+            {milestone ? truncateText(milestone.title, 20) : <span className="opacity-40">-</span>}
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 flex-shrink-0 w-[80px] justify-end px-2">
+          {task.estimatedPomodoros != null && (
+            <div className="text-xs opacity-70">
+              {task.completedPomodoros ?? 0}/{task.estimatedPomodoros}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </Reorder.Item>
   );
 }
 
@@ -181,9 +281,13 @@ export default function TaskList({
   enableBulkDueUpdate?: boolean;
 }) {
   const updateTask = useAppStore((s) => s.updateTask);
+  const updateTaskOrder = useAppStore((s) => s.updateTaskOrder);
   const removeTask = useAppStore((s) => s.removeTask);
   const toast = useToast();
   const globalActiveTaskId = useAppStore((s) => s.pomodoro.activeTaskId);
+  const globalActiveTaskIds = useAppStore((s) => s.pomodoro.activeTaskIds);
+  const addActiveTask = useAppStore((s) => s.addActiveTask);
+  const removeActiveTask = useAppStore((s) => s.removeActiveTask);
   const milestones = useAppStore((s) => s.milestones);
   const toggleCompleted = useAppStore((s) => s.toggleTask);
   const toggleDailyToday = useAppStore((s) => s.toggleDailyDoneForToday);
@@ -376,6 +480,47 @@ export default function TaskList({
     return list;
   }, [tasks, filterType, filterStatus, sortKey, sortAsc, milestones]);
 
+  // Reorder state
+  const [orderedTasks, setOrderedTasks] = useState<Task[]>([]);
+  useEffect(() => {
+    // Sort by order field if no explicit sort key
+    if (!sortKey) {
+      const sorted = [...filteredSorted].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      setOrderedTasks(sorted);
+    } else {
+      setOrderedTasks(filteredSorted);
+    }
+  }, [filteredSorted, sortKey]);
+
+  const handleReorder = (newOrder: Task[]) => {
+    if (sortKey) return; // Disable reorder when sorting is active
+    setOrderedTasks(newOrder);
+
+    // Update order for all affected tasks
+    // Simple approach: re-assign order based on index
+    // Optimization: only update if changed?
+    // For now, let's just update locally and trigger store updates for changed items
+    // But store update is async.
+    // Let's just update the order field for each item to match its index
+    // To avoid too many writes, we can debounce or just update the moved item?
+    // Reorder.Group gives us the new array. We should persist this order.
+
+    newOrder.forEach((t, idx) => {
+      if (t.order !== idx) {
+        // We need a way to batch update or just update.
+        // For now, let's update individually.
+        // Note: This might be heavy if list is long.
+        // Ideally we should have a bulk update API.
+        // But for MVP, let's just update the dropped item? 
+        // No, Framer Motion reorders the whole array.
+        // Let's update all.
+        if (t.order !== idx) {
+          updateTaskOrder(t.id, idx);
+        }
+      }
+    });
+  };
+
   // selection state derived helpers
   const allChecked = enableSelection && filteredSorted.length > 0 && filteredSorted.every((t) => selected[t.id]);
   const selectedCount = Object.values(selected).filter(Boolean).length;
@@ -528,208 +673,65 @@ export default function TaskList({
 
   const tableView = (
     <div className="overflow-x-auto">
-      <table className="table-fixed w-full border-separate border-spacing-0">
-        <thead>
-          <tr className="text-xs font-medium text-muted-foreground border-b border-border/50">
-            {enableSelection && (
-              <th className="w-[36px] text-left px-2 py-2 font-normal">
-                <button
-                  type="button"
-                  onClick={() => onSelectAll(!allChecked)}
-                  className={`w-4 h-4 rounded-[4px] border transition-all flex items-center justify-center ${allChecked
-                    ? "bg-primary border-primary text-primary-foreground"
-                    : "border-muted-foreground/40 hover:border-primary/60 bg-transparent"
-                    }`}
-                >
-                  {allChecked && <CheckCircle2 size={10} strokeWidth={3} />}
-                </button>
-              </th>
-            )}
-            <th className="text-left px-2 py-2 font-normal">タイトル</th>
-            {showCreatedColumn && <th className="text-left px-2 py-2 w-[120px] font-normal">作成日</th>}
-            {showPlannedColumn && <th className="text-left px-2 py-2 w-[120px] font-normal">実行日</th>}
-            {showScheduledColumn && <th className="text-left px-2 py-2 w-[160px] font-normal">設定（曜日/期間）</th>}
-            {showTypeColumn && <th className="text-left px-2 py-2 w-[128px] font-normal">種別</th>}
-            {showMilestoneColumn && <th className="text-left px-2 py-2 w-[160px] font-normal">マイルストーン</th>}
-          </tr>
-        </thead>
-        <tbody className="align-top">
-          {(filteredSorted.length === 0) ? (
-            <tr>
-              <td className="px-2 py-2 text-sm opacity-60" colSpan={(enableSelection ? 1 : 0) + 1 + Number(showCreatedColumn) + Number(showPlannedColumn) + Number(showScheduledColumn) + Number(showTypeColumn) + Number(showMilestoneColumn)}>タスクなし</td>
-            </tr>
-          ) : (
-            filteredSorted.map((t) => {
-              const planned = t.type === "backlog" ? (t.plannedDates ?? []).slice().sort((a, b) => a - b) : [];
-              const milestone = milestones.find((m) => m.id === t.milestoneId);
-              const isDaily = t.type === "daily";
-              const isDailyDoneToday = (() => {
-                if (!isDaily) return false;
-                const d = new Date();
-                d.setUTCHours(0, 0, 0, 0);
-                const today = d.getTime();
-                return (t.dailyDoneDates ?? []).includes(today);
-              })();
-              const scheduledDays = t.type === "scheduled" ? (t.scheduled?.daysOfWeek ?? []) : [];
-              const scheduledRanges = t.type === "scheduled" ? (t.scheduled?.dateRanges ?? []) : [];
-              const dow = ["日", "月", "火", "水", "木", "金", "土"];
-              const isActive = globalActiveTaskId === t.id;
-              return (
-                <tr
-                  key={t.id}
-                  className={`border-b border-border/40 transition-colors ${isActive ? "bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20" : ""
-                    } hover:bg-black/5 dark:hover:bg-white/5 group`}
-                  onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setCtxTask(t); setCtxPos({ x: e.clientX, y: e.clientY }); }}
-                >
-                  {enableSelection && (
-                    <td className="px-2 py-1">
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); onSelectOne(t.id, !selected[t.id]); }}
-                        className={`w-4 h-4 rounded-[4px] border transition-all flex items-center justify-center ${selected[t.id]
-                          ? "bg-primary border-primary text-primary-foreground"
-                          : "border-muted-foreground/30 hover:border-primary/60 bg-transparent"
-                          }`}
-                      >
-                        {selected[t.id] && <CheckCircle2 size={10} strokeWidth={3} />}
-                      </button>
-                    </td>
-                  )}
-                  <td className="px-2 py-1 overflow-hidden">
-                    <div className="flex items-center gap-2 min-w-0 overflow-hidden">
-                      {isDaily ? (
-                        <button
-                          type="button"
-                          onClick={() => { toggleDailyToday(t.id); toast.show(`「${t.title}」を${isDailyDoneToday ? '未完了' : '完了'}にしました`, 'success'); }}
-                          title="今日実行済みにする"
-                          className={`w-5 h-5 rounded-full border transition-all duration-200 flex items-center justify-center hover:scale-105 ${isDailyDoneToday
-                            ? "bg-primary border-primary text-primary-foreground"
-                            : "border-muted-foreground/40 hover:border-primary hover:bg-primary/10 dark:hover:bg-primary/20"
-                            }`}
-                        >
-                          {isDailyDoneToday && (
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => { toggleCompleted(t.id); toast.show(`「${t.title}」を${t.completed ? '未完了' : '完了'}にしました`, 'success'); }}
-                          title={t.completed ? "完了を解除" : "完了にする"}
-                          className={`w-5 h-5 rounded-full border transition-all duration-200 flex items-center justify-center hover:scale-105 ${t.completed
-                            ? "bg-primary border-primary text-primary-foreground"
-                            : "border-muted-foreground/40 hover:border-primary hover:bg-primary/10 dark:hover:bg-primary/20"
-                            }`}
-                        >
-                          {t.completed && (
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </button>
-                      )}
-                      <button
-                        className={`text-left truncate flex-1 max-w-full ${t.completed ? "line-through opacity-60" : ""}`}
-                        onClick={() => openEdit(t)}
-                        title={t.title}
-                      >
-                        <span className="text-sm font-medium flex items-center gap-2">
-                          {truncateText(t.title, 20)}
-                          {isActive && (
-                            <span className="inline-flex items-center gap-1.5 text-xxs font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/30">着手中</span>
-                          )}
-                        </span>
-                      </button>
-                      {/* 着手中トグルは右クリックメニューへ移動 */}
-                    </div>
-                  </td>
-                  {showCreatedColumn && (
-                    <td className="px-2 py-1 w-[120px] text-xs opacity-80 whitespace-nowrap">
-                      {new Date(t.createdAt).toLocaleDateString()}
-                    </td>
-                  )}
-                  {showPlannedColumn && (
-                    <td className="px-2 py-1 w-[120px] overflow-hidden">
-                      {t.type === 'backlog' ? (
-                        editingPlannedTaskId === t.id ? (
-                          <input
-                            type="date"
-                            className="w-full border rounded px-1 py-0.5 text-xxs bg-transparent"
-                            value={tempPlannedDate}
-                            onChange={(e) => setTempPlannedDate(e.target.value)}
-                            onBlur={() => savePlannedDate(t.id)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                savePlannedDate(t.id);
-                              } else if (e.key === 'Escape') {
-                                cancelEditPlannedDate();
-                              }
-                            }}
-                            autoFocus
-                          />
-                        ) : (
-                          <div className="flex items-center gap-1 flex-wrap text-xxs opacity-80">
-                            <button
-                              type="button"
-                              className="border rounded px-1 py-0.5 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                              onClick={() => startEditPlannedDate(t)}
-                            >
-                              {planned.length > 0 ? new Date(planned[0]).toLocaleDateString() : '日付を設定'}
-                            </button>
-                          </div>
-                        )
-                      ) : (
-                        <div className="flex items-center gap-1 flex-wrap text-[10px] opacity-80">
-                          <span className="opacity-40">-</span>
-                        </div>
-                      )}
-                    </td>
-                  )}
-                  {showScheduledColumn && (
-                    <td className="px-2 py-1 w-[160px] overflow-hidden">
-                      <div className="flex items-center gap-1 flex-wrap text-[10px] opacity-80">
-                        {scheduledDays.length > 0 && (
-                          <span className="border rounded px-1 py-0.5">{scheduledDays.map((d) => dow[d]).join("・")}</span>
-                        )}
-                        {scheduledRanges.length > 0 ? (
-                          scheduledRanges.map((r, idx) => (
-                            <span key={`${r.start}-${r.end}-${idx}`} className="border rounded px-1 py-0.5">
-                              {new Date(r.start).toLocaleDateString()}〜{new Date(r.end).toLocaleDateString()}
-                            </span>
-                          ))
-                        ) : scheduledDays.length === 0 ? (
-                          <span className="opacity-40">-</span>
-                        ) : null}
-                      </div>
-                    </td>
-                  )}
-                  {showTypeColumn && (
-                    <td className="px-2 py-1 w-[128px] whitespace-nowrap">
-                      <TypeBadge
-                        type={t.type}
-                        label={
-                          t.type === "daily"
-                            ? "毎日"
-                            : t.type === "scheduled"
-                              ? "特定曜日"
-                              : "積み上げ候補"
-                        }
-                      />
-                    </td>
-                  )}
-                  {showMilestoneColumn && (
-                    <td className="px-2 py-1 w-[160px] text-xs opacity-80 truncate" title={milestone?.title}>
-                      {milestone ? truncateText(milestone.title, 20) : <span className="opacity-40">-</span>}
-                    </td>
-                  )}
-                </tr>
-              );
-            })
+      <div className="min-w-full">
+        {/* Header */}
+        <div className="flex items-center text-xs font-medium text-muted-foreground border-b border-border/50 py-2 px-2">
+          <div className="w-[24px] flex-shrink-0"></div> {/* Grip placeholder */}
+          {enableSelection && (
+            <div className="w-[24px] flex-shrink-0 flex justify-center">
+              <button
+                type="button"
+                onClick={() => onSelectAll(!allChecked)}
+                className={`w-4 h-4 rounded-[4px] border transition-all flex items-center justify-center ${allChecked
+                  ? "bg-primary border-primary text-primary-foreground"
+                  : "border-muted-foreground/40 hover:border-primary/60 bg-transparent"
+                  }`}
+              >
+                {allChecked && <CheckCircle2 size={10} strokeWidth={3} />}
+              </button>
+            </div>
           )}
-        </tbody>
-      </table>
+          <div className="flex-1 px-2">タイトル</div>
+          {showCreatedColumn && <div className="w-[120px] px-2">作成日</div>}
+          {showPlannedColumn && <div className="w-[120px] px-2">実行日</div>}
+          {showScheduledColumn && <div className="w-[160px] px-2">設定（曜日/期間）</div>}
+          {showTypeColumn && <div className="w-[128px] px-2">種別</div>}
+          {showMilestoneColumn && <div className="w-[160px] px-2">マイルストーン</div>}
+          <div className="w-[80px] px-2 text-right">Pomodoro</div>
+        </div>
+
+        {/* Body */}
+        <div className="relative">
+          {(orderedTasks.length === 0) ? (
+            <div className="px-2 py-4 text-sm opacity-60 text-center">タスクなし</div>
+          ) : (
+            <Reorder.Group axis="y" values={orderedTasks} onReorder={handleReorder} className="flex flex-col">
+              {orderedTasks.map((t) => (
+                <TaskRow
+                  key={t.id}
+                  task={t}
+                  onEdit={(task: Task) => openEdit(task)}
+                  onContext={(e: React.MouseEvent, task: Task) => { e.preventDefault(); e.stopPropagation(); setCtxTask(task); setCtxPos({ x: e.clientX, y: e.clientY }); }}
+                  enableSelection={enableSelection}
+                  selected={selected[t.id]}
+                  onSelectOne={(id: string, checked: boolean) => onSelectOne(id, checked)}
+                  showCreatedColumn={showCreatedColumn}
+                  showPlannedColumn={showPlannedColumn}
+                  showScheduledColumn={showScheduledColumn}
+                  showTypeColumn={showTypeColumn}
+                  showMilestoneColumn={showMilestoneColumn}
+                  editingPlannedTaskId={editingPlannedTaskId}
+                  tempPlannedDate={tempPlannedDate}
+                  setTempPlannedDate={setTempPlannedDate}
+                  savePlannedDate={savePlannedDate}
+                  cancelEditPlannedDate={cancelEditPlannedDate}
+                  startEditPlannedDate={startEditPlannedDate}
+                />
+              ))}
+            </Reorder.Group>
+          )}
+        </div>
+      </div>
     </div>
   );
 
@@ -846,79 +848,66 @@ export default function TaskList({
         </TaskDialog>
       )}
 
+      {/* Context Menu */}
       {ctxTask && ctxPos && (
-        <div className="fixed z-[1000]" style={{ top: ctxPos.y, left: ctxPos.x }}>
-          <div
-            ref={ctxMenuRef}
-            className="min-w-[12rem] bg-popover text-popover-foreground border border-border rounded-lg shadow-xl p-1.5 animate-in fade-in zoom-in-95 duration-100"
-            onMouseDown={(e) => { e.stopPropagation(); }}
-            onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
-          >
+        <div
+          ref={ctxMenuRef}
+          className="fixed z-50 bg-popover text-popover-foreground border border-border rounded-md shadow-lg p-1 min-w-[160px] animate-in fade-in zoom-in-95 duration-100"
+          style={{ top: ctxPos.y, left: ctxPos.x }}
+        >
+          <div className="flex flex-col gap-0.5">
+            {globalActiveTaskIds.includes(ctxTask.id) ? (
+              <button
+                className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-sm text-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+                onClick={() => { removeActiveTask(ctxTask.id); setCtxTask(null); }}
+              >
+                <Pause size={14} className="opacity-70" />
+                <span>着手中から外す</span>
+              </button>
+            ) : (
+              <button
+                className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-sm text-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+                onClick={() => { addActiveTask(ctxTask.id); setCtxTask(null); }}
+              >
+                <Play size={14} className="opacity-70" />
+                <span>着手中に追加</span>
+              </button>
+            )}
+            <div className="h-px bg-border/50 my-1" />
             <button
-              type="button"
-              className="flex items-center gap-2.5 w-full text-left px-2.5 py-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors text-sm"
+              className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-sm text-xs hover:bg-accent hover:text-accent-foreground transition-colors"
               onClick={() => {
-                useAppStore.getState().duplicateTask(ctxTask.id);
-                toast.show(`「${ctxTask.title}」を複製しました`, 'success');
-                setCtxTask(null); setCtxPos(null);
+                const copyId = useAppStore.getState().duplicateTask(ctxTask.id);
+                toast.show('タスクを複製しました', 'success');
+                setCtxTask(null);
               }}
             >
-              <Copy size={15} className="opacity-70" />
+              <Copy size={14} className="opacity-70" />
               <span>複製</span>
             </button>
             <button
-              type="button"
-              className="flex items-center gap-2.5 w-full text-left px-2.5 py-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors text-sm"
-              onClick={() => {
-                openEdit(ctxTask);
-                setCtxTask(null); setCtxPos(null);
-              }}
+              className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-sm text-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+              onClick={() => { openEdit(ctxTask); setCtxTask(null); }}
             >
-              <Edit size={15} className="opacity-70" />
+              <Edit size={14} className="opacity-70" />
               <span>編集</span>
-            </button>
-            <button
-              type="button"
-              className="flex items-center gap-2.5 w-full text-left px-2.5 py-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors text-sm"
-              onClick={() => {
-                const isActive = useAppStore.getState().pomodoro.activeTaskId === ctxTask.id;
-                useAppStore.getState().setActiveTask(isActive ? undefined : ctxTask.id);
-                toast.show(isActive ? '着手中を解除しました' : '着手中に設定しました', 'success');
-                setCtxTask(null); setCtxPos(null);
-              }}
-            >
-              {useAppStore.getState().pomodoro.activeTaskId === ctxTask.id ? (
-                <>
-                  <Pause size={15} className="opacity-70" />
-                  <span>着手中を解除</span>
-                </>
-              ) : (
-                <>
-                  <Play size={15} className="opacity-70" />
-                  <span>着手中に設定</span>
-                </>
-              )}
             </button>
             <div className="h-px bg-border/50 my-1" />
             <button
-              type="button"
-              className="flex items-center gap-2.5 w-full text-left px-2.5 py-2 rounded-md hover:bg-destructive/10 hover:text-destructive transition-colors text-sm text-destructive"
+              className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-sm text-xs text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors"
               onClick={async () => {
-                const ok = await confirm('このタスクを削除しますか？', { tone: 'danger', confirmText: '削除' });
-                if (ok) removeTask(ctxTask.id);
-                if (ok) toast.show(`「${ctxTask.title}」を削除しました`, 'success');
-                setCtxTask(null); setCtxPos(null);
+                const ok = await confirm(`「${ctxTask.title}」を削除しますか？`, { tone: 'danger', confirmText: '削除' });
+                if (ok) {
+                  removeTask(ctxTask.id);
+                  toast.show('タスクを削除しました', 'success');
+                }
+                setCtxTask(null);
               }}
             >
-              <Trash2 size={15} className="opacity-70" />
-              <span>削除</span>
             </button>
           </div>
         </div>
       )}
-
     </div>
   );
 }
-
-

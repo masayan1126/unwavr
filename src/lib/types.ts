@@ -33,6 +33,7 @@ export const TaskSchema = z.object({
   // アーカイブ機能
   archived: z.boolean().optional(),
   archivedAt: z.number().int().optional(),
+  order: z.number().default(0),
 });
 export type Task = z.infer<typeof TaskSchema>;
 
@@ -46,6 +47,7 @@ export const PomodoroStateSchema = z.object({
   cyclesUntilLongBreak: z.number().int().min(1),
   completedWorkSessions: z.number().int().min(0),
   activeTaskId: z.string().optional(),
+  activeTaskIds: z.array(z.string()).default([]),
   lastTickAtMs: z.number().int().optional(),
 });
 export type PomodoroState = z.infer<typeof PomodoroStateSchema>;
@@ -56,6 +58,7 @@ export const MilestoneSchema = z.object({
   targetUnits: z.number().int().min(1),
   currentUnits: z.number().int().min(0).default(0),
   dueDate: z.number().int().optional(),
+  order: z.number().default(0),
 });
 export type Milestone = z.infer<typeof MilestoneSchema>;
 

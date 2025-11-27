@@ -114,23 +114,12 @@ export default function Sidebar() {
               </Link>
             );
           })()}
-          {open && (
-            <div className="mt-1 flex flex-col gap-1">
-              <Link
-                href="/milestones/import-export"
-                className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/milestones/import-export") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-                  }`}
-              >
-                <Upload size={16} />
-                <span className="truncate">インポート/エクスポート</span>
-              </Link>
-            </div>
-          )}
+
 
           {/* タスク（トップレベルのショートカット） */}
           {(() => {
             const isImportExport = pathname.startsWith("/tasks/import-export");
-            const isBacklog = pathname === "/backlog" || pathname.startsWith("/backlog/");
+            const isBacklog = pathname === "/tasks/backlog" || pathname.startsWith("/tasks/backlog/");
             const active = !isImportExport && (pathname === "/tasks" || pathname.startsWith("/tasks/") || isBacklog);
             return (
               <Link
@@ -171,21 +160,14 @@ export default function Sidebar() {
                   <span className="truncate">特定曜日</span>
                 </Link>
                 <Link
-                  href="/backlog"
-                  className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/backlog") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
+                  href="/tasks/backlog"
+                  className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/tasks/backlog") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
                     }`}
                 >
                   <Archive size={16} />
                   <span className="truncate">積み上げ候補</span>
                 </Link>
-                <Link
-                  href="/tasks/import-export"
-                  className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/tasks/import-export") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-                    }`}
-                >
-                  <Upload size={16} />
-                  <span className="truncate">インポート/エクスポート</span>
-                </Link>
+
                 <Link
                   href="/tasks/incomplete"
                   className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/tasks/incomplete") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
@@ -237,16 +219,7 @@ export default function Sidebar() {
                     </span>
                     <span className="truncate">BGMプレイリスト</span>
                   </Link>
-                  <Link
-                    href="/bgm/import-export"
-                    className={`group ml-6 flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ${pathname.startsWith("/bgm/import-export")
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      }`}
-                  >
-                    <Upload size={16} />
-                    <span className="truncate">インポート/エクスポート</span>
-                  </Link>
+
                 </div>
               </>
             )}

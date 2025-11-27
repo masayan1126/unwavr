@@ -12,6 +12,7 @@ import TaskCreateDialog from "@/components/TaskCreateDialog";
 import { useConfirm } from "@/components/Providers";
 import { useAppStore } from "@/lib/store";
 import HomePageSkeleton from "@/components/HomePageSkeleton";
+import ActiveTasksQueue from "@/components/ActiveTasksQueue";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -85,6 +86,8 @@ export default function Home() {
         </div>
       </header>
 
+      <ActiveTasksQueue />
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-fr">
         {/* 未完了 */}
         <section className="relative flex flex-col min-h-[320px] md:col-span-2 bg-[var(--sidebar)] rounded-xl p-5 pb-10 shadow-sm">
@@ -138,7 +141,7 @@ export default function Home() {
           </div>
           <TaskList title="" tasks={backlogDoneFiltered.slice(0, 10)} showType tableMode showCreatedColumn={false} showPlannedColumn showTypeColumn showMilestoneColumn={false} enableSelection />
           <div className="absolute bottom-3 right-5">
-            <Link href="/backlog" className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
+            <Link href="/tasks/backlog" className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
           </div>
         </section>
       </div>

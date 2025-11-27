@@ -122,14 +122,23 @@ export type AppState = {
   // bgm global control (lightweight state only)
   setBgmMiniPos: (pos: { x: number; y: number }) => void;
   setFontSize: (size: number) => void;
+  // Active Task Queue
+  addActiveTask: (taskId: string) => void;
+  removeActiveTask: (taskId: string) => void;
+  reorderActiveTasks: (newOrder: string[]) => void;
+  // Reordering
+  updateTaskOrder: (taskId: string, newOrder: number) => void;
+  updateMilestoneOrder: (milestoneId: string, newOrder: number) => void;
 };
 
 const ACTIVE_TASK_STORAGE_KEY = 'pomodoro:activeTaskId';
+const ACTIVE_TASK_IDS_STORAGE_KEY = 'pomodoro:activeTaskIds';
 
 function clearActiveTaskSideEffects(): void {
   try {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(ACTIVE_TASK_STORAGE_KEY);
+      localStorage.removeItem(ACTIVE_TASK_IDS_STORAGE_KEY);
     }
   } catch { }
 }
@@ -149,6 +158,7 @@ const defaultPomodoro: PomodoroState = {
   cyclesUntilLongBreak: 4,
   completedWorkSessions: 0,
   activeTaskId: undefined,
+  activeTaskIds: [],
 };
 
 function createShortcutId(): string {
@@ -203,6 +213,7 @@ export const useAppStore = create<AppState>()(
     pomodoro: PomodoroStateSchema.parse({
       ...defaultPomodoro,
       activeTaskId: (typeof window !== 'undefined' ? (localStorage.getItem(ACTIVE_TASK_STORAGE_KEY) || undefined) : undefined),
+      activeTaskIds: (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem(ACTIVE_TASK_IDS_STORAGE_KEY) || "[]") : []),
     }),
     bgmTracks: [],
     bgmGroups: [],
@@ -289,6 +300,7 @@ export const useAppStore = create<AppState>()(
           createdAt: Date.now(),
           completed: false,
           completedPomodoros: 0,
+          order: Date.now(), // Default order to timestamp (append to end)
         };
         createdId = newTask.id;
         fetch('/api/db/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newTask) }).catch(() => { });
@@ -303,8 +315,17 @@ export const useAppStore = create<AppState>()(
         const justCompleted = Boolean(changed?.completed);
         if (changed) fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ completed: changed.completed }) }).catch(() => { });
         if (justCompleted && includesActiveTask(state.pomodoro.activeTaskId, [taskId])) {
-          clearActiveTaskSideEffects();
-          return { tasks, pomodoro: { ...state.pomodoro, activeTaskId: undefined } };
+          // 完了したらアクティブから外す
+          const nextActiveIds = state.pomodoro.activeTaskIds.filter((id) => id !== taskId);
+          const nextActiveId = nextActiveIds.length > 0 ? nextActiveIds[0] : undefined;
+          try {
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(ACTIVE_TASK_IDS_STORAGE_KEY, JSON.stringify(nextActiveIds));
+              if (nextActiveId) localStorage.setItem(ACTIVE_TASK_STORAGE_KEY, nextActiveId);
+              else localStorage.removeItem(ACTIVE_TASK_STORAGE_KEY);
+            }
+          } catch { }
+          return { tasks, pomodoro: { ...state.pomodoro, activeTaskId: nextActiveId, activeTaskIds: nextActiveIds } };
         }
         return { tasks };
       }),
@@ -371,7 +392,8 @@ export const useAppStore = create<AppState>()(
           completed: false,
           completedPomodoros: 0,
           // 「(複製)」をタイトルに付与（重複回避・識別のため）
-          title: source.title ? `${source.title} (複製)` : '(複製)'
+          title: source.title ? `${source.title} (複製)` : '(複製)',
+          order: Date.now(),
         } as Task;
         createdId = copy.id;
         fetch('/api/db/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(copy) }).catch(() => { });
@@ -423,8 +445,17 @@ export const useAppStore = create<AppState>()(
           return next;
         });
         if (includesActiveTask(state.pomodoro.activeTaskId, taskIds)) {
-          clearActiveTaskSideEffects();
-          return { tasks, pomodoro: { ...state.pomodoro, activeTaskId: undefined } };
+          // まとめて完了した場合もアクティブから外す
+          const nextActiveIds = state.pomodoro.activeTaskIds.filter((id) => !taskIds.includes(id));
+          const nextActiveId = nextActiveIds.length > 0 ? nextActiveIds[0] : undefined;
+          try {
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(ACTIVE_TASK_IDS_STORAGE_KEY, JSON.stringify(nextActiveIds));
+              if (nextActiveId) localStorage.setItem(ACTIVE_TASK_STORAGE_KEY, nextActiveId);
+              else localStorage.removeItem(ACTIVE_TASK_STORAGE_KEY);
+            }
+          } catch { }
+          return { tasks, pomodoro: { ...state.pomodoro, activeTaskId: nextActiveId, activeTaskIds: nextActiveIds } };
         }
         return { tasks };
       }),
@@ -471,7 +502,7 @@ export const useAppStore = create<AppState>()(
       }),
     addMilestone: (input) =>
       set((state) => {
-        const m: Milestone = { ...input, id: createMilestoneId(), currentUnits: input.currentUnits ?? 0 } as Milestone;
+        const m: Milestone = { ...input, id: createMilestoneId(), currentUnits: input.currentUnits ?? 0, order: Date.now() } as Milestone;
         fetch('/api/db/milestones', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(m) }).catch(() => { });
         return { milestones: [...state.milestones, m] };
       }),
@@ -649,13 +680,81 @@ export const useAppStore = create<AppState>()(
     },
     setActiveTask: (taskId) =>
       set((state) => {
+        // Legacy support: setActiveTask sets the PRIMARY active task.
+        // If it's not in the list, add it to the front.
+        let nextIds = [...state.pomodoro.activeTaskIds];
+        if (taskId) {
+          if (!nextIds.includes(taskId)) {
+            nextIds = [taskId, ...nextIds];
+          } else {
+            // move to front? or just keep it? Let's move to front to indicate "Focus"
+            nextIds = [taskId, ...nextIds.filter((id) => id !== taskId)];
+          }
+        }
         try {
           if (typeof window !== 'undefined') {
             if (taskId) localStorage.setItem(ACTIVE_TASK_STORAGE_KEY, taskId);
             else localStorage.removeItem(ACTIVE_TASK_STORAGE_KEY);
+            localStorage.setItem(ACTIVE_TASK_IDS_STORAGE_KEY, JSON.stringify(nextIds));
           }
         } catch { }
-        return { pomodoro: { ...state.pomodoro, activeTaskId: taskId } };
+        return { pomodoro: { ...state.pomodoro, activeTaskId: taskId, activeTaskIds: nextIds } };
+      }),
+    addActiveTask: (taskId) =>
+      set((state) => {
+        if (state.pomodoro.activeTaskIds.includes(taskId)) return state;
+        const nextIds = [...state.pomodoro.activeTaskIds, taskId];
+        // If no active task, set this one as active
+        const nextActiveId = state.pomodoro.activeTaskId || taskId;
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(ACTIVE_TASK_IDS_STORAGE_KEY, JSON.stringify(nextIds));
+            localStorage.setItem(ACTIVE_TASK_STORAGE_KEY, nextActiveId);
+          }
+        } catch { }
+        return { pomodoro: { ...state.pomodoro, activeTaskIds: nextIds, activeTaskId: nextActiveId } };
+      }),
+    removeActiveTask: (taskId) =>
+      set((state) => {
+        const nextIds = state.pomodoro.activeTaskIds.filter((id) => id !== taskId);
+        // If we removed the active task, pick the first one from the remaining list
+        let nextActiveId = state.pomodoro.activeTaskId;
+        if (nextActiveId === taskId) {
+          nextActiveId = nextIds.length > 0 ? nextIds[0] : undefined;
+        }
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(ACTIVE_TASK_IDS_STORAGE_KEY, JSON.stringify(nextIds));
+            if (nextActiveId) localStorage.setItem(ACTIVE_TASK_STORAGE_KEY, nextActiveId);
+            else localStorage.removeItem(ACTIVE_TASK_STORAGE_KEY);
+          }
+        } catch { }
+        return { pomodoro: { ...state.pomodoro, activeTaskIds: nextIds, activeTaskId: nextActiveId } };
+      }),
+    reorderActiveTasks: (newOrder) =>
+      set((state) => {
+        // Ensure we don't lose tasks or add unknown ones (safety check)
+        const currentSet = new Set(state.pomodoro.activeTaskIds);
+        const validOrder = newOrder.filter((id) => currentSet.has(id));
+        // If newOrder is partial, append missing ones? No, usually reorder covers all.
+        // But let's be safe.
+        const missing = state.pomodoro.activeTaskIds.filter((id) => !validOrder.includes(id));
+        const finalIds = [...validOrder, ...missing];
+
+        // Active task remains the same unless it was removed (which shouldn't happen here)
+        // But if we want the "top" task to be active, we might update it.
+        // For now, let's keep activeTaskId independent of order, OR sync it to the first one.
+        // User request: "A and B are simultaneously in progress".
+        // Timer usually tracks ONE task. Let's sync activeTaskId to finalIds[0] for simplicity?
+        // Or let user explicitly click "Play" on one of them.
+        // Let's keep activeTaskId as is, unless it's not in the list.
+
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(ACTIVE_TASK_IDS_STORAGE_KEY, JSON.stringify(finalIds));
+          }
+        } catch { }
+        return { pomodoro: { ...state.pomodoro, activeTaskIds: finalIds } };
       }),
     startPomodoro: (isBreak) =>
       set((state) => {
@@ -797,6 +896,18 @@ export const useAppStore = create<AppState>()(
         const launcherCategories = state.launcherCategories.map((c) => (c.id === id ? { ...c, ...update } : c));
         fetch(`/api/db/launchers/categories/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update) }).catch(() => { });
         return { launcherCategories };
+      }),
+    updateTaskOrder: (taskId, newOrder) =>
+      set((state) => {
+        const tasks = state.tasks.map((t) => (t.id === taskId ? { ...t, order: newOrder } : t));
+        fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ order: newOrder }) }).catch(() => { });
+        return { tasks };
+      }),
+    updateMilestoneOrder: (milestoneId, newOrder) =>
+      set((state) => {
+        const milestones = state.milestones.map((m) => (m.id === milestoneId ? { ...m, order: newOrder } : m));
+        fetch(`/api/db/milestones/${encodeURIComponent(milestoneId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ order: newOrder }) }).catch(() => { });
+        return { milestones };
       }),
     exportLaunchers: () => {
       const data = {
