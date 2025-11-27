@@ -1,6 +1,7 @@
 "use client";
 import { Suspense } from "react";
 import Link from "next/link";
+import { Search } from "lucide-react";
 import TaskList from "@/components/TaskList";
 import TaskDialog from "@/components/TaskCreateDialog";
 import AddTaskButton from "@/components/AddTaskButton";
@@ -8,6 +9,7 @@ import TaskForm from "@/components/TaskForm";
 import TasksPageSkeleton from "@/components/TasksPageSkeleton";
 import { useTasksPage } from "@/hooks/useTasksPage";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { H1 } from "@/components/ui/Typography";
 import { TaskType } from "@/lib/types";
 
@@ -69,12 +71,12 @@ function TasksPageInner() {
         </div>
 
         <div className="flex-1 sm:max-w-md">
-          <input
+          <Input
             type="text"
             placeholder="タスクを検索..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full border border-black/10 dark:border-white/10 rounded px-3 py-2 bg-transparent"
+            iconLeft={<Search size={14} />}
           />
         </div>
       </div>
