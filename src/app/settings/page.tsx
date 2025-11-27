@@ -1,17 +1,17 @@
 "use client";
-import { useAppStore } from "@/lib/store";
 import Link from "next/link";
-import { useToast, useConfirm } from "@/components/Providers";
 import { Type, Database } from "lucide-react";
+import { useSettings } from "@/hooks/useSettings";
+import { Button } from "@/components/ui/Button";
+import { H1, H2, Text } from "@/components/ui/Typography";
 
 export default function SettingsPage() {
-  const clearAll = useAppStore((s) => s.clearTasksMilestonesLaunchers);
-  const toast = useToast();
-  const confirm = useConfirm();
+  const { fontSize, setFontSize, handleClearAll } = useSettings();
+
   return (
     <div className="p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">設定</h1>
+        <H1>設定</H1>
         <Link className="text-sm underline opacity-80" href="/">
           ホーム
         </Link>
@@ -20,14 +20,14 @@ export default function SettingsPage() {
       <div className="bg-card border border-black/10 dark:border-white/10 rounded-xl p-5 flex flex-col gap-4 shadow-sm">
         <div className="flex items-center gap-2 border-b border-black/5 dark:border-white/5 pb-3">
           <Type size={18} className="opacity-70" />
-          <h2 className="font-medium">表示設定</h2>
+          <H2>表示設定</H2>
         </div>
 
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between text-sm">
             <span className="opacity-80">文字サイズ</span>
             <span className="font-mono bg-black/5 dark:bg-white/10 px-2 py-0.5 rounded text-xs">
-              {useAppStore((s) => s.fontSize)}%
+              {fontSize}%
             </span>
           </div>
           <div className="flex items-center gap-3 pt-1">
@@ -39,8 +39,8 @@ export default function SettingsPage() {
                 max="120"
                 step="5"
                 list="fontsize-markers"
-                value={useAppStore((s) => s.fontSize)}
-                onChange={(e) => useAppStore.getState().setFontSize(Number(e.target.value))}
+                value={fontSize}
+                onChange={(e) => setFontSize(Number(e.target.value))}
                 className="w-full h-1.5 bg-black/10 dark:bg-white/10 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-sm hover:[&::-webkit-slider-thumb]:scale-110 transition-all relative z-10"
               />
               <datalist id="fontsize-markers" className="absolute w-full flex justify-between px-[6px] pointer-events-none top-1/2 -translate-y-1/2">
@@ -56,21 +56,21 @@ export default function SettingsPage() {
             </div>
             <span className="text-lg opacity-80 font-medium">A</span>
           </div>
-          <p className="text-xs opacity-60 mt-1">
+          <Text className="text-xs opacity-60 mt-1">
             アプリケーション全体の文字サイズを調整します（標準: 100%）
-          </p>
+          </Text>
         </div>
       </div>
 
       <div className="bg-card border border-black/10 dark:border-white/10 rounded-xl p-5 flex flex-col gap-4 shadow-sm">
         <div className="flex items-center gap-2 border-b border-black/5 dark:border-white/5 pb-3">
           <Database size={18} className="opacity-70" />
-          <h2 className="font-medium">データ管理</h2>
+          <H2>データ管理</H2>
         </div>
         <div className="text-sm">
-          <p className="opacity-80 mb-3">タスク、マイルストーン、BGM設定のインポート・エクスポートが行えます。</p>
-          <Link href="/settings/data" className="inline-flex items-center justify-center px-4 py-2 rounded-[3px] bg-primary text-primary-foreground text-sm hover:opacity-90 transition-opacity">
-            データ管理画面へ
+          <Text className="opacity-80 mb-3">タスク、マイルストーン、BGM設定のインポート・エクスポートが行えます。</Text>
+          <Link href="/settings/data">
+            <Button>データ管理画面へ</Button>
           </Link>
         </div>
       </div>
@@ -78,17 +78,9 @@ export default function SettingsPage() {
         <div className="text-sm font-medium text-[var(--danger)]">危険な操作</div>
         <div className="text-xs opacity-80">タスク・マイルストーン・ランチャーの設定をすべて削除します。この操作は取り消せません。</div>
         <div>
-          <button
-            className="px-3 py-2 rounded-[3px] bg-[var(--danger)] text-white text-sm hover:opacity-90 transition-opacity"
-            onClick={async () => {
-              const ok = await confirm('本当に全て削除しますか？この操作は取り消せません。', { tone: 'danger', confirmText: '削除' });
-              if (!ok) return;
-              clearAll();
-              toast.show('すべて削除しました', 'success');
-            }}
-          >
+          <Button variant="danger" onClick={handleClearAll}>
             すべて削除（タスク/マイルストーン/ランチャー）
-          </button>
+          </Button>
         </div>
       </div>
     </div>
