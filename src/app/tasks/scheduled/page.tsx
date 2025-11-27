@@ -3,28 +3,30 @@ import AddTaskButton from "@/components/AddTaskButton";
 import TaskList from "@/components/TaskList";
 import TaskDialog from "@/components/TaskCreateDialog";
 import TaskForm from "@/components/TaskForm";
-import { useMemo, useState } from "react";
-import { useAppStore } from "@/lib/store";
+import { useState } from "react";
+import { useScheduledTasks } from "@/hooks/useScheduledTasks";
 import SimpleTaskListPageSkeleton from "@/components/SimpleTaskListPageSkeleton";
 import StylishSelect from "@/components/StylishSelect";
 import FilterBar from "@/components/FilterBar";
 
 export default function ScheduledTasksPage() {
-  const tasks = useAppStore((s) => s.tasks);
-  const hydrating = useAppStore((s) => s.hydrating);
-  const scheduled = useMemo(() => tasks.filter((t) => t.type === "scheduled"), [tasks]);
-  const [page, setPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
-  const [sortKey, setSortKey] = useState<"title" | "createdAt" | "scheduled" | "type" | "milestone">("createdAt");
-  const [sortAsc, setSortAsc] = useState<boolean>(false);
-  const [filterStatus, setFilterStatus] = useState<"all" | "completed" | "incomplete">("all");
+  const {
+    hydrating,
+    pageItems,
+    total,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    sortKey,
+    setSortKey,
+    sortAsc,
+    setSortAsc,
+    filterStatus,
+    setFilterStatus,
+  } = useScheduledTasks();
   const [openCreate, setOpenCreate] = useState(false);
-  const total = scheduled.length;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const pageItems = useMemo(() => {
-    const offset = (page - 1) * pageSize;
-    return scheduled.slice(offset, offset + pageSize);
-  }, [scheduled, page, pageSize]);
 
   if (hydrating) {
     return <SimpleTaskListPageSkeleton />;
