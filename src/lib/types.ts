@@ -96,3 +96,45 @@ export function createMilestoneId(): string {
   return `mls_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
 }
 
+
+export type LauncherShortcut = {
+  id: string;
+  label: string;
+  url: string;
+  iconName: string;
+  color?: string;
+  categoryId?: string;
+  kind?: "web" | "app" | "native";
+  nativePath?: string;
+};
+
+export type LauncherCategory = {
+  id: string;
+  name: string;
+  color?: string;
+};
+
+export type ImportHistoryEntry = {
+  id: string;
+  fileName: string;
+  imported: number;
+  failed: number;
+  errors: string[];
+  timestamp: number;
+};
+
+export type BgmTrack = {
+  id: string;
+  videoId: string;
+  title: string;
+  url: string;
+  createdAt: number;
+  groupId?: string;
+};
+
+export type BgmGroup = {
+  id: string;
+  name: string;
+  color?: string;
+  parentId?: string;
+};
