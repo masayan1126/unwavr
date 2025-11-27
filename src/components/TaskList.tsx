@@ -296,6 +296,7 @@ export default function TaskList({
   const milestoneOptions = useMemo(() => milestones.map((m) => ({ id: m.id, title: m.title })), [milestones]);
 
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const storeTasks = useAppStore((s) => s.tasks);
   const editingTask = useMemo(() => storeTasks.find((t) => t.id === editingId), [editingId, storeTasks]);
   const [formTitle, setFormTitle] = useState("");
@@ -673,75 +674,19 @@ export default function TaskList({
     setTempPlannedDate("");
   }
 
-  const tableView = (
-    <div className="overflow-x-auto">
-      <div className="min-w-full">
-        {/* Header */}
-        <div className="flex items-center text-xs font-medium text-muted-foreground border-b border-border/50 py-2 px-2">
-          <div className="w-[24px] flex-shrink-0"></div> {/* Grip placeholder */}
-          {enableSelection && (
-            <div className="w-[24px] flex-shrink-0 flex justify-center">
-              <button
-                type="button"
-                onClick={() => onSelectAll(!allChecked)}
-                className={`w-4 h-4 rounded-[4px] border transition-all flex items-center justify-center ${allChecked
-                  ? "bg-primary border-primary text-primary-foreground"
-                  : "border-muted-foreground/40 hover:border-primary/60 bg-transparent"
-                  }`}
-              >
-                {allChecked && <CheckCircle2 size={10} strokeWidth={3} />}
-              </button>
-            </div>
-          )}
-          <div className="flex-1 px-2">タイトル</div>
-          {showCreatedColumn && <div className="w-[120px] px-2">作成日</div>}
-          {showPlannedColumn && <div className="w-[120px] px-2">実行日</div>}
-          {showScheduledColumn && <div className="w-[160px] px-2">設定（曜日/期間）</div>}
-          {showTypeColumn && <div className="w-[128px] px-2">種別</div>}
-          {showMilestoneColumn && <div className="w-[160px] px-2">マイルストーン</div>}
-          <div className="w-[80px] px-2 text-right">Pomodoro</div>
-        </div>
 
-        {/* Body */}
-        <div className="relative">
-          {(orderedTasks.length === 0) ? (
-            <div className="px-2 py-4 text-sm opacity-60 text-center">タスクなし</div>
-          ) : (
-            <Reorder.Group axis="y" values={orderedTasks} onReorder={handleReorder} className="flex flex-col">
-              {orderedTasks.map((t) => (
-                <TaskRow
-                  key={t.id}
-                  task={t}
-                  onEdit={(task: Task) => openEdit(task)}
-                  onContext={(e: React.MouseEvent, task: Task) => { e.preventDefault(); e.stopPropagation(); setCtxTask(task); setCtxPos({ x: e.clientX, y: e.clientY }); }}
-                  enableSelection={enableSelection}
-                  selected={selected[t.id]}
-                  onSelectOne={(id: string, checked: boolean) => onSelectOne(id, checked)}
-                  showCreatedColumn={showCreatedColumn}
-                  showPlannedColumn={showPlannedColumn}
-                  showScheduledColumn={showScheduledColumn}
-                  showTypeColumn={showTypeColumn}
-                  showMilestoneColumn={showMilestoneColumn}
-                  editingPlannedTaskId={editingPlannedTaskId}
-                  tempPlannedDate={tempPlannedDate}
-                  setTempPlannedDate={setTempPlannedDate}
-                  savePlannedDate={savePlannedDate}
-                  cancelEditPlannedDate={cancelEditPlannedDate}
-                  startEditPlannedDate={startEditPlannedDate}
-                />
-              ))}
-            </Reorder.Group>
-          )}
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <div className="rounded-md">
       <div className="flex items-center justify-between mb-2">
-        <div className="text-xs uppercase tracking-wide opacity-70">{title}</div>
-        {enableSelection && (
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="flex items-center gap-2 text-xs uppercase tracking-wide opacity-70 hover:opacity-100 transition-opacity"
+        >
+          <ChevronDown size={14} className={`transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`} />
+          {title}
+        </button>
+        {enableSelection && !isCollapsed && (
           <div ref={bulkMenuRef} className="relative">
             <button
               type="button"
@@ -799,8 +744,8 @@ export default function TaskList({
                             onChange={(e) => setBulkDateInput(e.target.value)}
                           />
                         </div>
-                        <button className="px-2 py-1 rounded-sm bg-primary text-primary-foreground text-xxs hover:opacity-90" onClick={bulkUpdateDueDate} disabled={!bulkDateInput}>
-                          設定
+                        <button className="px-2 py-1 bg-primary text-primary-foreground rounded text-xs hover:bg-primary/90 transition-colors" onClick={bulkUpdateDueDate}>
+                          適用
                         </button>
                       </div>
                     </div>
@@ -811,31 +756,68 @@ export default function TaskList({
           </div>
         )}
       </div>
-      {tableMode ? (
-        tableView
-      ) : (
-        <div className="flex flex-col divide-y divide-black/5 dark:divide-white/5">
-          {tasks.length === 0 ? (
-            <div className="text-sm opacity-60 py-2">タスクなし</div>
-          ) : (
-            tasks.map((t) => (
-              <div key={t.id} className="flex items-center gap-2 py-1" onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setCtxTask(t); setCtxPos({ x: e.clientX, y: e.clientY }); }}>
-                <TaskRow task={t} onEdit={openEdit} onContext={(e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); setCtxTask(t); setCtxPos({ x: e.clientX, y: e.clientY }); }} />
-                {showType && (t.type === "daily" || t.type === "scheduled") && (
-                  <span className="text-[10px] opacity-70 border rounded px-1 py-0.5 whitespace-nowrap">
-                    {t.type === "daily" ? "毎日" : "特定曜日"}
-                  </span>
-                )}
-                {showPlannedDates && t.type === "backlog" && (t.plannedDates?.length ?? 0) > 0 && (
-                  <div className="flex items-center gap-1 flex-wrap text-[10px] opacity-70">
-                    {t.plannedDates!.slice().sort((a, b) => a - b).map((d) => (
-                      <span key={d} className="border rounded px-1 py-0.5">{new Date(d).toLocaleDateString()}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))
-          )}
+
+      {!isCollapsed && (
+        <div className="overflow-x-auto">
+          <div className="min-w-full">
+            {/* Header */}
+            <div className="flex items-center text-xs font-medium text-muted-foreground border-b border-border/50 py-2 px-2">
+              <div className="w-[24px] flex-shrink-0"></div> {/* Grip placeholder */}
+              {enableSelection && (
+                <div className="w-[24px] flex-shrink-0 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => onSelectAll(!allChecked)}
+                    className={`w-4 h-4 rounded-[4px] border transition-all flex items-center justify-center ${allChecked
+                      ? "bg-primary border-primary text-primary-foreground"
+                      : "border-muted-foreground/40 hover:border-primary/60 bg-transparent"
+                      }`}
+                  >
+                    {allChecked && <CheckCircle2 size={10} strokeWidth={3} />}
+                  </button>
+                </div>
+              )}
+              <div className="flex-1 px-2">タイトル</div>
+              {showCreatedColumn && <div className="w-[120px] px-2">作成日</div>}
+              {showPlannedColumn && <div className="w-[120px] px-2">実行日</div>}
+              {showScheduledColumn && <div className="w-[160px] px-2">設定（曜日/期間）</div>}
+              {showTypeColumn && <div className="w-[128px] px-2">種別</div>}
+              {showMilestoneColumn && <div className="w-[160px] px-2">マイルストーン</div>}
+              <div className="w-[80px] px-2 text-right">Pomodoro</div>
+            </div>
+
+            {/* Body */}
+            <div className="relative">
+              {(orderedTasks.length === 0) ? (
+                <div className="px-2 py-4 text-sm opacity-60 text-center">タスクなし</div>
+              ) : (
+                <Reorder.Group axis="y" values={orderedTasks} onReorder={handleReorder} className="flex flex-col">
+                  {orderedTasks.map((t) => (
+                    <TaskRow
+                      key={t.id}
+                      task={t}
+                      onEdit={(task: Task) => openEdit(task)}
+                      onContext={(e: React.MouseEvent, task: Task) => { e.preventDefault(); e.stopPropagation(); setCtxTask(task); setCtxPos({ x: e.clientX, y: e.clientY }); }}
+                      enableSelection={enableSelection}
+                      selected={selected[t.id]}
+                      onSelectOne={(id: string, checked: boolean) => onSelectOne(id, checked)}
+                      showCreatedColumn={showCreatedColumn}
+                      showPlannedColumn={showPlannedColumn}
+                      showScheduledColumn={showScheduledColumn}
+                      showTypeColumn={showTypeColumn}
+                      showMilestoneColumn={showMilestoneColumn}
+                      editingPlannedTaskId={editingPlannedTaskId}
+                      tempPlannedDate={tempPlannedDate}
+                      setTempPlannedDate={setTempPlannedDate}
+                      savePlannedDate={savePlannedDate}
+                      cancelEditPlannedDate={cancelEditPlannedDate}
+                      startEditPlannedDate={startEditPlannedDate}
+                    />
+                  ))}
+                </Reorder.Group>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -906,6 +888,8 @@ export default function TaskList({
                 setCtxTask(null);
               }}
             >
+              <Trash2 size={14} className="opacity-70" />
+              <span>削除</span>
             </button>
           </div>
         </div>

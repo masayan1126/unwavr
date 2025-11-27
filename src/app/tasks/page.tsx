@@ -1,7 +1,7 @@
 "use client";
 import { Suspense } from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, RefreshCw } from "lucide-react";
 import TaskList from "@/components/TaskList";
 import TaskDialog from "@/components/TaskCreateDialog";
 import AddTaskButton from "@/components/AddTaskButton";
@@ -44,6 +44,15 @@ function TasksPageInner() {
         <div className="flex items-center justify-between">
           <H1>すべてのタスク</H1>
           <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-8 h-8 p-0 rounded-full border-black/10 dark:border-white/10"
+              onClick={() => window.location.reload()}
+              title="再読み込み"
+            >
+              <RefreshCw size={14} />
+            </Button>
             <AddTaskButton
               onClick={() => setOpenCreate(true)}
             />
