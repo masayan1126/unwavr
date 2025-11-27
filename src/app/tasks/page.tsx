@@ -57,7 +57,7 @@ function TasksPageInner() {
       {/* フィルターと検索 */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
         <div className="flex gap-2">
-          {(["all", "daily", "backlog", "scheduled"] as const).map(type => (
+          {(["all", "daily", "scheduled", "backlog"] as const).map(type => (
             <Button
               key={type}
               onClick={() => setSelectedType(type)}
@@ -92,12 +92,12 @@ function TasksPageInner() {
           <div className="text-lg font-semibold">{taskCounts.daily}</div>
         </div>
         <div className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
-          <div className="text-sm opacity-60">積み上げ候補</div>
-          <div className="text-lg font-semibold">{taskCounts.backlog}</div>
-        </div>
-        <div className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
           <div className="text-sm opacity-60">特定日タスク</div>
           <div className="text-lg font-semibold">{taskCounts.scheduled}</div>
+        </div>
+        <div className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
+          <div className="text-sm opacity-60">積み上げ候補</div>
+          <div className="text-lg font-semibold">{taskCounts.backlog}</div>
         </div>
       </div>
 
@@ -118,22 +118,22 @@ function TasksPageInner() {
             </section>
             <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
               <TaskList
-                title={`積み上げ候補 (${taskCounts.backlog})`}
-                tasks={baseFiltered.filter(t => t.type === "backlog")}
+                title={`特定曜日 (${taskCounts.scheduled})`}
+                tasks={baseFiltered.filter(t => t.type === "scheduled")}
                 showType
                 tableMode
-                showPlannedColumn
+                showScheduledColumn
                 showTypeColumn
                 showMilestoneColumn={false}
               />
             </section>
             <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
               <TaskList
-                title={`特定曜日 (${taskCounts.scheduled})`}
-                tasks={baseFiltered.filter(t => t.type === "scheduled")}
+                title={`積み上げ候補 (${taskCounts.backlog})`}
+                tasks={baseFiltered.filter(t => t.type === "backlog")}
                 showType
                 tableMode
-                showScheduledColumn
+                showPlannedColumn
                 showTypeColumn
                 showMilestoneColumn={false}
               />
