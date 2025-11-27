@@ -1,17 +1,30 @@
 import { ReactRenderer } from '@tiptap/react';
-import tippy from 'tippy.js';
-import CommandList, { ITEMS } from './CommandList';
+import tippy, { Instance } from 'tippy.js';
+import CommandList, { ITEMS, CommandItemProps } from './CommandList';
+import { Editor, Range } from '@tiptap/core';
 
-export default {
+interface SuggestionProps {
+    editor: Editor;
+    range: Range;
+    query: string;
+    text: string;
+    items: CommandItemProps[];
+    command: (props: { editor: Editor; range: Range }) => void;
+    decorationNode: Element | null;
+    clientRect?: (() => DOMRect) | null;
+    event?: KeyboardEvent;
+}
+
+const suggestion = {
     items: ({ query }: { query: string }) => {
         return ITEMS.filter(item => item.title.toLowerCase().includes(query.toLowerCase())).slice(0, 10);
     },
     render: () => {
         let component: ReactRenderer;
-        let popup: any;
+        let popup: Instance[];
 
         return {
-            onStart: (props: any) => {
+            onStart: (props: SuggestionProps) => {
                 component = new ReactRenderer(CommandList, {
                     props,
                     editor: props.editor,
@@ -31,7 +44,7 @@ export default {
                     placement: 'bottom-start',
                 });
             },
-            onUpdate(props: any) {
+            onUpdate(props: SuggestionProps) {
                 component.updateProps(props);
 
                 if (!props.clientRect) {
@@ -42,11 +55,12 @@ export default {
                     getReferenceClientRect: props.clientRect,
                 });
             },
-            onKeyDown(props: any) {
-                if (props.event.key === 'Escape') {
+            onKeyDown(props: SuggestionProps) {
+                if (props.event?.key === 'Escape') {
                     popup[0].hide();
                     return true;
                 }
+                // @ts-expect-error: component.ref might be undefined or not have onKeyDown
                 return component.ref?.onKeyDown(props);
             },
             onExit() {
@@ -56,3 +70,5 @@ export default {
         };
     },
 };
+
+export default suggestion;

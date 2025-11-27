@@ -1,4 +1,4 @@
-import { Extension } from '@tiptap/core';
+import { Extension, Editor, Range } from '@tiptap/core';
 import Suggestion from '@tiptap/suggestion';
 import suggestion from './suggestion';
 
@@ -8,7 +8,7 @@ export const SlashCommand = Extension.create({
         return {
             suggestion: {
                 char: '/',
-                command: ({ editor, range, props }: any) => {
+                command: ({ editor, range, props }: { editor: Editor; range: Range; props: { command: (args: { editor: Editor; range: Range }) => void } }) => {
                     props.command({ editor, range });
                 },
             },

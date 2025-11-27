@@ -83,8 +83,8 @@ export default function Milestones() {
 
       {importMessage && (
         <div className={`mb-3 p-2 rounded text-xs ${importMessage.type === 'success'
-            ? 'bg-[var(--primary)]/15 text-[var(--primary)] dark:bg-[var(--primary)]/20 dark:text-[var(--primary)]'
-            : 'bg-[var(--danger)]/15 text-[var(--danger)] dark:bg-[var(--danger)]/20 dark:text-[var(--danger)]'
+          ? 'bg-[var(--primary)]/15 text-[var(--primary)] dark:bg-[var(--primary)]/20 dark:text-[var(--primary)]'
+          : 'bg-[var(--danger)]/15 text-[var(--danger)] dark:bg-[var(--danger)]/20 dark:text-[var(--danger)]'
           }`}>
           {importMessage.message}
         </div>
@@ -95,7 +95,7 @@ export default function Milestones() {
         onSubmit={(e) => {
           e.preventDefault();
           if (!title.trim()) return;
-          add({ title: title.trim(), targetUnits: target, currentUnits: 0 });
+          add({ title: title.trim(), targetUnits: target, currentUnits: 0, order: 0 });
           setTitle("");
           setTarget(10);
         }}

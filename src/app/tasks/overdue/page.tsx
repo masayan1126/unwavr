@@ -22,7 +22,7 @@ export default function OverdueTasksPage() {
         <h1 className="text-xl font-semibold">期限切れタスク</h1>
         <Link className="text-sm underline opacity-80" href="/">ホーム</Link>
       </div>
-      <TaskList title="期限切れ" tasks={overdue} tableMode showCreatedColumn showPlannedColumn showTypeColumn enableSelection enableBulkDueUpdate />
+      <TaskList title="期限切れ" tasks={overdue} showCreatedColumn showPlannedColumn showTypeColumn enableSelection enableBulkDueUpdate />
     </div>
   );
 }

@@ -4,9 +4,7 @@ import { getTodayDateInput, getTomorrowDateInput } from "@/lib/taskUtils";
 import { Task } from "@/lib/types";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useConfirm } from "@/components/Providers";
-import { CalendarDays, ListTodo, Archive, Loader2, X, Mic, Circle, CircleDot, ChevronDown, CheckCircle2, Trash2, ArrowRight, Calendar, Copy, Edit, Play, Pause } from "lucide-react";
-import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
-import WysiwygEditor from "@/components/WysiwygEditor";
+import { CalendarDays, ListTodo, Archive, Circle, ChevronDown, CheckCircle2, Trash2, ArrowRight, Calendar, Copy, Edit, Play, Pause } from "lucide-react";
 import TaskDialog from "@/components/TaskCreateDialog";
 import { useToast } from "@/components/Providers";
 import TaskForm, { type TaskFormHandle } from "@/components/TaskForm";
@@ -38,7 +36,27 @@ function TypeBadge({ type, label }: { type: "daily" | "scheduled" | "backlog"; l
 import { Reorder } from "framer-motion";
 import { GripVertical } from "lucide-react";
 
-function TaskRow({ task, onEdit, onContext, enableSelection, selected, onSelectOne, showCreatedColumn, showPlannedColumn, showScheduledColumn, showTypeColumn, showMilestoneColumn, editingPlannedTaskId, tempPlannedDate, setTempPlannedDate, savePlannedDate, cancelEditPlannedDate, startEditPlannedDate }: any) {
+interface TaskRowProps {
+  task: Task;
+  onEdit: (task: Task) => void;
+  onContext: (e: React.MouseEvent, task: Task) => void;
+  enableSelection?: boolean;
+  selected?: boolean;
+  onSelectOne: (id: string, checked: boolean) => void;
+  showCreatedColumn?: boolean;
+  showPlannedColumn?: boolean;
+  showScheduledColumn?: boolean;
+  showTypeColumn?: boolean;
+  showMilestoneColumn?: boolean;
+  editingPlannedTaskId: string | null;
+  tempPlannedDate: string;
+  setTempPlannedDate: (date: string) => void;
+  savePlannedDate: (taskId: string) => void;
+  cancelEditPlannedDate: () => void;
+  startEditPlannedDate: (task: Task) => void;
+}
+
+function TaskRow({ task, onEdit, onContext, enableSelection, selected, onSelectOne, showCreatedColumn, showPlannedColumn, showScheduledColumn, showTypeColumn, showMilestoneColumn, editingPlannedTaskId, tempPlannedDate, setTempPlannedDate, savePlannedDate, cancelEditPlannedDate, startEditPlannedDate }: TaskRowProps) {
   const toggle = useAppStore((s) => s.toggleTask);
   const toggleDailyToday = useAppStore((s) => s.toggleDailyDoneForToday);
   const activeTaskIds = useAppStore((s) => s.pomodoro.activeTaskIds);
@@ -165,9 +183,9 @@ function TaskRow({ task, onEdit, onContext, enableSelection, selected, onSelectO
                   type="date"
                   className="w-full border rounded px-1 py-0.5 text-xxs bg-transparent"
                   value={tempPlannedDate}
-                  onChange={(e: any) => setTempPlannedDate(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTempPlannedDate(e.target.value)}
                   onBlur={() => savePlannedDate(task.id)}
-                  onKeyDown={(e: any) => {
+                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                     if (e.key === 'Enter') {
                       savePlannedDate(task.id);
                     } else if (e.key === 'Escape') {
@@ -201,7 +219,7 @@ function TaskRow({ task, onEdit, onContext, enableSelection, selected, onSelectO
                 <span className="border rounded px-1 py-0.5">{scheduledDays.map((d: number) => dow[d]).join("・")}</span>
               )}
               {scheduledRanges.length > 0 ? (
-                scheduledRanges.map((r: any, idx: number) => (
+                scheduledRanges.map((r: { start: number, end: number }, idx: number) => (
                   <span key={`${r.start}-${r.end}-${idx}`} className="border rounded px-1 py-0.5">
                     {new Date(r.start).toLocaleDateString()}〜{new Date(r.end).toLocaleDateString()}
                   </span>
@@ -249,10 +267,7 @@ function TaskRow({ task, onEdit, onContext, enableSelection, selected, onSelectO
 export default function TaskList({
   title,
   tasks,
-  showType = false,
-  showPlannedDates = false,
   showCreatedColumn = false,
-  tableMode = false,
   showPlannedColumn = true,
   showScheduledColumn = false,
   showTypeColumn = true,
@@ -267,10 +282,7 @@ export default function TaskList({
 }: {
   title: string;
   tasks: Task[];
-  showType?: boolean;
-  showPlannedDates?: boolean;
   showCreatedColumn?: boolean;
-  tableMode?: boolean;
   showPlannedColumn?: boolean;
   showScheduledColumn?: boolean;
   showTypeColumn?: boolean;
@@ -286,41 +298,15 @@ export default function TaskList({
   const updateTaskOrder = useAppStore((s) => s.updateTaskOrder);
   const removeTask = useAppStore((s) => s.removeTask);
   const toast = useToast();
-  const globalActiveTaskId = useAppStore((s) => s.pomodoro.activeTaskId);
   const globalActiveTaskIds = useAppStore((s) => s.pomodoro.activeTaskIds);
   const addActiveTask = useAppStore((s) => s.addActiveTask);
   const removeActiveTask = useAppStore((s) => s.removeActiveTask);
   const milestones = useAppStore((s) => s.milestones);
-  const toggleCompleted = useAppStore((s) => s.toggleTask);
-  const toggleDailyToday = useAppStore((s) => s.toggleDailyDoneForToday);
-  const milestoneOptions = useMemo(() => milestones.map((m) => ({ id: m.id, title: m.title })), [milestones]);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const storeTasks = useAppStore((s) => s.tasks);
   const editingTask = useMemo(() => storeTasks.find((t) => t.id === editingId), [editingId, storeTasks]);
-  const [formTitle, setFormTitle] = useState("");
-  const [formDescription, setFormDescription] = useState("");
-  const [formType, setFormType] = useState<"daily" | "scheduled" | "backlog">("backlog");
-  const [formEst, setFormEst] = useState<number>(0);
-  const [formMilestoneId, setFormMilestoneId] = useState<string>("");
-  const [formPlannedDateInput, setFormPlannedDateInput] = useState<string>("");
-  const [formPlannedDate, setFormPlannedDate] = useState<number | null>(null);
-  const [formScheduledDays, setFormScheduledDays] = useState<number[]>([]);
-  const [formScheduledRanges, setFormScheduledRanges] = useState<{ start: number, end: number }[]>([]);
-  const [listening, setListening] = useState(false);
-  const { toggle: toggleSpeech } = useSpeechRecognition({
-    onResult: (txt) => setFormTitle((prev) => (prev ? prev + " " + txt : txt)),
-    lang: "ja-JP",
-  });
-  const [isSaving, setIsSaving] = useState(false);
-  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
-  const saveTimerRef = useRef<number | null>(null);
-  const scheduleSave = (delay: number = 500) => {
-    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = window.setTimeout(() => saveEdit(true), delay);
-  };
-  const [showDescOverlay, setShowDescOverlay] = useState(false);
   const [ctxTask, setCtxTask] = useState<Task | null>(null);
   const [ctxPos, setCtxPos] = useState<{ x: number; y: number } | null>(null);
   const ctxMenuRef = useRef<HTMLDivElement | null>(null);
@@ -355,72 +341,10 @@ export default function TaskList({
   function openEdit(t: Task) {
     const latest = useAppStore.getState().tasks.find((x) => x.id === t.id) ?? t;
     setEditingId(latest.id);
-    setFormTitle(latest.title);
-    setFormDescription(latest.description ?? "");
-    setFormType(latest.type);
-    setFormEst(latest.estimatedPomodoros ?? 0);
-    setFormMilestoneId(latest.milestoneId ?? "");
-    const firstPlanned = (latest.plannedDates ?? [])[0];
-    if (firstPlanned != null) {
-      const d = new Date(firstPlanned);
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const dd = String(d.getDate()).padStart(2, "0");
-      setFormPlannedDateInput(`${y}-${m}-${dd}`);
-      setFormPlannedDate(firstPlanned);
-    } else {
-      setFormPlannedDateInput("");
-      setFormPlannedDate(null);
-    }
-    setFormScheduledDays(t.scheduled?.daysOfWeek ?? []);
-    setFormScheduledRanges(t.scheduled?.dateRanges ?? []);
   }
 
   function closeEdit() {
     setEditingId(null);
-  }
-
-  function saveEdit(keepOpen?: boolean) {
-    if (!editingId) return;
-    setIsSaving(true);
-    // 入力中の日付がボタン未押下でも保存時に取り込む
-    // 単一の実行日として保存（上書き）
-    let selectedPlanned: number | null = formPlannedDate;
-    if (formType === "backlog" && formPlannedDateInput) {
-      const dt = new Date(formPlannedDateInput);
-      if (!isNaN(dt.getTime())) {
-        selectedPlanned = Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate());
-      }
-    }
-
-    const baseUpdate: Partial<Task> = {
-      title: formTitle.trim() || "(無題)",
-      description: formDescription.trim() || undefined,
-      type: formType,
-      estimatedPomodoros: Number.isFinite(formEst) ? formEst : 0,
-      milestoneId: formMilestoneId || undefined,
-    };
-
-    // タスクタイプに応じてデータを設定
-    if (formType === "backlog") {
-      baseUpdate.plannedDates = selectedPlanned != null ? [selectedPlanned] : [];
-      baseUpdate.scheduled = undefined;
-    } else if (formType === "scheduled") {
-      baseUpdate.scheduled = {
-        daysOfWeek: formScheduledDays,
-        dateRanges: formScheduledRanges
-      };
-      baseUpdate.plannedDates = undefined;
-    } else {
-      // daily
-      baseUpdate.plannedDates = undefined;
-      baseUpdate.scheduled = undefined;
-    }
-
-    updateTask(editingId, baseUpdate);
-    setLastSavedAt(Date.now());
-    setTimeout(() => setIsSaving(false), 150);
-    if (!keepOpen) closeEdit();
   }
 
   function isDailyDoneToday(dates?: number[]): boolean {
@@ -861,7 +785,7 @@ export default function TaskList({
             <button
               className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-sm text-xs hover:bg-accent hover:text-accent-foreground transition-colors"
               onClick={() => {
-                const copyId = useAppStore.getState().duplicateTask(ctxTask.id);
+                useAppStore.getState().duplicateTask(ctxTask.id);
                 toast.show('タスクを複製しました', 'success');
                 setCtxTask(null);
               }}

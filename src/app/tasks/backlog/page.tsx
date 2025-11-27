@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import TaskList from "@/components/TaskList";
 import AddTaskButton from "@/components/AddTaskButton";
@@ -8,9 +7,6 @@ import TaskForm from "@/components/TaskForm";
 import { useAppStore } from "@/lib/store";
 import { Filter as FilterIcon } from "lucide-react";
 import BacklogPageSkeleton from "@/components/BacklogPageSkeleton";
-import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
-import TaskCreateDialog from "@/components/TaskCreateDialog";
 import StylishSelect from "@/components/StylishSelect";
 import FilterBar from "@/components/FilterBar";
 import FilterChip from "@/components/FilterChip";
@@ -20,7 +16,6 @@ export default function BacklogPage() {
   const hydrating = useAppStore((s) => s.hydrating);
   const milestones = useAppStore((s) => s.milestones);
   const backlog = useMemo(() => tasks.filter((t) => t.type === "backlog"), [tasks]);
-  const router = useRouter();
   const [openCreate, setOpenCreate] = useState(false);
   // フィルター状態
   const [showIncomplete, setShowIncomplete] = useState(true);
@@ -162,9 +157,6 @@ export default function BacklogPage() {
                 </>
               )}
             </div>
-            <Link className="text-sm underline opacity-80" href="/">
-              ホーム
-            </Link>
           </div>
         </div>
       </header>
@@ -193,7 +185,7 @@ export default function BacklogPage() {
               <StylishSelect
                 label="ソート"
                 value={sortKeyInc}
-                onChange={(v) => setSortKeyInc(v as any)}
+                onChange={(v) => setSortKeyInc(v as "title" | "createdAt" | "planned" | "type" | "milestone")}
                 options={[
                   { value: "createdAt", label: "日付" },
                   { value: "title", label: "タイトル" },
@@ -239,8 +231,6 @@ export default function BacklogPage() {
             <TaskList
               title={`未完了 (${incItems.length})`}
               tasks={incItems}
-              showPlannedDates
-              tableMode
               showCreatedColumn={false}
               showPlannedColumn
               showTypeColumn
@@ -260,7 +250,7 @@ export default function BacklogPage() {
               <StylishSelect
                 label="ソート"
                 value={sortKeyCom}
-                onChange={(v) => setSortKeyCom(v as any)}
+                onChange={(v) => setSortKeyCom(v as "title" | "createdAt" | "planned" | "type" | "milestone")}
                 options={[
                   { value: "createdAt", label: "日付" },
                   { value: "title", label: "タイトル" },
@@ -306,8 +296,6 @@ export default function BacklogPage() {
             <TaskList
               title={`実行済み (${comItems.length})`}
               tasks={comItems}
-              showPlannedDates
-              tableMode
               showCreatedColumn={false}
               showPlannedColumn
               showTypeColumn

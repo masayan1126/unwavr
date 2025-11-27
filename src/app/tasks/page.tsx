@@ -118,8 +118,6 @@ function TasksPageInner() {
               <TaskList
                 title={`毎日タスク (${taskCounts.daily})`}
                 tasks={baseFiltered.filter(t => t.type === "daily")}
-                showType
-                tableMode
                 showPlannedColumn={false}
                 showTypeColumn
                 showMilestoneColumn={false}
@@ -129,8 +127,6 @@ function TasksPageInner() {
               <TaskList
                 title={`特定曜日 (${taskCounts.scheduled})`}
                 tasks={baseFiltered.filter(t => t.type === "scheduled")}
-                showType
-                tableMode
                 showScheduledColumn
                 showTypeColumn
                 showMilestoneColumn={false}
@@ -140,8 +136,6 @@ function TasksPageInner() {
               <TaskList
                 title={`積み上げ候補 (${taskCounts.backlog})`}
                 tasks={baseFiltered.filter(t => t.type === "backlog")}
-                showType
-                tableMode
                 showPlannedColumn
                 showTypeColumn
                 showMilestoneColumn={false}
@@ -153,8 +147,6 @@ function TasksPageInner() {
             <TaskList
               title={`${typeLabels[selectedType]} (${filteredTasks.length})`}
               tasks={filteredTasks}
-              showType
-              tableMode
               showPlannedColumn={selectedType === "backlog"}
               showScheduledColumn={selectedType === "scheduled"}
               showTypeColumn

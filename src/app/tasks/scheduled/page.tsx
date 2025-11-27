@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import AddTaskButton from "@/components/AddTaskButton";
 import TaskList from "@/components/TaskList";
 import TaskDialog from "@/components/TaskCreateDialog";
@@ -7,9 +6,6 @@ import TaskForm from "@/components/TaskForm";
 import { useMemo, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import SimpleTaskListPageSkeleton from "@/components/SimpleTaskListPageSkeleton";
-import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
-import TaskCreateDialog from "@/components/TaskCreateDialog";
 import StylishSelect from "@/components/StylishSelect";
 import FilterBar from "@/components/FilterBar";
 
@@ -17,7 +13,6 @@ export default function ScheduledTasksPage() {
   const tasks = useAppStore((s) => s.tasks);
   const hydrating = useAppStore((s) => s.hydrating);
   const scheduled = useMemo(() => tasks.filter((t) => t.type === "scheduled"), [tasks]);
-  const router = useRouter();
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [sortKey, setSortKey] = useState<"title" | "createdAt" | "scheduled" | "type" | "milestone">("createdAt");
@@ -54,7 +49,7 @@ export default function ScheduledTasksPage() {
                 <StylishSelect
                   label="ソート"
                   value={sortKey}
-                  onChange={(v) => setSortKey(v as any)}
+                  onChange={(v) => setSortKey(v as "title" | "createdAt" | "scheduled" | "type" | "milestone")}
                   options={[
                     { value: "createdAt", label: "日付" },
                     { value: "title", label: "タイトル" },
@@ -73,7 +68,7 @@ export default function ScheduledTasksPage() {
                   label="ステータス"
                   value={filterStatus}
                   onChange={(v) => {
-                    setFilterStatus(v as any);
+                    setFilterStatus(v as "all" | "completed" | "incomplete");
                     setPage(1);
                   }}
                   options={[
@@ -111,7 +106,7 @@ export default function ScheduledTasksPage() {
             </div>
           </div>
           <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
-            <TaskList title="特定曜日" tasks={pageItems} tableMode showCreatedColumn={false} showPlannedColumn={false} showScheduledColumn showTypeColumn showMilestoneColumn={false} sortKey={sortKey} sortAsc={sortAsc} filterStatus={filterStatus} enableSelection />
+            <TaskList title="特定曜日" tasks={pageItems} showCreatedColumn={false} showPlannedColumn={false} showScheduledColumn showTypeColumn showMilestoneColumn={false} sortKey={sortKey} sortAsc={sortAsc} filterStatus={filterStatus} enableSelection />
           </section>
         </>
       )}

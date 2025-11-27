@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { Heading1, Heading2, Heading3, List, ListOrdered, Text, Code } from 'lucide-react';
+import { Editor, Range } from '@tiptap/core';
 
 export interface CommandItemProps {
     title: string;
     icon: React.ReactNode;
-    command: (editor: any, range: any) => void;
+    command: (props: { editor: Editor; range: Range }) => void;
 }
 
 export const ITEMS: CommandItemProps[] = [
@@ -59,7 +60,12 @@ export const ITEMS: CommandItemProps[] = [
     },
 ];
 
-const CommandList = forwardRef((props: any, ref) => {
+interface CommandListProps {
+    items: CommandItemProps[];
+    command: (item: CommandItemProps) => void;
+}
+
+const CommandList = forwardRef((props: CommandListProps, ref) => {
     const [selectedIndex, setSelectedIndex] = useState(0);
 
     const selectItem = useCallback((index: number) => {

@@ -106,6 +106,7 @@ function TaskFormInner({ onSubmitted, defaultType, task, onCancel }: TaskFormPro
           dailyDoneDates: [],
           plannedDates: type === "backlog" ? plannedDates : [],
           estimatedPomodoros: Number.isFinite(est) ? est : 0,
+          order: 0,
         });
         setDraftTaskId(newId);
       } else {

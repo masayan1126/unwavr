@@ -103,6 +103,7 @@ export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: Qui
         type: "backlog",
         plannedDates: [todayUtc],
         estimatedPomodoros: 0,
+        order: 0,
       });
 
       toast.show(`タスク「${title.trim()}」を追加しました`, "success");
@@ -205,11 +206,10 @@ export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: Qui
                 type="button"
                 onClick={toggleSpeech}
                 disabled={isSubmitting}
-                className={`px-4 py-3 rounded-lg transition-colors flex items-center justify-center min-w-[52px] disabled:opacity-50 ${
-                  listening
+                className={`px-4 py-3 rounded-lg transition-colors flex items-center justify-center min-w-[52px] disabled:opacity-50 ${listening
                     ? "bg-[var(--danger)] text-white hover:opacity-80"
                     : "bg-transparent border border-[var(--border)] hover:bg-black/5 dark:hover:bg-white/10"
-                }`}
+                  }`}
                 title={listening ? "音声入力を停止" : "音声入力を開始"}
                 aria-label={listening ? "音声入力を停止" : "音声入力を開始"}
               >

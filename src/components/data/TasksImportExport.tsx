@@ -195,6 +195,7 @@ export default function TasksImportExport() {
                     scheduled,
                     plannedDates,
                     estimatedPomodoros: Number.isFinite(estimated) ? estimated : 0,
+                    order: 0,
                 });
                 ok++;
             } catch (e) {
