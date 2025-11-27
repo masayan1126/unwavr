@@ -1,106 +1,50 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import TaskList from "@/components/TaskList";
 import AddTaskButton from "@/components/AddTaskButton";
 import TaskDialog from "@/components/TaskCreateDialog";
 import TaskForm from "@/components/TaskForm";
-import { useAppStore } from "@/lib/store";
 import { Filter as FilterIcon } from "lucide-react";
 import BacklogPageSkeleton from "@/components/BacklogPageSkeleton";
 import StylishSelect from "@/components/StylishSelect";
 import FilterBar from "@/components/FilterBar";
 import FilterChip from "@/components/FilterChip";
+import { useBacklogTasks } from "@/hooks/useBacklogTasks";
 
 export default function BacklogPage() {
-  const tasks = useAppStore((s) => s.tasks);
-  const hydrating = useAppStore((s) => s.hydrating);
-  const milestones = useAppStore((s) => s.milestones);
-  const backlog = useMemo(() => tasks.filter((t) => t.type === "backlog"), [tasks]);
-  const [openCreate, setOpenCreate] = useState(false);
-  // フィルター状態
-  const [showIncomplete, setShowIncomplete] = useState(true);
-  const [showCompleted, setShowCompleted] = useState(true);
-  const [filterOpen, setFilterOpen] = useState(false);
+  const {
+    hydrating,
+    showIncomplete,
+    setShowIncomplete,
+    showCompleted,
+    setShowCompleted,
+    filterOpen,
+    setFilterOpen,
+    incItems,
+    totalInc,
+    pageInc,
+    setPageInc,
+    pageSizeInc,
+    setPageSizeInc,
+    totalPagesInc,
+    sortKeyInc,
+    setSortKeyInc,
+    sortAscInc,
+    setSortAscInc,
+    comItems,
+    totalCom,
+    pageCom,
+    setPageCom,
+    pageSizeCom,
+    setPageSizeCom,
+    totalPagesCom,
+    sortKeyCom,
+    setSortKeyCom,
+    sortAscCom,
+    setSortAscCom,
+  } = useBacklogTasks();
 
-  // 実行済みと未完了に分ける
-  const incompleteBacklog = useMemo(() => backlog.filter((t) => !t.completed), [backlog]);
-  const completedBacklog = useMemo(() => backlog.filter((t) => t.completed), [backlog]);
-  const [pageInc, setPageInc] = useState(1);
-  const [pageCom, setPageCom] = useState(1);
-  const [pageSizeInc, setPageSizeInc] = useState(10);
-  const [pageSizeCom, setPageSizeCom] = useState(10);
-  const [sortKeyInc, setSortKeyInc] = useState<"title" | "createdAt" | "planned" | "type" | "milestone">("planned");
-  const [sortAscInc, setSortAscInc] = useState(true);
-  const [sortKeyCom, setSortKeyCom] = useState<"title" | "createdAt" | "planned" | "type" | "milestone">("planned");
-  const [sortAscCom, setSortAscCom] = useState(true);
-  const totalInc = incompleteBacklog.length;
-  const totalCom = completedBacklog.length;
-  const totalPagesInc = Math.max(1, Math.ceil(totalInc / pageSizeInc));
-  const totalPagesCom = Math.max(1, Math.ceil(totalCom / pageSizeCom));
-  const sortedIncompleteBacklog = useMemo(() => {
-    const list = incompleteBacklog.slice();
-    const dir = sortAscInc ? 1 : -1;
-    list.sort((a, b) => {
-      if (sortKeyInc === "title") {
-        return dir * (a.title ?? "").localeCompare(b.title ?? "");
-      }
-      if (sortKeyInc === "createdAt") {
-        return dir * ((a.createdAt ?? 0) - (b.createdAt ?? 0));
-      }
-      if (sortKeyInc === "planned") {
-        const pa = (a.plannedDates ?? []).slice().sort((x, y) => x - y)[0] ?? Number.MAX_SAFE_INTEGER;
-        const pb = (b.plannedDates ?? []).slice().sort((x, y) => x - y)[0] ?? Number.MAX_SAFE_INTEGER;
-        return dir * (pa - pb);
-      }
-      if (sortKeyInc === "type") {
-        const order: Record<string, number> = { daily: 0, scheduled: 1, backlog: 2 };
-        return dir * ((order[a.type] ?? 9) - (order[b.type] ?? 9));
-      }
-      if (sortKeyInc === "milestone") {
-        const ma = milestones.find((m) => m.id === a.milestoneId)?.title ?? "";
-        const mb = milestones.find((m) => m.id === b.milestoneId)?.title ?? "";
-        return dir * ma.localeCompare(mb);
-      }
-      return 0;
-    });
-    return list;
-  }, [incompleteBacklog, sortKeyInc, sortAscInc, milestones]);
-  const sortedCompletedBacklog = useMemo(() => {
-    const list = completedBacklog.slice();
-    const dir = sortAscCom ? 1 : -1;
-    list.sort((a, b) => {
-      if (sortKeyCom === "title") {
-        return dir * (a.title ?? "").localeCompare(b.title ?? "");
-      }
-      if (sortKeyCom === "createdAt") {
-        return dir * ((a.createdAt ?? 0) - (b.createdAt ?? 0));
-      }
-      if (sortKeyCom === "planned") {
-        const pa = (a.plannedDates ?? []).slice().sort((x, y) => x - y)[0] ?? Number.MAX_SAFE_INTEGER;
-        const pb = (b.plannedDates ?? []).slice().sort((x, y) => x - y)[0] ?? Number.MAX_SAFE_INTEGER;
-        return dir * (pa - pb);
-      }
-      if (sortKeyCom === "type") {
-        const order: Record<string, number> = { daily: 0, scheduled: 1, backlog: 2 };
-        return dir * ((order[a.type] ?? 9) - (order[b.type] ?? 9));
-      }
-      if (sortKeyCom === "milestone") {
-        const ma = milestones.find((m) => m.id === a.milestoneId)?.title ?? "";
-        const mb = milestones.find((m) => m.id === b.milestoneId)?.title ?? "";
-        return dir * ma.localeCompare(mb);
-      }
-      return 0;
-    });
-    return list;
-  }, [completedBacklog, sortKeyCom, sortAscCom, milestones]);
-  const incItems = useMemo(() => {
-    const offset = (pageInc - 1) * pageSizeInc;
-    return sortedIncompleteBacklog.slice(offset, offset + pageSizeInc);
-  }, [sortedIncompleteBacklog, pageInc, pageSizeInc]);
-  const comItems = useMemo(() => {
-    const offset = (pageCom - 1) * pageSizeCom;
-    return sortedCompletedBacklog.slice(offset, offset + pageSizeCom);
-  }, [sortedCompletedBacklog, pageCom, pageSizeCom]);
+  const [openCreate, setOpenCreate] = useState(false);
 
   if (hydrating) {
     return <BacklogPageSkeleton />;
@@ -242,7 +186,7 @@ export default function BacklogPage() {
       ) : null}
 
       {/* 実行済みの積み上げ候補 */}
-      {showCompleted && completedBacklog.length > 0 && (
+      {showCompleted && totalCom > 0 && (
         <>
           <div className="flex items-center justify-between mb-2 mt-4">
             <div className="text-xs opacity-70">{pageCom} / {totalPagesCom}（全 {totalCom} 件）</div>
