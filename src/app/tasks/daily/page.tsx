@@ -3,28 +3,30 @@ import AddTaskButton from "@/components/AddTaskButton";
 import TaskList from "@/components/TaskList";
 import TaskDialog from "@/components/TaskCreateDialog";
 import TaskForm from "@/components/TaskForm";
-import { useMemo, useState } from "react";
-import { useAppStore } from "@/lib/store";
+import { useState } from "react";
+import { useDailyTasks } from "@/hooks/useDailyTasks";
 import SimpleTaskListPageSkeleton from "@/components/SimpleTaskListPageSkeleton";
 import StylishSelect from "@/components/StylishSelect";
 import FilterBar from "@/components/FilterBar";
 
 export default function DailyTasksPage() {
-  const tasks = useAppStore((s) => s.tasks);
-  const hydrating = useAppStore((s) => s.hydrating);
-  const daily = useMemo(() => tasks.filter((t) => t.type === "daily"), [tasks]);
-  const [page, setPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
-  const [sortKey, setSortKey] = useState<"title" | "createdAt" | "type" | "milestone">("createdAt");
-  const [sortAsc, setSortAsc] = useState<boolean>(false);
-  const [filterStatus, setFilterStatus] = useState<"all" | "completed" | "incomplete">("all");
+  const {
+    hydrating,
+    pageItems,
+    total,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    sortKey,
+    setSortKey,
+    sortAsc,
+    setSortAsc,
+    filterStatus,
+    setFilterStatus,
+  } = useDailyTasks();
   const [openCreate, setOpenCreate] = useState(false);
-  const total = daily.length;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const pageItems = useMemo(() => {
-    const offset = (page - 1) * pageSize;
-    return daily.slice(offset, offset + pageSize);
-  }, [daily, page, pageSize]);
 
   if (hydrating) {
     return <SimpleTaskListPageSkeleton />;
