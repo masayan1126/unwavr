@@ -314,7 +314,7 @@ export const useAppStore = create<AppState>()(
         const changed = tasks.find((t) => t.id === taskId);
         const justCompleted = Boolean(changed?.completed);
         if (changed) fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ completed: changed.completed }) }).catch(() => { });
-        if (justCompleted && includesActiveTask(state.pomodoro.activeTaskId, [taskId])) {
+        if (justCompleted && state.pomodoro.activeTaskIds.includes(taskId)) {
           // 完了したらアクティブから外す
           const nextActiveIds = state.pomodoro.activeTaskIds.filter((id) => id !== taskId);
           const nextActiveId = nextActiveIds.length > 0 ? nextActiveIds[0] : undefined;
@@ -343,6 +343,24 @@ export const useAppStore = create<AppState>()(
           fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dailyDoneDates: next.dailyDoneDates }) }).catch(() => { });
           return next;
         });
+
+        // Check if the task was just marked as done for today
+        const updatedTask = tasks.find((t) => t.id === taskId);
+        const isDoneToday = updatedTask?.dailyDoneDates?.includes(today);
+
+        if (isDoneToday && state.pomodoro.activeTaskIds.includes(taskId)) {
+          const nextActiveIds = state.pomodoro.activeTaskIds.filter((id) => id !== taskId);
+          const nextActiveId = nextActiveIds.length > 0 ? nextActiveIds[0] : undefined;
+          try {
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(ACTIVE_TASK_IDS_STORAGE_KEY, JSON.stringify(nextActiveIds));
+              if (nextActiveId) localStorage.setItem(ACTIVE_TASK_STORAGE_KEY, nextActiveId);
+              else localStorage.removeItem(ACTIVE_TASK_STORAGE_KEY);
+            }
+          } catch { }
+          return { tasks, pomodoro: { ...state.pomodoro, activeTaskId: nextActiveId, activeTaskIds: nextActiveIds } };
+        }
+
         return { tasks };
       }),
     togglePlannedForToday: (taskId) =>
@@ -444,7 +462,8 @@ export const useAppStore = create<AppState>()(
           }).catch(() => { });
           return next;
         });
-        if (includesActiveTask(state.pomodoro.activeTaskId, taskIds)) {
+        const activeIdsSet = new Set(state.pomodoro.activeTaskIds);
+        if (taskIds.some((id) => activeIdsSet.has(id))) {
           // まとめて完了した場合もアクティブから外す
           const nextActiveIds = state.pomodoro.activeTaskIds.filter((id) => !taskIds.includes(id));
           const nextActiveId = nextActiveIds.length > 0 ? nextActiveIds[0] : undefined;
