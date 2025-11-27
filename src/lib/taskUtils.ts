@@ -171,4 +171,31 @@ export function getEarliestExecutionDate(task: Task): number | null {
   return null;
 }
 
+export function isDailyDoneToday(dailyDoneDates?: number[]): boolean {
+  const now = new Date();
+  const local = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const utc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  return Boolean(dailyDoneDates && (dailyDoneDates.includes(local) || dailyDoneDates.includes(utc)));
+}
 
+export function isBacklogPlannedToday(plannedDates?: number[]): boolean {
+  if (!plannedDates || plannedDates.length === 0) return false;
+  const now = new Date();
+  const localMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const utcMidnight = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  if (plannedDates.includes(localMidnight) || plannedDates.includes(utcMidnight)) return true;
+  return plannedDates.some((rawTs) => {
+    const tsMs = rawTs < 1e12 ? rawTs * 1000 : rawTs;
+    const dt = new Date(tsMs);
+    return dt.getFullYear() === now.getFullYear() && dt.getMonth() === now.getMonth() && dt.getDate() === now.getDate();
+  });
+}
+
+export function isScheduledForToday(days?: number[], ranges?: { start: number; end: number }[]): boolean {
+  const now = new Date();
+  const dow = now.getDay();
+  const inDays = Boolean(days && days.includes(dow));
+  const t = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const inRanges = Boolean(ranges && ranges.some((r) => t >= r.start && t <= r.end));
+  return inDays || inRanges;
+}

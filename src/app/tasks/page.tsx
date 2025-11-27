@@ -1,112 +1,29 @@
 "use client";
-import { useState, useMemo, Suspense, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import Link from "next/link";
 import TaskList from "@/components/TaskList";
 import TaskDialog from "@/components/TaskCreateDialog";
 import AddTaskButton from "@/components/AddTaskButton";
 import TaskForm from "@/components/TaskForm";
-import { useAppStore } from "@/lib/store";
-import { TaskType } from "@/lib/types";
 import TasksPageSkeleton from "@/components/TasksPageSkeleton";
-import TaskCreateDialog from "@/components/TaskCreateDialog";
-import { isOverdue } from "@/lib/taskUtils";
+import { useTasksPage } from "@/hooks/useTasksPage";
+import { Button } from "@/components/ui/Button";
+import { H1 } from "@/components/ui/Typography";
+import { TaskType } from "@/lib/types";
 
 function TasksPageInner() {
-  const tasks = useAppStore((s) => s.tasks);
-  const hydrating = useAppStore((s) => s.hydrating);
-  const [selectedType, setSelectedType] = useState<TaskType | "all">("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const searchParams = useSearchParams();
-  const [openCreate, setOpenCreate] = useState(false);
-
-  useEffect(() => {
-    if (searchParams.get("new") === "1") setOpenCreate(true);
-  }, [searchParams]);
-
-  function isDailyDoneToday(dailyDoneDates?: number[]): boolean {
-    const now = new Date();
-    const local = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const utc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-    return Boolean(dailyDoneDates && (dailyDoneDates.includes(local) || dailyDoneDates.includes(utc)));
-  }
-
-  function isBacklogPlannedToday(plannedDates?: number[]): boolean {
-    if (!plannedDates || plannedDates.length === 0) return false;
-    const now = new Date();
-    const localMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const utcMidnight = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-    if (plannedDates.includes(localMidnight) || plannedDates.includes(utcMidnight)) return true;
-    return plannedDates.some((rawTs) => {
-      const tsMs = rawTs < 1e12 ? rawTs * 1000 : rawTs;
-      const dt = new Date(tsMs);
-      return dt.getFullYear() === now.getFullYear() && dt.getMonth() === now.getMonth() && dt.getDate() === now.getDate();
-    });
-  }
-
-  function isScheduledForToday(days?: number[], ranges?: { start: number; end: number }[]): boolean {
-    const now = new Date();
-    const dow = now.getDay();
-    const inDays = Boolean(days && days.includes(dow));
-    const t = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const inRanges = Boolean(ranges && ranges.some((r) => t >= r.start && t <= r.end));
-    return inDays || inRanges;
-  }
-
-  // 現在の検索/クエリパラメータに基づく共通フィルタ（タイプは絞り込まない）
-  const baseFiltered = useMemo(() => {
-    const dailyFlag = searchParams.get("daily") === "1";
-    const backlogTodayFlag = searchParams.get("backlogToday") === "1";
-    const scheduledTodayFlag = searchParams.get("scheduledToday") === "1";
-    const overdueFlag = searchParams.get("overdue") === "1";
-    const onlyIncomplete = searchParams.get("onlyIncomplete") === "1";
-
-    let filtered = tasks.filter((task) => {
-      if (dailyFlag || backlogTodayFlag || scheduledTodayFlag || overdueFlag) {
-        if (onlyIncomplete) {
-          if (task.type === "daily") {
-            if (isDailyDoneToday(task.dailyDoneDates)) return false;
-          } else {
-            if (task.completed) return false;
-          }
-        }
-        const now = new Date();
-        const todayLocalMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-        if (overdueFlag && isOverdue(task, todayLocalMidnight)) return true;
-        if (dailyFlag && task.type === "daily") return true;
-        if (backlogTodayFlag && task.type === "backlog" && isBacklogPlannedToday(task.plannedDates)) return true;
-        if (scheduledTodayFlag && task.type === "scheduled" && isScheduledForToday(task.scheduled?.daysOfWeek, task.scheduled?.dateRanges)) return true;
-        return false;
-      }
-      // パラメータ指定が無ければ全件（タイプ未絞り込み）
-      return true;
-    });
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter((task) =>
-        task.title.toLowerCase().includes(query) ||
-        (task.description && task.description.toLowerCase().includes(query))
-      );
-    }
-    return filtered;
-  }, [tasks, searchQuery, searchParams]);
-
-  // 表示中のタスクリスト（選択タイプを反映）
-  const filteredTasks = useMemo(() => {
-    if (selectedType === "all") return baseFiltered;
-    return baseFiltered.filter((t) => t.type === selectedType);
-  }, [baseFiltered, selectedType]);
-
-  // 画面上の件数（現在の検索/条件に合わせた件数）
-  const taskCounts = useMemo(() => {
-    return {
-      all: baseFiltered.length,
-      daily: baseFiltered.filter(t => t.type === "daily").length,
-      backlog: baseFiltered.filter(t => t.type === "backlog").length,
-      scheduled: baseFiltered.filter(t => t.type === "scheduled").length,
-    };
-  }, [baseFiltered]);
+  const {
+    hydrating,
+    selectedType,
+    setSelectedType,
+    searchQuery,
+    setSearchQuery,
+    openCreate,
+    setOpenCreate,
+    filteredTasks,
+    taskCounts,
+    baseFiltered,
+  } = useTasksPage();
 
   const typeLabels: Record<TaskType | "all", string> = {
     all: "すべて",
@@ -123,7 +40,7 @@ function TasksPageInner() {
     <div className="p-6 sm:p-10 max-w-6xl mx-auto flex flex-col gap-6">
       <header className="mb-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold">今日のタスク</h1>
+          <H1>今日のタスク</H1>
           <div className="flex items-center gap-4">
             <AddTaskButton
               onClick={() => setOpenCreate(true)}
@@ -139,16 +56,15 @@ function TasksPageInner() {
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
         <div className="flex gap-2">
           {(["all", "daily", "backlog", "scheduled"] as const).map(type => (
-            <button
+            <Button
               key={type}
               onClick={() => setSelectedType(type)}
-              className={`px-3 py-1 rounded border text-sm ${selectedType === type
-                ? "bg-[var(--primary)] text-white border-[var(--primary)]"
-                : "border-black/10 dark:border-white/10"
-                }`}
+              variant={selectedType === type ? "primary" : "outline"}
+              size="sm"
+              className={selectedType === type ? "" : "border-black/10 dark:border-white/10"}
             >
               {typeLabels[type]} ({taskCounts[type]})
-            </button>
+            </Button>
           ))}
         </div>
 
