@@ -4,7 +4,7 @@ import { getTodayDateInput, getTomorrowDateInput } from "@/lib/taskUtils";
 import { Task } from "@/lib/types";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useConfirm } from "@/components/Providers";
-import { CalendarDays, ListTodo, Archive, Circle, ChevronDown, CheckCircle2, Trash2, ArrowRight, Calendar, Copy, Edit, Play, Pause } from "lucide-react";
+import { CalendarDays, ListTodo, Archive, Circle, ChevronDown, CheckCircle2, Trash2, ArrowRight, Calendar, Copy, Edit, Play, Pause, GripVertical } from "lucide-react";
 import TaskDialog from "@/components/TaskCreateDialog";
 import { useToast } from "@/components/Providers";
 import TaskForm, { type TaskFormHandle } from "@/components/TaskForm";
@@ -34,7 +34,7 @@ function TypeBadge({ type, label }: { type: "daily" | "scheduled" | "backlog"; l
 }
 
 import { Reorder } from "framer-motion";
-import { GripVertical } from "lucide-react";
+
 
 interface TaskRowProps {
   task: Task;

@@ -60,8 +60,8 @@ const suggestion = {
                     popup[0].hide();
                     return true;
                 }
-                // @ts-expect-error: component.ref might be undefined or not have onKeyDown
-                return component.ref?.onKeyDown(props);
+                const ref = component.ref as { onKeyDown: (props: SuggestionProps) => boolean } | null;
+                return ref?.onKeyDown(props) ?? false;
             },
             onExit() {
                 popup[0].destroy();

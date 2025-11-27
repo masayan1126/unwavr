@@ -1,8 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, ListTodo, Upload, Plus, ChevronLeft, ChevronRight, AlertTriangle, Home, Archive, Rocket, Target, Timer, Calendar, Music, Lock, MessageSquare, Settings } from "lucide-react";
-import { useAppStore } from "@/lib/store";
+import { CalendarDays, ListTodo, ChevronLeft, ChevronRight, AlertTriangle, Home, Archive, Rocket, Target, Timer, Calendar, Music, Lock, MessageSquare, Settings } from "lucide-react";
 import AuthButtons from "@/components/AuthButtons";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";

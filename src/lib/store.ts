@@ -134,19 +134,7 @@ export type AppState = {
 const ACTIVE_TASK_STORAGE_KEY = 'pomodoro:activeTaskId';
 const ACTIVE_TASK_IDS_STORAGE_KEY = 'pomodoro:activeTaskIds';
 
-function clearActiveTaskSideEffects(): void {
-  try {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(ACTIVE_TASK_STORAGE_KEY);
-      localStorage.removeItem(ACTIVE_TASK_IDS_STORAGE_KEY);
-    }
-  } catch { }
-}
 
-function includesActiveTask(activeId: string | undefined, ids: string[]): boolean {
-  if (!activeId) return false;
-  return ids.includes(activeId);
-}
 
 const defaultPomodoro: PomodoroState = {
   isRunning: false,
