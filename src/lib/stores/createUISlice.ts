@@ -1,21 +1,12 @@
 import { StateCreator } from "zustand";
 import { AppState } from "../storeTypes";
 import { Task, Milestone, LauncherCategory, LauncherShortcut, BgmGroup, BgmTrack } from "../types";
-
-export interface UISlice {
-    dataSource: 'db';
-    hydrating: boolean;
-    fontSize: number;
-    setDataSource: (src: 'db') => void;
-    hydrateFromDb: () => Promise<void>;
-    setFontSize: (size: number) => void;
-    clearTasksMilestonesLaunchers: () => void;
-}
+import { UISlice } from "./sliceTypes";
 
 export const createUISlice: StateCreator<AppState, [], [], UISlice> = (set, get) => ({
     dataSource: 'db',
     hydrating: true,
-    fontSize: (typeof window !== 'undefined' ? Number(localStorage.getItem("fontSize") || 100) : 100),
+    fontSize: (typeof window !== 'undefined' ? Number(safeLocalStorageGet("fontSize") || 100) : 100),
     setDataSource: (src) => set({ dataSource: src }),
     hydrateFromDb: async () => {
         set({ hydrating: true });
@@ -47,7 +38,7 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (set, get)
         }
     },
     setFontSize: (size) => {
-        if (typeof window !== 'undefined') localStorage.setItem("fontSize", String(size));
+        safeLocalStorageSet("fontSize", String(size));
         set({ fontSize: size });
     },
     clearTasksMilestonesLaunchers: () => {
@@ -57,3 +48,20 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (set, get)
             .catch(() => { });
     },
 });
+
+function safeLocalStorageGet(key: string): string | null {
+    try {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem(key);
+        }
+    } catch { }
+    return null;
+}
+
+function safeLocalStorageSet(key: string, value: string) {
+    try {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(key, value);
+        }
+    } catch { }
+}

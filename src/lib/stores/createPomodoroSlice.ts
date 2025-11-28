@@ -1,6 +1,7 @@
 import { StateCreator } from "zustand";
 import { PomodoroState, PomodoroStateSchema } from "../types";
 import { AppState } from "../storeTypes";
+import { PomodoroSlice } from "./sliceTypes";
 
 const defaultPomodoro: PomodoroState = {
     isRunning: false,
@@ -18,24 +19,37 @@ const defaultPomodoro: PomodoroState = {
 const ACTIVE_TASK_STORAGE_KEY = 'pomodoro:activeTaskId';
 const ACTIVE_TASK_IDS_STORAGE_KEY = 'pomodoro:activeTaskIds';
 
-export interface PomodoroSlice {
-    pomodoro: PomodoroState;
-    setActiveTask: (taskId?: string) => void;
-    addActiveTask: (taskId: string) => void;
-    removeActiveTask: (taskId: string) => void;
-    reorderActiveTasks: (newOrder: string[]) => void;
-    startPomodoro: (isBreak?: boolean) => void;
-    stopPomodoro: () => void;
-    tickPomodoro: () => void;
-    resetPomodoro: () => void;
-    setPomodoroSettings: (settings: Partial<Pick<PomodoroState, "workDurationSec" | "shortBreakSec" | "longBreakSec" | "cyclesUntilLongBreak">>) => void;
+function safeLocalStorageGet(key: string): string | null {
+    try {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem(key);
+        }
+    } catch { }
+    return null;
 }
 
-export const createPomodoroSlice: StateCreator<AppState, [], [], PomodoroSlice> = (set, get) => ({
+function safeLocalStorageSet(key: string, value: string) {
+    try {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(key, value);
+        }
+    } catch { }
+}
+
+function safeLocalStorageRemove(key: string) {
+    try {
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem(key);
+        }
+    } catch { }
+}
+
+
+export const createPomodoroSlice: StateCreator<AppState, [], [], PomodoroSlice> = (set) => ({
     pomodoro: PomodoroStateSchema.parse({
         ...defaultPomodoro,
-        activeTaskId: (typeof window !== 'undefined' ? (localStorage.getItem(ACTIVE_TASK_STORAGE_KEY) || undefined) : undefined),
-        activeTaskIds: (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem(ACTIVE_TASK_IDS_STORAGE_KEY) || "[]") : []),
+        activeTaskId: safeLocalStorageGet(ACTIVE_TASK_STORAGE_KEY) || undefined,
+        activeTaskIds: JSON.parse(safeLocalStorageGet(ACTIVE_TASK_IDS_STORAGE_KEY) || "[]"),
     }),
     setActiveTask: (taskId) =>
         set((state) => {
@@ -47,13 +61,9 @@ export const createPomodoroSlice: StateCreator<AppState, [], [], PomodoroSlice> 
                     nextIds = [taskId, ...nextIds.filter((id) => id !== taskId)];
                 }
             }
-            try {
-                if (typeof window !== 'undefined') {
-                    if (taskId) localStorage.setItem(ACTIVE_TASK_STORAGE_KEY, taskId);
-                    else localStorage.removeItem(ACTIVE_TASK_STORAGE_KEY);
-                    localStorage.setItem(ACTIVE_TASK_IDS_STORAGE_KEY, JSON.stringify(nextIds));
-                }
-            } catch { }
+            if (taskId) safeLocalStorageSet(ACTIVE_TASK_STORAGE_KEY, taskId);
+            else safeLocalStorageRemove(ACTIVE_TASK_STORAGE_KEY);
+            safeLocalStorageSet(ACTIVE_TASK_IDS_STORAGE_KEY, JSON.stringify(nextIds));
             return { pomodoro: { ...state.pomodoro, activeTaskId: taskId, activeTaskIds: nextIds } };
         }),
     addActiveTask: (taskId) =>
@@ -61,12 +71,8 @@ export const createPomodoroSlice: StateCreator<AppState, [], [], PomodoroSlice> 
             if (state.pomodoro.activeTaskIds.includes(taskId)) return state;
             const nextIds = [...state.pomodoro.activeTaskIds, taskId];
             const nextActiveId = state.pomodoro.activeTaskId || taskId;
-            try {
-                if (typeof window !== 'undefined') {
-                    localStorage.setItem(ACTIVE_TASK_IDS_STORAGE_KEY, JSON.stringify(nextIds));
-                    localStorage.setItem(ACTIVE_TASK_STORAGE_KEY, nextActiveId);
-                }
-            } catch { }
+            safeLocalStorageSet(ACTIVE_TASK_IDS_STORAGE_KEY, JSON.stringify(nextIds));
+            safeLocalStorageSet(ACTIVE_TASK_STORAGE_KEY, nextActiveId);
             return { pomodoro: { ...state.pomodoro, activeTaskIds: nextIds, activeTaskId: nextActiveId } };
         }),
     removeActiveTask: (taskId) =>
@@ -76,13 +82,9 @@ export const createPomodoroSlice: StateCreator<AppState, [], [], PomodoroSlice> 
             if (nextActiveId === taskId) {
                 nextActiveId = nextIds.length > 0 ? nextIds[0] : undefined;
             }
-            try {
-                if (typeof window !== 'undefined') {
-                    localStorage.setItem(ACTIVE_TASK_IDS_STORAGE_KEY, JSON.stringify(nextIds));
-                    if (nextActiveId) localStorage.setItem(ACTIVE_TASK_STORAGE_KEY, nextActiveId);
-                    else localStorage.removeItem(ACTIVE_TASK_STORAGE_KEY);
-                }
-            } catch { }
+            safeLocalStorageSet(ACTIVE_TASK_IDS_STORAGE_KEY, JSON.stringify(nextIds));
+            if (nextActiveId) safeLocalStorageSet(ACTIVE_TASK_STORAGE_KEY, nextActiveId);
+            else safeLocalStorageRemove(ACTIVE_TASK_STORAGE_KEY);
             return { pomodoro: { ...state.pomodoro, activeTaskIds: nextIds, activeTaskId: nextActiveId } };
         }),
     reorderActiveTasks: (newOrder) =>
@@ -91,12 +93,7 @@ export const createPomodoroSlice: StateCreator<AppState, [], [], PomodoroSlice> 
             const validOrder = newOrder.filter((id) => currentSet.has(id));
             const missing = state.pomodoro.activeTaskIds.filter((id) => !validOrder.includes(id));
             const finalIds = [...validOrder, ...missing];
-
-            try {
-                if (typeof window !== 'undefined') {
-                    localStorage.setItem(ACTIVE_TASK_IDS_STORAGE_KEY, JSON.stringify(finalIds));
-                }
-            } catch { }
+            safeLocalStorageSet(ACTIVE_TASK_IDS_STORAGE_KEY, JSON.stringify(finalIds));
             return { pomodoro: { ...state.pomodoro, activeTaskIds: finalIds } };
         }),
     startPomodoro: (isBreak) =>

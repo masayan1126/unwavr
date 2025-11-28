@@ -2,26 +2,8 @@ import { StateCreator } from "zustand";
 import { Task, createTaskId, isTaskForToday } from "../types";
 import { AppState } from "../storeTypes";
 
-export interface TaskSlice {
-    tasks: Task[];
-    addTask: (input: Omit<Task, "id" | "createdAt" | "completed" | "completedPomodoros">) => string;
-    toggleTask: (taskId: string) => void;
-    toggleDailyDoneForToday: (taskId: string) => void;
-    togglePlannedForToday: (taskId: string) => void;
-    incrementTaskPomodoro: (taskId: string) => void;
-    removeTask: (taskId: string) => void;
-    updateTask: (taskId: string, update: Partial<Omit<Task, "id" | "createdAt">>) => void;
-    duplicateTask: (taskId: string) => string;
-    completeTasks: (taskIds: string[]) => void;
-    resetDailyDoneForToday: (taskIds: string[]) => void;
-    archiveDailyTasks: (taskIds: string[]) => void;
-    archiveDailyTask: (taskId: string) => void;
-    updateTaskOrder: (taskId: string, newOrder: number) => void;
-    tasksForToday: () => Task[];
-    backlogTasks: () => Task[];
-    weekendOrHolidayTasks: () => Task[];
-    clearTasks: () => void;
-}
+import { TaskSlice } from "./sliceTypes";
+
 
 export const createTaskSlice: StateCreator<AppState, [], [], TaskSlice> = (set, get) => ({
     tasks: [],
@@ -262,4 +244,39 @@ export const createTaskSlice: StateCreator<AppState, [], [], TaskSlice> = (set, 
             (t) => t.archived !== true && t.type === "scheduled" && (t.scheduled?.daysOfWeek?.some((d) => d === 0 || d === 6) || (t.scheduled?.dateRanges?.length ?? 0) > 0)
         ),
     clearTasks: () => set({ tasks: [] }),
+    moveTasksToToday: (taskIds) =>
+        set((state) => {
+            if (!Array.isArray(taskIds) || taskIds.length === 0) return state;
+            const d = new Date();
+            const todayUtc = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+
+            const tasks = state.tasks.map((t) => {
+                if (!taskIds.includes(t.id)) return t;
+
+                if (t.type === 'daily') return t; // Daily tasks are already for today if not archived
+
+                let next = { ...t };
+                let updated = false;
+
+                if (t.type === 'scheduled') {
+                    // Convert to backlog and set planned date to today
+                    next = { ...next, type: 'backlog', plannedDates: [todayUtc] } as Task;
+                    updated = true;
+                } else if (t.type === 'backlog') {
+                    // Update planned date to today
+                    next = { ...next, plannedDates: [todayUtc] } as Task;
+                    updated = true;
+                }
+
+                if (updated) {
+                    fetch(`/api/db/tasks/${encodeURIComponent(t.id)}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: next.type, plannedDates: next.plannedDates })
+                    }).catch(() => { });
+                }
+                return next;
+            });
+            return { tasks };
+        }),
 });

@@ -58,10 +58,10 @@ export default function ActiveTasksQueue() {
                     return (
                         <Reorder.Item key={task.id} value={task}>
                             <div
-                                className={`relative flex items-center gap-3 p-3 bg-card border border-border rounded-lg shadow-sm transition-all ${getBorderColor(index)} ${isTimerTarget ? "bg-primary/5" : ""}`}
+                                className={`relative flex items-center gap-2 px-3 py-2 bg-card border border-border rounded-lg shadow-sm transition-all ${getBorderColor(index)} ${isTimerTarget ? "bg-primary/5" : ""}`}
                             >
                                 <div className="cursor-grab active:cursor-grabbing p-1 opacity-50 hover:opacity-100">
-                                    <GripVertical size={16} />
+                                    <GripVertical size={14} />
                                 </div>
 
                                 <div className="flex-1 min-w-0">
@@ -73,12 +73,9 @@ export default function ActiveTasksQueue() {
                                             </span>
                                         )}
                                     </div>
-                                    {task.description && (
-                                        <div className="text-xs opacity-70 truncate">{task.description}</div>
-                                    )}
                                 </div>
 
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
                                     <button
                                         onClick={() => {
                                             if (isTimerRunning) {
@@ -88,13 +85,13 @@ export default function ActiveTasksQueue() {
                                                 startPomodoro();
                                             }
                                         }}
-                                        className={`p-2 rounded-full transition-colors ${isTimerRunning
+                                        className={`p-1.5 rounded-full transition-colors ${isTimerRunning
                                             ? "bg-primary text-primary-foreground hover:opacity-90"
                                             : "bg-muted hover:bg-muted/80 text-muted-foreground"
                                             }`}
                                         title={isTimerRunning ? "一時停止" : "タイマー開始"}
                                     >
-                                        {isTimerRunning ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
+                                        {isTimerRunning ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
                                     </button>
 
                                     <button
@@ -102,18 +99,18 @@ export default function ActiveTasksQueue() {
                                             toggleTask(task.id);
                                             toast.show(`「${task.title}」を完了しました`, "success");
                                         }}
-                                        className="p-2 rounded-full hover:bg-green-500/10 text-muted-foreground hover:text-green-500 transition-colors"
+                                        className="p-1.5 rounded-full hover:bg-green-500/10 text-muted-foreground hover:text-green-500 transition-colors"
                                         title="完了にする"
                                     >
-                                        <CheckCircle2 size={18} />
+                                        <CheckCircle2 size={16} />
                                     </button>
 
                                     <button
                                         onClick={() => removeActiveTask(task.id)}
-                                        className="p-2 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                                        className="p-1.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                                         title="着手中から外す"
                                     >
-                                        <X size={18} />
+                                        <X size={16} />
                                     </button>
                                 </div>
                             </div>

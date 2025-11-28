@@ -1,17 +1,7 @@
 import { StateCreator } from "zustand";
 import { Milestone, createMilestoneId } from "../types";
 import { AppState } from "../storeTypes";
-
-export interface MilestoneSlice {
-    milestones: Milestone[];
-    addMilestone: (input: Omit<Milestone, "id">) => void;
-    updateMilestoneProgress: (milestoneId: string, delta: number) => void;
-    removeMilestone: (milestoneId: string) => void;
-    exportMilestones: () => string;
-    importMilestones: (jsonData: string) => { success: boolean; imported: number; errors: string[] };
-    updateMilestoneOrder: (milestoneId: string, newOrder: number) => void;
-    clearMilestones: () => void;
-}
+import { MilestoneSlice } from "./sliceTypes";
 
 export const createMilestoneSlice: StateCreator<AppState, [], [], MilestoneSlice> = (set, get) => ({
     milestones: [],

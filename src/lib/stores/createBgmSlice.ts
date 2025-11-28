@@ -1,6 +1,7 @@
 import { StateCreator } from "zustand";
 import { BgmTrack, BgmGroup } from "../types";
 import { AppState } from "../storeTypes";
+import { BgmSlice } from "./sliceTypes";
 
 function createBgmId(): string {
     return `bgm_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
@@ -9,27 +10,7 @@ function createBgmGroupId(): string {
     return `bgmg_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
 }
 
-export interface BgmSlice {
-    bgmTracks: BgmTrack[];
-    bgmGroups: BgmGroup[];
-    bgmCurrentTrackId?: string;
-    bgmMiniPos?: { x: number; y: number };
-    addBgmTrack: (input: Omit<BgmTrack, "id" | "createdAt">) => void;
-    removeBgmTrack: (id: string) => void;
-    updateBgmTrack: (id: string, update: Partial<Omit<BgmTrack, "id">>) => void;
-    moveBgmTrack: (fromIdx: number, toIdx: number) => void;
-    moveBgmTrackWithinGroup: (trackId: string, beforeTrackId?: string) => void;
-    setBgmTrackGroup: (trackId: string, groupId?: string) => void;
-    clearBgmTracks: () => void;
-    addBgmGroup: (input: Omit<BgmGroup, "id">) => void;
-    updateBgmGroup: (id: string, update: Partial<Omit<BgmGroup, "id">>) => void;
-    removeBgmGroup: (id: string) => void;
-    playBgmTrack: (trackId: string) => void;
-    stopBgm: () => void;
-    setBgmMiniPos: (pos: { x: number; y: number }) => void;
-}
-
-export const createBgmSlice: StateCreator<AppState, [], [], BgmSlice> = (set, get) => ({
+export const createBgmSlice: StateCreator<AppState, [], [], BgmSlice> = (set) => ({
     bgmTracks: [],
     bgmGroups: [],
     bgmCurrentTrackId: undefined,

@@ -1,19 +1,13 @@
 import { StateCreator } from "zustand";
-import { ImportHistoryEntry } from "../types";
+// import { ImportHistoryEntry } from "../types";
 import { AppState } from "../storeTypes";
+import { ImportHistorySlice } from "./sliceTypes";
 
 function createHistoryId(): string {
     return `imh_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
 }
 
-export interface ImportHistorySlice {
-    importHistory: ImportHistoryEntry[];
-    addImportHistory: (entry: Omit<ImportHistoryEntry, "id">) => void;
-    deleteImportHistory: (id: string) => void;
-    clearImportHistory: () => void;
-}
-
-export const createImportHistorySlice: StateCreator<AppState, [], [], ImportHistorySlice> = (set, get) => ({
+export const createImportHistorySlice: StateCreator<AppState, [], [], ImportHistorySlice> = (set) => ({
     importHistory: [],
     addImportHistory: (entry) =>
         set((state) => ({ importHistory: [{ ...entry, id: createHistoryId() }, ...state.importHistory] })),

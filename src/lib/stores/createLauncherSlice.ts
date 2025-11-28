@@ -1,6 +1,7 @@
 import { StateCreator } from "zustand";
 import { LauncherShortcut, LauncherCategory } from "../types";
 import { AppState } from "../storeTypes";
+import { LauncherSlice } from "./sliceTypes";
 
 function createShortcutId(): string {
     return `sct_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
@@ -8,22 +9,6 @@ function createShortcutId(): string {
 
 function createCategoryId(): string {
     return `cat_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
-}
-
-export interface LauncherSlice {
-    launcherShortcuts: LauncherShortcut[];
-    launcherCategories: LauncherCategory[];
-    launcherOnboarded: boolean;
-    addLauncherShortcut: (input: Omit<LauncherShortcut, "id">) => void;
-    removeLauncherShortcut: (id: string) => void;
-    updateLauncherShortcut: (id: string, update: Partial<Omit<LauncherShortcut, "id">>) => void;
-    addLauncherCategory: (input: Omit<LauncherCategory, "id">) => void;
-    removeLauncherCategory: (id: string) => void;
-    updateLauncherCategory: (id: string, update: Partial<Omit<LauncherCategory, "id">>) => void;
-    exportLaunchers: () => string;
-    importLaunchers: (jsonData: string, replace?: boolean) => { success: boolean; importedShortcuts: number; importedCategories: number; errors: string[] };
-    setLauncherOnboarded: (value: boolean) => void;
-    clearLaunchers: () => void;
 }
 
 export const createLauncherSlice: StateCreator<AppState, [], [], LauncherSlice> = (set, get) => ({

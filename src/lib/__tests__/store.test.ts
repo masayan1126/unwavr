@@ -1,12 +1,13 @@
 import { useAppStore } from "../store";
 import { act } from "@testing-library/react";
+import { vi, describe, it, expect, beforeEach } from "vitest";
 
 // Mock fetch
-global.fetch = jest.fn(() =>
+global.fetch = vi.fn(() =>
     Promise.resolve({
         json: () => Promise.resolve({}),
     })
-) as jest.Mock;
+) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 describe("useAppStore", () => {
     beforeEach(() => {
@@ -25,11 +26,12 @@ describe("useAppStore", () => {
                 activeTaskIds: [],
             },
         });
-        jest.clearAllMocks();
+        vi.clearAllMocks();
+
     });
 
     it("should add a task", () => {
-        const { addTask, tasks } = useAppStore.getState();
+        const { tasks } = useAppStore.getState();
         expect(tasks).toHaveLength(0);
 
         let taskId = "";
@@ -37,6 +39,7 @@ describe("useAppStore", () => {
             taskId = useAppStore.getState().addTask({
                 title: "Test Task",
                 type: "daily",
+                order: 0,
             });
         });
 
@@ -52,6 +55,7 @@ describe("useAppStore", () => {
             taskId = useAppStore.getState().addTask({
                 title: "Test Task",
                 type: "daily",
+                order: 0,
             });
         });
 
@@ -70,6 +74,7 @@ describe("useAppStore", () => {
             taskId = useAppStore.getState().addTask({
                 title: "Test Task",
                 type: "daily",
+                order: 0,
             });
         });
 
@@ -99,24 +104,23 @@ describe("useAppStore", () => {
     });
 
     it("should tick pomodoro", () => {
-        jest.useFakeTimers();
+        vi.useFakeTimers();
+
         act(() => {
             useAppStore.getState().startPomodoro();
         });
 
-        const initialSeconds = useAppStore.getState().pomodoro.secondsLeft;
+        // const initialSeconds = useAppStore.getState().pomodoro.secondsLeft;
 
         // Advance time by 1 second
         act(() => {
-            jest.advanceTimersByTime(1000);
+            vi.advanceTimersByTime(1000);
+
             useAppStore.getState().tickPomodoro();
         });
 
-        // Note: tickPomodoro relies on Date.now(). Jest fake timers mock Date.now() if configured,
-        // but we might need to ensure Date.now() advances.
-        // In many jest setups, advanceTimersByTime advances Date.now() as well.
-        // However, the store uses `Date.now()` inside.
-        // If this test fails, we might need to spyOn Date.now.
+        vi.useRealTimers();
+
     });
 
     it("should add a milestone", () => {
@@ -124,10 +128,67 @@ describe("useAppStore", () => {
             useAppStore.getState().addMilestone({
                 title: "Milestone 1",
                 targetUnits: 10,
+                currentUnits: 0,
+                order: 0,
             });
         });
 
         expect(useAppStore.getState().milestones).toHaveLength(1);
         expect(useAppStore.getState().milestones[0].title).toBe("Milestone 1");
+    });
+
+    it("should move backlog tasks to today", () => {
+        let taskId = "";
+        const pastDate = new Date();
+        pastDate.setDate(pastDate.getDate() - 1);
+        const pastDateUtc = Date.UTC(pastDate.getUTCFullYear(), pastDate.getUTCMonth(), pastDate.getUTCDate());
+
+        act(() => {
+            taskId = useAppStore.getState().addTask({
+                title: "Overdue Task",
+                type: "backlog",
+                plannedDates: [pastDateUtc],
+                order: 0,
+            });
+        });
+
+        act(() => {
+            useAppStore.getState().moveTasksToToday([taskId]);
+        });
+
+        const task = useAppStore.getState().tasks.find((t) => t.id === taskId);
+        const today = new Date();
+        const todayUtc = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+        expect(task?.plannedDates).toContain(todayUtc);
+    });
+
+    it("should convert scheduled tasks to backlog and move to today", () => {
+        let taskId = "";
+        const pastDate = new Date();
+        pastDate.setDate(pastDate.getDate() - 1);
+        const pastDateUtc = Date.UTC(pastDate.getUTCFullYear(), pastDate.getUTCMonth(), pastDate.getUTCDate());
+
+        act(() => {
+            taskId = useAppStore.getState().addTask({
+                title: "Overdue Scheduled Task",
+                type: "scheduled",
+                scheduled: {
+                    daysOfWeek: [],
+                    dateRanges: [{ start: pastDateUtc, end: pastDateUtc }],
+                },
+                order: 0,
+            });
+        });
+
+        act(() => {
+            useAppStore.getState().moveTasksToToday([taskId]);
+        });
+
+        const task = useAppStore.getState().tasks.find((t) => t.id === taskId);
+        const today = new Date();
+        const todayUtc = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+
+        expect(task?.type).toBe("backlog");
+        expect(task?.plannedDates).toContain(todayUtc);
     });
 });
