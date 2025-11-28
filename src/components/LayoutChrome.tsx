@@ -51,6 +51,10 @@ export default function LayoutChrome({ children }: { children: ReactNode }): Rea
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isQuickAddOpen]);
 
+  const isLauncherOpen = useAppStore((s) => s.isLauncherOpen);
+  const isLauncherExcluded = pathname?.startsWith("/terms") || pathname?.startsWith("/privacy") || pathname?.startsWith("/unwavr");
+  const showLauncher = !isLauncherExcluded;
+
   if (isStandaloneEditor) {
     return (
       <div className="min-h-screen motion-scope">
@@ -64,7 +68,10 @@ export default function LayoutChrome({ children }: { children: ReactNode }): Rea
       <div className="hidden md:block">
         <SidebarConditional />
       </div>
-      <div className="flex-1 min-w-0 flex flex-col bg-background">
+      <div
+        className="flex-1 min-w-0 flex flex-col bg-background transition-all duration-300 ease-in-out"
+        style={{ marginRight: showLauncher && isLauncherOpen ? '260px' : '0' }}
+      >
         <PomodoroTopBar />
         <NotificationBars />
         <main className="flex-1 pb-16 md:pb-0">

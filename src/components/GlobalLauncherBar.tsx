@@ -10,89 +10,99 @@ export default function GlobalLauncherBar() {
   const { status } = useSession();
   const pathname = usePathname();
   const shortcuts = useAppStore((s) => s.launcherShortcuts);
-  const [collapsed, setCollapsed] = useState(false);
+  const isLauncherOpen = useAppStore((s) => s.isLauncherOpen);
+  const toggleLauncher = useAppStore((s) => s.toggleLauncher);
 
-  const visibleShortcuts = shortcuts.slice(0, 10);
   const shouldHide = status !== "authenticated" || pathname.startsWith("/unwavr");
   if (shouldHide) return null;
 
   return (
-    <div className="fixed left-1/2 -translate-x-1/2 z-[99999] md:bottom-4 bottom-20 pb-[env(safe-area-inset-bottom)]">
-      <div className="pointer-events-auto">
-        <div className="flex items-end gap-2">
-          <button
-            aria-label={collapsed ? "ランチャー展開" : "ランチャー折りたたみ"}
-            onClick={() => setCollapsed((v) => !v)}
-            className="h-8 px-2 rounded border text-xs bg-background/90 backdrop-blur shadow"
-          >
-            {collapsed ? "▲" : "▼"}
-          </button>
-          {!collapsed && (
-            <div className="max-w-[92vw] overflow-x-auto">
-              <div className="flex items-center gap-2 px-2 py-2 rounded border bg-background/90 backdrop-blur shadow">
-                {visibleShortcuts.length === 0 ? (
-                  <div className="text-[11px] opacity-70 px-2">ランチャーにショートカットを追加してください</div>
-                ) : (
-                  visibleShortcuts.map((sc) => {
-                    const Ico = (Icons as unknown as Record<string, LucideIcon>)[sc.iconName];
-                    const style: React.CSSProperties = {
-                      backgroundColor: `${sc.color ?? "#0ea5e9"}20`,
-                      borderColor: sc.color ?? "#0ea5e9",
-                    };
-                    if (sc.kind === "web") {
-                      return (
-                        <a
-                          key={sc.id}
-                          href={sc.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="group flex flex-col items-center gap-1 px-2 py-2 border rounded hover:opacity-90 transition"
-                          style={style}
-                          title={sc.label}
-                        >
-                          <div className="w-8 h-8 rounded flex items-center justify-center border" style={{ borderColor: sc.color }}>
-                            {Ico ? <Ico size={16} /> : sc.iconName}
-                          </div>
-                          <div className="text-[10px] max-w-[6rem] truncate">{sc.label}</div>
-                        </a>
-                      );
-                    }
-                    return (
-                      <button
-                        key={sc.id}
-                        className="group flex flex-col items-center gap-1 px-2 py-2 border rounded hover:opacity-90 transition"
-                        style={style}
-                        title={sc.label}
-                        onClick={async () => {
-                          try {
-                            const path = sc.url || sc.nativePath;
-                            if (!path) return;
-                            await fetch("/api/system/launch", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ path }),
-                            });
-                          } catch (e) {
-                            console.error(e);
-                            alert("起動に失敗しました");
-                          }
-                        }}
-                      >
-                        <div className="w-8 h-8 rounded flex items-center justify-center border" style={{ borderColor: sc.color }}>
-                          {Ico ? <Ico size={16} /> : sc.iconName}
-                        </div>
-                        <div className="text-[10px] max-w-[6rem] truncate">{sc.label}</div>
-                      </button>
-                    );
-                  })
-                )}
-              </div>
+    <>
+      {/* Toggle Button - Fixed to the right edge, visible when closed or open */}
+      <button
+        aria-label={isLauncherOpen ? "ランチャーを閉じる" : "ランチャーを開く"}
+        onClick={toggleLauncher}
+        className={`fixed z-[100000] top-1/2 -translate-y-1/2 transition-all duration-300
+          ${isLauncherOpen ? 'right-[260px]' : 'right-0'}
+          w-6 h-12 bg-background/80 backdrop-blur-md border border-r-0 border-white/10 shadow-lg
+          rounded-l-xl flex items-center justify-center hover:bg-background text-xs opacity-50 hover:opacity-100
+        `}
+      >
+        {isLauncherOpen ? "▶" : "◀"}
+      </button>
+
+      {/* Sidebar Container */}
+      <div
+        className={`fixed top-0 right-0 h-full z-[99999] bg-background/95 backdrop-blur-xl border-l border-white/10 shadow-2xl transition-transform duration-300 ease-in-out
+          ${isLauncherOpen ? 'translate-x-0' : 'translate-x-full'}
+        `}
+        style={{ width: '260px' }}
+      >
+        <div className="h-full overflow-y-auto p-4 flex flex-col gap-4">
+          <h2 className="text-sm font-medium opacity-70 px-2">Launcher</h2>
+
+          {shortcuts.length === 0 ? (
+            <div className="text-sm opacity-50 px-2">ショートカットがありません</div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {shortcuts.map((sc) => {
+                const Ico = (Icons as unknown as Record<string, LucideIcon>)[sc.iconName];
+                const iconColor = sc.color ?? "#0ea5e9";
+
+                const Content = () => (
+                  <>
+                    <div
+                      className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center shadow-sm group-hover:shadow-md transition-all border border-white/10"
+                      style={{ backgroundColor: `${iconColor}20`, color: iconColor }}
+                    >
+                      {Ico ? <Ico size={20} /> : sc.iconName}
+                    </div>
+                    <div className="text-sm font-medium truncate opacity-80 group-hover:opacity-100">{sc.label}</div>
+                  </>
+                );
+
+                if (sc.kind === "web") {
+                  return (
+                    <a
+                      key={sc.id}
+                      href={sc.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group flex items-center gap-3 p-2 rounded-xl hover:bg-white/10 transition-all duration-200"
+                      title={sc.label}
+                    >
+                      <Content />
+                    </a>
+                  );
+                }
+                return (
+                  <button
+                    key={sc.id}
+                    className="group flex items-center gap-3 p-2 rounded-xl hover:bg-white/10 transition-all duration-200 w-full text-left"
+                    title={sc.label}
+                    onClick={async () => {
+                      try {
+                        const path = sc.url || sc.nativePath;
+                        if (!path) return;
+                        await fetch("/api/system/launch", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ path, args: sc.args }),
+                        });
+                      } catch (e) {
+                        console.error(e);
+                        alert("起動に失敗しました");
+                      }
+                    }}
+                  >
+                    <Content />
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }
-
-

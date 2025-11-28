@@ -16,6 +16,7 @@ export function useLauncherForm() {
   const [linkType, setLinkType] = useState<"web" | "app">("web");
   const [showHelp, setShowHelp] = useState(false);
   const [nativePath, setNativePath] = useState("");
+  const [args, setArgs] = useState("");
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +27,7 @@ export function useLauncherForm() {
       const col = color;
       addCategory({ name, color: col });
     }
-    add({ label: label.trim(), url: url.trim(), iconName, color, categoryId: cid, kind: linkType, nativePath: nativePath || undefined });
+    add({ label: label.trim(), url: url.trim(), iconName, color, categoryId: cid, kind: linkType, nativePath: nativePath || undefined, args: args.trim() || undefined });
     setLabel("");
     setUrl("");
     setIconName("Globe");
@@ -35,6 +36,7 @@ export function useLauncherForm() {
     setNewCategory("");
     setLinkType("web");
     setNativePath("");
+    setArgs("");
   };
 
   const pickNativeApp = async () => {
@@ -58,7 +60,7 @@ export function useLauncherForm() {
     // local states
     label, setLabel, url, setUrl, iconName, setIconName, color, setColor,
     categoryId, setCategoryId, newCategory, setNewCategory, linkType, setLinkType,
-    showHelp, setShowHelp, nativePath,
+    showHelp, setShowHelp, nativePath, args, setArgs,
     // actions
     submit, pickNativeApp,
   };

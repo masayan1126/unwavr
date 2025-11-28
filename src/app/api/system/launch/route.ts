@@ -6,7 +6,7 @@ const execAsync = promisify(exec);
 
 export async function POST(req: NextRequest) {
     try {
-        const { path } = await req.json();
+        const { path, args } = await req.json();
 
         if (!path || typeof path !== "string") {
             return NextResponse.json({ error: "Invalid path" }, { status: 400 });
@@ -18,12 +18,19 @@ export async function POST(req: NextRequest) {
         // We'll try to be smart: if it looks like a path, use it directly. If it looks like an app name, use -a.
 
         let command = "";
+        const argsStr = args ? ` ${args}` : "";
         if (path.startsWith("/") || path.startsWith("~") || path.includes("/")) {
             // Likely a path
-            command = `open "${path}"`;
+            // If args are provided, we assume the user wants to open the path WITH args.
+            // However, 'open' treats args as files to open.
+            // If the user wants to pass args to the app, they should use --args.
+            // But here we just append it.
+            // Wait, if 'path' is an app path (e.g. /Applications/Foo.app), we should use -a?
+            // Actually 'open /Applications/Foo.app --args bar' works.
+            command = `open "${path}"${argsStr}`;
         } else {
             // Likely an app name
-            command = `open -a "${path}"`;
+            command = `open -a "${path}"${argsStr}`;
         }
 
         console.log(`Launching: ${command}`);

@@ -47,6 +47,8 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (set, get)
             .then(() => { try { if (typeof window !== 'undefined') { get().hydrateFromDb(); } } catch { } })
             .catch(() => { });
     },
+    isLauncherOpen: true, // Default open as requested "always displayed"
+    toggleLauncher: () => set((state) => ({ isLauncherOpen: !state.isLauncherOpen })),
 });
 
 function safeLocalStorageGet(key: string): string | null {

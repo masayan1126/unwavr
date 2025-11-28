@@ -106,6 +106,7 @@ export type LauncherShortcut = {
   categoryId?: string;
   kind?: "web" | "app" | "native";
   nativePath?: string;
+  args?: string;
 };
 
 export type LauncherCategory = {

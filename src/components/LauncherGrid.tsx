@@ -20,6 +20,7 @@ export default function LauncherGrid() {
 
   const [label, setLabel] = useState("");
   const [url, setUrl] = useState("");
+  const [args, setArgs] = useState("");
   const [iconName, setIconName] = useState("Globe");
   const [color, setColor] = useState("#0ea5e9");
 
@@ -29,6 +30,7 @@ export default function LauncherGrid() {
     setEditingId(id);
     setLabel(sc.label);
     setUrl(sc.url);
+    setArgs(sc.args ?? "");
     setIconName(sc.iconName);
     setColor(sc.color ?? "#0ea5e9");
   }
@@ -39,7 +41,7 @@ export default function LauncherGrid() {
 
   function saveEdit() {
     if (!editingId) return;
-    update(editingId, { label: label.trim(), url: url.trim(), iconName, color });
+    update(editingId, { label: label.trim(), url: url.trim(), args: args.trim() || undefined, iconName, color });
     closeEdit();
   }
 
@@ -124,7 +126,7 @@ export default function LauncherGrid() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {list.map((sc) => {
                 const Ico = (Icons as unknown as Record<string, LucideIcon>)[sc.iconName];
-                const style = { backgroundColor: `${sc.color ?? "#0ea5e9"}20`, borderColor: sc.color ?? "#0ea5e9" } as React.CSSProperties;
+                const style = { backgroundColor: `${sc.color ?? "#0ea5e9"}20` } as React.CSSProperties;
                 return (
                   sc.kind === "web" ? (
                     <a
@@ -132,8 +134,8 @@ export default function LauncherGrid() {
                       href={sc.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="group relative flex flex-col items-center gap-2 p-3 bg-card rounded-lg shadow-sm hover:opacity-90 transition"
-                      style={style}
+                      className="group relative flex flex-col items-center gap-3 p-4 bg-card/50 hover:bg-card rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1"
+                      style={{ ...style, border: 'none' }}
                       title={sc.label}
                     >
                       <input
@@ -147,8 +149,8 @@ export default function LauncherGrid() {
                           toggleSelect(sc.id);
                         }}
                       />
-                      <div className="w-10 h-10 rounded flex items-center justify-center border" style={{ borderColor: sc.color }}>
-                        {Ico ? <Ico size={20} /> : sc.iconName}
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-background shadow-inner text-foreground/80 group-hover:text-foreground transition-colors">
+                        {Ico ? <Ico size={24} /> : sc.iconName}
                       </div>
                       <div className="text-sm text-center line-clamp-2">{sc.label}</div>
                       <div className="flex gap-2">
@@ -175,8 +177,8 @@ export default function LauncherGrid() {
                   ) : (
                     <div
                       key={sc.id}
-                      className="group relative flex flex-col items-center gap-2 p-3 bg-card rounded-lg shadow-sm hover:opacity-90 transition cursor-pointer"
-                      style={style}
+                      className="group relative flex flex-col items-center gap-3 p-4 bg-card/50 hover:bg-card rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                      style={{ ...style, border: 'none' }}
                       title={sc.label}
                       onClick={async () => {
                         try {
@@ -186,7 +188,7 @@ export default function LauncherGrid() {
                           await fetch("/api/system/launch", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ path }),
+                            body: JSON.stringify({ path, args: sc.args }),
                           });
                         } catch (e) {
                           console.error(e);
@@ -201,8 +203,8 @@ export default function LauncherGrid() {
                         onClick={(e) => e.stopPropagation()}
                         onChange={() => toggleSelect(sc.id)}
                       />
-                      <div className="w-10 h-10 rounded flex items-center justify-center border" style={{ borderColor: sc.color }}>
-                        {Ico ? <Ico size={20} /> : sc.iconName}
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-background shadow-inner text-foreground/80 group-hover:text-foreground transition-colors">
+                        {Ico ? <Ico size={24} /> : sc.iconName}
                       </div>
                       <div className="text-sm text-center line-clamp-2">{sc.label}</div>
                       <div className="flex gap-2 flex-wrap items-center justify-center">
@@ -268,7 +270,7 @@ export default function LauncherGrid() {
           ) : (
             groups.rest.map((sc) => {
               const Ico = (Icons as unknown as Record<string, LucideIcon>)[sc.iconName];
-              const style = { backgroundColor: `${sc.color ?? "#0ea5e9"}20`, borderColor: sc.color ?? "#0ea5e9" } as React.CSSProperties;
+              const style = { backgroundColor: `${sc.color ?? "#0ea5e9"}20` } as React.CSSProperties;
               return (
                 sc.kind === "web" ? (
                   <a
@@ -276,8 +278,8 @@ export default function LauncherGrid() {
                     href={sc.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="group relative flex flex-col items-center gap-2 p-3 bg-card rounded-lg shadow-sm hover:opacity-90 transition"
-                    style={style}
+                    className="group relative flex flex-col items-center gap-3 p-4 bg-card/50 hover:bg-card rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1"
+                    style={{ ...style, border: 'none' }}
                     title={sc.label}
                   >
                     <input
@@ -291,8 +293,8 @@ export default function LauncherGrid() {
                         toggleSelect(sc.id);
                       }}
                     />
-                    <div className="w-10 h-10 rounded flex items-center justify-center border" style={{ borderColor: sc.color }}>
-                      {Ico ? <Ico size={20} /> : sc.iconName}
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-background shadow-inner text-foreground/80 group-hover:text-foreground transition-colors">
+                      {Ico ? <Ico size={24} /> : sc.iconName}
                     </div>
                     <div className="text-sm text-center line-clamp-2">{sc.label}</div>
                     <div className="flex gap-2">
@@ -319,8 +321,8 @@ export default function LauncherGrid() {
                 ) : (
                   <div
                     key={sc.id}
-                    className="group relative flex flex-col items-center gap-2 p-3 bg-card rounded-lg shadow-sm hover:opacity-90 transition cursor-pointer"
-                    style={style}
+                    className="group relative flex flex-col items-center gap-3 p-4 bg-card/50 hover:bg-card rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                    style={{ ...style, border: 'none' }}
                     title={sc.label}
                     onClick={async () => {
                       try {
@@ -344,8 +346,8 @@ export default function LauncherGrid() {
                       onClick={(e) => e.stopPropagation()}
                       onChange={() => toggleSelect(sc.id)}
                     />
-                    <div className="w-10 h-10 rounded flex items-center justify-center border" style={{ borderColor: sc.color }}>
-                      {Ico ? <Ico size={20} /> : sc.iconName}
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-background shadow-inner text-foreground/80 group-hover:text-foreground transition-colors">
+                      {Ico ? <Ico size={24} /> : sc.iconName}
                     </div>
                     <div className="text-sm text-center line-clamp-2">{sc.label}</div>
                     <div className="flex gap-2 flex-wrap items-center justify-center">
@@ -405,19 +407,29 @@ export default function LauncherGrid() {
                 閉じる
               </button>
             </div>
-            <div className="flex gap-2">
-              <input
-                className="flex-1 border rounded px-2 py-1 bg-transparent border-black/10 dark:border-white/10"
-                placeholder="ラベル"
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
-              />
-              <input
-                className="flex-1 border rounded px-2 py-1 bg-transparent border-black/10 dark:border-white/10"
-                placeholder="URL"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-              />
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                <input
+                  className="flex-1 border rounded px-2 py-1 bg-transparent border-black/10 dark:border-white/10"
+                  placeholder="ラベル"
+                  value={label}
+                  onChange={(e) => setLabel(e.target.value)}
+                />
+                <input
+                  className="flex-1 border rounded px-2 py-1 bg-transparent border-black/10 dark:border-white/10"
+                  placeholder="URL / パス"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                />
+              </div>
+              {editing.kind === "app" && (
+                <input
+                  className="w-full border rounded px-2 py-1 bg-transparent border-black/10 dark:border-white/10"
+                  placeholder="引数 (任意)"
+                  value={args}
+                  onChange={(e) => setArgs(e.target.value)}
+                />
+              )}
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">

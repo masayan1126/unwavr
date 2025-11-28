@@ -8,7 +8,7 @@ export default function LauncherForm() {
     categories,
     label, setLabel, url, setUrl, iconName, setIconName, color, setColor,
     categoryId, setCategoryId, newCategory, setNewCategory, linkType, setLinkType,
-    showHelp, setShowHelp, nativePath,
+    showHelp, setShowHelp, nativePath, args, setArgs,
     submit, pickNativeApp,
   } = useLauncherForm();
 
@@ -17,7 +17,7 @@ export default function LauncherForm() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <label className="text-sm">種類</label>
         <select
-          className="border border-black/10 dark:border-white/10 rounded px-2 py-2 bg-transparent text-sm w-full sm:w-auto"
+          className="bg-background/50 hover:bg-background transition-colors rounded-lg px-3 py-2 text-sm w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-primary/20"
           value={linkType}
           onChange={(e) => setLinkType((e.target.value as "web" | "app"))}
         >
@@ -32,21 +32,34 @@ export default function LauncherForm() {
       </div>
       <div className="flex flex-col sm:flex-row gap-2">
         <input
-          className="flex-1 border rounded px-2 py-2 bg-transparent border-black/10 dark:border-white/10 text-sm w-full sm:w-auto"
+          className="flex-1 bg-background/50 hover:bg-background transition-colors rounded-lg px-3 py-2 text-sm w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-primary/20"
           placeholder="ラベル (例: YouTube)"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
         />
         <input
-          className="flex-1 border rounded px-2 py-2 bg-transparent border-black/10 dark:border-white/10 text-sm w-full sm:w-auto"
+          className="flex-1 bg-background/50 hover:bg-background transition-colors rounded-lg px-3 py-2 text-sm w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-primary/20"
           placeholder={linkType === "web" ? "URL (https://...)" : "アプリ名 または パス (例: Visual Studio Code)"}
           value={url}
           onChange={(e) => setUrl(e.target.value)}
         />
         {linkType === "app" && (
-          <button type="button" className="px-3 py-2 rounded-[3px] border text-xs w-full sm:w-auto hover:bg-black/5 dark:hover:bg-white/10 transition-colors" onClick={pickNativeApp}>
-            アプリ選択
-          </button>
+          <>
+            <div className="flex-1 flex flex-col gap-1 w-full sm:w-auto">
+              <input
+                className="bg-background/50 hover:bg-background transition-colors rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-primary/20"
+                placeholder="引数 (例: /Users/name/project)"
+                value={args}
+                onChange={(e) => setArgs(e.target.value)}
+              />
+              <div className="text-[10px] opacity-60 px-1">
+                ※アプリに渡す引数（ファイルパスなど）を指定できます
+              </div>
+            </div>
+            <button type="button" className="px-3 py-2 rounded-[3px] border text-xs w-full sm:w-auto hover:bg-black/5 dark:hover:bg-white/10 transition-colors h-[38px]" onClick={pickNativeApp}>
+              アプリ選択
+            </button>
+          </>
         )}
       </div>
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
@@ -57,7 +70,7 @@ export default function LauncherForm() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
           <label className="text-sm">カテゴリ</label>
           <select
-            className="border border-black/10 dark:border-white/10 rounded px-2 py-2 bg-transparent text-sm w-full sm:w-auto"
+            className="bg-background/50 hover:bg-background transition-colors rounded-lg px-3 py-2 text-sm w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-primary/20"
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
           >
@@ -69,7 +82,7 @@ export default function LauncherForm() {
             ))}
           </select>
           <input
-            className="border border-black/10 dark:border-white/10 rounded px-2 py-2 bg-transparent text-sm w-full sm:flex-1"
+            className="bg-background/50 hover:bg-background transition-colors rounded-lg px-3 py-2 text-sm w-full sm:flex-1 focus:outline-none focus:ring-2 focus:ring-primary/20"
             placeholder="新規カテゴリ名 (任意)"
             value={newCategory}
             onChange={(e) => setNewCategory(e.target.value)}
@@ -93,6 +106,7 @@ export default function LauncherForm() {
             </div>
             <div className="text-sm opacity-80 space-y-2">
               <p>アプリ名（例: <code>Visual Studio Code</code>）または絶対パス（例: <code>/Applications/Slack.app</code>）を入力してください。</p>
+              <p>「引数」には、アプリで開きたいファイルやフォルダのパス、またはコマンドライン引数を指定できます。</p>
               <p>「アプリ選択」ボタンを押すと、Finderからアプリを選択して自動入力できます。</p>
               <p>サーバーサイドで <code>open</code> コマンドを実行してアプリを起動します。</p>
             </div>

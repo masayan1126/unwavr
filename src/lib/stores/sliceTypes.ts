@@ -97,4 +97,6 @@ export interface UISlice {
     hydrateFromDb: () => Promise<void>;
     setFontSize: (size: number) => void;
     clearTasksMilestonesLaunchers: () => void;
+    isLauncherOpen: boolean;
+    toggleLauncher: () => void;
 }
