@@ -38,7 +38,7 @@ export default function BgmPage() {
   const moveWithinGroup = useAppStore((s) => s.moveBgmTrackWithinGroup);
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
-  const [currentId, setCurrentId] = useState<string | null>(null);
+  // const [currentId, setCurrentId] = useState<string | null>(null); // Removed local state
   const [newGroupName, setNewGroupName] = useState("");
   const [selectedGroupId, setSelectedGroupId] = useState<string>("");
   const [importing, setImporting] = useState(false);
@@ -200,7 +200,7 @@ export default function BgmPage() {
   };
 
   const play = (id: string) => {
-    setCurrentId(id);
+    // setCurrentId(id); // Removed local state update
     try { useAppStore.getState().playBgmTrack(id); } catch { }
   };
 
@@ -333,22 +333,6 @@ export default function BgmPage() {
         )}
       </div>
 
-      {currentId && (
-        <div className="mt-4">
-          <div className="text-xs font-semibold mb-2">再生中</div>
-          <div className="aspect-video w-full border rounded-lg overflow-hidden shadow-sm">
-            <iframe
-              className="w-full h-full"
-              src={`https://www.youtube.com/embed/${tracks.find((t) => t.id === currentId)?.videoId}?autoplay=1`}
-              title="YouTube video player"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

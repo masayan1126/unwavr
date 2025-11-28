@@ -41,8 +41,15 @@ export function useLauncherForm() {
     try {
       const res = await fetch("/api/launcher/pick");
       const data = await res.json();
-      if (data?.path) setNativePath(data.path);
-    } catch {}
+      if (data?.path) {
+        setUrl(data.path);
+        // Extract app name from path (e.g. /Applications/Slack.app -> Slack)
+        const name = data.path.split("/").pop()?.replace(".app", "") ?? "";
+        if (name && !label) {
+          setLabel(name);
+        }
+      }
+    } catch { }
   };
 
   return {

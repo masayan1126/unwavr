@@ -65,9 +65,17 @@ export default function GlobalLauncherBar() {
                         title={sc.label}
                         onClick={async () => {
                           try {
-                            const text = sc.nativePath || sc.url || "";
-                            if (text) await navigator.clipboard.writeText(text);
-                          } catch {}
+                            const path = sc.url || sc.nativePath;
+                            if (!path) return;
+                            await fetch("/api/system/launch", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ path }),
+                            });
+                          } catch (e) {
+                            console.error(e);
+                            alert("起動に失敗しました");
+                          }
                         }}
                       >
                         <div className="w-8 h-8 rounded flex items-center justify-center border" style={{ borderColor: sc.color }}>

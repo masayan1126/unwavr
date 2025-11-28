@@ -175,14 +175,30 @@ export default function LauncherGrid() {
                   ) : (
                     <div
                       key={sc.id}
-                      className="group relative flex flex-col items-center gap-2 p-3 bg-card rounded-lg shadow-sm hover:opacity-90 transition cursor-default"
+                      className="group relative flex flex-col items-center gap-2 p-3 bg-card rounded-lg shadow-sm hover:opacity-90 transition cursor-pointer"
                       style={style}
                       title={sc.label}
+                      onClick={async () => {
+                        try {
+                          // Use url as the path/name since that's where we store it in the form
+                          const path = sc.url || sc.nativePath;
+                          if (!path) return;
+                          await fetch("/api/system/launch", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ path }),
+                          });
+                        } catch (e) {
+                          console.error(e);
+                          alert("起動に失敗しました");
+                        }
+                      }}
                     >
                       <input
                         type="checkbox"
                         className="absolute top-2 right-2"
                         checked={Boolean(selected[sc.id])}
+                        onClick={(e) => e.stopPropagation()}
                         onChange={() => toggleSelect(sc.id)}
                       />
                       <div className="w-10 h-10 rounded flex items-center justify-center border" style={{ borderColor: sc.color }}>
@@ -190,10 +206,11 @@ export default function LauncherGrid() {
                       </div>
                       <div className="text-sm text-center line-clamp-2">{sc.label}</div>
                       <div className="flex gap-2 flex-wrap items-center justify-center">
-                        {sc.url && (
+                        {/* {sc.url && (
                           <button
                             className="text-[10px] opacity-60 underline"
-                            onClick={async () => {
+                            onClick={async (e) => {
+                              e.stopPropagation();
                               try {
                                 await navigator.clipboard.writeText(sc.url);
                               } catch { }
@@ -201,11 +218,12 @@ export default function LauncherGrid() {
                           >
                             スキームをコピー
                           </button>
-                        )}
-                        {sc.nativePath && (
+                        )} */}
+                        {/* {sc.nativePath && (
                           <button
                             className="text-[10px] opacity-60 underline"
-                            onClick={async () => {
+                            onClick={async (e) => {
+                              e.stopPropagation();
                               try {
                                 await navigator.clipboard.writeText(sc.nativePath!);
                               } catch { }
@@ -213,16 +231,16 @@ export default function LauncherGrid() {
                           >
                             パスをコピー
                           </button>
-                        )}
+                        )} */}
                         <button
                           className="text-[10px] opacity-60 underline"
-                          onClick={() => openEdit(sc.id)}
+                          onClick={(e) => { e.stopPropagation(); openEdit(sc.id); }}
                         >
                           編集
                         </button>
                         <button
                           className="text-[10px] opacity-60 underline"
-                          onClick={() => remove(sc.id)}
+                          onClick={(e) => { e.stopPropagation(); remove(sc.id); }}
                         >
                           削除
                         </button>
@@ -301,14 +319,29 @@ export default function LauncherGrid() {
                 ) : (
                   <div
                     key={sc.id}
-                    className="group relative flex flex-col items-center gap-2 p-3 bg-card rounded-lg shadow-sm hover:opacity-90 transition cursor-default"
+                    className="group relative flex flex-col items-center gap-2 p-3 bg-card rounded-lg shadow-sm hover:opacity-90 transition cursor-pointer"
                     style={style}
                     title={sc.label}
+                    onClick={async () => {
+                      try {
+                        const path = sc.url || sc.nativePath;
+                        if (!path) return;
+                        await fetch("/api/system/launch", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ path }),
+                        });
+                      } catch (e) {
+                        console.error(e);
+                        alert("起動に失敗しました");
+                      }
+                    }}
                   >
                     <input
                       type="checkbox"
                       className="absolute top-2 right-2"
                       checked={Boolean(selected[sc.id])}
+                      onClick={(e) => e.stopPropagation()}
                       onChange={() => toggleSelect(sc.id)}
                     />
                     <div className="w-10 h-10 rounded flex items-center justify-center border" style={{ borderColor: sc.color }}>
@@ -316,10 +349,11 @@ export default function LauncherGrid() {
                     </div>
                     <div className="text-sm text-center line-clamp-2">{sc.label}</div>
                     <div className="flex gap-2 flex-wrap items-center justify-center">
-                      {sc.url && (
+                      {/* {sc.url && (
                         <button
                           className="text-[10px] opacity-60 underline"
-                          onClick={async () => {
+                          onClick={async (e) => {
+                            e.stopPropagation();
                             try {
                               await navigator.clipboard.writeText(sc.url);
                             } catch { }
@@ -327,11 +361,12 @@ export default function LauncherGrid() {
                         >
                           スキームをコピー
                         </button>
-                      )}
-                      {sc.nativePath && (
+                      )} */}
+                      {/* {sc.nativePath && (
                         <button
                           className="text-[10px] opacity-60 underline"
-                          onClick={async () => {
+                          onClick={async (e) => {
+                            e.stopPropagation();
                             try {
                               await navigator.clipboard.writeText(sc.nativePath!);
                             } catch { }
@@ -339,16 +374,16 @@ export default function LauncherGrid() {
                         >
                           パスをコピー
                         </button>
-                      )}
+                      )} */}
                       <button
                         className="text-[10px] opacity-60 underline"
-                        onClick={() => openEdit(sc.id)}
+                        onClick={(e) => { e.stopPropagation(); openEdit(sc.id); }}
                       >
                         編集
                       </button>
                       <button
                         className="text-[10px] opacity-60 underline"
-                        onClick={() => remove(sc.id)}
+                        onClick={(e) => { e.stopPropagation(); remove(sc.id); }}
                       >
                         削除
                       </button>

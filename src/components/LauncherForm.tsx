@@ -39,19 +39,16 @@ export default function LauncherForm() {
         />
         <input
           className="flex-1 border rounded px-2 py-2 bg-transparent border-black/10 dark:border-white/10 text-sm w-full sm:w-auto"
-          placeholder={linkType === "web" ? "URL (https://...)" : "スキーム (例: slack://, obsidian://)"}
+          placeholder={linkType === "web" ? "URL (https://...)" : "アプリ名 または パス (例: Visual Studio Code)"}
           value={url}
           onChange={(e) => setUrl(e.target.value)}
         />
         {linkType === "app" && (
           <button type="button" className="px-3 py-2 rounded-[3px] border text-xs w-full sm:w-auto hover:bg-black/5 dark:hover:bg-white/10 transition-colors" onClick={pickNativeApp}>
-            アプリ登録
+            アプリ選択
           </button>
         )}
       </div>
-      {linkType === "app" && nativePath && (
-        <div className="text-[11px] opacity-70">選択されたアプリ: {nativePath}</div>
-      )}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <div className="flex items-center gap-2">
           <label className="text-sm">色</label>
@@ -95,8 +92,9 @@ export default function LauncherForm() {
               </button>
             </div>
             <div className="text-sm opacity-80 space-y-2">
-              <p>ブラウザの制約により、Finder/Explorerからアプリ本体を選択して保存したり、任意のアプリを直接起動することはできません。</p>
-              <p>多くのデスクトップアプリは「カスタムURLスキーム」を提供しており、例のような<code>app://</code>形式のリンクで起動できます。以下から選ぶか、各アプリのドキュメントでスキームをご確認ください。</p>
+              <p>アプリ名（例: <code>Visual Studio Code</code>）または絶対パス（例: <code>/Applications/Slack.app</code>）を入力してください。</p>
+              <p>「アプリ選択」ボタンを押すと、Finderからアプリを選択して自動入力できます。</p>
+              <p>サーバーサイドで <code>open</code> コマンドを実行してアプリを起動します。</p>
             </div>
             <div className="flex flex-wrap gap-2 text-xs">
               {[

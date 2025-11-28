@@ -12,6 +12,8 @@ import PomodoroTopBar from "@/components/PomodoroTopBar";
 import QuickAddTaskModal from "@/components/QuickAddTaskModal";
 import { useAppStore } from "@/lib/store";
 
+import GlobalBgmPlayer from "@/components/GlobalBgmPlayer";
+
 export default function LayoutChrome({ children }: { children: ReactNode }): ReactElement {
   const pathname = usePathname();
   const isStandaloneEditor = /^\/tasks\/[^/]+\/description\/?$/.test(pathname ?? "");
@@ -71,6 +73,7 @@ export default function LayoutChrome({ children }: { children: ReactNode }): Rea
       </div>
       <OnboardingGuide />
       <GlobalLauncherBarConditional />
+      <GlobalBgmPlayer />
       <CookieConsentConditional />
       <MobileTabBar />
 
