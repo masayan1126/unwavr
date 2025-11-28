@@ -88,7 +88,7 @@ export default function Home() {
 
       <ActiveTasksQueue />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-fr">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 未完了 */}
         <section className="relative flex flex-col min-h-[320px] md:col-span-2 bg-[var(--sidebar)] rounded-xl p-5 pb-10 shadow-sm">
           <div className="mb-2 flex gap-2 items-center">
@@ -112,7 +112,7 @@ export default function Home() {
         </section>
 
         {/* 積み上げ済み (毎日) */}
-        <section className="relative flex flex-col min-h-[320px] bg-[var(--sidebar)] rounded-xl p-5 pb-10 shadow-sm">
+        <section className="relative flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-5 pb-10 shadow-sm">
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">積み上げ済み (毎日) ({dailyDoneFiltered.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs" />
@@ -124,7 +124,7 @@ export default function Home() {
         </section>
 
         {/* 完了済み (特定曜日) */}
-        <section className="relative flex flex-col min-h-[320px] bg-[var(--sidebar)] rounded-xl p-5 pb-10 shadow-sm">
+        <section className="relative flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-5 pb-10 shadow-sm">
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">完了済み (特定曜日) ({scheduledDoneFiltered.length})</h2>
           </div>
@@ -135,7 +135,7 @@ export default function Home() {
         </section>
 
         {/* 完了済み (積み上げ候補) */}
-        <section className="relative flex flex-col min-h-[320px] md:col-span-2 bg-[var(--sidebar)] rounded-xl p-5 pb-10 shadow-sm">
+        <section className="relative flex flex-col min-h-[150px] md:col-span-2 bg-[var(--sidebar)] rounded-xl p-5 pb-10 shadow-sm">
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">完了済み (積み上げ候補) ({backlogDoneFiltered.length})</h2>
           </div>

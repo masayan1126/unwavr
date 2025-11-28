@@ -48,6 +48,7 @@ interface TaskRowProps {
   showScheduledColumn?: boolean;
   showTypeColumn?: boolean;
   showMilestoneColumn?: boolean;
+  showPomodoroColumn?: boolean;
   editingPlannedTaskId: string | null;
   tempPlannedDate: string;
   setTempPlannedDate: (date: string) => void;
@@ -56,7 +57,7 @@ interface TaskRowProps {
   startEditPlannedDate: (task: Task) => void;
 }
 
-function TaskRow({ task, onEdit, onContext, enableSelection, selected, onSelectOne, showCreatedColumn, showPlannedColumn, showScheduledColumn, showTypeColumn, showMilestoneColumn, editingPlannedTaskId, tempPlannedDate, setTempPlannedDate, savePlannedDate, cancelEditPlannedDate, startEditPlannedDate }: TaskRowProps) {
+function TaskRow({ task, onEdit, onContext, enableSelection, selected, onSelectOne, showCreatedColumn, showPlannedColumn, showScheduledColumn, showTypeColumn, showMilestoneColumn, showPomodoroColumn, editingPlannedTaskId, tempPlannedDate, setTempPlannedDate, savePlannedDate, cancelEditPlannedDate, startEditPlannedDate }: TaskRowProps) {
   const toggle = useAppStore((s) => s.toggleTask);
   const toggleDailyToday = useAppStore((s) => s.toggleDailyDoneForToday);
   const activeTaskIds = useAppStore((s) => s.pomodoro.activeTaskIds);
@@ -252,13 +253,15 @@ function TaskRow({ task, onEdit, onContext, enableSelection, selected, onSelectO
           </div>
         )}
 
-        <div className="flex items-center gap-2 flex-shrink-0 w-[80px] justify-end px-2">
-          {task.estimatedPomodoros != null && (
-            <div className="text-xs opacity-70">
-              {task.completedPomodoros ?? 0}/{task.estimatedPomodoros}
-            </div>
-          )}
-        </div>
+        {showPomodoroColumn && (
+          <div className="flex items-center gap-2 flex-shrink-0 w-[80px] justify-end px-2">
+            {task.estimatedPomodoros != null && (
+              <div className="text-xs opacity-70">
+                {task.completedPomodoros ?? 0}/{task.estimatedPomodoros}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </Reorder.Item>
   );
@@ -272,6 +275,7 @@ export default function TaskList({
   showScheduledColumn = false,
   showTypeColumn = true,
   showMilestoneColumn = false,
+  showPomodoroColumn = false,
   // 拡張: 共通の列ソート/フィルター
   sortKey,
   sortAsc,
@@ -287,6 +291,7 @@ export default function TaskList({
   showScheduledColumn?: boolean;
   showTypeColumn?: boolean;
   showMilestoneColumn?: boolean;
+  showPomodoroColumn?: boolean;
   sortKey?: "title" | "createdAt" | "planned" | "scheduled" | "type" | "milestone";
   sortAsc?: boolean;
   filterType?: "all" | "daily" | "backlog" | "scheduled";
@@ -685,8 +690,8 @@ export default function TaskList({
         <div className="overflow-x-auto">
           <div className="min-w-full">
             {/* Header */}
-            <div className="flex items-center text-xs font-medium text-muted-foreground border-b border-border/50 py-2 px-2">
-              <div className="w-[24px] flex-shrink-0"></div> {/* Grip placeholder */}
+            <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground border-b border-border/50 py-2 px-2">
+              {/* <div className="w-[24px] flex-shrink-0"></div> Grip placeholder removed */}
               {enableSelection && (
                 <div className="w-[24px] flex-shrink-0 flex justify-center">
                   <button
@@ -707,7 +712,7 @@ export default function TaskList({
               {showScheduledColumn && <div className="w-[160px] px-2">設定（曜日/期間）</div>}
               {showTypeColumn && <div className="w-[128px] px-2">種別</div>}
               {showMilestoneColumn && <div className="w-[160px] px-2">マイルストーン</div>}
-              <div className="w-[80px] px-2 text-right">Pomodoro</div>
+              {showPomodoroColumn && <div className="w-[80px] px-2 text-right">Pomodoro</div>}
             </div>
 
             {/* Body */}
@@ -730,6 +735,7 @@ export default function TaskList({
                       showScheduledColumn={showScheduledColumn}
                       showTypeColumn={showTypeColumn}
                       showMilestoneColumn={showMilestoneColumn}
+                      showPomodoroColumn={showPomodoroColumn}
                       editingPlannedTaskId={editingPlannedTaskId}
                       tempPlannedDate={tempPlannedDate}
                       setTempPlannedDate={setTempPlannedDate}
