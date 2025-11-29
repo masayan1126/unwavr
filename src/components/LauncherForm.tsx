@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useLauncherForm } from "@/hooks/useLauncher";
 import IconPicker from "@/components/IconPicker";
 import PrimaryButton from "@/components/PrimaryButton";
+import { Plus } from "lucide-react";
 
 export default function LauncherForm() {
   const [activeTab, setActiveTab] = useState<"icon" | "image">("icon");
@@ -112,9 +113,11 @@ export default function LauncherForm() {
         </div>
 
         {activeTab === "icon" ? (
-          <IconPicker value={iconName} onChange={setIconName} />
+          <div className="min-h-[280px]">
+            <IconPicker value={iconName} onChange={setIconName} />
+          </div>
         ) : (
-          <div className="flex flex-col gap-3 p-4 bg-muted/30 rounded-lg border border-border/50">
+          <div className="flex flex-col gap-3 p-4 bg-muted/30 rounded-lg border border-border/50 min-h-[280px]">
             <div className="text-sm opacity-80">画像をアップロード</div>
             <div className="flex items-center gap-4">
               <label className="cursor-pointer px-4 py-2 rounded-[3px] bg-primary text-primary-foreground text-sm hover:bg-primary/90 transition-colors shadow-sm">
@@ -156,7 +159,7 @@ export default function LauncherForm() {
         )}
       </div>
       <div className="flex justify-end">
-        <PrimaryButton label="追加" type="submit" className="w-full sm:w-auto" />
+        <PrimaryButton label="追加" type="submit" iconLeft={<Plus size={16} />} className="w-full sm:w-auto" />
       </div>
 
       {

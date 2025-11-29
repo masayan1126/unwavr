@@ -5,6 +5,7 @@ import { useAppStore } from "@/lib/store";
 import { useMemo, useState } from "react";
 import { useToast, useConfirm } from "@/components/Providers";
 import IconPicker from "@/components/IconPicker";
+import PrimaryButton from "@/components/PrimaryButton";
 
 export default function LauncherGrid() {
   const shortcuts = useAppStore((s) => s.launcherShortcuts);
