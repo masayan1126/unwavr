@@ -1,5 +1,6 @@
 import { useAppStore } from "@/lib/store";
 import type { Task } from "@/lib/types";
+import { vi } from "vitest";
 
 const ACTIVE_STORAGE_KEY = "pomodoro:activeTaskId";
 
@@ -12,6 +13,7 @@ function createBaseTask(args: { id: string; completed: boolean }): Task {
     createdAt: now,
     completed: args.completed,
     plannedDates: [],
+    order: 0,
   };
 }
 
@@ -20,27 +22,38 @@ function initializeActiveTaskState(args: { completed: boolean }): string {
   const task = createBaseTask({ id: taskId, completed: args.completed });
   useAppStore.setState((state) => ({
     tasks: [task],
-    pomodoro: { ...state.pomodoro, activeTaskId: taskId },
+    pomodoro: { ...state.pomodoro, activeTaskId: taskId, activeTaskIds: [taskId] },
   }));
   localStorage.setItem(ACTIVE_STORAGE_KEY, taskId);
   return taskId;
 }
 
 beforeEach(() => {
-  (global.fetch as unknown as jest.Mock) = jest.fn(() => Promise.resolve({ ok: true }));
-  localStorage.clear();
+  global.fetch = vi.fn(() => Promise.resolve({ ok: true })) as unknown as typeof fetch;
+
+  // Mock localStorage
+  const storage: Record<string, string> = {};
+  global.localStorage = {
+    getItem: vi.fn((key) => storage[key] || null),
+    setItem: vi.fn((key, value) => { storage[key] = value; }),
+    removeItem: vi.fn((key) => { delete storage[key]; }),
+    clear: vi.fn(() => { for (const key in storage) delete storage[key]; }),
+    key: vi.fn(),
+    length: 0,
+  } as unknown as Storage;
+
   useAppStore.setState((state) => ({
     tasks: [],
-    pomodoro: { ...state.pomodoro, activeTaskId: undefined },
+    pomodoro: { ...state.pomodoro, activeTaskId: undefined, activeTaskIds: [] },
   }));
 });
 
 afterEach(() => {
-  (global.fetch as jest.Mock).mockClear();
+  vi.clearAllMocks();
   localStorage.clear();
   useAppStore.setState((state) => ({
     tasks: [],
-    pomodoro: { ...state.pomodoro, activeTaskId: undefined },
+    pomodoro: { ...state.pomodoro, activeTaskId: undefined, activeTaskIds: [] },
   }));
 });
 

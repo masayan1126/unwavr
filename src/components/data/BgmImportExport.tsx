@@ -38,7 +38,7 @@ export default function BgmImportExport() {
         let parsed: unknown;
         try {
             parsed = JSON.parse(jsonText);
-        } catch (e) {
+        } catch {
             toast.show("JSONのパースに失敗しました", "error");
             return;
         }

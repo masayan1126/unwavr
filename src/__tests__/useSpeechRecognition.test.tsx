@@ -10,7 +10,7 @@ describe('音声認識フック useSpeechRecognition', () => {
       interimResults = false;
       // narrow typing to unknown to avoid any
       onresult: ((ev: unknown) => void) | null = null;
-      onend: (() => void) | null = null;
+      onend: ((ev: Event) => void) | null = null;
       start() { /* noop */ }
       stop() { if (this.onend) this.onend(new Event('end')); }
     }
@@ -19,7 +19,7 @@ describe('音声認識フック useSpeechRecognition', () => {
   });
 
   it('認識結果イベント発火時に公開APIが動作する', () => {
-    const { result } = renderHook(() => useSpeechRecognition({ onResult: () => {} }));
+    const { result } = renderHook(() => useSpeechRecognition({ onResult: () => { } }));
     // simulate result
     // `recRef` は外に露出していないため実体には触らない
     // ここではトグル可否と公開APIの存在のみを検証する

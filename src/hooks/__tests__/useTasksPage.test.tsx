@@ -26,7 +26,7 @@ vi.mock("@/lib/store", () => ({
 
 // Mock utils to simplify testing logic
 vi.mock("@/lib/taskUtils", async (importOriginal) => {
-    const actual = await importOriginal();
+    const actual = await importOriginal<typeof import("@/lib/taskUtils")>();
     return {
         ...actual,
         isOverdue: () => false,

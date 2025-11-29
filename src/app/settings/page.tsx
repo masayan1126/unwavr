@@ -1,12 +1,17 @@
 "use client";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import { Type, Database } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { Button } from "@/components/ui/Button";
 import { H1, H2, Text } from "@/components/ui/Typography";
 
 export default function SettingsPage() {
-  const { fontSize, setFontSize, handleClearAll } = useSettings();
+  const { fontSize, setFontSize, handleClearAll, geminiApiKey, setGeminiApiKey } = useSettings();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) return null;
 
   return (
     <div className="p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-6">
@@ -72,6 +77,34 @@ export default function SettingsPage() {
           <Link href="/settings/data">
             <Button>データ管理画面へ</Button>
           </Link>
+        </div>
+      </div>
+
+      <div className="bg-card border border-black/10 dark:border-white/10 rounded-xl p-5 flex flex-col gap-4 shadow-sm">
+        <div className="flex items-center gap-2 border-b border-black/5 dark:border-white/5 pb-3">
+          <span className="opacity-70">✨</span>
+          <H2>AI連携 (Gemini 2.5 Flash)</H2>
+        </div>
+        <div className="text-sm flex flex-col gap-3">
+          <Text className="opacity-80">
+            Gemini APIキーを設定すると、AIアシスタント機能が利用可能になります。
+            キーはブラウザにのみ保存され、サーバーには送信されません。
+          </Text>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium opacity-70">Gemini API Key</label>
+            <input
+              type="password"
+              placeholder="AIzaSy..."
+              className="border rounded px-3 py-2 text-sm bg-background w-full max-w-md"
+              value={geminiApiKey}
+              onChange={(e) => setGeminiApiKey(e.target.value)}
+            />
+          </div>
+          <div className="text-xs opacity-60">
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">
+              APIキーを取得する
+            </a>
+          </div>
         </div>
       </div>
       <div className="bg-[var(--danger)]/5 rounded-xl p-5 flex flex-col gap-3">

@@ -6,9 +6,8 @@ import { useAppStore } from "@/lib/store";
 import { Loader2, Mic } from "lucide-react";
 import WysiwygEditor from "@/components/WysiwygEditor";
 import PrimaryButton from "@/components/PrimaryButton";
-import { copyDescriptionToClipboard, copyDescriptionWithFormat, type CopyFormat } from "@/lib/taskUtils";
+import { copyDescriptionWithFormat, type CopyFormat } from "@/lib/taskUtils";
 import { Copy, ChevronDown } from "lucide-react";
-import { X } from "lucide-react";
 import { useToast } from "@/components/Providers";
 
 export type TaskFormProps = {
@@ -19,7 +18,7 @@ export type TaskFormProps = {
 };
 export type TaskFormHandle = { save: () => void };
 
-function TaskFormInner({ onSubmitted, defaultType, task, onCancel }: TaskFormProps, ref: React.Ref<TaskFormHandle>) {
+function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: React.Ref<TaskFormHandle>) {
   const toast = useToast();
   const addTask = useAppStore((s) => s.addTask);
   const milestones = useAppStore((s) => s.milestones);

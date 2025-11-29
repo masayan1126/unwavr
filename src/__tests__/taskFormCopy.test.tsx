@@ -1,32 +1,33 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import TaskForm from "@/components/TaskForm";
 import type { Task } from "@/lib/types";
+import { vi } from "vitest";
 
-jest.mock("@/lib/store", () => {
-  const actual = jest.requireActual("@/lib/store");
+vi.mock("@/lib/store", () => {
+  const actual = vi.importActual("@/lib/store");
   const state = {
-    addTask: jest.fn().mockReturnValue("new-id"),
-    updateTask: jest.fn(),
+    addTask: vi.fn().mockReturnValue("new-id"),
+    updateTask: vi.fn(),
     milestones: [],
   };
   return {
     __esModule: true,
     ...actual,
-    useAppStore: jest.fn((selector) => selector(state)),
+    useAppStore: vi.fn((selector) => selector(state)),
   };
 });
 
-jest.mock("@/components/Providers", () => {
+vi.mock("@/components/Providers", () => {
   return {
     __esModule: true,
-    useToast: () => ({ show: jest.fn() }),
+    useToast: () => ({ show: vi.fn() }),
   };
 });
 
 describe("TaskFormの説明コピー", () => {
   it("説明をコピーできる", async () => {
     // @ts-expect-error - JSDOMでclipboardをモック
-    navigator.clipboard = { writeText: jest.fn().mockResolvedValue(undefined) };
+    navigator.clipboard = { writeText: vi.fn().mockResolvedValue(undefined) };
     const sampleTask: Task = {
       id: "t1",
       title: "テストタスク",
@@ -34,6 +35,8 @@ describe("TaskFormの説明コピー", () => {
       type: "backlog",
       createdAt: Date.now(),
       plannedDates: [],
+      completed: false,
+      order: 0,
     };
     render(<TaskForm task={sampleTask} />);
     const editorLabel = screen.getByText("詳細");

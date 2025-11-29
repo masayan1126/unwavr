@@ -18,6 +18,7 @@
     "start:e2e": "next start -p 3001"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.45.4",
     "@tiptap/extension-link": "^3.2.2",
     "@tiptap/extension-underline": "^3.2.2",

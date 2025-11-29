@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAppStore } from "@/lib/store";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { Mic, X } from "lucide-react";
@@ -55,19 +55,7 @@ export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: Qui
     }
   }, [isOpen]);
 
-  // ESCキーでモーダルを閉じる
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !isSubmitting) {
-        handleClose();
-      }
-    };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [isOpen, isSubmitting]);
-
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (isSubmitting) return;
 
     // 音声入力が有効な場合は停止
@@ -78,7 +66,19 @@ export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: Qui
     setTitle("");
     setError(null);
     onClose();
-  };
+  }, [isSubmitting, listening, toggleSpeech, onClose]);
+
+  // ESCキーでモーダルを閉じる
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !isSubmitting) {
+        handleClose();
+      }
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [isOpen, isSubmitting, handleClose]);
 
   const handleSave = async () => {
     if (!title.trim()) return;
@@ -207,8 +207,8 @@ export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: Qui
                 onClick={toggleSpeech}
                 disabled={isSubmitting}
                 className={`px-4 py-3 rounded-lg transition-colors flex items-center justify-center min-w-[52px] disabled:opacity-50 ${listening
-                    ? "bg-[var(--danger)] text-white hover:opacity-80"
-                    : "bg-transparent border border-[var(--border)] hover:bg-black/5 dark:hover:bg-white/10"
+                  ? "bg-[var(--danger)] text-white hover:opacity-80"
+                  : "bg-transparent border border-[var(--border)] hover:bg-black/5 dark:hover:bg-white/10"
                   }`}
                 title={listening ? "音声入力を停止" : "音声入力を開始"}
                 aria-label={listening ? "音声入力を停止" : "音声入力を開始"}

@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { CalendarDays, ListTodo, ChevronLeft, ChevronRight, AlertTriangle, Home, Archive, Rocket, Target, Timer, Calendar, Music, Lock, MessageSquare, Settings } from "lucide-react";
 import AuthButtons from "@/components/AuthButtons";
@@ -52,7 +53,7 @@ export default function Sidebar() {
         <div className="flex items-center justify-between px-2 pt-2">
           <div className="flex items-center gap-3 min-w-0 group cursor-pointer">
             <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
-              <img src="/unwavr-logo.svg" alt="unwavr logo" className="w-5 h-5 shrink-0" />
+              <Image src="/unwavr-logo.svg" alt="unwavr logo" width={24} height={24} className="w-6 h-6 shrink-0" />
             </div>
             <div className="flex flex-col min-w-0">
               <div className="text-sm font-bold tracking-tight text-foreground truncate" title="unwavr">{open ? "unwavr" : ""}</div>
@@ -312,5 +313,3 @@ export default function Sidebar() {
     </aside>
   );
 }
-
-

@@ -1,4 +1,4 @@
-import { TaskSlice, MilestoneSlice, LauncherSlice, BgmSlice, PomodoroSlice, ImportHistorySlice, UISlice } from "./stores/sliceTypes";
+import { TaskSlice, MilestoneSlice, LauncherSlice, BgmSlice, PomodoroSlice, ImportHistorySlice, UISlice, AISlice } from "./stores/sliceTypes";
 
 export type AppState = TaskSlice &
     MilestoneSlice &
@@ -6,4 +6,5 @@ export type AppState = TaskSlice &
     BgmSlice &
     PomodoroSlice &
     ImportHistorySlice &
-    UISlice;
+    UISlice &
+    AISlice;

@@ -49,7 +49,7 @@ export default function TaskDialog({ open, onClose, title = "タスク", childre
       <div className={`relative z-10 bg-card text-foreground shadow-2xl transition-all duration-300 ease-out transform-gpu w-full max-w-4xl h-[90vh] flex flex-col rounded-xl overflow-hidden ${shown ? "opacity-100 scale-100" : "opacity-0 scale-95"}`} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-4 py-3 shrink-0 z-20">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            {/* Breadcrumbs placeholder */}
+            <span className="font-medium text-foreground">{title}</span>
           </div>
           <button
             type="button"

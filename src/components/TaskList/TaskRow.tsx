@@ -1,5 +1,5 @@
-import { Reorder } from "framer-motion";
-import { GripVertical, CheckCircle2, Trash2 } from "lucide-react";
+import { Reorder, useDragControls } from "framer-motion";
+import { GripVertical, CheckCircle2 } from "lucide-react";
 import { Task } from "@/lib/types";
 import { useAppStore } from "@/lib/store";
 import { useToast } from "@/components/Providers";
@@ -66,15 +66,20 @@ export function TaskRow({ task, onEdit, onContext, enableSelection, selected, on
     const isActive = activeTaskIds.includes(task.id);
     const activeIndex = activeTaskIds.indexOf(task.id);
 
+    const controls = useDragControls();
+
     return (
-        <Reorder.Item value={task} id={task.id} className="relative">
+        <Reorder.Item value={task} id={task.id} className="relative" dragListener={false} dragControls={controls}>
             <div
                 className={`flex items-center gap-2 py-2 px-2 min-w-0 transition-colors border-b border-border/40 hover:bg-black/5 dark:hover:bg-white/5 group ${isActive ? "bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20" : ""
                     }`}
                 onContextMenu={(e) => { e.preventDefault(); onContext(e, task); }}
             >
-                <div className="cursor-grab active:cursor-grabbing p-1 opacity-0 group-hover:opacity-30 hover:!opacity-100 transition-opacity absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full">
-                    <GripVertical size={14} />
+                <div
+                    className="flex-shrink-0 w-[24px] flex justify-center items-center cursor-grab active:cursor-grabbing text-foreground/50 hover:text-foreground transition-colors"
+                    onPointerDown={(e) => controls.start(e)}
+                >
+                    <GripVertical size={16} />
                 </div>
 
                 {enableSelection && (

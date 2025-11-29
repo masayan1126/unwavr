@@ -5,6 +5,7 @@ function makeTask(partial: Partial<Task>): Task {
   return {
     id: partial.id ?? "t1",
     title: partial.title ?? "t",
+    order: 0,
     type: partial.type ?? "backlog",
     createdAt: partial.createdAt ?? Date.now(),
     completed: partial.completed ?? false,
@@ -88,10 +89,14 @@ describe("タスクユーティリティ taskUtils", () => {
 
     it("scheduled は dateRanges の最小 start を返す", () => {
       const now = Date.now();
-      const task = makeTask({ type: "scheduled", scheduled: { daysOfWeek: [], dateRanges: [
-        { start: now - 10, end: now + 10 },
-        { start: now - 20, end: now - 15 },
-      ] } });
+      const task = makeTask({
+        type: "scheduled", scheduled: {
+          daysOfWeek: [], dateRanges: [
+            { start: now - 10, end: now + 10 },
+            { start: now - 20, end: now - 15 },
+          ]
+        }
+      });
       expect(getEarliestExecutionDate(task)).toBe(now - 20);
     });
 

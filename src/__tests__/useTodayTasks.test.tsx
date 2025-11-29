@@ -12,6 +12,7 @@ type MinimalTask = {
   completed: boolean;
   plannedDates?: number[];
   scheduled?: { daysOfWeek: number[]; dateRanges: { start: number; end: number }[] };
+  order: number;
 };
 
 function setTasks(tasks: MinimalTask[]) {
@@ -30,10 +31,10 @@ describe('今日のタスク用フック useTodayTasks', () => {
     const withinToday = start + 60 * 60 * 1000; // 今日の1:00
     const yesterday = start - 60 * 60 * 1000; // 昨日の23:00（期限切れ扱い）
     setTasks([
-      { id: '1', title: 'daily', type: 'daily', createdAt: Date.now(), completed: false },
-      { id: '2', title: 'scheduled by dow', type: 'scheduled', createdAt: Date.now(), completed: false, scheduled: { daysOfWeek: [today.getDay()], dateRanges: [] } },
-      { id: '3', title: 'backlog planned today', type: 'backlog', createdAt: Date.now(), completed: false, plannedDates: [withinToday] },
-      { id: '4', title: 'backlog overdue', type: 'backlog', createdAt: Date.now(), completed: false, plannedDates: [yesterday] },
+      { id: "t1", title: "T1", type: "daily", createdAt: 100, completed: false, order: 0 },
+      { id: '2', title: 'scheduled by dow', type: 'scheduled', createdAt: Date.now(), completed: false, scheduled: { daysOfWeek: [today.getDay()], dateRanges: [] }, order: 0 },
+      { id: '3', title: 'backlog planned today', type: 'backlog', createdAt: Date.now(), completed: false, plannedDates: [withinToday], order: 0 },
+      { id: '4', title: 'backlog overdue', type: 'backlog', createdAt: Date.now(), completed: false, plannedDates: [yesterday], order: 0 },
     ]);
 
     const { result } = renderHook(() => useTodayTasks());

@@ -18,9 +18,14 @@ export const useSettings = () => {
         toast.show("すべて削除しました", "success");
     };
 
+    const geminiApiKey = useAppStore((s) => s.geminiApiKey);
+    const setGeminiApiKey = useAppStore((s) => s.setGeminiApiKey);
+
     return {
         fontSize,
         setFontSize,
+        geminiApiKey,
+        setGeminiApiKey,
         handleClearAll,
     };
 };

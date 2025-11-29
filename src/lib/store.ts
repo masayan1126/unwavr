@@ -8,6 +8,7 @@ import { createBgmSlice } from "./stores/createBgmSlice";
 import { createPomodoroSlice } from "./stores/createPomodoroSlice";
 import { createImportHistorySlice } from "./stores/createImportHistorySlice";
 import { createUISlice } from "./stores/createUISlice";
+import { createAISlice } from "./stores/createAISlice";
 
 export const useAppStore = create<AppState>()((...a) => ({
   ...createTaskSlice(...a),
@@ -17,6 +18,7 @@ export const useAppStore = create<AppState>()((...a) => ({
   ...createPomodoroSlice(...a),
   ...createImportHistorySlice(...a),
   ...createUISlice(...a),
+  ...createAISlice(...a),
 }));
 
 // Initial hydration

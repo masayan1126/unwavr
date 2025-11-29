@@ -12,7 +12,7 @@ function AuthHydrator() {
   useEffect(() => {
     if (status === "authenticated") {
       // ログイン直後にDBから再取得
-      hydrate().catch(() => {});
+      hydrate().catch(() => { });
     } else if (status === "unauthenticated") {
       // サインアウト時にローカル状態をクリア
       clearAll();
@@ -50,7 +50,7 @@ function ConfirmProvider({ children }: { children: React.ReactNode }): React.Rea
     setOpen(false);
     const r = resolver;
     setResolver(null);
-    r && r(v);
+    if (r) r(v);
   }, [resolver]);
 
   const value = useMemo(() => confirm, [confirm]);
@@ -133,7 +133,7 @@ function PomodoroTicker() {
       raf = window.requestAnimationFrame(loop);
       return () => window.cancelAnimationFrame(raf);
     }
-    return () => {};
+    return () => { };
   }, [isRunning, tick]);
   return null;
 }

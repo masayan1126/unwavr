@@ -100,3 +100,8 @@ export interface UISlice {
     isLauncherOpen: boolean;
     toggleLauncher: () => void;
 }
+
+export interface AISlice {
+    geminiApiKey: string;
+    setGeminiApiKey: (key: string) => void;
+}
