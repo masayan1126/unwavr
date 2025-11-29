@@ -11,7 +11,7 @@ export default function LauncherForm() {
     categories,
     label, setLabel, url, setUrl, iconName, setIconName, color, setColor,
     categoryId, setCategoryId, newCategory, setNewCategory, linkType, setLinkType,
-    showHelp, setShowHelp, nativePath, args, setArgs,
+    showHelp, setShowHelp, args, setArgs,
     customIconUrl, setCustomIconUrl,
     submit, pickNativeApp,
   } = useLauncherForm();

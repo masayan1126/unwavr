@@ -1,15 +1,13 @@
 "use client";
 import { useAppStore } from "@/lib/store";
-import { X, Minimize2, Maximize2, SkipBack, SkipForward, Pause, Play } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
+import { X, Minimize2, Maximize2, SkipBack, SkipForward } from "lucide-react";
+import { useState, useEffect } from "react";
 
 export default function GlobalBgmPlayer() {
     const currentId = useAppStore((s) => s.bgmCurrentTrackId);
     const tracks = useAppStore((s) => s.bgmTracks);
     const stopBgm = useAppStore((s) => s.stopBgm);
     const playBgmTrack = useAppStore((s) => s.playBgmTrack);
-    const pathname = usePathname();
 
     const [isMinimized, setIsMinimized] = useState(false);
     const [isVisible, setIsVisible] = useState(true);
@@ -45,8 +43,8 @@ export default function GlobalBgmPlayer() {
     return (
         <div
             className={`fixed z-50 transition-all duration-300 shadow-xl bg-black rounded-lg overflow-hidden border border-white/10 ${isMinimized
-                    ? "bottom-20 right-4 w-64 h-16 flex items-center"
-                    : "bottom-20 right-4 w-80 sm:w-96 aspect-video"
+                ? "bottom-20 right-4 w-64 h-16 flex items-center"
+                : "bottom-20 right-4 w-80 sm:w-96 aspect-video"
                 }`}
         >
             {isMinimized ? (

@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect } from "react";
 import { useAppStore } from "@/lib/store";
-import { chatWithGemini, generateTaskFromText } from "@/lib/gemini";
+import { processUserRequest } from "@/lib/gemini";
 import { useToast } from "@/components/Providers";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 type Msg = { role: "user" | "model"; content: string };
 
@@ -11,9 +11,20 @@ export default function ChatAssistant() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const listRef = useRef<HTMLDivElement | null>(null);
+
   const apiKey = useAppStore((s) => s.geminiApiKey);
+  const tasks = useAppStore((s) => s.tasks);
   const addTask = useAppStore((s) => s.addTask);
+  const updateTask = useAppStore((s) => s.updateTask);
+  const removeTask = useAppStore((s) => s.removeTask);
+  const completeTasks = useAppStore((s) => s.completeTasks);
+
   const toast = useToast();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -37,26 +48,46 @@ export default function ChatAssistant() {
     setLoading(true);
 
     try {
-      // Check if it's a task creation request
-      if (content.toLowerCase().startsWith("task:") || content.includes("タスク作成") || content.includes("タスク追加")) {
-        const taskData = await generateTaskFromText(apiKey, content);
-        if (taskData) {
-          const taskId = addTask(taskData);
-          setMessages((m) => [...m, { role: "model", content: `タスク「${taskData.title}」を作成しました。` }]);
-          toast.show("タスクを作成しました", "success");
-        } else {
-          setMessages((m) => [...m, { role: "model", content: "タスク情報の抽出に失敗しました。" }]);
-        }
-      } else {
-        // Normal chat
-        const history = messages.map(m => ({
-          role: m.role,
-          parts: [{ text: m.content }]
-        }));
+      // Prepare simplified task context
+      const currentTasks = tasks.map(t => ({
+        id: t.id,
+        title: t.title,
+        type: t.type,
+        completed: t.completed,
+        scheduled: t.scheduled,
+        plannedDates: t.plannedDates
+      }));
 
-        const reply = await chatWithGemini(apiKey, history, content);
-        setMessages((m) => [...m, { role: "model", content: reply }]);
+      const history = messages.map(m => ({
+        role: m.role,
+        parts: [{ text: m.content }]
+      }));
+
+      const result = await processUserRequest(apiKey, history, content, currentTasks);
+
+      // Execute action
+      switch (result.type) {
+        case "create_task":
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          addTask(result.task as any);
+          toast.show("タスクを作成しました", "success");
+          break;
+        case "update_task":
+          updateTask(result.taskId, result.updates);
+          toast.show("タスクを更新しました", "success");
+          break;
+        case "delete_task":
+          removeTask(result.taskId);
+          toast.show("タスクを削除しました", "success");
+          break;
+        case "complete_task":
+          completeTasks([result.taskId]);
+          toast.show("タスクを完了しました", "success");
+          break;
       }
+
+      setMessages((m) => [...m, { role: "model", content: result.message }]);
+
     } catch (e) {
       console.error(e);
       toast.show("エラーが発生しました", "error");
@@ -72,14 +103,14 @@ export default function ChatAssistant() {
         {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-60 gap-2">
             <p>Gemini 2.5 Flash アシスタント</p>
-            <p className="text-xs">「タスク追加: 牛乳を買う」のように入力するとタスクを作成できます</p>
+            <p className="text-xs">「牛乳を買うタスクを追加して」「今日のタスクを教えて」など話しかけてください</p>
           </div>
         )}
         {messages.map((m, idx) => (
           <div key={idx} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             <div className={`max-w-[80%] rounded-lg px-4 py-2 text-sm whitespace-pre-wrap ${m.role === "user"
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-foreground"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-foreground"
               }`}>
               {m.content}
             </div>
@@ -97,10 +128,10 @@ export default function ChatAssistant() {
       <div className="border-t p-3 bg-background flex items-center gap-2">
         <input
           className="flex-1 border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-          placeholder={apiKey ? "メッセージを入力..." : "設定画面でAPIキーを設定してください"}
+          placeholder={mounted && apiKey ? "メッセージを入力..." : "設定画面でAPIキーを設定してください"}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          disabled={!apiKey || loading}
+          disabled={!mounted || !apiKey || loading}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -111,7 +142,7 @@ export default function ChatAssistant() {
         <button
           className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50 hover:opacity-90 transition-opacity"
           onClick={send}
-          disabled={loading || !input.trim() || !apiKey}
+          disabled={loading || !input.trim() || !mounted || !apiKey}
         >
           送信
         </button>

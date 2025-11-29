@@ -266,23 +266,7 @@ export default function WeatherPage() {
 
         console.error('Geolocation error details:', errorDetails);
 
-        let errorMessage = "位置情報の許可が必要です";
-        const errorCode = geolocationError.code;
-
-        switch (errorCode) {
-          case geolocationError.PERMISSION_DENIED:
-            errorMessage = "位置情報の許可が拒否されました。ブラウザの設定で位置情報を許可してください。";
-            break;
-          case geolocationError.POSITION_UNAVAILABLE:
-            errorMessage = "位置情報を取得できませんでした。GPSが無効になっている可能性があります。";
-            break;
-          case geolocationError.TIMEOUT:
-            errorMessage = "位置情報の取得がタイムアウトしました。ネットワーク接続を確認してください。";
-            break;
-          default:
-            errorMessage = `位置情報エラーが発生しました (コード: ${errorCode})。ブラウザの設定を確認してください。`;
-            break;
-        }
+        // 位置情報エラーの場合、デフォルト位置で天気を取得
 
 
 

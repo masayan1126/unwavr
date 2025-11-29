@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono, Noto_Sans_JP, Space_Grotesk } from "next/font/go
 import "./globals.css";
 import Providers from "@/components/Providers";
 import LayoutChrome from "@/components/LayoutChrome";
+import FloatingAIAssistant from "@/components/FloatingAIAssistant";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -19,7 +20,7 @@ const spaceGrotesk = Space_Grotesk({
 const notoSansJp = Noto_Sans_JP({
   variable: "--font-noto-sans-jp",
   subsets: ["latin"],
-  weight: ["300","400","500","700","900"],
+  weight: ["300", "400", "500", "700", "900"],
   display: "swap",
 });
 
@@ -94,6 +95,7 @@ export default function RootLayout({
       <body suppressHydrationWarning className={`${inter.variable} ${spaceGrotesk.variable} ${notoSansJp.variable} ${jetbrainsMono.variable} antialiased`}>
         <Providers>
           <LayoutChrome>{children}</LayoutChrome>
+          <FloatingAIAssistant />
         </Providers>
       </body>
     </html>

@@ -1,52 +1,88 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Task } from "./types";
 
-export async function chatWithGemini(apiKey: string, history: { role: "user" | "model"; parts: { text: string }[] }[], message: string) {
+export type AIAction =
+    | { type: "chat"; message: string }
+    | { type: "create_task"; task: Partial<Task>; message: string }
+    | { type: "update_task"; taskId: string; updates: Partial<Task>; message: string }
+    | { type: "delete_task"; taskId: string; message: string }
+    | { type: "complete_task"; taskId: string; message: string };
+
+export async function processUserRequest(
+    apiKey: string,
+    history: { role: "user" | "model"; parts: { text: string }[] }[],
+    message: string,
+    currentTasks: Partial<Task>[]
+): Promise<AIAction> {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
+    const taskContext = currentTasks.map(t =>
+        `- ID: ${t.id}, Title: ${t.title}, Type: ${t.type}, Completed: ${t.completed}, Scheduled: ${JSON.stringify(t.scheduled)}, Planned: ${JSON.stringify(t.plannedDates)}`
+    ).join("\n");
+
+    const systemPrompt = `
+    You are an intelligent task management assistant. You can manage tasks based on user requests.
+    
+    Current Tasks:
+    ${taskContext}
+
+    Available Tools (return as JSON):
+    1. create_task: Create a new task.
+       Format: { "tool": "create_task", "parameters": { "title": "...", "type": "daily"|"scheduled"|"backlog", ... }, "reply": "..." }
+    2. update_task: Update an existing task. Find the Task ID from the Current Tasks list based on the user's description.
+       Format: { "tool": "update_task", "parameters": { "taskId": "...", "updates": { ... } }, "reply": "..." }
+    3. delete_task: Delete a task. Find the Task ID from the Current Tasks list.
+       Format: { "tool": "delete_task", "parameters": { "taskId": "..." }, "reply": "..." }
+    4. complete_task: Mark a task as completed. Find the Task ID from the Current Tasks list.
+       Format: { "tool": "complete_task", "parameters": { "taskId": "..." }, "reply": "..." }
+    5. chat: General conversation or if the user's request is unclear or if no tool is needed.
+       Format: { "tool": "chat", "parameters": {}, "reply": "..." }
+
+    Rules:
+    - Return ONLY valid JSON.
+    - If the user asks to update/delete/complete a task, you MUST find the matching ID from the "Current Tasks" list. If ambiguous, ask for clarification (tool: chat).
+    - For "scheduled" tasks, "daysOfWeek" is 0-6 (Sunday-Saturday).
+    - For dates, use timestamps (number) or "YYYY-MM-DD" strings where appropriate. Current time: ${new Date().toISOString()}.
+    - "reply" should be a friendly message confirming the action or answering the question.
+    `;
+
     const chat = model.startChat({
-        history: history,
+        history: [
+            { role: "user", parts: [{ text: systemPrompt }] },
+            { role: "model", parts: [{ text: "Understood. I am ready to help you manage your tasks. Please provide your request." }] },
+            ...history
+        ],
     });
 
     const result = await chat.sendMessage(message);
-    const response = await result.response;
-    return response.text();
-}
-
-export async function generateTaskFromText(apiKey: string, text: string) {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-    const prompt = `
-    Analyze the following text and extract task information.
-    Return ONLY a valid JSON object with the following structure:
-    {
-        "title": "Task title",
-        "type": "daily" | "scheduled" | "backlog",
-        "scheduled": {
-            "daysOfWeek": [0-6] (0 is Sunday, optional),
-            "dateRanges": [{"start": "YYYY-MM-DD", "end": "YYYY-MM-DD"}] (optional)
-        },
-        "plannedDates": [timestamp] (optional, for backlog)
-    }
-    
-    If the text implies a specific date (e.g. "tomorrow", "next monday"), calculate the timestamp or date range relative to now (${new Date().toISOString()}).
-    If no specific type is implied, default to "backlog".
-    
-    Text: "${text}"
-    `;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const textResponse = response.text();
+    const responseText = await result.response.text();
 
     try {
-        // Extract JSON from code block if present
-        const jsonMatch = textResponse.match(/```json\n([\s\S]*)\n```/) || textResponse.match(/{[\s\S]*}/);
-        const jsonStr = jsonMatch ? jsonMatch[0].replace(/```json|```/g, "") : textResponse;
-        return JSON.parse(jsonStr);
+        const jsonMatch = responseText.match(/```json\n([\s\S]*)\n```/) || responseText.match(/{[\s\S]*}/);
+
+        if (jsonMatch) {
+            const jsonStr = jsonMatch[0].replace(/```json|```/g, "");
+            const parsed = JSON.parse(jsonStr);
+
+            switch (parsed.tool) {
+                case "create_task":
+                    return { type: "create_task", task: parsed.parameters, message: parsed.reply };
+                case "update_task":
+                    return { type: "update_task", taskId: parsed.parameters.taskId, updates: parsed.parameters.updates, message: parsed.reply };
+                case "delete_task":
+                    return { type: "delete_task", taskId: parsed.parameters.taskId, message: parsed.reply };
+                case "complete_task":
+                    return { type: "complete_task", taskId: parsed.parameters.taskId, message: parsed.reply };
+                default:
+                    return { type: "chat", message: parsed.reply || responseText };
+            }
+        } else {
+            // No JSON found, treat as normal chat
+            return { type: "chat", message: responseText };
+        }
     } catch (e) {
-        console.error("Failed to parse JSON from Gemini response", e);
-        return null;
+        console.error("Failed to parse Gemini response", e);
+        return { type: "chat", message: responseText }; // Fallback to raw text if JSON parsing fails
     }
 }
