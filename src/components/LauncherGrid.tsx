@@ -3,6 +3,7 @@ import * as Icons from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { useMemo, useState } from "react";
+import { useToast, useConfirm } from "@/components/Providers";
 import IconPicker from "@/components/IconPicker";
 
 export default function LauncherGrid() {
@@ -94,18 +95,29 @@ export default function LauncherGrid() {
 
   return (
     <>
-      <div className="flex items-center justify-end gap-2 mb-2">
-        <span className="text-xs opacity-70">選択: {selectedCount}</span>
-        <button className="text-xs underline opacity-80" onClick={selectAll}>全選択</button>
-        <button className="text-xs underline opacity-80" onClick={clearAll}>全解除</button>
-        <button
-          className="text-xs px-2 py-1 rounded border"
-          onClick={bulkDelete}
-          disabled={selectedCount === 0}
-          aria-disabled={selectedCount === 0}
-        >
-          選択を削除
-        </button>
+      <div className={`flex items-center justify-between h-12 px-4 bg-muted/50 rounded-lg mb-4 transition-all duration-300 ${selectedCount > 0 ? 'opacity-100 translate-y-0' : 'opacity-50 translate-y-0'}`}>
+        <div className="flex items-center gap-3 text-sm">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={shortcuts.length > 0 && selectedCount === shortcuts.length}
+              onChange={(e) => e.target.checked ? selectAll() : clearAll()}
+              className="rounded border-gray-300 text-primary focus:ring-primary"
+            />
+            <span className="font-medium">{selectedCount} 選択中</span>
+          </label>
+        </div>
+        <div className="flex items-center gap-2">
+          {selectedCount > 0 && (
+            <button
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+              onClick={bulkDelete}
+            >
+              <Icons.Trash2 size={14} />
+              削除
+            </button>
+          )}
+        </div>
       </div>
 
       {categories.map((c) => {
@@ -118,15 +130,28 @@ export default function LauncherGrid() {
                 <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: c.color ?? "#888" }} />
                 {c.name}
               </span>
-              <span className="flex items-center gap-2">
-                <button className="text-[10px] underline opacity-80" onClick={() => selectCategoryAll(c.id)}>全選択</button>
-                <button className="text-[10px] underline opacity-80" onClick={() => clearCategoryAll(c.id)}>全解除</button>
+              <span className="flex items-center gap-1">
+                <button
+                  className="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                  title="全選択"
+                  onClick={() => selectCategoryAll(c.id)}
+                >
+                  <Icons.CheckSquare size={16} className="opacity-70" />
+                </button>
+                <button
+                  className="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                  title="全解除"
+                  onClick={() => clearCategoryAll(c.id)}
+                >
+                  <Icons.Square size={16} className="opacity-70" />
+                </button>
               </span>
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {list.map((sc) => {
                 const Ico = (Icons as unknown as Record<string, LucideIcon>)[sc.iconName];
                 const style = { backgroundColor: `${sc.color ?? "#0ea5e9"}20` } as React.CSSProperties;
+                const isSelected = Boolean(selected[sc.id]);
                 return (
                   sc.kind === "web" ? (
                     <a
@@ -134,55 +159,62 @@ export default function LauncherGrid() {
                       href={sc.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="group relative flex flex-col items-center gap-3 p-4 bg-card/50 hover:bg-card rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1"
+                      className={`group relative flex flex-col items-center gap-3 p-4 bg-card/50 hover:bg-card rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 ${isSelected ? 'ring-2 ring-primary/50' : ''}`}
                       style={{ ...style, border: 'none' }}
                       title={sc.label}
                     >
-                      <input
-                        type="checkbox"
-                        className="absolute top-2 right-2"
-                        checked={Boolean(selected[sc.id])}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={(e) => {
+                      <button
+                        className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all z-10 ${isSelected
+                          ? "bg-primary border-primary text-primary-foreground"
+                          : "border-muted-foreground/30 hover:border-primary/50 bg-background/50 backdrop-blur-sm opacity-0 group-hover:opacity-100"
+                          }`}
+                        onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
                           toggleSelect(sc.id);
                         }}
-                      />
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-background shadow-inner text-foreground/80 group-hover:text-foreground transition-colors">
-                        {Ico ? <Ico size={24} /> : sc.iconName}
+                      >
+                        {isSelected && <Icons.Check size={14} strokeWidth={3} className="text-white" />}
+                      </button>
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-background shadow-inner text-foreground/80 group-hover:text-foreground transition-colors overflow-hidden">
+                        {sc.customIconUrl ? (
+                          <img src={sc.customIconUrl} alt={sc.label} className="w-full h-full object-cover" />
+                        ) : (
+                          Ico ? <Ico size={24} /> : sc.iconName
+                        )}
                       </div>
                       <div className="text-sm text-center line-clamp-2">{sc.label}</div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-2 right-2">
                         <button
-                          className="text-[10px] opacity-60 underline"
+                          className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
                           onClick={(e) => {
                             e.preventDefault();
                             openEdit(sc.id);
                           }}
+                          title="編集"
                         >
-                          編集
+                          <Icons.Edit2 size={14} />
                         </button>
                         <button
-                          className="text-[10px] opacity-60 underline"
+                          className="p-1.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                           onClick={(e) => {
                             e.preventDefault();
                             remove(sc.id);
                           }}
+                          title="削除"
                         >
-                          削除
+                          <Icons.Trash2 size={14} />
                         </button>
                       </div>
                     </a>
                   ) : (
                     <div
                       key={sc.id}
-                      className="group relative flex flex-col items-center gap-3 p-4 bg-card/50 hover:bg-card rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                      className={`group relative flex flex-col items-center gap-3 p-4 bg-card/50 hover:bg-card rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 cursor-pointer ${isSelected ? 'ring-2 ring-primary/50' : ''}`}
                       style={{ ...style, border: 'none' }}
                       title={sc.label}
                       onClick={async () => {
                         try {
-                          // Use url as the path/name since that's where we store it in the form
                           const path = sc.url || sc.nativePath;
                           if (!path) return;
                           await fetch("/api/system/launch", {
@@ -196,55 +228,40 @@ export default function LauncherGrid() {
                         }
                       }}
                     >
-                      <input
-                        type="checkbox"
-                        className="absolute top-2 right-2"
-                        checked={Boolean(selected[sc.id])}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={() => toggleSelect(sc.id)}
-                      />
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-background shadow-inner text-foreground/80 group-hover:text-foreground transition-colors">
-                        {Ico ? <Ico size={24} /> : sc.iconName}
+                      <button
+                        className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all z-10 ${isSelected
+                          ? "bg-primary border-primary text-primary-foreground"
+                          : "border-muted-foreground/30 hover:border-primary/50 bg-background/50 backdrop-blur-sm opacity-0 group-hover:opacity-100"
+                          }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleSelect(sc.id);
+                        }}
+                      >
+                        {isSelected && <Icons.Check size={14} strokeWidth={3} className="text-white" />}
+                      </button>
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-background shadow-inner text-foreground/80 group-hover:text-foreground transition-colors overflow-hidden">
+                        {sc.customIconUrl ? (
+                          <img src={sc.customIconUrl} alt={sc.label} className="w-full h-full object-cover" />
+                        ) : (
+                          Ico ? <Ico size={24} /> : sc.iconName
+                        )}
                       </div>
                       <div className="text-sm text-center line-clamp-2">{sc.label}</div>
-                      <div className="flex gap-2 flex-wrap items-center justify-center">
-                        {/* {sc.url && (
-                          <button
-                            className="text-[10px] opacity-60 underline"
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              try {
-                                await navigator.clipboard.writeText(sc.url);
-                              } catch { }
-                            }}
-                          >
-                            スキームをコピー
-                          </button>
-                        )} */}
-                        {/* {sc.nativePath && (
-                          <button
-                            className="text-[10px] opacity-60 underline"
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              try {
-                                await navigator.clipboard.writeText(sc.nativePath!);
-                              } catch { }
-                            }}
-                          >
-                            パスをコピー
-                          </button>
-                        )} */}
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-2 right-2">
                         <button
-                          className="text-[10px] opacity-60 underline"
+                          className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
                           onClick={(e) => { e.stopPropagation(); openEdit(sc.id); }}
+                          title="編集"
                         >
-                          編集
+                          <Icons.Edit2 size={14} />
                         </button>
                         <button
-                          className="text-[10px] opacity-60 underline"
+                          className="p-1.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                           onClick={(e) => { e.stopPropagation(); remove(sc.id); }}
+                          title="削除"
                         >
-                          削除
+                          <Icons.Trash2 size={14} />
                         </button>
                       </div>
                     </div>
@@ -259,9 +276,21 @@ export default function LauncherGrid() {
       <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm mb-2">
         <h2 className="text-sm font-medium mb-4 flex items-center justify-between">
           <span>未分類</span>
-          <span className="flex items-center gap-2">
-            <button className="text-[10px] underline opacity-80" onClick={() => selectCategoryAll(undefined)}>全選択</button>
-            <button className="text-[10px] underline opacity-80" onClick={() => clearCategoryAll(undefined)}>全解除</button>
+          <span className="flex items-center gap-1">
+            <button
+              className="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+              title="全選択"
+              onClick={() => selectCategoryAll(undefined)}
+            >
+              <Icons.CheckSquare size={16} className="opacity-70" />
+            </button>
+            <button
+              className="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+              title="全解除"
+              onClick={() => clearCategoryAll(undefined)}
+            >
+              <Icons.Square size={16} className="opacity-70" />
+            </button>
           </span>
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -271,6 +300,7 @@ export default function LauncherGrid() {
             groups.rest.map((sc) => {
               const Ico = (Icons as unknown as Record<string, LucideIcon>)[sc.iconName];
               const style = { backgroundColor: `${sc.color ?? "#0ea5e9"}20` } as React.CSSProperties;
+              const isSelected = Boolean(selected[sc.id]);
               return (
                 sc.kind === "web" ? (
                   <a
@@ -278,50 +308,58 @@ export default function LauncherGrid() {
                     href={sc.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="group relative flex flex-col items-center gap-3 p-4 bg-card/50 hover:bg-card rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1"
+                    className={`group relative flex flex-col items-center gap-3 p-4 bg-card/50 hover:bg-card rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 ${isSelected ? 'ring-2 ring-primary/50' : ''}`}
                     style={{ ...style, border: 'none' }}
                     title={sc.label}
                   >
-                    <input
-                      type="checkbox"
-                      className="absolute top-2 right-2"
-                      checked={Boolean(selected[sc.id])}
-                      onClick={(e) => e.stopPropagation()}
-                      onChange={(e) => {
+                    <button
+                      className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all z-10 ${isSelected
+                        ? "bg-primary border-primary text-primary-foreground"
+                        : "border-muted-foreground/30 hover:border-primary/50 bg-background/50 backdrop-blur-sm opacity-0 group-hover:opacity-100"
+                        }`}
+                      onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         toggleSelect(sc.id);
                       }}
-                    />
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-background shadow-inner text-foreground/80 group-hover:text-foreground transition-colors">
-                      {Ico ? <Ico size={24} /> : sc.iconName}
+                    >
+                      {isSelected && <Icons.Check size={14} strokeWidth={3} className="text-white" />}
+                    </button>
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-background shadow-inner text-foreground/80 group-hover:text-foreground transition-colors overflow-hidden">
+                      {sc.customIconUrl ? (
+                        <img src={sc.customIconUrl} alt={sc.label} className="w-full h-full object-cover" />
+                      ) : (
+                        Ico ? <Ico size={24} /> : sc.iconName
+                      )}
                     </div>
                     <div className="text-sm text-center line-clamp-2">{sc.label}</div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-2 right-2">
                       <button
-                        className="text-[10px] opacity-60 underline"
+                        className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
                         onClick={(e) => {
                           e.preventDefault();
                           openEdit(sc.id);
                         }}
+                        title="編集"
                       >
-                        編集
+                        <Icons.Edit2 size={14} />
                       </button>
                       <button
-                        className="text-[10px] opacity-60 underline"
+                        className="p-1.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                         onClick={(e) => {
                           e.preventDefault();
                           remove(sc.id);
                         }}
+                        title="削除"
                       >
-                        削除
+                        <Icons.Trash2 size={14} />
                       </button>
                     </div>
                   </a>
                 ) : (
                   <div
                     key={sc.id}
-                    className="group relative flex flex-col items-center gap-3 p-4 bg-card/50 hover:bg-card rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                    className={`group relative flex flex-col items-center gap-3 p-4 bg-card/50 hover:bg-card rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 cursor-pointer ${isSelected ? 'ring-2 ring-primary/50' : ''}`}
                     style={{ ...style, border: 'none' }}
                     title={sc.label}
                     onClick={async () => {
@@ -331,7 +369,7 @@ export default function LauncherGrid() {
                         await fetch("/api/system/launch", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ path }),
+                          body: JSON.stringify({ path, args: sc.args }),
                         });
                       } catch (e) {
                         console.error(e);
@@ -339,55 +377,40 @@ export default function LauncherGrid() {
                       }
                     }}
                   >
-                    <input
-                      type="checkbox"
-                      className="absolute top-2 right-2"
-                      checked={Boolean(selected[sc.id])}
-                      onClick={(e) => e.stopPropagation()}
-                      onChange={() => toggleSelect(sc.id)}
-                    />
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-background shadow-inner text-foreground/80 group-hover:text-foreground transition-colors">
-                      {Ico ? <Ico size={24} /> : sc.iconName}
+                    <button
+                      className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all z-10 ${isSelected
+                        ? "bg-primary border-primary text-primary-foreground"
+                        : "border-muted-foreground/30 hover:border-primary/50 bg-background/50 backdrop-blur-sm opacity-0 group-hover:opacity-100"
+                        }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSelect(sc.id);
+                      }}
+                    >
+                      {isSelected && <Icons.Check size={14} strokeWidth={3} className="text-white" />}
+                    </button>
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-background shadow-inner text-foreground/80 group-hover:text-foreground transition-colors overflow-hidden">
+                      {sc.customIconUrl ? (
+                        <img src={sc.customIconUrl} alt={sc.label} className="w-full h-full object-cover" />
+                      ) : (
+                        Ico ? <Ico size={24} /> : sc.iconName
+                      )}
                     </div>
                     <div className="text-sm text-center line-clamp-2">{sc.label}</div>
-                    <div className="flex gap-2 flex-wrap items-center justify-center">
-                      {/* {sc.url && (
-                        <button
-                          className="text-[10px] opacity-60 underline"
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            try {
-                              await navigator.clipboard.writeText(sc.url);
-                            } catch { }
-                          }}
-                        >
-                          スキームをコピー
-                        </button>
-                      )} */}
-                      {/* {sc.nativePath && (
-                        <button
-                          className="text-[10px] opacity-60 underline"
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            try {
-                              await navigator.clipboard.writeText(sc.nativePath!);
-                            } catch { }
-                          }}
-                        >
-                          パスをコピー
-                        </button>
-                      )} */}
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-2 right-2">
                       <button
-                        className="text-[10px] opacity-60 underline"
+                        className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
                         onClick={(e) => { e.stopPropagation(); openEdit(sc.id); }}
+                        title="編集"
                       >
-                        編集
+                        <Icons.Edit2 size={14} />
                       </button>
                       <button
-                        className="text-[10px] opacity-60 underline"
+                        className="p-1.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                         onClick={(e) => { e.stopPropagation(); remove(sc.id); }}
+                        title="削除"
                       >
-                        削除
+                        <Icons.Trash2 size={14} />
                       </button>
                     </div>
                   </div>

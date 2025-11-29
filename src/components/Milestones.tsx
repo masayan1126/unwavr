@@ -16,7 +16,16 @@ export default function Milestones() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
-    exportMilestones();
+    const csv = exportMilestones();
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `milestones_${Date.now()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {

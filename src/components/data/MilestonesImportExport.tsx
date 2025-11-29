@@ -21,10 +21,62 @@ export default function MilestonesImportExport() {
             <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex items-center justify-between">
                 <div className="text-sm font-medium">エクスポート（CSV）</div>
                 <button
-                    onClick={() => {
-                        exportMilestones();
-                        setExportHistory((arr) => [{ id: `exp_${Date.now()}`, timestamp: Date.now(), count: milestones.length }, ...arr]);
-                        toast.show('CSVをエクスポートしました', 'success');
+                    onClick={async () => {
+                        const csv = exportMilestones();
+                        const fileName = `milestones_${Date.now()}.csv`;
+
+                        // Feature detection for File System Access API
+                        const anyWindow = window as unknown as {
+                            showSaveFilePicker?: (options?: unknown) => Promise<FileSystemFileHandle>;
+                            showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle>;
+                        };
+
+                        try {
+                            if (anyWindow.showSaveFilePicker) {
+                                const fileHandle = await anyWindow.showSaveFilePicker({
+                                    suggestedName: fileName,
+                                    types: [{ description: 'CSV Files', accept: { 'text/csv': ['.csv'] } }],
+                                } as unknown);
+                                const writable = await fileHandle.createWritable();
+                                await writable.write(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+                                await writable.close();
+                                toast.show(`CSVを保存しました: ${fileName}`, 'success');
+                                setExportHistory((arr) => [{ id: `exp_${Date.now()}`, timestamp: Date.now(), count: milestones.length }, ...arr]);
+                                return;
+                            }
+                            if (anyWindow.showDirectoryPicker) {
+                                const dir = await anyWindow.showDirectoryPicker();
+                                const fileHandle = await dir.getFileHandle(fileName, { create: true });
+                                const writable = await fileHandle.createWritable();
+                                await writable.write(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+                                await writable.close();
+                                toast.show(`CSVを保存しました: ${fileName}`, 'success');
+                                setExportHistory((arr) => [{ id: `exp_${Date.now()}`, timestamp: Date.now(), count: milestones.length }, ...arr]);
+                                return;
+                            }
+
+                            // Fallback
+                            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = fileName;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+
+                            setExportHistory((arr) => [{ id: `exp_${Date.now()}`, timestamp: Date.now(), count: milestones.length }, ...arr]);
+                            toast.show('CSVをエクスポートしました', 'success');
+                        } catch (e) {
+                            const err = e as Error;
+                            const message = err?.message ?? '保存に失敗しました';
+                            if (message.toLowerCase().includes('abort') || message.toLowerCase().includes('cancel')) {
+                                toast.show('保存をキャンセルしました', 'info');
+                                return;
+                            }
+                            toast.show(message, 'error');
+                        }
                     }}
                     className="group flex items-center gap-1.5 px-3 py-1.5 bg-[#2383E2] dark:bg-[#2383E2] text-white text-sm font-medium rounded-[3px] shadow-sm hover:bg-[#2383E2]/90 transition-all"
                 >

@@ -23,7 +23,59 @@ export default function LauncherImportExportPage() {
 
       <div className="border rounded p-4 border-[var(--border)] flex items-center justify-between">
         <div className="text-sm font-medium">エクスポート（JSON）</div>
-        <button className="px-3 py-1.5 rounded text-sm bg-[var(--primary)] text-[#0f172a] border border-transparent hover:opacity-80" onClick={() => { exportLaunchers(); toast.show('JSONをエクスポートしました', 'success'); }}>
+        <button className="px-3 py-1.5 rounded text-sm bg-[var(--primary)] text-[#0f172a] border border-transparent hover:opacity-80" onClick={async () => {
+          const fileName = `launchers_${Date.now()}.json`;
+          const data = {
+            categories: useAppStore.getState().launcherCategories,
+            shortcuts: useAppStore.getState().launcherShortcuts,
+          };
+          const json = JSON.stringify(data, null, 2);
+
+          // Feature detection for File System Access API
+          const anyWindow = window as unknown as {
+            showSaveFilePicker?: (options?: unknown) => Promise<FileSystemFileHandle>;
+            showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle>;
+          };
+
+          try {
+            if (anyWindow.showSaveFilePicker) {
+              const fileHandle = await anyWindow.showSaveFilePicker({
+                suggestedName: fileName,
+                types: [
+                  {
+                    description: 'JSON Files',
+                    accept: { 'application/json': ['.json'] },
+                  },
+                ],
+              } as unknown);
+              const writable = await fileHandle.createWritable();
+              await writable.write(new Blob([json], { type: 'application/json' }));
+              await writable.close();
+              toast.show(`JSONを保存しました: ${fileName}`, 'success');
+              return;
+            }
+            if (anyWindow.showDirectoryPicker) {
+              const dir = await anyWindow.showDirectoryPicker();
+              const fileHandle = await dir.getFileHandle(fileName, { create: true });
+              const writable = await fileHandle.createWritable();
+              await writable.write(new Blob([json], { type: 'application/json' }));
+              await writable.close();
+              toast.show(`JSONを保存しました: ${fileName}`, 'success');
+              return;
+            }
+            // Fallback
+            exportLaunchers();
+            toast.show('JSONをエクスポートしました', 'success');
+          } catch (e) {
+            const err = e as Error;
+            const message = err?.message ?? '保存に失敗しました';
+            if (message.toLowerCase().includes('abort') || message.toLowerCase().includes('cancel')) {
+              toast.show('保存をキャンセルしました', 'info');
+              return;
+            }
+            toast.show(message, 'error');
+          }
+        }}>
           エクスポート
         </button>
       </div>
@@ -31,9 +83,9 @@ export default function LauncherImportExportPage() {
       <div className="border rounded p-4 border-[var(--border)] flex flex-col gap-3">
         <div className="text-sm font-medium">インポート（JSON）</div>
         <div className="text-xs opacity-70">Launcher カテゴリ/ショートカットのJSONを貼り付けてください。</div>
-        <textarea className="border rounded p-2 h-40 bg-transparent text-sm" placeholder="JSON を貼り付け" value={text} onChange={(e)=>setText(e.target.value)} />
+        <textarea className="border rounded p-2 h-40 bg-transparent text-sm" placeholder="JSON を貼り付け" value={text} onChange={(e) => setText(e.target.value)} />
         <label className="inline-flex items-center gap-2 text-xs opacity-80">
-          <input type="checkbox" checked={replace} onChange={(e)=>setReplace(e.target.checked)} /> 既存を置き換える
+          <input type="checkbox" checked={replace} onChange={(e) => setReplace(e.target.checked)} /> 既存を置き換える
         </label>
         <div className="flex items-center gap-2">
           <button className="px-3 py-1 rounded border text-sm" onClick={() => {

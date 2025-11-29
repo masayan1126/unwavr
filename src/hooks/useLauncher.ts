@@ -18,6 +18,8 @@ export function useLauncherForm() {
   const [nativePath, setNativePath] = useState("");
   const [args, setArgs] = useState("");
 
+  const [customIconUrl, setCustomIconUrl] = useState("");
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!label.trim() || !url.trim()) return;
@@ -27,7 +29,7 @@ export function useLauncherForm() {
       const col = color;
       addCategory({ name, color: col });
     }
-    add({ label: label.trim(), url: url.trim(), iconName, color, categoryId: cid, kind: linkType, nativePath: nativePath || undefined, args: args.trim() || undefined });
+    add({ label: label.trim(), url: url.trim(), iconName, color, categoryId: cid, kind: linkType, nativePath: nativePath || undefined, args: args.trim() || undefined, customIconUrl: customIconUrl || undefined });
     setLabel("");
     setUrl("");
     setIconName("Globe");
@@ -37,6 +39,7 @@ export function useLauncherForm() {
     setLinkType("web");
     setNativePath("");
     setArgs("");
+    setCustomIconUrl("");
   };
 
   const pickNativeApp = async () => {
@@ -60,7 +63,7 @@ export function useLauncherForm() {
     // local states
     label, setLabel, url, setUrl, iconName, setIconName, color, setColor,
     categoryId, setCategoryId, newCategory, setNewCategory, linkType, setLinkType,
-    showHelp, setShowHelp, nativePath, args, setArgs,
+    showHelp, setShowHelp, nativePath, args, setArgs, customIconUrl, setCustomIconUrl,
     // actions
     submit, pickNativeApp,
   };

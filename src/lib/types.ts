@@ -107,6 +107,7 @@ export type LauncherShortcut = {
   kind?: "web" | "app" | "native";
   nativePath?: string;
   args?: string;
+  customIconUrl?: string;
 };
 
 export type LauncherCategory = {
