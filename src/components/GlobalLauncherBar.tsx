@@ -21,10 +21,10 @@ export default function GlobalLauncherBar() {
       <button
         aria-label={isLauncherOpen ? "ランチャーを閉じる" : "ランチャーを開く"}
         onClick={toggleLauncher}
-        className={`fixed z-[100000] top-1/2 -translate-y-1/2 transition-all duration-300
+        className={`fixed z-[100000] top-1/2 -translate-y-1/2 transition-all duration-300 hidden lg:flex
           ${isLauncherOpen ? 'right-[260px]' : 'right-0'}
           w-6 h-12 bg-background/80 backdrop-blur-md border border-r-0 border-white/10 shadow-lg
-          rounded-l-xl flex items-center justify-center hover:bg-background text-xs opacity-50 hover:opacity-100
+          rounded-l-xl items-center justify-center hover:bg-background text-xs opacity-50 hover:opacity-100
         `}
       >
         {isLauncherOpen ? "▶" : "◀"}
@@ -32,7 +32,7 @@ export default function GlobalLauncherBar() {
 
       {/* Sidebar Container */}
       <div
-        className={`fixed top-0 right-0 h-full z-[99999] bg-background/95 backdrop-blur-xl border-l border-white/10 shadow-2xl transition-transform duration-300 ease-in-out
+        className={`fixed top-0 right-0 h-full z-[99999] bg-background/95 backdrop-blur-xl border-l border-white/10 shadow-2xl transition-transform duration-300 ease-in-out hidden lg:block
           ${isLauncherOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
         style={{ width: '260px' }}

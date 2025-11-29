@@ -47,7 +47,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen p-6 sm:p-10 max-w-[1400px] mx-auto flex flex-col gap-6">
+    <div className="min-h-screen p-3 sm:p-10 max-w-[1400px] mx-auto flex flex-col gap-4 sm:gap-6">
       <header
         role="banner"
         aria-label="サイトヘッダー"
@@ -58,7 +58,7 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-4 md:gap-6 text-sm">
           {/* Status Bar */}
-          <div className="flex items-center gap-3 md:gap-4 bg-card border border-border rounded-full px-4 py-1.5 shadow-sm">
+          <div className="hidden sm:flex items-center gap-3 md:gap-4 bg-card border border-border rounded-full px-4 py-1.5 shadow-sm">
             <NetworkSpeedIndicator />
             <div className="w-px h-4 bg-border" />
             <WeatherWidget variant="small" />
@@ -90,7 +90,7 @@ export default function Home() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 未完了 */}
-        <section className="relative flex flex-col min-h-[320px] md:col-span-2 bg-[var(--sidebar)] rounded-xl p-5 pb-10 shadow-sm">
+        <section className="relative flex flex-col min-h-[320px] md:col-span-2 bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-10 shadow-sm">
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">未完了 ({incompleteToday.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs">
@@ -112,7 +112,7 @@ export default function Home() {
         </section>
 
         {/* 積み上げ済み (毎日) */}
-        <section className="relative flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-5 pb-10 shadow-sm">
+        <section className="relative flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-10 shadow-sm">
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">積み上げ済み (毎日) ({dailyDoneFiltered.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs" />
@@ -124,7 +124,7 @@ export default function Home() {
         </section>
 
         {/* 完了済み (特定曜日) */}
-        <section className="relative flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-5 pb-10 shadow-sm">
+        <section className="relative flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-10 shadow-sm">
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">完了済み (特定曜日) ({scheduledDoneFiltered.length})</h2>
           </div>
@@ -135,7 +135,7 @@ export default function Home() {
         </section>
 
         {/* 完了済み (積み上げ候補) */}
-        <section className="relative flex flex-col min-h-[150px] md:col-span-2 bg-[var(--sidebar)] rounded-xl p-5 pb-10 shadow-sm">
+        <section className="relative flex flex-col min-h-[150px] md:col-span-2 bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-10 shadow-sm">
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">完了済み (積み上げ候補) ({backlogDoneFiltered.length})</h2>
           </div>

@@ -7,7 +7,7 @@ import NotificationBars from "@/components/NotificationBars";
 import OnboardingGuide from "@/components/OnboardingGuide";
 import GlobalLauncherBarConditional from "@/components/GlobalLauncherBarConditional";
 import CookieConsentConditional from "@/components/CookieConsentConditional";
-import MobileTabBar from "@/components/MobileTabBar";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import PomodoroTopBar from "@/components/PomodoroTopBar";
 import QuickAddTaskModal from "@/components/QuickAddTaskModal";
 import { useAppStore } from "@/lib/store";
@@ -69,12 +69,12 @@ export default function LayoutChrome({ children }: { children: ReactNode }): Rea
         <SidebarConditional />
       </div>
       <div
-        className="flex-1 min-w-0 flex flex-col bg-background transition-all duration-300 ease-in-out"
-        style={{ marginRight: showLauncher && isLauncherOpen ? '260px' : '0' }}
+        className={`flex-1 min-w-0 flex flex-col bg-background transition-all duration-300 ease-in-out ${showLauncher && isLauncherOpen ? "sm:mr-[260px]" : ""
+          }`}
       >
         <PomodoroTopBar />
         <NotificationBars />
-        <main className="flex-1 pb-16 md:pb-0">
+        <main className="flex-1 pb-20 md:pb-0">
           {children}
         </main>
       </div>
@@ -82,7 +82,7 @@ export default function LayoutChrome({ children }: { children: ReactNode }): Rea
       <GlobalLauncherBarConditional />
       <GlobalBgmPlayer />
       <CookieConsentConditional />
-      <MobileTabBar />
+      <MobileBottomNav />
 
       {/* クイックタスク追加モーダル */}
       <QuickAddTaskModal
