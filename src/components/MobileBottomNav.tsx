@@ -1,17 +1,17 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ListTodo, Target, Calendar, Rocket, Music } from "lucide-react";
+import { Home, ListTodo, Target, Calendar, Music } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 type Item = { href: string; label: string; icon: React.ReactNode };
 
 const items: Item[] = [
-    { href: "/", label: "ホーム", icon: <Home size={20} /> },
-    { href: "/tasks", label: "タスク", icon: <ListTodo size={20} /> },
-    { href: "/milestones", label: "目標", icon: <Target size={20} /> },
-    { href: "/calendar", label: "予定", icon: <Calendar size={20} /> },
-    { href: "/bgm", label: "BGM", icon: <Music size={20} /> },
+    { href: "/", label: "ホーム", icon: <Home size={24} strokeWidth={1.5} /> },
+    { href: "/tasks", label: "タスク", icon: <ListTodo size={24} strokeWidth={1.5} /> },
+    { href: "/milestones", label: "目標", icon: <Target size={24} strokeWidth={1.5} /> },
+    { href: "/calendar", label: "予定", icon: <Calendar size={24} strokeWidth={1.5} /> },
+    { href: "/bgm", label: "BGM", icon: <Music size={24} strokeWidth={1.5} /> },
 ];
 
 export default function MobileBottomNav() {

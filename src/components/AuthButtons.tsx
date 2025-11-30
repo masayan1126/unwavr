@@ -31,7 +31,6 @@ export default function AuthButtons() {
   return (
     <div className="flex items-center gap-2">
       {session.user?.image ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <img src={session.user.image} alt="avatar" className="w-5 h-5 rounded-full" />
       ) : (
         <div className="w-5 h-5 rounded-full bg-black/10 dark:bg-white/20" />

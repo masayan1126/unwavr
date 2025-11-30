@@ -41,6 +41,7 @@ export default function Home() {
   }, []);
   const [openCreate, setOpenCreate] = useState(false);
   const defaultCreateType = "backlog" as const;
+  const [activeTab, setActiveTab] = useState<"incomplete" | "daily" | "scheduled" | "backlog">("incomplete");
 
   if (hydrating) {
     return <HomePageSkeleton />;
@@ -88,9 +89,30 @@ export default function Home() {
 
       <ActiveTasksQueue />
 
+      {/* Mobile Tabs */}
+      <div className="md:hidden flex items-center gap-2 overflow-x-auto pb-2 -mx-3 px-3 scrollbar-hide">
+        {[
+          { id: "incomplete", label: `未完了 (${incompleteToday.length})` },
+          { id: "daily", label: `毎日 (${dailyDoneFiltered.length})` },
+          { id: "scheduled", label: `特定曜日 (${scheduledDoneFiltered.length})` },
+          { id: "backlog", label: `積み上げ (${backlogDoneFiltered.length})` },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as "incomplete" | "daily" | "scheduled" | "backlog")}
+            className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${activeTab === tab.id
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 未完了 */}
-        <section className="relative flex flex-col min-h-[320px] md:col-span-2 bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-10 shadow-sm">
+        <section className={`relative flex flex-col min-h-[320px] md:col-span-2 bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-10 shadow-sm ${activeTab === "incomplete" ? "flex" : "hidden md:flex"}`}>
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">未完了 ({incompleteToday.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs">
@@ -105,14 +127,14 @@ export default function Home() {
               </button>
             </div>
           </div>
-          <TaskList title="" tasks={incompleteToday.slice(0, 10)} showCreatedColumn={false} showPlannedColumn showTypeColumn showMilestoneColumn={false} enableSelection />
+          <TaskList title="" tasks={incompleteToday.slice(0, 20)} showCreatedColumn={false} showPlannedColumn showTypeColumn showMilestoneColumn={false} enableSelection />
           <div className="absolute bottom-3 right-5">
             <Link href={{ pathname: "/tasks", query: { daily: "1", backlogToday: "1", scheduledToday: "1", onlyIncomplete: "1" } }} className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
           </div>
         </section>
 
         {/* 積み上げ済み (毎日) */}
-        <section className="relative flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-10 shadow-sm">
+        <section className={`relative flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-10 shadow-sm ${activeTab === "daily" ? "flex" : "hidden md:flex"}`}>
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">積み上げ済み (毎日) ({dailyDoneFiltered.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs" />
@@ -124,7 +146,7 @@ export default function Home() {
         </section>
 
         {/* 完了済み (特定曜日) */}
-        <section className="relative flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-10 shadow-sm">
+        <section className={`relative flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-10 shadow-sm ${activeTab === "scheduled" ? "flex" : "hidden md:flex"}`}>
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">完了済み (特定曜日) ({scheduledDoneFiltered.length})</h2>
           </div>
@@ -135,7 +157,7 @@ export default function Home() {
         </section>
 
         {/* 完了済み (積み上げ候補) */}
-        <section className="relative flex flex-col min-h-[150px] md:col-span-2 bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-10 shadow-sm">
+        <section className={`relative flex flex-col min-h-[150px] md:col-span-2 bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-10 shadow-sm ${activeTab === "backlog" ? "flex" : "hidden md:flex"}`}>
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">完了済み (積み上げ候補) ({backlogDoneFiltered.length})</h2>
           </div>

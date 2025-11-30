@@ -30,7 +30,6 @@ export default function UnwavrLanding() {
           </Link>
           <div className="w-full rounded-xl overflow-hidden border bg-black/5 dark:bg-white/5 shadow-xl">
             <div className="w-full h-auto max-h-[40vh] md:max-h-[60vh] lg:max-h-[65vh]">
-              {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
               <img src="/hero.jpg" alt="Unwavr プロダクトプレビュー" className="w-full h-full object-contain" />
             </div>
           </div>
@@ -102,7 +101,6 @@ export default function UnwavrLanding() {
           </div>
           <div className="rounded border h-48 md:h-56 overflow-hidden bg-black/5 dark:bg-white/5">
             {/* Tasks illustration */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/illustration-tasks.svg" alt="Tasks Illustration" className="w-full h-full object-cover" />
           </div>
 
@@ -116,7 +114,6 @@ export default function UnwavrLanding() {
             </ul>
           </div>
           <div className="rounded border h-48 md:h-56 overflow-hidden bg-black/5 dark:bg-white/5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/illustration-pomodoro.svg" alt="Pomodoro Illustration" className="w-full h-full object-cover" />
           </div>
 
@@ -129,7 +126,6 @@ export default function UnwavrLanding() {
             </ul>
           </div>
           <div className="rounded border h-48 md:h-56 overflow-hidden bg-black/5 dark:bg-white/5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/illustration-calendar.svg" alt="Calendar Illustration" className="w-full h-full object-cover" />
           </div>
 
@@ -142,7 +138,6 @@ export default function UnwavrLanding() {
             </ul>
           </div>
           <div className="rounded border h-48 md:h-56 overflow-hidden bg-black/5 dark:bg-white/5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/illustration-milestone.svg" alt="Milestone Illustration" className="w-full h-full object-cover" />
           </div>
 
@@ -155,7 +150,6 @@ export default function UnwavrLanding() {
             </ul>
           </div>
           <div className="rounded border h-48 md:h-56 overflow-hidden bg-black/5 dark:bg-white/5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/illustration-launcher.svg" alt="Launcher Illustration" className="w-full h-full object-cover" />
           </div>
 
@@ -226,7 +220,7 @@ export default function UnwavrLanding() {
           </div>
         </div>
 
-        
+
       </section>
 
       {/* CTA */}

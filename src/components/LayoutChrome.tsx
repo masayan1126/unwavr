@@ -69,7 +69,7 @@ export default function LayoutChrome({ children }: { children: ReactNode }): Rea
         <SidebarConditional />
       </div>
       <div
-        className={`flex-1 min-w-0 flex flex-col bg-background transition-all duration-300 ease-in-out ${showLauncher && isLauncherOpen ? "sm:mr-[260px]" : ""
+        className={`flex-1 min-w-0 flex flex-col bg-background transition-all duration-300 ease-in-out ${showLauncher && isLauncherOpen ? "xl:mr-[260px]" : ""
           }`}
       >
         <PomodoroTopBar />
