@@ -76,7 +76,7 @@ export function TaskRow({ task, onEdit, onContext, enableSelection, selected, on
                 onContextMenu={(e) => { e.preventDefault(); onContext(e, task); }}
             >
                 <div
-                    className="flex-shrink-0 w-[24px] flex justify-center items-center cursor-grab active:cursor-grabbing text-foreground/50 hover:text-foreground transition-colors"
+                    className="flex-shrink-0 w-[24px] flex justify-center items-center cursor-grab active:cursor-grabbing text-foreground/50 hover:text-foreground transition-colors touch-none select-none"
                     onPointerDown={(e) => controls.start(e)}
                 >
                     <GripVertical size={16} />
