@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { H1 } from "@/components/ui/Typography";
 import { TaskType } from "@/lib/types";
+import PullToRefresh from "@/components/PullToRefresh";
 
 function TasksPageInner() {
   const {
@@ -39,128 +40,130 @@ function TasksPageInner() {
   }
 
   return (
-    <div className="p-6 sm:p-10 pb-24 sm:pb-10 max-w-6xl mx-auto flex flex-col gap-6">
-      <header className="mb-6">
-        <div className="flex items-center justify-between">
-          <H1>すべてのタスク</H1>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-8 h-8 p-0 rounded-full border-black/10 dark:border-white/10"
-              onClick={() => window.location.reload()}
-              title="再読み込み"
-            >
-              <RefreshCw size={14} />
-            </Button>
-            <AddTaskButton
-              onClick={() => setOpenCreate(true)}
+    <PullToRefresh>
+      <div className="p-6 sm:p-10 pb-24 sm:pb-10 max-w-6xl mx-auto flex flex-col gap-6">
+        <header className="mb-6">
+          <div className="flex items-center justify-between">
+            <H1>すべてのタスク</H1>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-8 h-8 p-0 rounded-full border-black/10 dark:border-white/10"
+                onClick={() => window.location.reload()}
+                title="再読み込み"
+              >
+                <RefreshCw size={14} />
+              </Button>
+              <AddTaskButton
+                onClick={() => setOpenCreate(true)}
+              />
+              <Link className="flex items-center gap-1 text-sm opacity-80 hover:opacity-100" href="/" title="ホーム">
+                <Home size={16} />
+                <span className="hidden md:inline underline">ホーム</span>
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        {/* フィルターと検索 */}
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 sm:mx-0 sm:px-0 scrollbar-hide w-full sm:w-auto">
+            {(["all", "daily", "scheduled", "backlog"] as const).map(type => (
+              <Button
+                key={type}
+                onClick={() => setSelectedType(type)}
+                variant={selectedType === type ? "primary" : "outline"}
+                size="sm"
+                className={`whitespace-nowrap ${selectedType === type ? "" : "border-black/10 dark:border-white/10"}`}
+              >
+                {typeLabels[type]} ({taskCounts[type]})
+              </Button>
+            ))}
+          </div>
+
+          <div className="flex-1 sm:max-w-md">
+            <Input
+              type="text"
+              placeholder="タスクを検索..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              iconLeft={<Search size={14} />}
             />
-            <Link className="flex items-center gap-1 text-sm opacity-80 hover:opacity-100" href="/" title="ホーム">
-              <Home size={16} />
-              <span className="hidden md:inline underline">ホーム</span>
-            </Link>
           </div>
         </div>
-      </header>
 
-      {/* フィルターと検索 */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 sm:mx-0 sm:px-0 scrollbar-hide w-full sm:w-auto">
-          {(["all", "daily", "scheduled", "backlog"] as const).map(type => (
-            <Button
-              key={type}
-              onClick={() => setSelectedType(type)}
-              variant={selectedType === type ? "primary" : "outline"}
-              size="sm"
-              className={`whitespace-nowrap ${selectedType === type ? "" : "border-black/10 dark:border-white/10"}`}
-            >
-              {typeLabels[type]} ({taskCounts[type]})
-            </Button>
-          ))}
+        {/* 統計情報 */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
+            <div className="text-sm opacity-60">総タスク数</div>
+            <div className="text-lg font-semibold">{taskCounts.all}</div>
+          </div>
+          <div className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
+            <div className="text-sm opacity-60">毎日タスク</div>
+            <div className="text-lg font-semibold">{taskCounts.daily}</div>
+          </div>
+          <div className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
+            <div className="text-sm opacity-60">特定日タスク</div>
+            <div className="text-lg font-semibold">{taskCounts.scheduled}</div>
+          </div>
+          <div className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
+            <div className="text-sm opacity-60">積み上げ候補</div>
+            <div className="text-lg font-semibold">{taskCounts.backlog}</div>
+          </div>
         </div>
 
-        <div className="flex-1 sm:max-w-md">
-          <Input
-            type="text"
-            placeholder="タスクを検索..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            iconLeft={<Search size={14} />}
-          />
-        </div>
-      </div>
-
-      {/* 統計情報 */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
-          <div className="text-sm opacity-60">総タスク数</div>
-          <div className="text-lg font-semibold">{taskCounts.all}</div>
-        </div>
-        <div className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
-          <div className="text-sm opacity-60">毎日タスク</div>
-          <div className="text-lg font-semibold">{taskCounts.daily}</div>
-        </div>
-        <div className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
-          <div className="text-sm opacity-60">特定日タスク</div>
-          <div className="text-lg font-semibold">{taskCounts.scheduled}</div>
-        </div>
-        <div className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
-          <div className="text-sm opacity-60">積み上げ候補</div>
-          <div className="text-lg font-semibold">{taskCounts.backlog}</div>
-        </div>
-      </div>
-
-      {/* タスク一覧 */}
-      <div className="space-y-6">
-        {selectedType === "all" ? (
-          <>
+        {/* タスク一覧 */}
+        <div className="space-y-6">
+          {selectedType === "all" ? (
+            <>
+              <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+                <TaskList
+                  title={`毎日タスク (${taskCounts.daily})`}
+                  tasks={baseFiltered.filter(t => t.type === "daily")}
+                  showPlannedColumn={false}
+                  showTypeColumn
+                  showMilestoneColumn={false}
+                />
+              </section>
+              <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+                <TaskList
+                  title={`特定曜日 (${taskCounts.scheduled})`}
+                  tasks={baseFiltered.filter(t => t.type === "scheduled")}
+                  showScheduledColumn
+                  showTypeColumn
+                  showMilestoneColumn={false}
+                />
+              </section>
+              <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+                <TaskList
+                  title={`積み上げ候補 (${taskCounts.backlog})`}
+                  tasks={baseFiltered.filter(t => t.type === "backlog")}
+                  showPlannedColumn
+                  showTypeColumn
+                  showMilestoneColumn={false}
+                />
+              </section>
+            </>
+          ) : (
             <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
               <TaskList
-                title={`毎日タスク (${taskCounts.daily})`}
-                tasks={baseFiltered.filter(t => t.type === "daily")}
-                showPlannedColumn={false}
+                title={`${typeLabels[selectedType]} (${filteredTasks.length})`}
+                tasks={filteredTasks}
+                showPlannedColumn={selectedType === "backlog"}
+                showScheduledColumn={selectedType === "scheduled"}
                 showTypeColumn
                 showMilestoneColumn={false}
               />
             </section>
-            <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
-              <TaskList
-                title={`特定曜日 (${taskCounts.scheduled})`}
-                tasks={baseFiltered.filter(t => t.type === "scheduled")}
-                showScheduledColumn
-                showTypeColumn
-                showMilestoneColumn={false}
-              />
-            </section>
-            <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
-              <TaskList
-                title={`積み上げ候補 (${taskCounts.backlog})`}
-                tasks={baseFiltered.filter(t => t.type === "backlog")}
-                showPlannedColumn
-                showTypeColumn
-                showMilestoneColumn={false}
-              />
-            </section>
-          </>
-        ) : (
-          <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
-            <TaskList
-              title={`${typeLabels[selectedType]} (${filteredTasks.length})`}
-              tasks={filteredTasks}
-              showPlannedColumn={selectedType === "backlog"}
-              showScheduledColumn={selectedType === "scheduled"}
-              showTypeColumn
-              showMilestoneColumn={false}
-            />
-          </section>
-        )}
-      </div>
+          )}
+        </div>
 
-      <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規タスク">
-        <TaskForm onSubmitted={(mode) => { if (mode === 'close') setOpenCreate(false); }} />
-      </TaskDialog>
-    </div>
+        <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規タスク">
+          <TaskForm onSubmitted={(mode) => { if (mode === 'close') setOpenCreate(false); }} />
+        </TaskDialog>
+      </div>
+    </PullToRefresh>
   );
 }
 
