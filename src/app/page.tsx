@@ -115,10 +115,10 @@ export default function Home() {
             <div className="ml-auto flex items-center gap-2 text-xs">
               <button
                 onClick={() => setOpenCreate(true)}
-                className="group flex items-center gap-1.5 px-3 py-1.5 bg-[#2383E2] dark:bg-[#2383E2] text-white text-sm font-medium rounded-[3px] shadow-sm hover:bg-[#2383E2]/90 transition-all"
+                className="group flex items-center gap-1.5 px-2 md:px-3 py-1.5 bg-[#2383E2] dark:bg-[#2383E2] text-white text-sm font-medium rounded-[3px] shadow-sm hover:bg-[#2383E2]/90 transition-all"
               >
                 <Plus size={16} strokeWidth={2.5} />
-                <span>新規</span>
+                <span className="hidden md:inline">新規</span>
                 <div className="w-px h-3 bg-white/20 mx-0.5" />
                 <ChevronDown size={14} className="opacity-70 group-hover:opacity-100" />
               </button>

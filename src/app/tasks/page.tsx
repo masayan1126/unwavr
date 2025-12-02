@@ -1,7 +1,7 @@
 "use client";
 import { Suspense } from "react";
 import Link from "next/link";
-import { Search, RefreshCw } from "lucide-react";
+import { Search, RefreshCw, Home } from "lucide-react";
 import TaskList from "@/components/TaskList";
 import TaskDialog from "@/components/TaskCreateDialog";
 import AddTaskButton from "@/components/AddTaskButton";
@@ -56,8 +56,9 @@ function TasksPageInner() {
             <AddTaskButton
               onClick={() => setOpenCreate(true)}
             />
-            <Link className="text-sm underline opacity-80" href="/">
-              ホーム
+            <Link className="flex items-center gap-1 text-sm opacity-80 hover:opacity-100" href="/" title="ホーム">
+              <Home size={16} />
+              <span className="hidden md:inline underline">ホーム</span>
             </Link>
           </div>
         </div>

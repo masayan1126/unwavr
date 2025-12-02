@@ -23,11 +23,16 @@ export default function GlobalLauncherBar() {
         onClick={toggleLauncher}
         className={`fixed z-[100000] top-1/2 -translate-y-1/2 transition-all duration-300 hidden xl:flex
           ${isLauncherOpen ? 'right-[260px]' : 'right-0'}
-          w-6 h-12 bg-background/80 backdrop-blur-md border border-r-0 border-white/10 shadow-lg
-          rounded-l-xl items-center justify-center hover:bg-background text-xs opacity-50 hover:opacity-100
+          w-8 h-16 bg-background/60 backdrop-blur-md border border-r-0 border-white/10 shadow-lg
+          rounded-l-2xl items-center justify-center hover:bg-background/80 text-foreground/70 hover:text-foreground
+          group
         `}
       >
-        {isLauncherOpen ? "▶" : "◀"}
+        {isLauncherOpen ? (
+          <Icons.ChevronRight size={20} className="transition-transform group-hover:scale-110" />
+        ) : (
+          <Icons.ChevronLeft size={20} className="transition-transform group-hover:scale-110" />
+        )}
       </button>
 
       {/* Sidebar Container */}

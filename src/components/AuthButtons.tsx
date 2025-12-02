@@ -10,11 +10,24 @@ function GoogleIcon({ size = 14 }: { size?: number }) {
   );
 }
 
-export default function AuthButtons() {
+export default function AuthButtons({ collapsed = false }: { collapsed?: boolean }) {
   const { data: session, status } = useSession();
   const loading = status === "loading";
   if (loading) return <div className="text-xs opacity-70">認証確認中...</div>;
   if (!session) {
+    if (collapsed) {
+      return (
+        <button
+          onClick={() => signIn("google")}
+          className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+          title="Googleでログイン"
+        >
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-white">
+            <GoogleIcon />
+          </span>
+        </button>
+      );
+    }
     return (
       <button
         onClick={() => signIn("google")}
@@ -28,6 +41,19 @@ export default function AuthButtons() {
       </button>
     );
   }
+
+  if (collapsed) {
+    return (
+      <div className="flex flex-col items-center gap-2">
+        {session.user?.image ? (
+          <img src={session.user.image} alt="avatar" className="w-8 h-8 rounded-full" title={session.user?.email || session.user?.name || ""} />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-black/10 dark:bg-white/20" />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-2">
       {session.user?.image ? (
