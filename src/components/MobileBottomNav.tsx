@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ListTodo, Target, Calendar, Music } from "lucide-react";
+import { Home, ListTodo, MessageSquare, Settings } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 type Item = { href: string; label: string; icon: React.ReactNode };
@@ -9,9 +9,8 @@ type Item = { href: string; label: string; icon: React.ReactNode };
 const items: Item[] = [
     { href: "/", label: "ホーム", icon: <Home size={24} strokeWidth={1.5} /> },
     { href: "/tasks", label: "タスク", icon: <ListTodo size={24} strokeWidth={1.5} /> },
-    { href: "/milestones", label: "目標", icon: <Target size={24} strokeWidth={1.5} /> },
-    { href: "/calendar", label: "予定", icon: <Calendar size={24} strokeWidth={1.5} /> },
-    { href: "/bgm", label: "BGM", icon: <Music size={24} strokeWidth={1.5} /> },
+    { href: "/assistant", label: "AI", icon: <MessageSquare size={24} strokeWidth={1.5} /> },
+    { href: "/settings", label: "設定", icon: <Settings size={24} strokeWidth={1.5} /> },
 ];
 
 export default function MobileBottomNav() {
@@ -23,7 +22,7 @@ export default function MobileBottomNav() {
 
     return (
         <nav className="md:hidden fixed bottom-0 inset-x-0 z-[9999] border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_3px_rgba(0,0,0,0.1)]">
-            <ul className="grid grid-cols-5 h-14">
+            <ul className="grid grid-cols-4 h-14">
                 {items.map((it) => {
                     const active = pathname === it.href || (it.href !== "/" && pathname.startsWith(it.href));
                     return (

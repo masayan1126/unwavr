@@ -39,7 +39,7 @@ function TasksPageInner() {
   }
 
   return (
-    <div className="p-6 sm:p-10 max-w-6xl mx-auto flex flex-col gap-6">
+    <div className="p-6 sm:p-10 pb-24 sm:pb-10 max-w-6xl mx-auto flex flex-col gap-6">
       <header className="mb-6">
         <div className="flex items-center justify-between">
           <H1>すべてのタスク</H1>
@@ -66,14 +66,14 @@ function TasksPageInner() {
 
       {/* フィルターと検索 */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 sm:mx-0 sm:px-0 scrollbar-hide w-full sm:w-auto">
           {(["all", "daily", "scheduled", "backlog"] as const).map(type => (
             <Button
               key={type}
               onClick={() => setSelectedType(type)}
               variant={selectedType === type ? "primary" : "outline"}
               size="sm"
-              className={selectedType === type ? "" : "border-black/10 dark:border-white/10"}
+              className={`whitespace-nowrap ${selectedType === type ? "" : "border-black/10 dark:border-white/10"}`}
             >
               {typeLabels[type]} ({taskCounts[type]})
             </Button>

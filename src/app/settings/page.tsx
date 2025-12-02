@@ -111,7 +111,7 @@ export default function SettingsPage() {
         <div className="text-sm font-medium text-[var(--danger)]">危険な操作</div>
         <div className="text-xs opacity-80">タスク・マイルストーン・ランチャーの設定をすべて削除します。この操作は取り消せません。</div>
         <div>
-          <Button variant="danger" onClick={handleClearAll}>
+          <Button variant="danger" onClick={handleClearAll} className="w-full sm:w-auto h-auto">
             すべて削除（タスク/マイルストーン/ランチャー）
           </Button>
         </div>
