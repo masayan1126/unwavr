@@ -153,12 +153,12 @@ export function TaskRow({ task, onEdit, onContext, enableSelection, selected, on
 
                 {/* Columns */}
                 {showCreatedColumn && (
-                    <div className="w-[120px] text-xs opacity-80 whitespace-nowrap flex-shrink-0 px-2">
+                    <div className="hidden sm:block w-[120px] text-xs opacity-80 whitespace-nowrap flex-shrink-0 px-2">
                         {new Date(task.createdAt).toLocaleDateString()}
                     </div>
                 )}
                 {showPlannedColumn && (
-                    <div className="w-[120px] overflow-hidden flex-shrink-0 px-2">
+                    <div className="hidden sm:block w-[120px] overflow-hidden flex-shrink-0 px-2">
                         {task.type === 'backlog' ? (
                             editingPlannedTaskId === task.id ? (
                                 <input
@@ -195,7 +195,7 @@ export function TaskRow({ task, onEdit, onContext, enableSelection, selected, on
                     </div>
                 )}
                 {showScheduledColumn && (
-                    <div className="w-[160px] overflow-hidden flex-shrink-0 px-2">
+                    <div className="hidden sm:block w-[160px] overflow-hidden flex-shrink-0 px-2">
                         <div className="flex items-center gap-1 flex-wrap text-[10px] opacity-80">
                             {scheduledDays.length > 0 && (
                                 <span className="border rounded px-1 py-0.5">{scheduledDays.map((d: number) => dow[d]).join("・")}</span>
@@ -213,7 +213,7 @@ export function TaskRow({ task, onEdit, onContext, enableSelection, selected, on
                     </div>
                 )}
                 {showTypeColumn && (
-                    <div className="w-[128px] whitespace-nowrap flex-shrink-0 px-2">
+                    <div className="hidden sm:block w-[128px] whitespace-nowrap flex-shrink-0 px-2">
                         <TypeBadge
                             type={task.type}
                             label={
@@ -229,7 +229,7 @@ export function TaskRow({ task, onEdit, onContext, enableSelection, selected, on
                     </div>
                 )}
                 {showMilestoneColumn && (
-                    <div className="w-[160px] text-xs opacity-80 truncate flex-shrink-0 px-2" title={milestone?.title}>
+                    <div className="hidden sm:block w-[160px] text-xs opacity-80 truncate flex-shrink-0 px-2" title={milestone?.title}>
                         {milestone ? truncateText(milestone.title, 20) : <span className="opacity-40">-</span>}
                     </div>
                 )}

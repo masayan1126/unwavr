@@ -365,11 +365,11 @@ export default function TaskList({
                                 </div>
                             )}
                             <div className="flex-1 px-2">タイトル</div>
-                            {showCreatedColumn && <div className="w-[120px] px-2">作成日</div>}
-                            {showPlannedColumn && <div className="w-[120px] px-2">実行日</div>}
-                            {showScheduledColumn && <div className="w-[160px] px-2">設定（曜日/期間）</div>}
-                            {showTypeColumn && <div className="w-[128px] px-2">種別</div>}
-                            {showMilestoneColumn && <div className="w-[160px] px-2">マイルストーン</div>}
+                            {showCreatedColumn && <div className="hidden sm:block w-[120px] px-2">作成日</div>}
+                            {showPlannedColumn && <div className="hidden sm:block w-[120px] px-2">実行日</div>}
+                            {showScheduledColumn && <div className="hidden sm:block w-[160px] px-2">設定（曜日/期間）</div>}
+                            {showTypeColumn && <div className="hidden sm:block w-[128px] px-2">種別</div>}
+                            {showMilestoneColumn && <div className="hidden sm:block w-[160px] px-2">マイルストーン</div>}
                             <div className="w-[80px] px-2 text-right">Pomodoro</div>
                         </div>
 
