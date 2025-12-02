@@ -110,7 +110,7 @@ export default function FloatingAIAssistant() {
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="fixed bottom-20 right-4 w-[calc(100vw-32px)] sm:w-[400px] h-[500px] max-h-[60vh] sm:max-h-[500px] bg-card border border-border shadow-2xl rounded-2xl z-[9999] flex flex-col overflow-hidden"
+                        className="fixed bottom-20 right-4 w-[calc(100vw-32px)] sm:w-[400px] h-[500px] max-h-[60vh] sm:max-h-[500px] bg-card border border-border shadow-2xl rounded-2xl z-[200000] flex flex-col overflow-hidden"
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between p-3 border-b bg-muted/30">
@@ -195,7 +195,7 @@ export default function FloatingAIAssistant() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsOpen(!isOpen)}
-                className={`fixed bottom-4 right-4 z-[9999] w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-colors ${isOpen ? "bg-muted text-foreground" : "bg-primary text-primary-foreground"
+                className={`fixed bottom-4 right-4 z-[200000] w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-colors ${isOpen ? "bg-muted text-foreground" : "bg-primary text-primary-foreground"
                     }`}
             >
                 {isOpen ? <X size={24} /> : <Sparkles size={24} />}

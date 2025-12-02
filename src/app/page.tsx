@@ -1,14 +1,12 @@
 "use client";
 import Link from "next/link";
 import TaskList from "@/components/TaskList";
-import PrimaryButton from "@/components/PrimaryButton";
 import TaskDialog from "@/components/TaskCreateDialog";
 import TaskForm from "@/components/TaskForm";
 import { useTodayTasks } from "@/hooks/useTodayTasks";
 import WeatherWidget from "@/components/WeatherWidget";
 import NetworkSpeedIndicator from "@/components/NetworkSpeedIndicator";
 import { Plus, RefreshCw, ChevronDown } from "lucide-react";
-import TaskCreateDialog from "@/components/TaskCreateDialog";
 import { useConfirm } from "@/components/Providers";
 import { useAppStore } from "@/lib/store";
 import HomePageSkeleton from "@/components/HomePageSkeleton";
@@ -21,7 +19,6 @@ export default function Home() {
     dailyDoneFiltered,
     scheduledDoneFiltered,
     backlogDoneFiltered,
-    loading,
   } = useTodayTasks();
   const hydrateFromDb = useAppStore((s) => s.hydrateFromDb);
   const hydrating = useAppStore((s) => s.hydrating);
@@ -89,8 +86,8 @@ export default function Home() {
 
       <ActiveTasksQueue />
 
-      {/* Mobile Tabs */}
-      <div className="md:hidden flex items-center gap-2 overflow-x-auto pb-2 -mx-3 px-3 scrollbar-hide">
+      {/* Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-3 px-3 scrollbar-hide">
         {[
           { id: "incomplete", label: `未完了 (${incompleteToday.length})` },
           { id: "daily", label: `毎日 (${dailyDoneFiltered.length})` },
@@ -110,9 +107,9 @@ export default function Home() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="flex flex-col gap-6">
         {/* 未完了 */}
-        <section className={`relative flex flex-col min-h-[320px] md:col-span-2 bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-10 shadow-sm ${activeTab === "incomplete" ? "flex" : "hidden md:flex"}`}>
+        <section className={`relative flex flex-col min-h-[320px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-16 shadow-sm ${activeTab === "incomplete" ? "flex" : "hidden"}`}>
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">未完了 ({incompleteToday.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs">
@@ -134,7 +131,7 @@ export default function Home() {
         </section>
 
         {/* 積み上げ済み (毎日) */}
-        <section className={`relative flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-10 shadow-sm ${activeTab === "daily" ? "flex" : "hidden md:flex"}`}>
+        <section className={`relative flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-16 shadow-sm ${activeTab === "daily" ? "flex" : "hidden"}`}>
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">積み上げ済み (毎日) ({dailyDoneFiltered.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs" />
@@ -146,7 +143,7 @@ export default function Home() {
         </section>
 
         {/* 完了済み (特定曜日) */}
-        <section className={`relative flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-10 shadow-sm ${activeTab === "scheduled" ? "flex" : "hidden md:flex"}`}>
+        <section className={`relative flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-16 shadow-sm ${activeTab === "scheduled" ? "flex" : "hidden"}`}>
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">完了済み (特定曜日) ({scheduledDoneFiltered.length})</h2>
           </div>
@@ -157,7 +154,7 @@ export default function Home() {
         </section>
 
         {/* 完了済み (積み上げ候補) */}
-        <section className={`relative flex flex-col min-h-[150px] md:col-span-2 bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-10 shadow-sm ${activeTab === "backlog" ? "flex" : "hidden md:flex"}`}>
+        <section className={`relative flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-16 shadow-sm ${activeTab === "backlog" ? "flex" : "hidden"}`}>
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">完了済み (積み上げ候補) ({backlogDoneFiltered.length})</h2>
           </div>
