@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Noto_Sans_JP, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
@@ -77,7 +77,19 @@ export const metadata: Metadata = {
     apple: [{ url: "/unwavr-logo.svg" }],
   },
   category: "productivity",
-  // 動的テーマカラー（ライト/ダーク）
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "unwavr",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#3b82f6" },
     { media: "(prefers-color-scheme: dark)", color: "#60a5fa" },
