@@ -1,4 +1,4 @@
-import { Reorder, useDragControls, useMotionValue, useTransform } from "framer-motion";
+import { Reorder, useDragControls, useMotionValue, useTransform, motion } from "framer-motion";
 import { GripVertical, CheckCircle2, Trash2, Check } from "lucide-react";
 import { Task } from "@/lib/types";
 import { useAppStore } from "@/lib/store";
@@ -67,29 +67,35 @@ export function TaskRow({ task, onEdit, onContext, enableSelection, selected, on
     const activeIndex = activeTaskIds.indexOf(task.id);
 
     const controls = useDragControls();
+    const x = useMotionValue(0);
+    const opacityRight = useTransform(x, [0, 50], [0, 1]);
+    const opacityLeft = useTransform(x, [-50, 0], [1, 0]);
 
     return (
-        <div className="relative overflow-hidden">
+        <Reorder.Item
+            value={task}
+            id={task.id}
+            className="relative overflow-hidden"
+            dragListener={false}
+            dragControls={controls}
+        >
             {/* Swipe Background Layer */}
             <div className="absolute inset-0 flex justify-between items-center px-4 pointer-events-none z-0">
-                <div className="flex items-center justify-start w-full h-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                <motion.div style={{ opacity: opacityRight }} className="flex items-center justify-start w-full h-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
                     <Check size={24} className="ml-4" />
-                </div>
-                <div className="absolute inset-0 flex items-center justify-end w-full h-full bg-red-500/20 text-red-600 dark:text-red-400">
+                </motion.div>
+                <motion.div style={{ opacity: opacityLeft }} className="absolute inset-0 flex items-center justify-end w-full h-full bg-red-500/20 text-red-600 dark:text-red-400">
                     <Trash2 size={24} className="mr-4" />
-                </div>
+                </motion.div>
             </div>
 
             {/* Swipeable Content */}
-            <Reorder.Item
-                value={task}
-                id={task.id}
+            <motion.div
                 className="relative z-10 bg-background"
-                dragListener={false}
-                dragControls={controls}
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
                 dragElastic={0.1}
+                style={{ x }}
                 onDragEnd={(_, info) => {
                     const offset = info.offset.x;
                     const threshold = 100;
@@ -106,7 +112,6 @@ export function TaskRow({ task, onEdit, onContext, enableSelection, selected, on
                         // Left swipe: Delete
                         // We need to confirm deletion, but for swipe UX, maybe just delete with undo toast?
                         // For now, let's use the existing confirm logic if possible, or just delete.
-                        // Since we can't easily use async confirm in drag end without state, let's just delete.
                         // Ideally we should have an undo feature.
                         // For safety, let's just trigger the context menu logic or similar.
                         // But user asked for swipe delete. Let's do it.
@@ -287,7 +292,7 @@ export function TaskRow({ task, onEdit, onContext, enableSelection, selected, on
                         )}
                     </div>
                 </div>
-            </Reorder.Item>
-        </div>
+            </motion.div>
+        </Reorder.Item>
     );
 }
