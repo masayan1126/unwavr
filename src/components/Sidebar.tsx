@@ -2,10 +2,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { CalendarDays, ListTodo, AlertTriangle, Home, Archive, Rocket, Target, Timer, Calendar, Music, Lock, MessageSquare, Settings, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { CalendarDays, ListTodo, AlertTriangle, Home, Archive, Rocket, Target, Timer, Calendar, Music, Lock, MessageSquare, Settings, PanelLeftClose, PanelLeftOpen, Sun } from "lucide-react";
 import AuthButtons from "@/components/AuthButtons";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
+import DailyBriefingDialog from "./DailyBriefingDialog";
 
 type NavItem = {
   href: string;
@@ -28,6 +29,7 @@ export default function Sidebar() {
   const [open, setOpen] = useState(true);
   const [width, setWidth] = useState<number>(224);
   const [tasksOpen, setTasksOpen] = useState<boolean>(true);
+  const [showBriefing, setShowBriefing] = useState(false);
   const startXRef = useRef<number | null>(null);
   const startWRef = useRef<number>(width);
   useEffect(() => {
@@ -238,6 +240,15 @@ export default function Sidebar() {
                   </span>
                   <span className="truncate">Unwavr AI</span>
                 </Link>
+                <button
+                  onClick={() => setShowBriefing(true)}
+                  className="group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 text-muted-foreground hover:bg-muted hover:text-foreground text-left w-full"
+                >
+                  <span className="group-hover:scale-110 transition-transform duration-200">
+                    <Sun size={16} />
+                  </span>
+                  <span className="truncate">Daily Briefing</span>
+                </button>
               </div>
             </div>
 
@@ -325,6 +336,7 @@ export default function Sidebar() {
           title="ドラッグで幅を変更"
         />
       )}
+      <DailyBriefingDialog isOpen={showBriefing} onClose={() => setShowBriefing(false)} />
     </aside>
   );
 }

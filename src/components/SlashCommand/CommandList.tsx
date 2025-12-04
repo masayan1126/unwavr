@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
-import { Heading1, Heading2, Heading3, List, ListOrdered, Text, Code } from 'lucide-react';
+import { Heading1, Heading2, Heading3, List, ListOrdered, Text, Code, Sparkles } from 'lucide-react';
 import { Editor, Range } from '@tiptap/core';
 
 export interface CommandItemProps {
@@ -56,6 +56,14 @@ export const ITEMS: CommandItemProps[] = [
         icon: <Code size={18} />,
         command: ({ editor, range }) => {
             editor.chain().focus().deleteRange(range).toggleCodeBlock().run();
+        },
+    },
+    {
+        title: 'AI アシスタント',
+        icon: <Sparkles size={18} />,
+        command: ({ editor, range }) => {
+            editor.chain().focus().deleteRange(range).run();
+            window.dispatchEvent(new CustomEvent("unwavr:ai-prompt"));
         },
     },
 ];

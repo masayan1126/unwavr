@@ -7,6 +7,7 @@ import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import Heading from "@tiptap/extension-heading";
 import { SlashCommand } from "./SlashCommand/extension";
+import AIPromptDialog from "./AIPromptDialog";
 import "tippy.js/dist/tippy.css";
 
 type WysiwygEditorProps = {
@@ -49,6 +50,14 @@ export default function WysiwygEditor({ value, onChange, className, onBlur }: Wy
     if ((value || "") !== current) editor.commands.setContent(value || "", { emitUpdate: false });
   }, [value, editor]);
 
+  const [showAIPrompt, setShowAIPrompt] = React.useState(false);
+
+  useEffect(() => {
+    const handleAIPrompt = () => setShowAIPrompt(true);
+    window.addEventListener("unwavr:ai-prompt", handleAIPrompt);
+    return () => window.removeEventListener("unwavr:ai-prompt", handleAIPrompt);
+  }, []);
+
   return (
     <div className={`${className ?? ""} flex flex-col border border-black/10 dark:border-white/10 rounded-xl overflow-hidden bg-card shadow-sm focus-within:ring-2 focus-within:ring-[var(--primary)]/20 transition-all`}>
       <div className="flex-1 min-h-0 max-h-[60vh] overflow-y-auto flex flex-col">
@@ -69,6 +78,11 @@ export default function WysiwygEditor({ value, onChange, className, onBlur }: Wy
         </div>
         <EditorContent editor={editor} className="tiptap prose prose-sm max-w-none dark:prose-invert w-full min-h-[300px] flex-1" />
       </div>
+      <AIPromptDialog
+        isOpen={showAIPrompt}
+        onClose={() => setShowAIPrompt(false)}
+        onInsert={(text) => editor?.chain().focus().insertContent(text).run()}
+      />
     </div>
   );
 }

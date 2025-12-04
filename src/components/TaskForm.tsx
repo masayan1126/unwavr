@@ -3,7 +3,8 @@ import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHand
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { Scheduled, TaskType, type Task } from "@/lib/types";
 import { useAppStore } from "@/lib/store";
-import { Loader2, Mic } from "lucide-react";
+import { Loader2, Mic, Sparkles } from "lucide-react";
+import { parseTaskInput } from "@/lib/gemini";
 import WysiwygEditor from "@/components/WysiwygEditor";
 import PrimaryButton from "@/components/PrimaryButton";
 import { copyDescriptionWithFormat, type CopyFormat } from "@/lib/taskUtils";
@@ -211,17 +212,73 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
     );
   }
 
+  const [isParsing, setIsParsing] = useState(false);
+  const apiKey = useAppStore((s) => s.geminiApiKey);
+
+  const handleSmartParse = async () => {
+    if (!title.trim() || !apiKey) {
+      if (!apiKey) toast.show("Gemini APIキーを設定してください", "error");
+      return;
+    }
+    setIsParsing(true);
+    try {
+      const result = await parseTaskInput(apiKey, title);
+      if (result.title) setTitle(result.title);
+      if (result.type) {
+        setType(result.type);
+        // Reset related fields based on type
+        if (result.type === "scheduled") {
+          setScheduled(result.scheduled || { daysOfWeek: [] });
+          setPlannedDates([]);
+        } else if (result.type === "backlog") {
+          setScheduled(undefined);
+          if (result.plannedDates && result.plannedDates.length > 0) {
+            setPlannedDates(result.plannedDates);
+            const d = new Date(result.plannedDates[0]);
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, "0");
+            const dd = String(d.getDate()).padStart(2, "0");
+            setPlannedDateInput(`${y}-${m}-${dd}`);
+          }
+        } else {
+          setScheduled(undefined);
+          setPlannedDates([]);
+        }
+      }
+      if (result.estimatedPomodoros) setEst(result.estimatedPomodoros);
+      if (result.description) setDesc(prev => prev ? prev + "\n" + result.description : result.description!);
+
+      toast.show("AIがタスク詳細を自動設定しました", "success");
+    } catch (e) {
+      console.error(e);
+      toast.show("解析に失敗しました", "error");
+    } finally {
+      setIsParsing(false);
+    }
+  };
+
   return (
     <>
       <form ref={formRef} onSubmit={onSubmit} onBlur={handleFormBlur} className="flex flex-col gap-6 w-full">
         <div className="flex flex-col gap-2">
-          <input
-            className={`text-4xl font-bold bg-transparent border-none p-0 focus:ring-0 placeholder:text-muted-foreground/40 w-full ${listening ? "ring-2 ring-[var(--danger)]/60 rounded" : ""}`}
-            placeholder="無題"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onBlur={performSave}
-          />
+          <div className="flex gap-2 items-center">
+            <input
+              className={`text-4xl font-bold bg-transparent border-none p-0 focus:ring-0 placeholder:text-muted-foreground/40 w-full ${listening ? "ring-2 ring-[var(--danger)]/60 rounded" : ""}`}
+              placeholder="無題"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={performSave}
+            />
+            <button
+              type="button"
+              onClick={handleSmartParse}
+              disabled={isParsing || !title.trim()}
+              className="p-2 rounded-full hover:bg-primary/10 text-primary disabled:opacity-30 transition-colors"
+              title="AIで詳細を自動設定"
+            >
+              {isParsing ? <Loader2 size={20} className="animate-spin" /> : <Sparkles size={20} />}
+            </button>
+          </div>
           <div className="flex items-center gap-2">
             {listening && (
               <span className="inline-flex items-center gap-1 text-xs text-[var(--danger)]">

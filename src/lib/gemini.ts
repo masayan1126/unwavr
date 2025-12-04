@@ -103,3 +103,122 @@ export async function processUserRequest(
         return { type: "chat", message: responseText }; // Fallback to raw text if JSON parsing fails
     }
 }
+
+export async function generateText(apiKey: string, prompt: string): Promise<string> {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+}
+
+export async function parseTaskInput(apiKey: string, input: string): Promise<Partial<Task>> {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+    const prompt = `
+    Analyze the following task input and extract task details into a JSON object.
+    Input: "${input}"
+
+    Current Date: ${new Date().toISOString()}
+
+    Output Format (JSON):
+    {
+        "title": "Task Title",
+        "type": "daily" | "scheduled" | "backlog",
+        "scheduled": { "daysOfWeek": [0-6], "dateRanges": [] } (only if type is scheduled),
+        "plannedDates": [timestamp] (only if type is backlog and specific date is mentioned),
+        "estimatedPomodoros": number (if mentioned, e.g. "2 pomodoros", "1 hour" -> 2),
+        "description": "Any extra details not in title"
+    }
+
+    Rules:
+    - If specific day of week is mentioned (e.g. "every Monday"), set type to "scheduled" and daysOfWeek (0=Sun, 1=Mon...).
+    - If specific date is mentioned (e.g. "tomorrow", "next Friday"), set type to "backlog" and plannedDates to the timestamp of that date (start of day).
+    - If "daily" or "every day" is implied, set type to "daily".
+    - Default type is "backlog".
+    - Remove date/time/type keywords from the title.
+    - Return ONLY valid JSON.
+    `;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    try {
+        const jsonMatch = text.match(/```json\n([\s\S]*)\n```/) || text.match(/{[\s\S]*}/);
+        if (jsonMatch) {
+            return JSON.parse(jsonMatch[0].replace(/```json|```/g, ""));
+        }
+    } catch (e) {
+        console.error("Failed to parse task input", e);
+    }
+    return { title: input };
+}
+
+export async function breakdownTask(apiKey: string, taskTitle: string, taskDescription: string): Promise<string[]> {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+    const prompt = `
+    Break down the following task into 3-7 actionable subtasks.
+    Task Title: "${taskTitle}"
+    Task Description: "${taskDescription}"
+
+    Output Format:
+    Return ONLY a JSON array of strings.
+    Example: ["Subtask 1", "Subtask 2", "Subtask 3"]
+    `;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    try {
+        const jsonMatch = text.match(/```json\n([\s\S]*)\n```/) || text.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+            return JSON.parse(jsonMatch[0].replace(/```json|```/g, ""));
+        }
+    } catch (e) {
+        console.error("Failed to parse breakdown", e);
+    }
+    return [];
+}
+
+export type BriefingContext = {
+    tasks: Partial<Task>[];
+    weather?: string;
+    date: Date;
+};
+
+export async function generateDailyBriefing(apiKey: string, context: BriefingContext): Promise<string> {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+    const taskSummary = context.tasks.map(t =>
+        `- [${t.completed ? 'x' : ' '}] ${t.title} (${t.type})`
+    ).join("\n");
+
+    const prompt = `
+    You are a helpful personal assistant. Provide a daily briefing for the user.
+    
+    Current Date: ${context.date.toLocaleString()}
+    Weather: ${context.weather || "Unknown"}
+    
+    Today's Tasks:
+    ${taskSummary}
+
+    Instructions:
+    1. Greet the user enthusiastically.
+    2. Summarize the weather (if known).
+    3. Highlight key tasks for today (especially uncompleted ones).
+    4. Offer a motivational quote or tip for productivity.
+    5. Keep it concise (under 200 words).
+    6. Use Markdown formatting.
+    `;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+}

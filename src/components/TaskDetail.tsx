@@ -6,6 +6,9 @@ import { copyDescriptionWithFormat } from "@/lib/taskUtils";
 import { useAppStore } from "@/lib/store";
 import { isTaskForToday } from "@/lib/types";
 import RichText from "@/components/RichText";
+import { Split, Loader2 } from "lucide-react";
+import { breakdownTask } from "@/lib/gemini";
+import { useState } from "react";
 
 function formatDow(days?: number[]): string {
   if (!days || days.length === 0) return "-";
@@ -22,7 +25,10 @@ export default function TaskDetail({ taskId, backHref }: { taskId: string; backH
   const remove = useAppStore((s) => s.removeTask);
   const setActive = useAppStore((s) => s.setActiveTask);
   const activeId = useAppStore((s) => s.pomodoro.activeTaskId);
+  const apiKey = useAppStore((s) => s.geminiApiKey);
+  const updateTask = useAppStore((s) => s.updateTask);
   const task = tasks.find((t) => t.id === taskId);
+  const [isBreakingDown, setIsBreakingDown] = useState(false);
 
   if (!task) {
     return (
@@ -50,11 +56,41 @@ export default function TaskDetail({ taskId, backHref }: { taskId: string; backH
           )}
         </h2>
         <div className="flex items-center gap-2">
+          <button
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-sm font-medium"
+            disabled={isBreakingDown}
+            onClick={async () => {
+              if (isBreakingDown) return;
+              if (!apiKey) {
+                toast.show("Gemini APIキーを設定してください", "error");
+                return;
+              }
+              setIsBreakingDown(true);
+              try {
+                const subtasks = await breakdownTask(apiKey, task.title, task.description || "");
+                if (subtasks.length > 0) {
+                  const checklist = "\n\n" + subtasks.map(s => `- [ ] ${s}`).join("\n");
+                  updateTask(task.id, { description: (task.description || "") + checklist });
+                  toast.show("サブタスクを追加しました", "success");
+                } else {
+                  toast.show("サブタスクを生成できませんでした", "error");
+                }
+              } catch (e) {
+                console.error(e);
+                toast.show("エラーが発生しました", "error");
+              } finally {
+                setIsBreakingDown(false);
+              }
+            }}
+          >
+            {isBreakingDown ? <Loader2 size={14} className="animate-spin" /> : <Split size={14} />}
+            Breakdown
+          </button>
           {task.description ? (
             <button
               className="text-sm underline opacity-80"
               onClick={async () => {
-                await copyDescriptionWithFormat(task.description, 'markdown');
+                await copyDescriptionWithFormat(task.description!, 'markdown');
                 toast.show("Markdownでコピーしました", "success");
               }}
             >
