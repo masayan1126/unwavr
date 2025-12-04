@@ -56,7 +56,7 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-4 md:gap-6 text-sm">
           {/* Status Bar */}
-          <div className="hidden sm:flex items-center gap-3 md:gap-4 bg-card border border-border rounded-full px-4 py-1.5 shadow-sm">
+          <div className="hidden sm:flex items-center gap-3 md:gap-4 bg-card border border-border rounded-xl px-4 py-1.5 shadow-sm">
             <NetworkSpeedIndicator />
             <div className="w-px h-4 bg-border" />
             <WeatherWidget variant="small" />
