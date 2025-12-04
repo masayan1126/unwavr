@@ -41,7 +41,7 @@ function TasksPageInner() {
 
   return (
     <PullToRefresh>
-      <div className="p-6 sm:p-10 pb-24 sm:pb-10 max-w-6xl mx-auto flex flex-col gap-6">
+      <div className="p-6 sm:p-10 pb-24 sm:pb-10 max-w-[1400px] mx-auto flex flex-col gap-6">
         <header className="mb-6">
           <div className="flex items-center justify-between">
             <H1>すべてのタスク</H1>

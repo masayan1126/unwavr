@@ -13,7 +13,7 @@ export default function IncompleteTasksPage() {
   }
 
   return (
-    <div className="p-6 sm:p-10 max-w-5xl mx-auto">
+    <div className="p-6 sm:p-10 max-w-[1400px] mx-auto flex flex-col gap-4">
       <h1 className="text-xl font-semibold mb-4">未完了タスク</h1>
       <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
         <TaskList title="未完了" tasks={incomplete} showCreatedColumn={false} showPlannedColumn showTypeColumn />

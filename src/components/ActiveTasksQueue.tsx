@@ -6,7 +6,7 @@ import { GripVertical, X, Play, Pause, CheckCircle2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useToast } from "@/components/Providers";
 
-export default function ActiveTasksQueue() {
+export default function ActiveTasksQueue({ className }: { className?: string }) {
     const tasks = useAppStore((s) => s.tasks);
     const activeTaskIds = useAppStore((s) => s.pomodoro.activeTaskIds);
     const activeTaskId = useAppStore((s) => s.pomodoro.activeTaskId);
@@ -48,7 +48,7 @@ export default function ActiveTasksQueue() {
     };
 
     return (
-        <div className="flex flex-col gap-2 mb-6">
+        <div className={`flex flex-col gap-2 mb-6 ${className || ""}`}>
             <h2 className="text-sm font-medium opacity-80 px-1">着手中・並列タスク</h2>
             <Reorder.Group axis="y" values={activeTasks} onReorder={handleReorder} className="flex flex-col gap-2">
                 {activeTasks.map((task, index) => {

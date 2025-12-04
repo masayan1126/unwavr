@@ -370,7 +370,7 @@ export default function TaskList({
                             {showScheduledColumn && <div className="hidden sm:block w-[160px] px-2">設定（曜日/期間）</div>}
                             {showTypeColumn && <div className="hidden sm:block w-[128px] px-2">種別</div>}
                             {showMilestoneColumn && <div className="hidden sm:block w-[160px] px-2">マイルストーン</div>}
-                            <div className="w-[80px] px-2 text-right">Pomodoro</div>
+
                         </div>
 
                         {/* Body */}

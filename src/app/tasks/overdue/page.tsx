@@ -28,7 +28,7 @@ export default function OverdueTasksPage() {
   };
 
   return (
-    <div className="p-6 sm:p-10 max-w-5xl mx-auto">
+    <div className="p-6 sm:p-10 max-w-[1400px] mx-auto flex flex-col gap-4">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold">期限切れタスク</h1>
         <div className="flex items-center gap-4">

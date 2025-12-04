@@ -284,13 +284,7 @@ export function TaskRow({ task, onEdit, onContext, enableSelection, selected, on
                         </div>
                     )}
 
-                    <div className="flex items-center gap-2 flex-shrink-0 w-[80px] justify-end px-2">
-                        {task.estimatedPomodoros != null && (
-                            <div className="text-xs opacity-70">
-                                {task.completedPomodoros ?? 0}/{task.estimatedPomodoros}
-                            </div>
-                        )}
-                    </div>
+
                 </div>
             </motion.div>
         </Reorder.Item>

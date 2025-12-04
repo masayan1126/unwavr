@@ -77,7 +77,7 @@ export default function ArchivedTasksPage(): React.ReactElement {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="p-6 sm:p-10 max-w-[1400px] mx-auto flex flex-col gap-4">
       <header className="mb-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">アーカイブ済みタスク</h1>

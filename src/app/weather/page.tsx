@@ -349,7 +349,7 @@ export default function WeatherPage() {
   };
 
   return (
-    <div className="p-6 sm:p-10 max-w-3xl mx-auto flex flex-col gap-6">
+    <div className="p-6 sm:p-10 max-w-[1400px] mx-auto flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">天気</h1>
         <div className="flex items-center gap-4">

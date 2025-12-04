@@ -207,7 +207,7 @@ export default function BgmPage() {
   const idxOf = (id: string) => tracks.findIndex((t) => t.id === id);
 
   return (
-    <div className="max-w-5xl mx-auto p-6 sm:p-10 flex flex-col gap-6">
+    <div className="max-w-[1400px] mx-auto p-6 sm:p-10 flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">作業用BGM（YouTubeプレイリスト）</h1>
         <button
