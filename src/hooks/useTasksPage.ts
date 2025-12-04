@@ -14,6 +14,10 @@ export const useTasksPage = () => {
 
     useEffect(() => {
         if (searchParams.get("new") === "1") setOpenCreate(true);
+        const searchParam = searchParams.get("search");
+        const taskIdParam = searchParams.get("taskId");
+        if (taskIdParam) setSearchQuery(taskIdParam);
+        else if (searchParam) setSearchQuery(searchParam);
     }, [searchParams]);
 
     const baseFiltered = useMemo(() => {
@@ -47,7 +51,8 @@ export const useTasksPage = () => {
             const query = searchQuery.toLowerCase();
             filtered = filtered.filter((task) =>
                 task.title.toLowerCase().includes(query) ||
-                (task.description && task.description.toLowerCase().includes(query))
+                (task.description && task.description.toLowerCase().includes(query)) ||
+                task.id.toLowerCase().includes(query)
             );
         }
         return filtered;

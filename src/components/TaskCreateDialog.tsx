@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { X, Maximize2, Minimize2 } from "lucide-react";
+import { useAppStore } from "@/lib/store";
 
 type Props = {
   open: boolean;
@@ -12,6 +13,9 @@ type Props = {
 
 export default function TaskDialog({ open, onClose, title = "タスク", children, onBeforeClose }: Props): React.ReactElement | null {
   const [shown, setShown] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
+  const isLauncherOpen = useAppStore((s) => s.isLauncherOpen);
+
   useEffect(() => {
     if (open) {
       setShown(true);
@@ -30,6 +34,8 @@ export default function TaskDialog({ open, onClose, title = "タスク", childre
         document.body.style.width = '';
         window.scrollTo(0, scrollY);
       };
+    } else {
+      setIsMaximized(false); // Reset on close
     }
   }, [open]);
   if (!open) return null;
@@ -46,20 +52,37 @@ export default function TaskDialog({ open, onClose, title = "タスク", childre
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={handleClose}>
       <div className={`absolute inset-0 bg-black/50 transition-all duration-300 ${shown ? "opacity-100 backdrop-blur-[2px]" : "opacity-0 backdrop-blur-0"}`} />
-      <div className={`relative z-10 bg-card text-foreground shadow-2xl transition-all duration-300 ease-out transform-gpu w-full max-w-4xl h-[90vh] flex flex-col rounded-xl overflow-hidden ${shown ? "opacity-100 scale-100" : "opacity-0 scale-95"}`} onClick={(e) => e.stopPropagation()}>
+      <div
+        className={`z-10 bg-card text-foreground shadow-2xl transition-all duration-300 ease-out transform-gpu flex flex-col overflow-hidden ${isMaximized
+            ? `fixed inset-0 rounded-none ${isLauncherOpen ? "xl:right-[260px]" : ""}`
+            : "relative w-full max-w-4xl h-[90vh] rounded-xl"
+          } ${shown ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between px-4 py-3 shrink-0 z-20">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="font-medium text-foreground">{title}</span>
           </div>
-          <button
-            type="button"
-            className="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-muted-foreground transition-colors"
-            onClick={handleClose}
-            aria-label="閉じる"
-            title="閉じる"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              className="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-muted-foreground transition-colors"
+              onClick={() => setIsMaximized(!isMaximized)}
+              aria-label={isMaximized ? "元に戻す" : "最大化"}
+              title={isMaximized ? "元に戻す" : "最大化"}
+            >
+              {isMaximized ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+            </button>
+            <button
+              type="button"
+              className="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-muted-foreground transition-colors"
+              onClick={handleClose}
+              aria-label="閉じる"
+              title="閉じる"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto px-8 md:px-16 py-4">
           {children}

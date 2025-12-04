@@ -116,7 +116,7 @@ export default function FloatingAIAssistant() {
                         <div className="flex items-center justify-between p-3 border-b bg-muted/30">
                             <div className="flex items-center gap-2 text-sm font-medium">
                                 <Sparkles size={16} className="text-primary" />
-                                <span>AI Assistant</span>
+                                <span>Unwavr AI</span>
                             </div>
                             <button
                                 onClick={() => setIsOpen(false)}

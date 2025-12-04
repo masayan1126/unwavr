@@ -87,7 +87,7 @@ export default function SettingsPage() {
         </div>
         <div className="text-sm flex flex-col gap-3">
           <Text className="opacity-80">
-            Gemini APIキーを設定すると、AIアシスタント機能が利用可能になります。
+            Gemini APIキーを設定すると、Unwavr AI機能が利用可能になります。
             キーはブラウザにのみ保存され、サーバーには送信されません。
           </Text>
           <div className="flex flex-col gap-1">

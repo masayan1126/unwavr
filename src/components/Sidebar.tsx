@@ -18,7 +18,6 @@ const navItems: NavItem[] = [
   { href: "/launcher", label: "ランチャー", icon: <Rocket size={16} /> },
   { href: "/milestones", label: "マイルストーン", icon: <Target size={16} /> },
   { href: "/calendar", label: "カレンダー", icon: <Calendar size={16} /> },
-  { href: "/assistant", label: "AIアシスタント", icon: <MessageSquare size={16} /> },
   { href: "/pricing", label: "料金プラン", icon: <span className="inline-block w-4 h-4">¥</span> },
   { href: "/settings", label: "設定", icon: <Settings size={16} /> },
 ];
@@ -72,7 +71,7 @@ export default function Sidebar() {
           </button>
         </div>
         {open && (
-          <nav className="flex-1 flex flex-col gap-0.5">
+          <nav className="flex-1 flex flex-col gap-0.5" suppressHydrationWarning={true}>
             {/* ホーム */}
             {(() => {
               const item = navItems.find((n) => n.href === "/");
@@ -220,7 +219,25 @@ export default function Sidebar() {
                   </span>
                   <span className="truncate">BGMプレイリスト</span>
                 </Link>
+              </div>
+            </div>
 
+            {/* AI Assistant Section */}
+            <div className="mt-4">
+              <div className="px-3 py-1.5 text-xxs uppercase tracking-wider text-muted-foreground/60 font-semibold">AI Support</div>
+              <div className="flex flex-col gap-0.5">
+                <Link
+                  href="/assistant"
+                  className={`group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ${pathname.startsWith("/assistant")
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                >
+                  <span className={`transition-transform duration-200 ${pathname.startsWith("/assistant") ? "scale-110" : "group-hover:scale-110"}`}>
+                    <MessageSquare size={16} />
+                  </span>
+                  <span className="truncate">Unwavr AI</span>
+                </Link>
               </div>
             </div>
 

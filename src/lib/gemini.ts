@@ -45,7 +45,23 @@ export async function processUserRequest(
     - If the user asks to update/delete/complete a task, you MUST find the matching ID from the "Current Tasks" list. If ambiguous, ask for clarification (tool: chat).
     - For "scheduled" tasks, "daysOfWeek" is 0-6 (Sunday-Saturday).
     - For dates, use timestamps (number) or "YYYY-MM-DD" strings where appropriate. Current time: ${new Date().toISOString()}.
+    - Definition of "Today's Incomplete Tasks":
+      1. Daily tasks (type: "daily") that are NOT completed.
+      2. Scheduled tasks (type: "scheduled") where "daysOfWeek" includes today's day of week (0=Sun, 1=Mon, ..., 6=Sat) AND are NOT completed.
+      3. Backlog tasks (type: "backlog") where "plannedDates" includes today's date (YYYY-MM-DD) AND are NOT completed.
+         - STRICTLY EXCLUDE backlog tasks that do not have today's date in "plannedDates".
+         - If "plannedDates" is empty or null, do NOT include it.
     - "reply" should be a friendly message confirming the action or answering the question.
+    - When asked to summarize or list tasks, ALWAYS use a Markdown table for better visualization.
+    - CRITICAL: Whenever you mention a task title in your response (whether in a table, list, or sentence), YOU MUST wrap it in a Markdown link to allow filtering: [Task Title](/tasks?taskId=TaskId).
+      Example:
+      ### 📅 今日のタスク
+      | ステータス | タイトル | タイプ |
+      | :--- | :--- | :--- |
+      | ⬜️ 未完了 | [**タスクA**](/tasks?taskId=task-id-a) | 毎日 |
+      | ✅ 完了 | [**タスクB**](/tasks?taskId=task-id-b) | 特定曜日 |
+      
+      "[タスクA](/tasks?taskId=task-id-a)を完了しました。"
     `;
 
     const chat = model.startChat({
