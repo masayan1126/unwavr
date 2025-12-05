@@ -49,6 +49,11 @@ export const createUISlice: StateCreator<AppState, [], [], UISlice> = (set, get)
     },
     isLauncherOpen: true, // Default open as requested "always displayed"
     toggleLauncher: () => set((state) => ({ isLauncherOpen: !state.isLauncherOpen })),
+    language: (typeof window !== 'undefined' ? (safeLocalStorageGet("language") as 'ja' | 'en') || 'ja' : 'ja'),
+    setLanguage: (lang) => {
+        safeLocalStorageSet("language", lang);
+        set({ language: lang });
+    },
 });
 
 function safeLocalStorageGet(key: string): string | null {

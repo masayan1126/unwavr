@@ -99,6 +99,8 @@ export interface UISlice {
     clearTasksMilestonesLaunchers: () => void;
     isLauncherOpen: boolean;
     toggleLauncher: () => void;
+    language: 'ja' | 'en';
+    setLanguage: (lang: 'ja' | 'en') => void;
 }
 
 export interface AISlice {

@@ -113,13 +113,14 @@ export async function generateText(apiKey: string, prompt: string): Promise<stri
     return response.text();
 }
 
-export async function parseTaskInput(apiKey: string, input: string): Promise<Partial<Task>> {
+export async function parseTaskInput(apiKey: string, input: string, language: 'ja' | 'en' = 'ja'): Promise<Partial<Task>> {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const prompt = `
     Analyze the following task input and extract task details into a JSON object.
     Input: "${input}"
+    Language Context: ${language}
 
     Current Date: ${new Date().toISOString()}
 
@@ -134,9 +135,9 @@ export async function parseTaskInput(apiKey: string, input: string): Promise<Par
     }
 
     Rules:
-    - If specific day of week is mentioned (e.g. "every Monday"), set type to "scheduled" and daysOfWeek (0=Sun, 1=Mon...).
-    - If specific date is mentioned (e.g. "tomorrow", "next Friday"), set type to "backlog" and plannedDates to the timestamp of that date (start of day).
-    - If "daily" or "every day" is implied, set type to "daily".
+    - If specific day of week is mentioned (e.g. "every Monday", "毎週月曜"), set type to "scheduled" and daysOfWeek (0=Sun, 1=Mon...).
+    - If specific date is mentioned (e.g. "tomorrow", "明日"), set type to "backlog" and plannedDates to the timestamp of that date (start of day).
+    - If "daily" or "every day" or "毎日" is implied, set type to "daily".
     - Default type is "backlog".
     - Remove date/time/type keywords from the title.
     - Return ONLY valid JSON.
@@ -157,7 +158,7 @@ export async function parseTaskInput(apiKey: string, input: string): Promise<Par
     return { title: input };
 }
 
-export async function breakdownTask(apiKey: string, taskTitle: string, taskDescription: string): Promise<string[]> {
+export async function breakdownTask(apiKey: string, taskTitle: string, taskDescription: string, language: 'ja' | 'en' = 'ja'): Promise<string[]> {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
@@ -165,9 +166,10 @@ export async function breakdownTask(apiKey: string, taskTitle: string, taskDescr
     Break down the following task into 3-7 actionable subtasks.
     Task Title: "${taskTitle}"
     Task Description: "${taskDescription}"
+    Language: ${language}
 
     Output Format:
-    Return ONLY a JSON array of strings.
+    Return ONLY a JSON array of strings in ${language === 'en' ? 'English' : 'Japanese'}.
     Example: ["Subtask 1", "Subtask 2", "Subtask 3"]
     `;
 
@@ -190,6 +192,7 @@ export type BriefingContext = {
     tasks: Partial<Task>[];
     weather?: string;
     date: Date;
+    language: 'ja' | 'en';
 };
 
 export async function generateDailyBriefing(apiKey: string, context: BriefingContext): Promise<string> {
@@ -205,6 +208,7 @@ export async function generateDailyBriefing(apiKey: string, context: BriefingCon
     
     Current Date: ${context.date.toLocaleString()}
     Weather: ${context.weather || "Unknown"}
+    Language: ${apiKey.startsWith("AI") ? "Detect from prompt" : "en"} (Instruction: Output in ${context.language === 'en' ? 'English' : 'Japanese'})
     
     Today's Tasks:
     ${taskSummary}
@@ -216,6 +220,7 @@ export async function generateDailyBriefing(apiKey: string, context: BriefingCon
     4. Offer a motivational quote or tip for productivity.
     5. Keep it concise (under 200 words).
     6. Use Markdown formatting.
+    7. OUTPUT MUST BE IN ${context.language === 'en' ? 'ENGLISH' : 'JAPANESE'}.
     `;
 
     const result = await model.generateContent(prompt);

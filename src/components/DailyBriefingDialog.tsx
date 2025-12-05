@@ -18,6 +18,7 @@ export default function DailyBriefingDialog({ isOpen, onClose }: DailyBriefingDi
     const [loading, setLoading] = useState(false);
     const apiKey = useAppStore((s) => s.geminiApiKey);
     const tasks = useAppStore((s) => s.tasks);
+    const language = useAppStore((s) => s.language);
     const toast = useToast();
 
     // Mock weather for now, or use a real hook if available
@@ -41,7 +42,8 @@ export default function DailyBriefingDialog({ isOpen, onClose }: DailyBriefingDi
             const text = await generateDailyBriefing(apiKey, {
                 tasks: todayTasks,
                 weather,
-                date: new Date()
+                date: new Date(),
+                language
             });
             setBriefing(text);
         } catch (e) {

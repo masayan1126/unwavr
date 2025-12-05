@@ -214,6 +214,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
 
   const [isParsing, setIsParsing] = useState(false);
   const apiKey = useAppStore((s) => s.geminiApiKey);
+  const language = useAppStore((s) => s.language);
 
   const handleSmartParse = async () => {
     if (!title.trim() || !apiKey) {
@@ -222,7 +223,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
     }
     setIsParsing(true);
     try {
-      const result = await parseTaskInput(apiKey, title);
+      const result = await parseTaskInput(apiKey, title, language);
       if (result.title) setTitle(result.title);
       if (result.type) {
         setType(result.type);

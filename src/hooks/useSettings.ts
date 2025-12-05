@@ -21,11 +21,16 @@ export const useSettings = () => {
     const geminiApiKey = useAppStore((s) => s.geminiApiKey);
     const setGeminiApiKey = useAppStore((s) => s.setGeminiApiKey);
 
+    const language = useAppStore((s) => s.language);
+    const setLanguage = useAppStore((s) => s.setLanguage);
+
     return {
         fontSize,
         setFontSize,
         geminiApiKey,
         setGeminiApiKey,
         handleClearAll,
+        language,
+        setLanguage,
     };
 };

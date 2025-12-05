@@ -1,13 +1,13 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Type, Database } from "lucide-react";
+import { Type, Database, Globe } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { Button } from "@/components/ui/Button";
 import { H1, H2, Text } from "@/components/ui/Typography";
 
 export default function SettingsPage() {
-  const { fontSize, setFontSize, handleClearAll, geminiApiKey, setGeminiApiKey } = useSettings();
+  const { fontSize, setFontSize, handleClearAll, geminiApiKey, setGeminiApiKey, language, setLanguage } = useSettings();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -63,6 +63,42 @@ export default function SettingsPage() {
           </div>
           <Text className="text-xs opacity-60 mt-1">
             アプリケーション全体の文字サイズを調整します（標準: 100%）
+          </Text>
+        </div>
+      </div>
+
+      <div className="bg-card border border-black/10 dark:border-white/10 rounded-xl p-5 flex flex-col gap-4 shadow-sm">
+        <div className="flex items-center gap-2 border-b border-black/5 dark:border-white/5 pb-3">
+          <Globe size={18} className="opacity-70" />
+          <H2>言語設定 (Language)</H2>
+        </div>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="language"
+                value="ja"
+                checked={language === "ja"}
+                onChange={() => setLanguage("ja")}
+                className="accent-primary"
+              />
+              <span className="text-sm">日本語</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="language"
+                value="en"
+                checked={language === "en"}
+                onChange={() => setLanguage("en")}
+                className="accent-primary"
+              />
+              <span className="text-sm">English</span>
+            </label>
+          </div>
+          <Text className="text-xs opacity-60 mt-1">
+            AI機能（Daily Briefingなど）の出力言語を切り替えます。
           </Text>
         </div>
       </div>

@@ -27,6 +27,7 @@ export default function TaskDetail({ taskId, backHref }: { taskId: string; backH
   const activeId = useAppStore((s) => s.pomodoro.activeTaskId);
   const apiKey = useAppStore((s) => s.geminiApiKey);
   const updateTask = useAppStore((s) => s.updateTask);
+  const language = useAppStore((s) => s.language);
   const task = tasks.find((t) => t.id === taskId);
   const [isBreakingDown, setIsBreakingDown] = useState(false);
 
@@ -67,7 +68,7 @@ export default function TaskDetail({ taskId, backHref }: { taskId: string; backH
               }
               setIsBreakingDown(true);
               try {
-                const subtasks = await breakdownTask(apiKey, task.title, task.description || "");
+                const subtasks = await breakdownTask(apiKey, task.title, task.description || "", language);
                 if (subtasks.length > 0) {
                   const checklist = "\n\n" + subtasks.map(s => `- [ ] ${s}`).join("\n");
                   updateTask(task.id, { description: (task.description || "") + checklist });
