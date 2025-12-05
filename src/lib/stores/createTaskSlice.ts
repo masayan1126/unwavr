@@ -1,5 +1,6 @@
 import { StateCreator } from "zustand";
 import { Task, createTaskId, isTaskForToday } from "../types";
+import { getTodayUtc } from "../taskUtils";
 import { AppState } from "../storeTypes";
 
 import { TaskSlice } from "./sliceTypes";
@@ -247,8 +248,7 @@ export const createTaskSlice: StateCreator<AppState, [], [], TaskSlice> = (set, 
     moveTasksToToday: (taskIds) =>
         set((state) => {
             if (!Array.isArray(taskIds) || taskIds.length === 0) return state;
-            const d = new Date();
-            const todayUtc = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+            const todayUtc = getTodayUtc();
 
             const tasks = state.tasks.map((t) => {
                 if (!taskIds.includes(t.id)) return t;
