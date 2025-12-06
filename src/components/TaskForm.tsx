@@ -91,6 +91,44 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
   const performSave = useCallback(() => {
     if (isSubmittingRef.current) return;
     const trimmed = title.trim();
+
+    // Check for changes if editing an existing task
+    if (draftTaskId && task) {
+      // Helper to normalize strings (undefined/null -> "")
+      const normStr = (s?: string | null) => s ?? "";
+      // Helper to normalize numbers (undefined/null -> 0)
+      const normNum = (n?: number | null) => n ?? 0;
+
+      const currentPlannedDates = type === "backlog" ? plannedDates : [];
+      const currentScheduled = type === "scheduled" ? scheduled : undefined;
+      const currentMilestoneId = milestoneId || undefined;
+      const currentDesc = desc || undefined;
+      const currentEst = Number.isFinite(est) ? est : 0;
+
+      const isTitleChanged = trimmed !== normStr(task.title);
+      const isDescChanged = normStr(currentDesc) !== normStr(task.description);
+      const isTypeChanged = type !== task.type;
+      const isMilestoneChanged = normStr(currentMilestoneId) !== normStr(task.milestoneId);
+      const isEstChanged = currentEst !== normNum(task.estimatedPomodoros);
+
+      // Safe array comparison: slice() before sort() to avoid mutating original state
+      const isPlannedDatesChanged = JSON.stringify(currentPlannedDates.slice().sort()) !== JSON.stringify((task.plannedDates ?? []).slice().sort());
+
+      // Normalize scheduled object: treat null/undefined as equivalent
+      const normScheduled = (s?: Scheduled | null) => {
+        if (!s) return null;
+        return {
+          daysOfWeek: (s.daysOfWeek ?? []).slice().sort(),
+          dateRanges: (s.dateRanges ?? []).map(r => ({ start: r.start, end: r.end })).sort((a, b) => a.start - b.start),
+        };
+      };
+      const isScheduledChanged = JSON.stringify(normScheduled(currentScheduled)) !== JSON.stringify(normScheduled(task.scheduled));
+
+      if (!isTitleChanged && !isDescChanged && !isTypeChanged && !isMilestoneChanged && !isEstChanged && !isPlannedDatesChanged && !isScheduledChanged) {
+        return;
+      }
+    }
+
     isSubmittingRef.current = true;
     setIsSaving(true);
     try {
@@ -126,7 +164,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
       setTimeout(() => { isSubmittingRef.current = false; }, 0);
       setTimeout(() => setIsSaving(false), 150);
     }
-  }, [addTask, desc, milestoneId, plannedDates, scheduled, title, type, draftTaskId, est]);
+  }, [addTask, desc, milestoneId, plannedDates, scheduled, title, type, draftTaskId, est, task]);
 
   useImperativeHandle(ref, () => ({ save: performSave }), [performSave]);
 
