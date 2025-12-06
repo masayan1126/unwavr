@@ -63,15 +63,17 @@ export default function Pomodoro() {
     for (const f of freqs) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'sine';
+      // 三角波に変更して倍音を増やし、聞こえやすくする
+      osc.type = 'triangle';
       osc.frequency.value = f;
       gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.22, t + 0.01);
-      gain.gain.linearRampToValueAtTime(0.0, t + 0.18);
+      // 音量を0.22から0.5にアップ
+      gain.gain.linearRampToValueAtTime(0.5, t + 0.02);
+      gain.gain.linearRampToValueAtTime(0.0, t + 0.28);
       osc.connect(gain).connect(ctx.destination);
       osc.start(t);
-      osc.stop(t + 0.2);
-      t += 0.22;
+      osc.stop(t + 0.3);
+      t += 0.32;
     }
   };
 
@@ -212,6 +214,18 @@ export default function Pomodoro() {
             className="w-16 bg-transparent text-right outline-none"
           />
         </label>
+      </div>
+
+      <div className="mt-3 flex justify-end">
+        <button
+          onClick={() => {
+            ensureAudio();
+            playPattern([880, 988, 1047]);
+          }}
+          className="text-xs opacity-70 hover:opacity-100 flex items-center gap-1 border rounded px-2 py-1"
+        >
+          <span className="text-[10px]">🔊</span> サウンドテスト
+        </button>
       </div>
     </div>
   );
