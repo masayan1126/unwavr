@@ -29,25 +29,32 @@ export default function Toast({ message, type = "info", onClose, durationMs = 30
 
   const accent =
     type === "success" ? "bg-[var(--primary)]" :
-    type === "warning" ? "bg-[var(--warning)]" :
-    type === "error" ? "bg-[var(--danger)]" :
-    "bg-[var(--primary)]";
+      type === "warning" ? "bg-[var(--warning)]" :
+        type === "error" ? "bg-[var(--danger)]" :
+          "bg-[var(--primary)]";
 
   const Icon =
     type === "success" ? CheckCircle2 :
-    type === "warning" ? AlertTriangle :
-    type === "error" ? XCircle :
-    Info;
+      type === "warning" ? AlertTriangle :
+        type === "error" ? XCircle :
+          Info;
 
   const isError = type === "error";
   const baseContainer = "pointer-events-auto flex items-start gap-3 rounded-lg backdrop-blur shadow-lg px-4 py-3 w-[320px] sm:w-[360px] border";
   const normalContainer = "border-[var(--border)] bg-white/90 dark:bg-neutral-900/90";
   const errorContainer = "bg-[var(--danger)] text-white border-[var(--danger)]";
 
-  const posBase = position === "top" ? { top: 16 + offsetPx } : { bottom: 16 + offsetPx };
+  // スマートフォン: 上部中央、デスクトップ: 指定位置（右寄せ）
+  // sm以上では指定のpositionに従う（bottom指定時はbottom、top指定時はtop）
+  const positionClass = position === "top"
+    ? "top-4 sm:top-4"
+    : "top-4 sm:top-auto sm:bottom-4";
 
   return (
-    <div className={`fixed right-4 z-[1000] pointer-events-none`} style={posBase}>
+    <div
+      className={`fixed z-[250000] pointer-events-none left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-4 ${positionClass}`}
+      style={{ ...(offsetPx ? (position === "top" ? { marginTop: offsetPx } : { marginBottom: offsetPx }) : {}) }}
+    >
       <div
         role="alert"
         aria-live="assertive"

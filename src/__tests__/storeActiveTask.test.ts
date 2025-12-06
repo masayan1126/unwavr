@@ -3,6 +3,8 @@ import type { Task } from "@/lib/types";
 import { vi } from "vitest";
 
 const ACTIVE_STORAGE_KEY = "pomodoro:activeTaskId";
+const POMODORO_SETTINGS_STORAGE_KEY = "pomodoro:settings";
+const POMODORO_STATE_STORAGE_KEY = "pomodoro:state";
 
 function createBaseTask(args: { id: string; completed: boolean }): Task {
   const now = Date.now();
@@ -28,11 +30,13 @@ function initializeActiveTaskState(args: { completed: boolean }): string {
   return taskId;
 }
 
+let storage: Record<string, string> = {};
+
 beforeEach(() => {
   global.fetch = vi.fn(() => Promise.resolve({ ok: true })) as unknown as typeof fetch;
 
   // Mock localStorage
-  const storage: Record<string, string> = {};
+  storage = {};
   global.localStorage = {
     getItem: vi.fn((key) => storage[key] || null),
     setItem: vi.fn((key, value) => { storage[key] = value; }),
@@ -81,4 +85,42 @@ describe("着手中タスク完了時の自動解除", () => {
   });
 });
 
+describe("ポモドーロ設定・状態の永続化", () => {
+  it("設定変更時にlocalStorageに保存される", () => {
+    useAppStore.getState().setPomodoroSettings({
+      workDurationSec: 30 * 60,
+      shortBreakSec: 10 * 60,
+    });
 
+    const savedSettings = JSON.parse(storage[POMODORO_SETTINGS_STORAGE_KEY] || "{}");
+    expect(savedSettings.workDurationSec).toBe(30 * 60);
+    expect(savedSettings.shortBreakSec).toBe(10 * 60);
+  });
+
+  it("タイマー開始時に状態が保存される", () => {
+    useAppStore.getState().startPomodoro(false);
+
+    const savedState = JSON.parse(storage[POMODORO_STATE_STORAGE_KEY] || "{}");
+    expect(savedState.isRunning).toBe(true);
+    expect(savedState.isBreak).toBe(false);
+    expect(typeof savedState.lastTickAtMs).toBe("number");
+  });
+
+  it("タイマー停止時に状態が保存される", () => {
+    useAppStore.getState().startPomodoro(false);
+    useAppStore.getState().stopPomodoro();
+
+    const savedState = JSON.parse(storage[POMODORO_STATE_STORAGE_KEY] || "{}");
+    expect(savedState.isRunning).toBe(false);
+  });
+
+  it("リセット時に状態が保存される", () => {
+    useAppStore.getState().startPomodoro(false);
+    useAppStore.getState().resetPomodoro();
+
+    const savedState = JSON.parse(storage[POMODORO_STATE_STORAGE_KEY] || "{}");
+    expect(savedState.isRunning).toBe(false);
+    expect(savedState.isBreak).toBe(false);
+    expect(savedState.completedWorkSessions).toBe(0);
+  });
+});

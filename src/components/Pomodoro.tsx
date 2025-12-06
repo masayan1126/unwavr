@@ -3,6 +3,13 @@ import { useEffect, useRef, useState } from "react";
 import { usePomodoro } from "@/hooks/usePomodoro";
 import { NoticeToast } from "@/components/Toast";
 
+// デフォルト値（SSR用）
+const DEFAULT_SECONDS = 25 * 60;
+const DEFAULT_WORK_DURATION = 25 * 60;
+const DEFAULT_SHORT_BREAK = 5 * 60;
+const DEFAULT_LONG_BREAK = 15 * 60;
+const DEFAULT_CYCLES = 4;
+
 function format(sec: number): string {
   const m = Math.floor(sec / 60)
     .toString()
@@ -20,6 +27,23 @@ export default function Pomodoro() {
   const prevCompletedRef = useRef<number>(s.completedWorkSessions);
   const audioRef = useRef<AudioContext | null>(null);
   const prevIsBreakForSoundRef = useRef<boolean>(s.isBreak);
+
+  // Hydration mismatch回避: マウント状態を追跡
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // SSR/初期表示用の値（マウント完了後は実際の値を使用）
+  const displaySecondsLeft = isMounted ? s.secondsLeft : DEFAULT_SECONDS;
+  const displayWorkDuration = isMounted ? s.workDurationSec : DEFAULT_WORK_DURATION;
+  const displayShortBreak = isMounted ? s.shortBreakSec : DEFAULT_SHORT_BREAK;
+  const displayLongBreak = isMounted ? s.longBreakSec : DEFAULT_LONG_BREAK;
+  const displayCycles = isMounted ? s.cyclesUntilLongBreak : DEFAULT_CYCLES;
+  const displayIsBreak = isMounted ? s.isBreak : false;
+  const displayIsRunning = isMounted ? s.isRunning : false;
+  const displayCompletedSessions = isMounted ? s.completedWorkSessions : 0;
+  const displayActiveTaskId = isMounted ? activeTaskId : undefined;
 
   const ensureAudio = () => {
     try {
@@ -112,13 +136,13 @@ export default function Pomodoro() {
         />
       )}
       <div className="text-xs uppercase tracking-wide opacity-70 mb-2">ポモドーロ</div>
-      <div className="text-4xl font-bold tabular-nums mb-2">{format(s.secondsLeft)}</div>
+      <div className="text-4xl font-bold tabular-nums mb-2">{format(displaySecondsLeft)}</div>
       <div className="text-xs mb-3 opacity-70">
-        モード: {s.isBreak ? "休憩" : "作業"} / セッション: {s.completedWorkSessions}
-        {activeTaskId && <span className="ml-2">(タスク選択中)</span>}
+        モード: {displayIsBreak ? "休憩" : "作業"} / セッション: {displayCompletedSessions}
+        {displayActiveTaskId && <span className="ml-2">(タスク選択中)</span>}
       </div>
       <div className="flex gap-2 items-center mb-3">
-        {!s.isRunning ? (
+        {!displayIsRunning ? (
           <button className="px-3 py-1 rounded bg-foreground text-background text-sm" onClick={() => { ensureAudio(); start(); }}>
             スタート
           </button>
@@ -139,9 +163,9 @@ export default function Pomodoro() {
       </div>
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div>
-          作業: {Math.round(s.workDurationSec / 60)}分 / 休憩: {Math.round(s.shortBreakSec / 60)}分
+          作業: {Math.round(displayWorkDuration / 60)}分 / 休憩: {Math.round(displayShortBreak / 60)}分
         </div>
-        <div>ロング休憩: {Math.round(s.longBreakSec / 60)}分 / 周期: {s.cyclesUntilLongBreak}</div>
+        <div>ロング休憩: {Math.round(displayLongBreak / 60)}分 / 周期: {displayCycles}</div>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
         <label className="flex items-center justify-between gap-2 border rounded px-2 py-1">
@@ -150,7 +174,7 @@ export default function Pomodoro() {
             type="number"
             min={1}
             max={120}
-            value={Math.round(s.workDurationSec / 60)}
+            value={Math.round(displayWorkDuration / 60)}
             onChange={(e) => setSettings({ workDurationSec: Math.max(1, Number(e.target.value)) * 60 })}
             className="w-16 bg-transparent text-right outline-none"
           />
@@ -161,7 +185,7 @@ export default function Pomodoro() {
             type="number"
             min={1}
             max={60}
-            value={Math.round(s.shortBreakSec / 60)}
+            value={Math.round(displayShortBreak / 60)}
             onChange={(e) => setSettings({ shortBreakSec: Math.max(1, Number(e.target.value)) * 60 })}
             className="w-16 bg-transparent text-right outline-none"
           />
@@ -172,7 +196,7 @@ export default function Pomodoro() {
             type="number"
             min={1}
             max={120}
-            value={Math.round(s.longBreakSec / 60)}
+            value={Math.round(displayLongBreak / 60)}
             onChange={(e) => setSettings({ longBreakSec: Math.max(1, Number(e.target.value)) * 60 })}
             className="w-16 bg-transparent text-right outline-none"
           />
@@ -183,7 +207,7 @@ export default function Pomodoro() {
             type="number"
             min={1}
             max={10}
-            value={s.cyclesUntilLongBreak}
+            value={displayCycles}
             onChange={(e) => setSettings({ cyclesUntilLongBreak: Math.max(1, Number(e.target.value)) })}
             className="w-16 bg-transparent text-right outline-none"
           />

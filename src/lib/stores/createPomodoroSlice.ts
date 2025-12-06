@@ -18,6 +18,8 @@ const defaultPomodoro: PomodoroState = {
 
 const ACTIVE_TASK_STORAGE_KEY = 'pomodoro:activeTaskId';
 const ACTIVE_TASK_IDS_STORAGE_KEY = 'pomodoro:activeTaskIds';
+const POMODORO_SETTINGS_STORAGE_KEY = 'pomodoro:settings';
+const POMODORO_STATE_STORAGE_KEY = 'pomodoro:state';
 
 function safeLocalStorageGet(key: string): string | null {
     try {
@@ -44,13 +46,80 @@ function safeLocalStorageRemove(key: string) {
     } catch { }
 }
 
+// 設定値の保存
+function savePomodoroSettings(pomodoro: PomodoroState) {
+    const settings = {
+        workDurationSec: pomodoro.workDurationSec,
+        shortBreakSec: pomodoro.shortBreakSec,
+        longBreakSec: pomodoro.longBreakSec,
+        cyclesUntilLongBreak: pomodoro.cyclesUntilLongBreak,
+    };
+    safeLocalStorageSet(POMODORO_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+}
 
-export const createPomodoroSlice: StateCreator<AppState, [], [], PomodoroSlice> = (set) => ({
-    pomodoro: PomodoroStateSchema.parse({
+// 実行状態の保存
+function savePomodoroState(pomodoro: PomodoroState) {
+    const state = {
+        isRunning: pomodoro.isRunning,
+        isBreak: pomodoro.isBreak,
+        secondsLeft: pomodoro.secondsLeft,
+        completedWorkSessions: pomodoro.completedWorkSessions,
+        lastTickAtMs: pomodoro.lastTickAtMs,
+    };
+    safeLocalStorageSet(POMODORO_STATE_STORAGE_KEY, JSON.stringify(state));
+}
+
+// 保存された設定値の読み込み
+function loadPomodoroSettings(): Partial<PomodoroState> {
+    const raw = safeLocalStorageGet(POMODORO_SETTINGS_STORAGE_KEY);
+    if (!raw) return {};
+    try {
+        const parsed = JSON.parse(raw);
+        return {
+            workDurationSec: typeof parsed.workDurationSec === 'number' ? parsed.workDurationSec : undefined,
+            shortBreakSec: typeof parsed.shortBreakSec === 'number' ? parsed.shortBreakSec : undefined,
+            longBreakSec: typeof parsed.longBreakSec === 'number' ? parsed.longBreakSec : undefined,
+            cyclesUntilLongBreak: typeof parsed.cyclesUntilLongBreak === 'number' ? parsed.cyclesUntilLongBreak : undefined,
+        };
+    } catch {
+        return {};
+    }
+}
+
+// 保存された実行状態の読み込み
+function loadPomodoroState(): Partial<PomodoroState> {
+    const raw = safeLocalStorageGet(POMODORO_STATE_STORAGE_KEY);
+    if (!raw) return {};
+    try {
+        const parsed = JSON.parse(raw);
+        return {
+            isRunning: typeof parsed.isRunning === 'boolean' ? parsed.isRunning : undefined,
+            isBreak: typeof parsed.isBreak === 'boolean' ? parsed.isBreak : undefined,
+            secondsLeft: typeof parsed.secondsLeft === 'number' ? parsed.secondsLeft : undefined,
+            completedWorkSessions: typeof parsed.completedWorkSessions === 'number' ? parsed.completedWorkSessions : undefined,
+            lastTickAtMs: typeof parsed.lastTickAtMs === 'number' ? parsed.lastTickAtMs : undefined,
+        };
+    } catch {
+        return {};
+    }
+}
+
+// 初期状態を構築
+function buildInitialPomodoro(): PomodoroState {
+    const savedSettings = loadPomodoroSettings();
+    const savedState = loadPomodoroState();
+
+    return PomodoroStateSchema.parse({
         ...defaultPomodoro,
+        ...savedSettings,
+        ...savedState,
         activeTaskId: safeLocalStorageGet(ACTIVE_TASK_STORAGE_KEY) || undefined,
         activeTaskIds: JSON.parse(safeLocalStorageGet(ACTIVE_TASK_IDS_STORAGE_KEY) || "[]"),
-    }),
+    });
+}
+
+export const createPomodoroSlice: StateCreator<AppState, [], [], PomodoroSlice> = (set) => ({
+    pomodoro: buildInitialPomodoro(),
     setActiveTask: (taskId) =>
         set((state) => {
             let nextIds = [...state.pomodoro.activeTaskIds];
@@ -102,18 +171,22 @@ export const createPomodoroSlice: StateCreator<AppState, [], [], PomodoroSlice> 
             const secondsLeft = nextIsBreak
                 ? state.pomodoro.shortBreakSec
                 : state.pomodoro.workDurationSec;
-            return {
-                pomodoro: {
-                    ...state.pomodoro,
-                    isRunning: true,
-                    isBreak: nextIsBreak,
-                    secondsLeft,
-                    lastTickAtMs: Date.now(),
-                },
+            const nextPomodoro = {
+                ...state.pomodoro,
+                isRunning: true,
+                isBreak: nextIsBreak,
+                secondsLeft,
+                lastTickAtMs: Date.now(),
             };
+            savePomodoroState(nextPomodoro);
+            return { pomodoro: nextPomodoro };
         }),
     stopPomodoro: () =>
-        set((state) => ({ pomodoro: { ...state.pomodoro, isRunning: false } })),
+        set((state) => {
+            const nextPomodoro = { ...state.pomodoro, isRunning: false };
+            savePomodoroState(nextPomodoro);
+            return { pomodoro: nextPomodoro };
+        }),
     tickPomodoro: () =>
         set((state) => {
             const s = state.pomodoro;
@@ -159,35 +232,41 @@ export const createPomodoroSlice: StateCreator<AppState, [], [], PomodoroSlice> 
                 ))
                 : state.tasks;
 
-            return {
-                tasks,
-                pomodoro: {
-                    ...s,
-                    secondsLeft,
-                    isBreak,
-                    isRunning: true,
-                    completedWorkSessions: completed,
-                    lastTickAtMs: now - remainderMs,
-                },
+            const nextPomodoro = {
+                ...s,
+                secondsLeft,
+                isBreak,
+                isRunning: true,
+                completedWorkSessions: completed,
+                lastTickAtMs: now - remainderMs,
             };
+            // 5秒ごとに保存（パフォーマンス最適化）
+            if (Math.floor(secondsLeft / 5) !== Math.floor(s.secondsLeft / 5) || workSessionCompletions > 0) {
+                savePomodoroState(nextPomodoro);
+            }
+            return { tasks, pomodoro: nextPomodoro };
         }),
     resetPomodoro: () =>
-        set((state) => ({
-            pomodoro: {
+        set((state) => {
+            const nextPomodoro = {
                 ...state.pomodoro,
                 isRunning: false,
                 isBreak: false,
                 secondsLeft: state.pomodoro.workDurationSec,
                 completedWorkSessions: 0,
                 lastTickAtMs: undefined,
-            },
-        })),
+            };
+            savePomodoroState(nextPomodoro);
+            return { pomodoro: nextPomodoro };
+        }),
     setPomodoroSettings: (settings) =>
         set((state) => {
             const next = { ...state.pomodoro, ...settings } as PomodoroState;
             if (!next.isRunning) {
                 next.secondsLeft = next.isBreak ? next.shortBreakSec : next.workDurationSec;
             }
+            savePomodoroSettings(next);
+            savePomodoroState(next);
             return { pomodoro: next };
         }),
 });
