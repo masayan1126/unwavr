@@ -69,5 +69,10 @@
     "ts-jest": "^29.2.5",
     "typescript": "^5",
     "vitest": "^4.0.9"
+  },
+  "overrides": {
+    "next-auth": {
+      "next": "$next"
+    }
   }
 }
