@@ -9,6 +9,21 @@ import { TaskType, Scheduled } from "@/lib/types";
 import RichText from "@/components/RichText";
 import { copyDescriptionWithFormat } from "@/lib/taskUtils";
 import WysiwygEditor from "@/components/WysiwygEditor";
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  Target,
+  Edit3,
+  Trash2,
+  Play,
+  Pause,
+  Copy,
+  CheckCircle2,
+  Repeat,
+  CalendarDays,
+  Layers
+} from "lucide-react";
 
 export default function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -73,8 +88,8 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
   if (!task) {
     return (
-      <div className="p-6 sm:p-10 max-w-3xl mx-auto">
-        <div className="text-center">タスクが見つかりません</div>
+      <div className="p-6 sm:p-10 max-w-4xl mx-auto">
+        <div className="text-center py-12 opacity-60">タスクが見つかりません</div>
       </div>
     );
   }
@@ -145,9 +160,9 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
-    return date.toLocaleDateString('ja-JP', { 
-      year: 'numeric', 
-      month: 'long', 
+    return date.toLocaleDateString('ja-JP', {
+      year: 'numeric',
+      month: 'long',
       day: 'numeric',
       weekday: 'short'
     });
@@ -155,153 +170,224 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
   const weekdayLabels = ["日", "月", "火", "水", "木", "金", "土"];
 
+  const getTypeIcon = () => {
+    switch (task.type) {
+      case "daily": return <Repeat size={16} className="text-[var(--primary)]" />;
+      case "scheduled": return <CalendarDays size={16} className="text-[var(--warning)]" />;
+      case "backlog": return <Layers size={16} className="text-purple-500" />;
+    }
+  };
+
+  const getTypeLabel = () => {
+    switch (task.type) {
+      case "daily": return "毎日";
+      case "scheduled": return "特定曜日";
+      case "backlog": return "積み上げ候補";
+    }
+  };
+
+  const getTypeBgColor = () => {
+    switch (task.type) {
+      case "daily": return "bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/30";
+      case "scheduled": return "bg-[var(--warning)]/10 text-[var(--warning)] border-[var(--warning)]/30";
+      case "backlog": return "bg-purple-500/10 text-purple-500 border-purple-500/30";
+    }
+  };
+
+  const isActive = activeTaskId === task.id;
+
   return (
-    <div className="p-6 sm:p-10 max-w-3xl mx-auto flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold flex items-center gap-2">
-          タスク詳細
-          {task && activeTaskId === task.id && (
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/30">
-              着手中
-            </span>
-          )}
-        </h1>
-        <div className="flex items-center gap-4">
-          <Link className="text-sm underline opacity-80" href="/">
-            ホーム
-          </Link>
+    <div className="p-6 sm:p-10 max-w-4xl mx-auto">
+      {/* ヘッダー */}
+      <div className="flex items-center gap-4 mb-6">
+        <button
+          onClick={() => router.back()}
+          className="p-2 rounded-lg border border-[var(--border)] hover:bg-[var(--sidebar)] transition-colors"
+          title="戻る"
+        >
+          <ArrowLeft size={18} />
+        </button>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-xl font-semibold truncate">{task.title}</h1>
+            <div className={`inline-flex items-center gap-1.5 text-xs font-medium border rounded-full px-2.5 py-1 ${getTypeBgColor()}`}>
+              {getTypeIcon()}
+              <span>{getTypeLabel()}</span>
+            </div>
+            {isActive && (
+              <div className="inline-flex items-center gap-1.5 text-xs font-medium border rounded-full px-2.5 py-1 bg-green-500/10 text-green-500 border-green-500/30">
+                <Play size={12} fill="currentColor" />
+                <span>着手中</span>
+              </div>
+            )}
+          </div>
         </div>
+        <Link
+          href="/"
+          className="text-sm opacity-70 hover:opacity-100 hidden sm:block"
+        >
+          ホーム
+        </Link>
       </div>
 
       {!isEditing ? (
-        // 表示モード
-        <div className="space-y-4">
-          <div className="border rounded p-4 border-[var(--border)]">
-            <div className="flex items-center justify-between mb-2 gap-2">
-              <h2 className="text-lg font-medium flex items-center gap-2">
-                {task.title}
-                {activeTaskId === task.id && (
-                  <span className="inline-flex items-center gap-1.5 text-[10px] font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/30">
-                    着手中
-                  </span>
-                )}
-              </h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={async () => {
-                    if (task.description) {
-                      await copyDescriptionWithFormat(task.description, 'markdown');
-                      toast.show('Markdownでコピーしました', 'success');
-                    } else {
-                      toast.show('説明がありません', 'warning');
-                    }
-                  }}
-                  className="text-sm underline opacity-80"
-                >
-                  説明をコピー
-                </button>
-                <button
-                  onClick={() => setActiveTask(activeTaskId === task.id ? undefined : task.id)}
-                  className={`text-sm underline opacity-80 ${activeTaskId === task.id ? 'text-[var(--primary)]' : ''}`}
-                >
-                  {activeTaskId === task.id ? '着手中を解除' : '着手中に設定'}
-                </button>
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="text-sm underline opacity-80"
-                >
-                  編集
-                </button>
-              </div>
+        /* 表示モード */
+        <div className="space-y-6">
+          {/* メインカード */}
+          <div className="bg-[var(--sidebar)] rounded-xl p-6 border border-[var(--border)]">
+            {/* アクションボタン */}
+            <div className="flex flex-wrap items-center gap-2 mb-6 pb-4 border-b border-[var(--border)]">
+              <button
+                onClick={() => setActiveTask(isActive ? undefined : task.id)}
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${isActive
+                    ? "bg-green-500 text-white"
+                    : "bg-[var(--primary)] text-white hover:opacity-90"
+                  }`}
+              >
+                {isActive ? <Pause size={14} /> : <Play size={14} />}
+                {isActive ? '着手中を解除' : '着手開始'}
+              </button>
+              <button
+                onClick={() => setIsEditing(true)}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border border-[var(--border)] hover:bg-white/5 transition-colors"
+              >
+                <Edit3 size={14} />
+                編集
+              </button>
+              <button
+                onClick={async () => {
+                  if (task.description) {
+                    await copyDescriptionWithFormat(task.description, 'markdown');
+                    toast.show('Markdownでコピーしました', 'success');
+                  } else {
+                    toast.show('説明がありません', 'warning');
+                  }
+                }}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border border-[var(--border)] hover:bg-white/5 transition-colors"
+              >
+                <Copy size={14} />
+                説明をコピー
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-[var(--danger)] border border-[var(--danger)]/30 hover:bg-[var(--danger)]/10 transition-colors ml-auto"
+              >
+                <Trash2 size={14} />
+                削除
+              </button>
             </div>
-            
+
+            {/* 説明 */}
             {task.description && (
-              <div className="prose prose-sm dark:prose-invert opacity-90 mb-3">
-                <RichText html={task.description} />
+              <div className="mb-6">
+                <h3 className="text-xs uppercase tracking-wider opacity-60 mb-3 flex items-center gap-2">
+                  <Edit3 size={12} />
+                  説明
+                </h3>
+                <div className="prose prose-sm dark:prose-invert max-w-none">
+                  <RichText html={task.description} />
+                </div>
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="opacity-60">タイプ:</span>
-                <span className="ml-2">
-                  {task.type === "daily" ? "毎日" : 
-                   task.type === "scheduled" ? "特定曜日" : "積み上げ候補"}
-                </span>
+            {/* 詳細情報 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* ポモドーロ */}
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-[var(--border)]">
+                <div className="p-2 rounded-lg bg-[var(--primary)]/10">
+                  <Clock size={16} className="text-[var(--primary)]" />
+                </div>
+                <div>
+                  <div className="text-xs opacity-60">ポモドーロ</div>
+                  <div className="font-medium">
+                    {task.completedPomodoros ?? 0} / {task.estimatedPomodoros ?? 0}
+                  </div>
+                </div>
               </div>
-              
-              {(task.estimatedPomodoros ?? 0) > 0 && (
-                <div>
-                  <span className="opacity-60">見積ポモ数:</span>
-                  <span className="ml-2">{task.estimatedPomodoros ?? 0}</span>
-                </div>
-              )}
 
+              {/* マイルストーン */}
               {task.milestoneId && (
-                <div>
-                  <span className="opacity-60">マイルストーン:</span>
-                  <span className="ml-2">
-                    {milestones.find(m => m.id === task.milestoneId)?.title}
-                  </span>
-                </div>
-              )}
-
-              {task.type === "scheduled" && task.scheduled && (
-                <div>
-                  <span className="opacity-60">スケジュール:</span>
-                  <div className="ml-2">
-                    {task.scheduled.daysOfWeek && task.scheduled.daysOfWeek.length > 0 && (
-                      <div>曜日: {task.scheduled.daysOfWeek.map(d => weekdayLabels[d]).join(", ")}</div>
-                    )}
-                    {task.scheduled.dateRanges && task.scheduled.dateRanges.length > 0 && (
-                      <div>期間: {task.scheduled.dateRanges.map(r => 
-                        `${formatDate(r.start)} - ${formatDate(r.end)}`
-                      ).join(", ")}</div>
-                    )}
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-[var(--border)]">
+                  <div className="p-2 rounded-lg bg-[var(--warning)]/10">
+                    <Target size={16} className="text-[var(--warning)]" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs opacity-60">マイルストーン</div>
+                    <div className="font-medium truncate">
+                      {milestones.find(m => m.id === task.milestoneId)?.title || "未設定"}
+                    </div>
                   </div>
                 </div>
               )}
 
-              {task.type === "backlog" && task.plannedDates && task.plannedDates.length > 0 && (
+              {/* 完了状態 */}
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-[var(--border)]">
+                <div className={`p-2 rounded-lg ${task.completed ? "bg-green-500/10" : "bg-gray-500/10"}`}>
+                  <CheckCircle2 size={16} className={task.completed ? "text-green-500" : "text-gray-500"} />
+                </div>
                 <div>
-                  <span className="opacity-60">予定日:</span>
-                  <div className="ml-2">
-                    {task.plannedDates.map(date => (
-                      <div key={date}>{formatDate(date)}</div>
-                    ))}
+                  <div className="text-xs opacity-60">ステータス</div>
+                  <div className="font-medium">{task.completed ? "完了" : "未完了"}</div>
+                </div>
+              </div>
+
+              {/* スケジュール（特定曜日の場合） */}
+              {task.type === "scheduled" && task.scheduled && (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-[var(--border)] sm:col-span-2 lg:col-span-3">
+                  <div className="p-2 rounded-lg bg-[var(--warning)]/10">
+                    <Calendar size={16} className="text-[var(--warning)]" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-xs opacity-60">スケジュール</div>
+                    <div className="font-medium">
+                      {task.scheduled.daysOfWeek && task.scheduled.daysOfWeek.length > 0 && (
+                        <span>曜日: {task.scheduled.daysOfWeek.map(d => weekdayLabels[d]).join(", ")}</span>
+                      )}
+                      {task.scheduled.dateRanges && task.scheduled.dateRanges.length > 0 && (
+                        <span className="ml-3">
+                          期間: {task.scheduled.dateRanges.map(r => `${formatDate(r.start)} - ${formatDate(r.end)}`).join(", ")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 予定日（バックログの場合） */}
+              {task.type === "backlog" && task.plannedDates && task.plannedDates.length > 0 && (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-[var(--border)] sm:col-span-2 lg:col-span-3">
+                  <div className="p-2 rounded-lg bg-purple-500/10">
+                    <Calendar size={16} className="text-purple-500" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-xs opacity-60">予定日</div>
+                    <div className="font-medium">
+                      {task.plannedDates.map(date => formatDate(date)).join(", ")}
+                    </div>
                   </div>
                 </div>
               )}
             </div>
           </div>
-
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="px-4 py-2 bg-[var(--danger)] text-white rounded hover:opacity-90"
-            >
-              削除
-            </button>
-          </div>
         </div>
       ) : (
-        // 編集モード
-        <div className="space-y-4">
-          <div className="border rounded p-4 border-[var(--border)]">
-            <div className="space-y-4">
+        /* 編集モード */
+        <div className="space-y-6">
+          <div className="bg-[var(--sidebar)] rounded-xl p-6 border border-[var(--border)]">
+            <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium mb-1">タイトル</label>
+                <label className="block text-sm font-medium mb-2 opacity-80">タイトル</label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   onBlur={() => handleSave(true)}
-                  className="w-full border border-[var(--border)] rounded px-3 py-2 bg-transparent"
+                  className="w-full border border-[var(--border)] rounded-lg px-4 py-2.5 bg-transparent focus:ring-2 focus:ring-[var(--primary)]/50 focus:border-[var(--primary)] transition-all"
                 />
               </div>
 
               <div id="editor-description" className="space-y-2">
-                <label className="block text-sm font-medium">詳細</label>
+                <label className="block text-sm font-medium opacity-80">詳細</label>
                 <WysiwygEditor
                   value={description}
                   onChange={(html) => { setDescription(html); }}
@@ -309,50 +395,52 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">タイプ</label>
-                <select
-                  value={type}
-                  onChange={(e) => {
-                    const newType = e.target.value as TaskType;
-                    setType(newType);
-                    if (newType === "scheduled") {
-                      setSelectedDays([]);
-                      setRangeStart("");
-                      setRangeEnd("");
-                    }
-                    if (newType !== "backlog") {
-                      setPlannedDates([]);
-                    }
-                  }}
-                  onBlur={() => handleSave(true)}
-                  className="w-full border border-[var(--border)] rounded px-3 py-2 bg-transparent"
-                >
-                  <option value="daily">毎日</option>
-                  <option value="backlog">積み上げ候補</option>
-                  <option value="scheduled">特定曜日</option>
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2 opacity-80">タイプ</label>
+                  <select
+                    value={type}
+                    onChange={(e) => {
+                      const newType = e.target.value as TaskType;
+                      setType(newType);
+                      if (newType === "scheduled") {
+                        setSelectedDays([]);
+                        setRangeStart("");
+                        setRangeEnd("");
+                      }
+                      if (newType !== "backlog") {
+                        setPlannedDates([]);
+                      }
+                    }}
+                    onBlur={() => handleSave(true)}
+                    className="w-full border border-[var(--border)] rounded-lg px-4 py-2.5 bg-transparent focus:ring-2 focus:ring-[var(--primary)]/50 focus:border-[var(--primary)] transition-all"
+                  >
+                    <option value="daily">毎日</option>
+                    <option value="backlog">積み上げ候補</option>
+                    <option value="scheduled">特定曜日</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 opacity-80">見積ポモ数</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={estimatedPomodoros}
+                    onChange={(e) => setEstimatedPomodoros(parseInt(e.target.value) || 0)}
+                    onBlur={() => handleSave(true)}
+                    className="w-full border border-[var(--border)] rounded-lg px-4 py-2.5 bg-transparent focus:ring-2 focus:ring-[var(--primary)]/50 focus:border-[var(--primary)] transition-all"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">見積ポモ数</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={estimatedPomodoros}
-                  onChange={(e) => setEstimatedPomodoros(parseInt(e.target.value) || 0)}
-                  onBlur={() => handleSave(true)}
-                  className="w-full border border-[var(--border)] rounded px-3 py-2 bg-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">マイルストーン</label>
+                <label className="block text-sm font-medium mb-2 opacity-80">マイルストーン</label>
                 <select
                   value={milestoneId}
                   onChange={(e) => setMilestoneId(e.target.value)}
                   onBlur={() => handleSave(true)}
-                  className="w-full border border-[var(--border)] rounded px-3 py-2 bg-transparent"
+                  className="w-full border border-[var(--border)] rounded-lg px-4 py-2.5 bg-transparent focus:ring-2 focus:ring-[var(--primary)]/50 focus:border-[var(--primary)] transition-all"
                 >
                   <option value="">未選択</option>
                   {milestones.map((m) => (
@@ -364,20 +452,19 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               </div>
 
               {type === "scheduled" && (
-                <div className="space-y-3">
+                <div className="space-y-4 p-4 rounded-lg bg-white/5 border border-[var(--border)]">
                   <div>
-                    <label className="block text-sm font-medium mb-2">曜日</label>
-                    <div className="flex gap-2">
+                    <label className="block text-sm font-medium mb-3 opacity-80">曜日</label>
+                    <div className="flex gap-2 flex-wrap">
                       {weekdayLabels.map((label, index) => (
                         <button
                           key={index}
                           type="button"
                           onClick={() => toggleDay(index)}
-                          className={`px-3 py-1 rounded border ${
-                            selectedDays.includes(index)
-                              ? "bg-[var(--primary)] text-white border-[var(--primary)]"
-                              : "border-[var(--border)]"
-                          }`}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedDays.includes(index)
+                              ? "bg-[var(--primary)] text-white"
+                              : "border border-[var(--border)] hover:bg-white/5"
+                            }`}
                         >
                           {label}
                         </button>
@@ -386,22 +473,22 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1">期間</label>
-                    <div className="flex gap-2">
+                    <label className="block text-sm font-medium mb-2 opacity-80">期間</label>
+                    <div className="flex items-center gap-3 flex-wrap">
                       <input
                         type="date"
                         value={rangeStart}
                         onChange={(e) => setRangeStart(e.target.value)}
                         onBlur={() => handleSave(true)}
-                        className="border border-[var(--border)] rounded px-3 py-2 bg-transparent"
+                        className="border border-[var(--border)] rounded-lg px-4 py-2.5 bg-transparent focus:ring-2 focus:ring-[var(--primary)]/50 focus:border-[var(--primary)] transition-all"
                       />
-                      <span className="flex items-center">〜</span>
+                      <span className="opacity-60">〜</span>
                       <input
                         type="date"
                         value={rangeEnd}
                         onChange={(e) => setRangeEnd(e.target.value)}
                         onBlur={() => handleSave(true)}
-                        className="border border-[var(--border)] rounded px-3 py-2 bg-transparent"
+                        className="border border-[var(--border)] rounded-lg px-4 py-2.5 bg-transparent focus:ring-2 focus:ring-[var(--primary)]/50 focus:border-[var(--primary)] transition-all"
                       />
                     </div>
                   </div>
@@ -409,48 +496,48 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               )}
 
               {type === "backlog" && (
-                <div>
-                  <label className="block text-sm font-medium mb-2">予定日</label>
-                  <div className="space-y-2">
-                    <button
-                      type="button"
-                      onClick={addPlannedDate}
-                      className="px-3 py-1 text-sm border border-[var(--border)] rounded"
-                    >
-                      今日を追加
-                    </button>
-                    {plannedDates.length > 0 && (
-                      <div className="space-y-1">
-                        {plannedDates.map(date => (
-                          <div key={date} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                            <span>{formatDate(date)}</span>
-                            <button
-                              onClick={() => { removePlannedDate(date); setTimeout(()=>handleSave(), 0); }}
-                              className="text-[var(--danger)] text-sm"
-                            >
-                              削除
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                <div className="space-y-3 p-4 rounded-lg bg-white/5 border border-[var(--border)]">
+                  <label className="block text-sm font-medium opacity-80">予定日</label>
+                  <button
+                    type="button"
+                    onClick={addPlannedDate}
+                    className="inline-flex items-center gap-2 px-3 py-2 text-sm border border-[var(--border)] rounded-lg hover:bg-white/5 transition-colors"
+                  >
+                    <Calendar size={14} />
+                    今日を追加
+                  </button>
+                  {plannedDates.length > 0 && (
+                    <div className="space-y-2 mt-3">
+                      {plannedDates.map(date => (
+                        <div key={date} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                          <span className="text-sm">{formatDate(date)}</span>
+                          <button
+                            onClick={() => { removePlannedDate(date); setTimeout(() => handleSave(), 0); }}
+                            className="text-[var(--danger)] text-sm hover:underline"
+                          >
+                            削除
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <button
               onClick={() => handleSave()}
               disabled={!title.trim()}
-              className="px-4 py-2 bg-[var(--primary)] text-white rounded hover:opacity-90 disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--primary)] text-white rounded-lg font-medium hover:opacity-90 disabled:opacity-50 transition-colors"
             >
+              <CheckCircle2 size={16} />
               保存
             </button>
             <button
               onClick={() => setIsEditing(false)}
-              className="px-4 py-2 border border-[var(--border)] rounded"
+              className="px-5 py-2.5 border border-[var(--border)] rounded-lg hover:bg-white/5 transition-colors"
             >
               キャンセル
             </button>
@@ -458,22 +545,28 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       )}
 
+      {/* 削除確認モーダル */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="absolute inset-0 bg-black/50 transition-all duration-300 opacity-100 backdrop-blur-[2px]" />
-          <div className="relative z-10 bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md mx-4 transition-all duration-300 ease-out [filter:blur(0px)]">
-            <h3 className="text-lg font-medium mb-4">タスクを削除しますか？</h3>
+        <div className="fixed inset-0 flex items-center justify-center z-[100000]">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)} />
+          <div className="relative z-10 bg-[var(--sidebar)] border border-[var(--border)] p-6 rounded-xl max-w-md mx-4 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-[var(--danger)]/10">
+                <Trash2 size={20} className="text-[var(--danger)]" />
+              </div>
+              <h3 className="text-lg font-semibold">タスクを削除しますか？</h3>
+            </div>
             <p className="text-sm opacity-70 mb-6">この操作は取り消せません。</p>
-            <div className="flex gap-2 justify-end">
+            <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 border border-[var(--border)] rounded"
+                className="px-4 py-2 border border-[var(--border)] rounded-lg hover:bg-white/5 transition-colors"
               >
                 キャンセル
               </button>
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 bg-[var(--danger)] text-white rounded hover:opacity-90"
+                className="px-4 py-2 bg-[var(--danger)] text-white rounded-lg hover:opacity-90 transition-colors"
               >
                 削除
               </button>
