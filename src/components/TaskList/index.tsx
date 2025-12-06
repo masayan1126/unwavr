@@ -66,6 +66,7 @@ export default function TaskList({
         sortAsc,
         filterType,
         filterStatus,
+        activeTaskIds: globalActiveTaskIds,
     });
 
     useEffect(() => {

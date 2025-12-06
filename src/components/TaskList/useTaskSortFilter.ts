@@ -13,6 +13,7 @@ interface UseTaskSortFilterProps {
     sortAsc?: boolean;
     filterType?: FilterType;
     filterStatus?: FilterStatus;
+    activeTaskIds?: string[];
 }
 
 export function useTaskSortFilter({
@@ -22,6 +23,7 @@ export function useTaskSortFilter({
     sortAsc,
     filterType = "all",
     filterStatus = "all",
+    activeTaskIds = [],
 }: UseTaskSortFilterProps) {
     const [orderedTasks, setOrderedTasks] = useState<Task[]>([]);
 
@@ -78,12 +80,21 @@ export function useTaskSortFilter({
 
     useEffect(() => {
         if (!sortKey) {
-            const sorted = [...filteredSorted].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+            const sorted = [...filteredSorted].sort((a, b) => {
+                // 着手中のタスクを最優先
+                const aIsActive = activeTaskIds.includes(a.id);
+                const bIsActive = activeTaskIds.includes(b.id);
+                if (aIsActive && !bIsActive) return -1;
+                if (!aIsActive && bIsActive) return 1;
+
+                // 次にオーダー順
+                return (a.order ?? 0) - (b.order ?? 0);
+            });
             setOrderedTasks(sorted);
         } else {
             setOrderedTasks(filteredSorted);
         }
-    }, [filteredSorted, sortKey]);
+    }, [filteredSorted, sortKey, activeTaskIds]);
 
     return { orderedTasks, setOrderedTasks, filteredSorted };
 }
