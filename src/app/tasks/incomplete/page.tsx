@@ -1,7 +1,7 @@
 "use client";
 import TaskList from "@/components/TaskList";
 import { useAppStore } from "@/lib/store";
-import WeekendPageSkeleton from "@/components/WeekendPageSkeleton";
+import SimpleTaskListPageSkeleton from "@/components/SimpleTaskListPageSkeleton";
 
 export default function IncompleteTasksPage() {
   const tasks = useAppStore((s) => s.tasks);
@@ -9,7 +9,7 @@ export default function IncompleteTasksPage() {
   const incomplete = tasks.filter((t) => !t.completed);
 
   if (hydrating) {
-    return <WeekendPageSkeleton />;
+    return <SimpleTaskListPageSkeleton />;
   }
 
   return (

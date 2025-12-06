@@ -3,7 +3,7 @@ import TaskList from "@/components/TaskList";
 import { useAppStore } from "@/lib/store";
 import { isOverdue } from "@/lib/taskUtils";
 import Link from "next/link";
-import WeekendPageSkeleton from "@/components/WeekendPageSkeleton";
+import SimpleTaskListPageSkeleton from "@/components/SimpleTaskListPageSkeleton";
 import { useToast } from "@/components/Providers";
 import { ArrowRight } from "lucide-react";
 
@@ -17,7 +17,7 @@ export default function OverdueTasksPage() {
   const overdue = tasks.filter((t) => isOverdue(t, todayLocalMidnight));
 
   if (hydrating) {
-    return <WeekendPageSkeleton />;
+    return <SimpleTaskListPageSkeleton />;
   }
 
   const handleMoveAll = () => {
