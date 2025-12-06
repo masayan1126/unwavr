@@ -45,20 +45,26 @@ export default function Pomodoro() {
   const displayCompletedSessions = isMounted ? s.completedWorkSessions : 0;
   const displayActiveTaskId = isMounted ? activeTaskId : undefined;
 
-  const ensureAudio = () => {
+  const ensureAudio = async () => {
     try {
       if (!audioRef.current) {
-        audioRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+        const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        audioRef.current = new AudioContextClass();
       }
       if (audioRef.current.state === 'suspended') {
-        void audioRef.current.resume();
+        await audioRef.current.resume();
       }
-    } catch { }
+      return audioRef.current;
+    } catch (e) {
+      console.error("Audio initialization failed", e);
+      return null;
+    }
   };
 
-  const playPattern = (freqs: number[]) => {
-    const ctx = audioRef.current;
-    if (!ctx || ctx.state !== 'running') return;
+  const playPattern = async (freqs: number[]) => {
+    const ctx = await ensureAudio();
+    if (!ctx) return;
+
     let t = ctx.currentTime;
     for (const f of freqs) {
       const osc = ctx.createOscillator();
@@ -85,14 +91,11 @@ export default function Pomodoro() {
     }
     const changed = prevIsBreakForSoundRef.current !== s.isBreak;
     if (changed) {
-      try {
-        ensureAudio();
-        // break -> work に切り替わった時のみ鳴らす（作業再開サウンド）
-        if (!s.isBreak) {
-          // 明瞭な上昇3連（作業再開）
-          playPattern([1200, 1400, 1600]);
-        }
-      } catch { }
+      // break -> work に切り替わった時のみ鳴らす（作業再開サウンド）
+      if (!s.isBreak) {
+        // 明瞭な上昇3連（作業再開）
+        playPattern([1200, 1400, 1600]);
+      }
       prevIsBreakForSoundRef.current = s.isBreak;
     }
   }, [s.isBreak, s.isRunning]);
@@ -113,17 +116,26 @@ export default function Pomodoro() {
       messages.push(`作業セッション終了（合計 ${count} 回）。${isLong ? "ロング休憩" : "休憩"}を始めましょう。`);
     }
     setToastQueue((q) => [...q, ...messages]);
+
     // 音を鳴らす（差分回数分）
-    try {
-      const isLong = curr % s.cyclesUntilLongBreak === 0;
-      ensureAudio();
-      // ロング休憩: 低め3連、通常: 高め3連
-      const pattern = isLong ? [440, 392, 349] : [880, 988, 1047];
-      // diffが複数でも聴覚的にわかるように繰り返し
+    const isLong = curr % s.cyclesUntilLongBreak === 0;
+    // ロング休憩: 低め3連、通常: 高め3連
+    const pattern = isLong ? [440, 392, 349] : [880, 988, 1047];
+
+    console.log('[Pomodoro] Work session completed. Playing sound.', { diff, isLong });
+
+    // diffが複数でも聴覚的にわかるように繰り返し
+    (async () => {
       for (let i = 0; i < diff; i++) {
-        playPattern(pattern);
+        try {
+          await playPattern(pattern);
+          console.log('[Pomodoro] Sound played successfully');
+        } catch (e) {
+          console.error('[Pomodoro] Sound playback failed', e);
+        }
       }
-    } catch { }
+    })();
+
     prevCompletedRef.current = curr;
   }, [s.completedWorkSessions, s.cyclesUntilLongBreak, s.isRunning]);
 

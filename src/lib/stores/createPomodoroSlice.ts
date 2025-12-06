@@ -224,6 +224,7 @@ export const createPomodoroSlice: StateCreator<AppState, [], [], PomodoroSlice> 
                     completed += 1;
                     workSessionCompletions += 1;
                     const shouldLong = completed % s.cyclesUntilLongBreak === 0;
+                    isBreak = true;
                     secondsLeft = shouldLong ? s.longBreakSec : s.shortBreakSec;
                 } else {
                     isBreak = false;
