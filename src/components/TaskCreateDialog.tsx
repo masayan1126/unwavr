@@ -12,13 +12,11 @@ type Props = {
 };
 
 export default function TaskDialog({ open, onClose, title = "タスク", children, onBeforeClose }: Props): React.ReactElement | null {
-  const [shown, setShown] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const isLauncherOpen = useAppStore((s) => s.isLauncherOpen);
 
   useEffect(() => {
     if (open) {
-      setShown(true);
       // 背面スクロールの抑止（iOS含む）
       const prev = document.body.style.overflow;
       const prevTop = document.body.style.top;
@@ -38,25 +36,24 @@ export default function TaskDialog({ open, onClose, title = "タスク", childre
       setIsMaximized(false); // Reset on close
     }
   }, [open]);
+
   if (!open) return null;
+
   const handleClose = async () => {
-    setShown(false);
-    try {
-      if (onBeforeClose) {
-        await onBeforeClose();
-      }
-    } finally {
-      setTimeout(() => onClose(), 180);
+    if (onBeforeClose) {
+      await onBeforeClose();
     }
+    onClose();
   };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={handleClose}>
-      <div className={`absolute inset-0 bg-black/50 transition-all duration-300 ${shown ? "opacity-100 backdrop-blur-[2px]" : "opacity-0 backdrop-blur-0"}`} />
+      <div className="absolute inset-0 bg-black/50" />
       <div
-        className={`z-10 bg-card text-foreground shadow-2xl transition-all duration-300 ease-out transform-gpu flex flex-col overflow-hidden ${isMaximized
-            ? `fixed inset-0 rounded-none ${isLauncherOpen ? "xl:right-[260px]" : ""}`
-            : "relative w-full max-w-4xl h-[90vh] rounded-xl"
-          } ${shown ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
+        className={`z-10 bg-card text-foreground shadow-2xl flex flex-col overflow-hidden ${isMaximized
+          ? `fixed inset-0 rounded-none ${isLauncherOpen ? "xl:right-[260px]" : ""}`
+          : "relative w-full max-w-4xl h-[90vh] rounded-xl"
+          }`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-4 py-3 shrink-0 z-20">

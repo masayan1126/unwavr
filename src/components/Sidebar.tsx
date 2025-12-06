@@ -17,9 +17,6 @@ type NavItem = {
 const navItems: NavItem[] = [
   { href: "/", label: "ホーム", icon: <Home size={16} /> },
   { href: "/launcher", label: "ランチャー", icon: <Rocket size={16} /> },
-  { href: "/milestones", label: "マイルストーン", icon: <Target size={16} /> },
-  { href: "/calendar", label: "カレンダー", icon: <Calendar size={16} /> },
-  { href: "/pricing", label: "料金プラン", icon: <span className="inline-block w-4 h-4">¥</span> },
   { href: "/settings", label: "設定", icon: <Settings size={16} /> },
 ];
 
@@ -28,30 +25,55 @@ export default function Sidebar() {
   const { status, data: session } = useSession();
   const [open, setOpen] = useState(true);
   const [width, setWidth] = useState<number>(224);
-  const [tasksOpen, setTasksOpen] = useState<boolean>(true);
   const [showBriefing, setShowBriefing] = useState(false);
   const startXRef = useRef<number | null>(null);
   const startWRef = useRef<number>(width);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const w = Number(localStorage.getItem("sidebar:w") ?? 224);
     const o = localStorage.getItem("sidebar:o");
     if (w) setWidth(Math.max(160, Math.min(360, w)));
     if (o != null) setOpen(o === "1");
-    setTasksOpen(true); // 常時展開（フラット表示）
   }, []);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     localStorage.setItem("sidebar:w", String(width));
     localStorage.setItem("sidebar:o", open ? "1" : "0");
-    localStorage.setItem("sidebar:tasks:o", tasksOpen ? "1" : "0");
-  }, [width, open, tasksOpen]);
+  }, [width, open]);
+
   if (pathname.startsWith("/unwavr")) return null;
   if (status === "unauthenticated") return null;
+
+  const NavLink = ({ href, label, icon, exact = false }: { href: string; label: string; icon: React.ReactNode; exact?: boolean }) => {
+    const active = exact ? pathname === href : pathname === href || pathname.startsWith(href);
+    return (
+      <Link
+        href={href}
+        className={`group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ${active
+          ? "bg-primary/10 text-primary font-medium"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
+      >
+        <span className={`transition-transform duration-200 ${active ? "scale-110" : "group-hover:scale-110"}`}>
+          {icon}
+        </span>
+        <span className="truncate">{label}</span>
+      </Link>
+    );
+  };
+
+  const SectionHeader = ({ label }: { label: string }) => (
+    <div className="px-3 py-1.5 mt-4 text-xxs uppercase tracking-wider text-muted-foreground/60 font-semibold">
+      {label}
+    </div>
+  );
+
   return (
     <aside className="hidden md:flex border-r border-border h-[100svh] sticky top-0 bg-sidebar text-muted-foreground" style={{ width: open ? width : 48 }}>
-      <div className="flex flex-col p-3 gap-6 flex-1 overflow-y-auto">
-        <div className={`flex items-center ${open ? "justify-between px-2" : "justify-center"} pt-2`}>
+      <div className="flex flex-col p-3 gap-1 flex-1 overflow-y-auto">
+        <div className={`flex items-center ${open ? "justify-between px-2" : "justify-center"} pt-2 mb-4`}>
           {open && (
             <div className="flex items-center gap-3 min-w-0 group cursor-pointer">
               <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
@@ -72,228 +94,62 @@ export default function Sidebar() {
             {open ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
           </button>
         </div>
+
         {open && (
           <nav className="flex-1 flex flex-col gap-0.5" suppressHydrationWarning={true}>
-            {/* ホーム */}
+            {/* Home & Launcher */}
+            <NavLink href="/" label="ホーム" icon={<Home size={16} />} exact={true} />
+            <NavLink href="/launcher" label="ランチャー" icon={<Rocket size={16} />} />
+
+            {/* Tasks Section */}
+            <SectionHeader label="Tasks & Planning" />
+            <NavLink href="/tasks/daily" label="毎日" icon={<ListTodo size={16} />} />
+            <NavLink href="/tasks/scheduled" label="特定曜日" icon={<CalendarDays size={16} />} />
+            <NavLink href="/tasks/backlog" label="積み上げ候補" icon={<Archive size={16} />} />
+            <NavLink href="/milestones" label="マイルストーン" icon={<Target size={16} />} />
+
+            {/* Calendar (Google Login Check) */}
             {(() => {
-              const item = navItems.find((n) => n.href === "/");
-              if (!item) return null;
-              const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ${active
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
-                >
-                  <span className={`transition-transform duration-200 ${active ? "scale-110" : "group-hover:scale-110"}`}>
-                    {item.icon}
-                  </span>
-                  <span className="truncate">{item.label}</span>
-                </Link>
-              );
-            })()}
-
-            {/* マイルストーン */}
-            {(() => {
-              const item = navItems.find((n) => n.href === "/milestones");
-              if (!item) return null;
-              const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ${active
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
-                  data-guide-key="milestones"
-                >
-                  <span className={`transition-transform duration-200 ${active ? "scale-110" : "group-hover:scale-110"}`}>
-                    {item.icon}
-                  </span>
-                  <span className="truncate">{item.label}</span>
-                </Link>
-              );
-            })()}
-
-
-            {/* タスク（トップレベルのショートカット） */}
-            {(() => {
-              const isImportExport = pathname.startsWith("/tasks/import-export");
-              const isBacklog = pathname === "/tasks/backlog" || pathname.startsWith("/tasks/backlog/");
-              const active = !isImportExport && (pathname === "/tasks" || pathname.startsWith("/tasks/") || isBacklog);
-              return (
-                <Link
-                  href="/tasks"
-                  className={`group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ${active
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
-                  data-guide-key="tasksTop"
-                >
-                  <span className={`transition-transform duration-200 ${active ? "scale-110" : "group-hover:scale-110"}`}>
-                    <ListTodo size={16} />
-                  </span>
-                  <span className="truncate">タスク</span>
-                </Link>
-              );
-            })()}
-
-            {/* タスク 親メニュー（復活） */}
-            <div className="mt-1">
-              {tasksOpen && (
-                <div id="sidebar-tasks-submenu" className="mt-1 flex flex-col gap-1">
-
-                  <Link
-                    href="/tasks/daily"
-                    className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/tasks/daily") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-                      }`}
-                  >
-                    <ListTodo size={16} />
-                    <span className="truncate">毎日</span>
-                  </Link>
-                  <Link
-                    href="/tasks/scheduled"
-                    className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/tasks/scheduled") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-                      }`}
-                  >
-                    <CalendarDays size={16} />
-                    <span className="truncate">特定曜日</span>
-                  </Link>
-                  <Link
-                    href="/tasks/backlog"
-                    className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/tasks/backlog") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-                      }`}
-                  >
-                    <Archive size={16} />
-                    <span className="truncate">積み上げ候補</span>
-                  </Link>
-
-                  <Link
-                    href="/tasks/incomplete"
-                    className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/tasks/incomplete") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-                      }`}
-                  >
-                    <AlertTriangle size={16} />
-                    <span className="truncate">未完了タスク</span>
-                  </Link>
-
-                  <Link
-                    href="/tasks/archived"
-                    className={`ml-6 flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${pathname.startsWith("/tasks/archived") ? "bg-black/5 dark:bg-white/5 text-foreground font-medium" : "hover:bg-black/5 dark:hover:bg-white/5"
-                      }`}
-                  >
-                    <Archive size={16} />
-                    <span className="truncate">アーカイブ</span>
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* 集中 親メニュー */}
-            <div className="mt-4">
-              <div className="px-3 py-1.5 text-xxs uppercase tracking-wider text-muted-foreground/60 font-semibold">Focus</div>
-              <div className="flex flex-col gap-0.5">
-                <Link
-                  href="/pomodoro"
-                  className={`group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ${pathname.startsWith("/pomodoro")
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
-                >
-                  <span className={`transition-transform duration-200 ${pathname.startsWith("/pomodoro") ? "scale-110" : "group-hover:scale-110"}`}>
-                    <Timer size={16} />
-                  </span>
-                  <span className="truncate">ポモドーロ</span>
-                </Link>
-                <Link
-                  href="/bgm"
-                  className={`group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ${pathname.startsWith("/bgm")
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
-                >
-                  <span className={`transition-transform duration-200 ${pathname.startsWith("/bgm") ? "scale-110" : "group-hover:scale-110"}`}>
-                    <Music size={16} />
-                  </span>
-                  <span className="truncate">BGMプレイリスト</span>
-                </Link>
-              </div>
-            </div>
-
-            {/* AI Assistant Section */}
-            <div className="mt-4">
-              <div className="px-3 py-1.5 text-xxs uppercase tracking-wider text-muted-foreground/60 font-semibold">AI Support</div>
-              <div className="flex flex-col gap-0.5">
-                <Link
-                  href="/assistant"
-                  className={`group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ${pathname.startsWith("/assistant")
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
-                >
-                  <span className={`transition-transform duration-200 ${pathname.startsWith("/assistant") ? "scale-110" : "group-hover:scale-110"}`}>
-                    <MessageSquare size={16} />
-                  </span>
-                  <span className="truncate">Unwavr AI</span>
-                </Link>
-                <button
-                  onClick={() => setShowBriefing(true)}
-                  className="group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 text-muted-foreground hover:bg-muted hover:text-foreground text-left w-full"
-                >
-                  <span className="group-hover:scale-110 transition-transform duration-200">
-                    <Sun size={16} />
-                  </span>
-                  <span className="truncate">Daily Briefing</span>
-                </button>
-              </div>
-            </div>
-
-            {/* 残りのメニュー（ホーム/マイルストーン以外） */}
-            {navItems
-              .filter((n) => n.href !== "/" && n.href !== "/milestones")
-              .map((item) => {
-                const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-                // Googleログインでのみカレンダーを有効化
-                if (item.href === "/calendar") {
-                  const isGoogle = (session as unknown as { provider?: string } | null)?.provider === "google";
-                  if (!isGoogle) {
-                    return (
-                      <div
-                        key={item.href}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm opacity-70 cursor-not-allowed select-none ${active ? "bg-black/5 dark:bg-white/5 text-foreground/80" : "bg-transparent"
-                          }`}
-                        title="Googleログインが必要です"
-                        aria-disabled
-                      >
-                        <div className="flex items-center gap-1">
-                          {item.icon}
-                          <Lock size={14} className="opacity-80" />
-                        </div>
-                        <span className="truncate">{item.label}</span>
-                      </div>
-                    );
-                  }
-                }
+              const isGoogle = (session as unknown as { provider?: string } | null)?.provider === "google";
+              const active = pathname.startsWith("/calendar");
+              if (!isGoogle) {
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ${active
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      }`}
-                  >
-                    <span className={`transition-transform duration-200 ${active ? "scale-110" : "group-hover:scale-110"}`}>
-                      {item.icon}
-                    </span>
-                    <span className="truncate">{item.label}</span>
-                  </Link>
+                  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm opacity-70 cursor-not-allowed select-none ${active ? "bg-black/5 dark:bg-white/5 text-foreground/80" : "bg-transparent"}`} title="Googleログインが必要です">
+                    <div className="flex items-center gap-1">
+                      <Calendar size={16} className="opacity-80" />
+                      <Lock size={14} className="opacity-80" />
+                    </div>
+                    <span className="truncate">カレンダー</span>
+                  </div>
                 );
-              })}
+              }
+              return <NavLink href="/calendar" label="カレンダー" icon={<Calendar size={16} />} />;
+            })()}
+
+            <NavLink href="/tasks/incomplete" label="未完了タスク" icon={<AlertTriangle size={16} />} />
+            <NavLink href="/tasks/archived" label="アーカイブ" icon={<Archive size={16} />} />
+
+            {/* Focus Section */}
+            <SectionHeader label="Focus" />
+            <NavLink href="/pomodoro" label="ポモドーロ" icon={<Timer size={16} />} />
+            <NavLink href="/bgm" label="BGMプレイリスト" icon={<Music size={16} />} />
+
+            {/* AI Support Section */}
+            <SectionHeader label="AI Support" />
+            <NavLink href="/assistant" label="Unwavr AI" icon={<MessageSquare size={16} />} />
+            <button
+              onClick={() => setShowBriefing(true)}
+              className="group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 text-muted-foreground hover:bg-muted hover:text-foreground text-left w-full"
+            >
+              <span className="group-hover:scale-110 transition-transform duration-200">
+                <Sun size={16} />
+              </span>
+              <span className="truncate">Daily Briefing</span>
+            </button>
+
+            {/* System Section */}
+            <SectionHeader label="System" />
+            <NavLink href="/settings" label="設定" icon={<Settings size={16} />} />
 
             <div className="mt-3 pt-3 border-t border-black/10 dark:border-white/10 text-xs opacity-80 flex flex-col gap-1">
               <Link href="/terms" className="hover:underline">利用規約</Link>
@@ -301,6 +157,7 @@ export default function Sidebar() {
             </div>
           </nav>
         )}
+
         {open && (
           <div className="mt-auto flex flex-col gap-3">
             <AuthButtons />
