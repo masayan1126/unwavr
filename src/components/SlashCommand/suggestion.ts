@@ -17,7 +17,7 @@ interface SuggestionProps {
 
 const suggestion = {
     items: ({ query }: { query: string }) => {
-        return ITEMS.filter(item => item.title.toLowerCase().includes(query.toLowerCase())).slice(0, 10);
+        return ITEMS.filter(item => item.title.toLowerCase().includes(query.toLowerCase()));
     },
     render: () => {
         let component: ReactRenderer;

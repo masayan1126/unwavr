@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
-import { Heading1, Heading2, Heading3, List, ListOrdered, Text, Code, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useImperativeHandle, forwardRef, useRef } from 'react';
+import { Heading1, Heading2, Heading3, List, ListOrdered, Text, Code, Sparkles, Quote, Minus, CheckSquare, Bold, Italic, Underline, Strikethrough } from 'lucide-react';
 import { Editor, Range } from '@tiptap/core';
 
 export interface CommandItemProps {
@@ -38,6 +38,34 @@ export const ITEMS: CommandItemProps[] = [
         },
     },
     {
+        title: '太字',
+        icon: <Bold size={18} />,
+        command: ({ editor, range }) => {
+            editor.chain().focus().deleteRange(range).toggleBold().run();
+        },
+    },
+    {
+        title: '斜体',
+        icon: <Italic size={18} />,
+        command: ({ editor, range }) => {
+            editor.chain().focus().deleteRange(range).toggleItalic().run();
+        },
+    },
+    {
+        title: '下線',
+        icon: <Underline size={18} />,
+        command: ({ editor, range }) => {
+            editor.chain().focus().deleteRange(range).toggleUnderline().run();
+        },
+    },
+    {
+        title: '取り消し線',
+        icon: <Strikethrough size={18} />,
+        command: ({ editor, range }) => {
+            editor.chain().focus().deleteRange(range).toggleStrike().run();
+        },
+    },
+    {
         title: '箇条書き',
         icon: <List size={18} />,
         command: ({ editor, range }) => {
@@ -49,6 +77,27 @@ export const ITEMS: CommandItemProps[] = [
         icon: <ListOrdered size={18} />,
         command: ({ editor, range }) => {
             editor.chain().focus().deleteRange(range).toggleOrderedList().run();
+        },
+    },
+    {
+        title: 'タスクリスト',
+        icon: <CheckSquare size={18} />,
+        command: ({ editor, range }) => {
+            editor.chain().focus().deleteRange(range).toggleTaskList().run();
+        },
+    },
+    {
+        title: '引用',
+        icon: <Quote size={18} />,
+        command: ({ editor, range }) => {
+            editor.chain().focus().deleteRange(range).toggleBlockquote().run();
+        },
+    },
+    {
+        title: '区切り線',
+        icon: <Minus size={18} />,
+        command: ({ editor, range }) => {
+            editor.chain().focus().deleteRange(range).setHorizontalRule().run();
         },
     },
     {
@@ -75,6 +124,31 @@ interface CommandListProps {
 
 const CommandList = forwardRef((props: CommandListProps, ref) => {
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const selectedIndexRef = useRef(selectedIndex);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    // Keep ref in sync with state for event handlers
+    useEffect(() => {
+        selectedIndexRef.current = selectedIndex;
+
+        // Scroll selected item into view
+        const container = scrollContainerRef.current;
+        if (container) {
+            const selectedElement = container.children[selectedIndex] as HTMLElement;
+            if (selectedElement) {
+                const containerTop = container.scrollTop;
+                const containerBottom = containerTop + container.clientHeight;
+                const elementTop = selectedElement.offsetTop;
+                const elementBottom = elementTop + selectedElement.offsetHeight;
+
+                if (elementTop < containerTop) {
+                    container.scrollTop = elementTop;
+                } else if (elementBottom > containerBottom) {
+                    container.scrollTop = elementBottom - container.clientHeight;
+                }
+            }
+        }
+    }, [selectedIndex]);
 
     const selectItem = useCallback((index: number) => {
         const item = props.items[index];
@@ -85,33 +159,38 @@ const CommandList = forwardRef((props: CommandListProps, ref) => {
 
     useEffect(() => {
         setSelectedIndex(0);
-    }, [props.items]);
+    }, [props.items.map(item => item.title).join(',')]);
 
     useImperativeHandle(ref, () => ({
         onKeyDown: ({ event }: { event: KeyboardEvent }) => {
+            if (props.items.length === 0) return false;
+
             if (event.key === 'ArrowUp') {
-                setSelectedIndex((selectedIndex + props.items.length - 1) % props.items.length);
+                setSelectedIndex((prev) => (prev + props.items.length - 1) % props.items.length);
                 return true;
             }
             if (event.key === 'ArrowDown') {
-                setSelectedIndex((selectedIndex + 1) % props.items.length);
+                setSelectedIndex((prev) => (prev + 1) % props.items.length);
                 return true;
             }
             if (event.key === 'Enter') {
-                selectItem(selectedIndex);
+                selectItem(selectedIndexRef.current);
                 return true;
             }
             return false;
         },
-    }));
+    }), [props.items, selectItem]);
 
     return (
-        <div className="z-50 min-w-[200px] overflow-hidden rounded-md border border-black/10 dark:border-white/10 bg-popover p-1 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95">
+        <div
+            ref={scrollContainerRef}
+            className="z-50 min-w-[200px] max-h-[300px] overflow-y-auto overflow-x-hidden rounded-md border border-black/10 dark:border-white/10 bg-popover p-1 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95"
+        >
             {props.items.length ? (
                 props.items.map((item: CommandItemProps, index: number) => (
                     <button
                         key={index}
-                        className={`flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none ${index === selectedIndex ? 'bg-accent text-accent-foreground' : 'hover:bg-accent hover:text-accent-foreground'
+                        className={`flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors ${index === selectedIndex ? 'bg-accent text-accent-foreground' : 'hover:bg-accent hover:text-accent-foreground'
                             }`}
                         onClick={() => selectItem(index)}
                     >

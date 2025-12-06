@@ -6,6 +6,8 @@ import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import Heading from "@tiptap/extension-heading";
+import TaskList from "@tiptap/extension-task-list";
+import TaskItem from "@tiptap/extension-task-item";
 import { SlashCommand } from "./SlashCommand/extension";
 import AIPromptDialog from "./AIPromptDialog";
 import "tippy.js/dist/tippy.css";
@@ -24,6 +26,8 @@ export default function WysiwygEditor({ value, onChange, className, onBlur }: Wy
       Underline,
       Link.configure({ openOnClick: false }),
       Heading.configure({ levels: [1, 2, 3] }),
+      TaskList,
+      TaskItem.configure({ nested: true }),
       SlashCommand,
     ],
     content: value || "",
@@ -74,6 +78,9 @@ export default function WysiwygEditor({ value, onChange, className, onBlur }: Wy
           <div className="w-px h-4 bg-black/10 dark:bg-white/10 mx-1 self-center" />
           <ToolbarButton onClick={() => editor?.chain().focus().toggleBulletList().run()} label="• List" isActive={editor?.isActive('bulletList')} />
           <ToolbarButton onClick={() => editor?.chain().focus().toggleOrderedList().run()} label="1. List" isActive={editor?.isActive('orderedList')} />
+          <ToolbarButton onClick={() => editor?.chain().focus().toggleTaskList().run()} label="☑ Task" isActive={editor?.isActive('taskList')} />
+          <ToolbarButton onClick={() => editor?.chain().focus().toggleBlockquote().run()} label='"' isActive={editor?.isActive('blockquote')} />
+          <ToolbarButton onClick={() => editor?.chain().focus().setHorizontalRule().run()} label="—" />
           <ToolbarButton onClick={() => editor?.chain().focus().toggleCode().run()} label="< >" isActive={editor?.isActive('code')} />
         </div>
         <EditorContent editor={editor} className="tiptap prose prose-sm max-w-none dark:prose-invert w-full min-h-[300px] flex-1" />
