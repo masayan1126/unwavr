@@ -168,9 +168,18 @@ export const createPomodoroSlice: StateCreator<AppState, [], [], PomodoroSlice> 
     startPomodoro: (isBreak) =>
         set((state) => {
             const nextIsBreak = Boolean(isBreak ?? state.pomodoro.isBreak);
+
+            let workDuration = state.pomodoro.workDurationSec;
+            if (state.pomodoro.activeTaskId) {
+                const task = state.tasks.find(t => t.id === state.pomodoro.activeTaskId);
+                if (task?.pomodoroSetting?.workDurationSec) {
+                    workDuration = task.pomodoroSetting.workDurationSec;
+                }
+            }
+
             const secondsLeft = nextIsBreak
                 ? state.pomodoro.shortBreakSec
-                : state.pomodoro.workDurationSec;
+                : workDuration;
             const nextPomodoro = {
                 ...state.pomodoro,
                 isRunning: true,
@@ -215,11 +224,17 @@ export const createPomodoroSlice: StateCreator<AppState, [], [], PomodoroSlice> 
                     completed += 1;
                     workSessionCompletions += 1;
                     const shouldLong = completed % s.cyclesUntilLongBreak === 0;
-                    isBreak = true;
                     secondsLeft = shouldLong ? s.longBreakSec : s.shortBreakSec;
                 } else {
                     isBreak = false;
-                    secondsLeft = s.workDurationSec;
+                    let workDuration = s.workDurationSec;
+                    if (s.activeTaskId) {
+                        const task = state.tasks.find(t => t.id === s.activeTaskId);
+                        if (task?.pomodoroSetting?.workDurationSec) {
+                            workDuration = task.pomodoroSetting.workDurationSec;
+                        }
+                    }
+                    secondsLeft = workDuration;
                 }
             }
 
@@ -248,11 +263,19 @@ export const createPomodoroSlice: StateCreator<AppState, [], [], PomodoroSlice> 
         }),
     resetPomodoro: () =>
         set((state) => {
+            let workDuration = state.pomodoro.workDurationSec;
+            if (state.pomodoro.activeTaskId) {
+                const task = state.tasks.find(t => t.id === state.pomodoro.activeTaskId);
+                if (task?.pomodoroSetting?.workDurationSec) {
+                    workDuration = task.pomodoroSetting.workDurationSec;
+                }
+            }
+
             const nextPomodoro = {
                 ...state.pomodoro,
                 isRunning: false,
                 isBreak: false,
-                secondsLeft: state.pomodoro.workDurationSec,
+                secondsLeft: workDuration,
                 completedWorkSessions: 0,
                 lastTickAtMs: undefined,
             };
@@ -263,7 +286,18 @@ export const createPomodoroSlice: StateCreator<AppState, [], [], PomodoroSlice> 
         set((state) => {
             const next = { ...state.pomodoro, ...settings } as PomodoroState;
             if (!next.isRunning) {
-                next.secondsLeft = next.isBreak ? next.shortBreakSec : next.workDurationSec;
+                if (next.isBreak) {
+                    next.secondsLeft = next.shortBreakSec;
+                } else {
+                    let workDuration = next.workDurationSec;
+                    if (next.activeTaskId) {
+                        const task = state.tasks.find(t => t.id === next.activeTaskId);
+                        if (task?.pomodoroSetting?.workDurationSec) {
+                            workDuration = task.pomodoroSetting.workDurationSec;
+                        }
+                    }
+                    next.secondsLeft = workDuration;
+                }
             }
             savePomodoroSettings(next);
             savePomodoroState(next);

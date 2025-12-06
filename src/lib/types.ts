@@ -15,6 +15,11 @@ export const ScheduledSchema = z.object({
 });
 export type Scheduled = z.infer<typeof ScheduledSchema>;
 
+export const TaskPomodoroSettingSchema = z.object({
+  workDurationSec: z.number().int().min(1).optional(),
+});
+export type TaskPomodoroSetting = z.infer<typeof TaskPomodoroSettingSchema>;
+
 export const TaskSchema = z.object({
   id: z.string(),
   title: z.string().min(1),
@@ -26,6 +31,7 @@ export const TaskSchema = z.object({
   estimatedPomodoros: z.number().int().min(0).default(0).optional(),
   completedPomodoros: z.number().int().min(0).default(0).optional(),
   milestoneId: z.string().optional(),
+  pomodoroSetting: TaskPomodoroSettingSchema.optional(),
   // 毎日タスクの「今日実行」状態を日単位で保持（UTC 0時のタイムスタンプ）
   dailyDoneDates: z.array(z.number().int()).optional(),
   // 積み上げ候補を「今日やる」に設定した日を保持（UTC 0時のタイムスタンプ）

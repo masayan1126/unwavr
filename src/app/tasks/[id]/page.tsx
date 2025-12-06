@@ -41,6 +41,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   const [description, setDescription] = useState("");
   const [type, setType] = useState<TaskType>("daily");
   const [estimatedPomodoros, setEstimatedPomodoros] = useState(0);
+  const [pomodoroWorkMinutes, setPomodoroWorkMinutes] = useState<number | "">("");
   const [milestoneId, setMilestoneId] = useState("");
   const [plannedDates, setPlannedDates] = useState<number[]>([]);
   const [isEditing, setIsEditing] = useState(false);
@@ -61,6 +62,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
     setDescription(task.description || "");
     setType(task.type);
     setEstimatedPomodoros(task.estimatedPomodoros || 0);
+    setPomodoroWorkMinutes(task.pomodoroSetting?.workDurationSec ? Math.floor(task.pomodoroSetting.workDurationSec / 60) : "");
     setMilestoneId(task.milestoneId || "");
     setPlannedDates(task.plannedDates || []);
 
@@ -116,6 +118,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
       type,
       scheduled: newScheduled,
       estimatedPomodoros: estimatedPomodoros || 0,
+      pomodoroSetting: pomodoroWorkMinutes ? { workDurationSec: Number(pomodoroWorkMinutes) * 60 } : undefined,
       milestoneId: milestoneId || undefined,
       plannedDates: type === "backlog" ? plannedDates : []
     });
@@ -240,8 +243,8 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               <button
                 onClick={() => setActiveTask(isActive ? undefined : task.id)}
                 className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${isActive
-                    ? "bg-green-500 text-white"
-                    : "bg-[var(--primary)] text-white hover:opacity-90"
+                  ? "bg-green-500 text-white"
+                  : "bg-[var(--primary)] text-white hover:opacity-90"
                   }`}
               >
                 {isActive ? <Pause size={14} /> : <Play size={14} />}
@@ -301,6 +304,11 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                   <div className="text-xs opacity-60">ポモドーロ</div>
                   <div className="font-medium">
                     {task.completedPomodoros ?? 0} / {task.estimatedPomodoros ?? 0}
+                    {task.pomodoroSetting?.workDurationSec && (
+                      <span className="ml-2 text-xs opacity-60">
+                        ({Math.floor(task.pomodoroSetting.workDurationSec / 60)}分)
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -435,6 +443,22 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               </div>
 
               <div>
+                <label className="block text-sm font-medium mb-2 opacity-80">カスタム作業時間（分）</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    placeholder="デフォルト"
+                    value={pomodoroWorkMinutes}
+                    onChange={(e) => setPomodoroWorkMinutes(e.target.value === "" ? "" : parseInt(e.target.value))}
+                    onBlur={() => handleSave(true)}
+                    className="w-full border border-[var(--border)] rounded-lg px-4 py-2.5 bg-transparent focus:ring-2 focus:ring-[var(--primary)]/50 focus:border-[var(--primary)] transition-all"
+                  />
+                  <span className="text-xs opacity-60 whitespace-nowrap">分 (未設定時はデフォルト)</span>
+                </div>
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium mb-2 opacity-80">マイルストーン</label>
                 <select
                   value={milestoneId}
@@ -462,8 +486,8 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                           type="button"
                           onClick={() => toggleDay(index)}
                           className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedDays.includes(index)
-                              ? "bg-[var(--primary)] text-white"
-                              : "border border-[var(--border)] hover:bg-white/5"
+                            ? "bg-[var(--primary)] text-white"
+                            : "border border-[var(--border)] hover:bg-white/5"
                             }`}
                         >
                           {label}
