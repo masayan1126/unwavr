@@ -87,7 +87,7 @@ export default function Home() {
       <ActiveTasksQueue />
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-3 px-3 scrollbar-hide">
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-3 px-3 scrollbar-hide mt-2">
         {[
           { id: "incomplete", label: `未完了 (${incompleteToday.length})` },
           { id: "daily", label: `毎日 (${dailyDoneFiltered.length})` },
@@ -109,7 +109,7 @@ export default function Home() {
 
       <div className="flex flex-col gap-6">
         {/* 未完了 */}
-        <section className={`relative flex flex-col min-h-[320px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-16 shadow-sm ${activeTab === "incomplete" ? "flex" : "hidden"}`}>
+        <section className={`flex flex-col min-h-[320px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 shadow-sm ${activeTab === "incomplete" ? "flex" : "hidden"}`}>
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">未完了 ({incompleteToday.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs">
@@ -125,41 +125,41 @@ export default function Home() {
             </div>
           </div>
           <TaskList title="" tasks={incompleteToday.slice(0, 20)} showCreatedColumn={false} showPlannedColumn showTypeColumn showMilestoneColumn={false} enableSelection />
-          <div className="absolute bottom-3 right-5">
+          <div className="mt-auto flex justify-end pt-4">
             <Link href={{ pathname: "/tasks", query: { daily: "1", backlogToday: "1", scheduledToday: "1", onlyIncomplete: "1" } }} className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
           </div>
         </section>
 
         {/* 積み上げ済み (毎日) */}
-        <section className={`relative flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-16 shadow-sm ${activeTab === "daily" ? "flex" : "hidden"}`}>
+        <section className={`flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 shadow-sm ${activeTab === "daily" ? "flex" : "hidden"}`}>
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">積み上げ済み (毎日) ({dailyDoneFiltered.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs" />
           </div>
           <TaskList title="" tasks={dailyDoneFiltered.slice(0, 10)} showCreatedColumn={false} showPlannedColumn={false} showTypeColumn showMilestoneColumn={false} enableSelection />
-          <div className="absolute bottom-3 right-5">
+          <div className="mt-auto flex justify-end pt-4">
             <Link href="/tasks/daily" className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
           </div>
         </section>
 
         {/* 完了済み (特定曜日) */}
-        <section className={`relative flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-16 shadow-sm ${activeTab === "scheduled" ? "flex" : "hidden"}`}>
+        <section className={`flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 shadow-sm ${activeTab === "scheduled" ? "flex" : "hidden"}`}>
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">完了済み (特定曜日) ({scheduledDoneFiltered.length})</h2>
           </div>
           <TaskList title="" tasks={scheduledDoneFiltered.slice(0, 10)} showCreatedColumn={false} showPlannedColumn={false} showTypeColumn showMilestoneColumn={false} enableSelection />
-          <div className="absolute bottom-3 right-5">
+          <div className="mt-auto flex justify-end pt-4">
             <Link href="/tasks/scheduled" className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
           </div>
         </section>
 
         {/* 完了済み (積み上げ候補) */}
-        <section className={`relative flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-16 shadow-sm ${activeTab === "backlog" ? "flex" : "hidden"}`}>
+        <section className={`flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 shadow-sm ${activeTab === "backlog" ? "flex" : "hidden"}`}>
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">完了済み (積み上げ候補) ({backlogDoneFiltered.length})</h2>
           </div>
           <TaskList title="" tasks={backlogDoneFiltered.slice(0, 10)} showCreatedColumn={false} showPlannedColumn showTypeColumn showMilestoneColumn={false} enableSelection />
-          <div className="absolute bottom-3 right-5">
+          <div className="mt-auto flex justify-end pt-4">
             <Link href="/tasks/backlog" className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
           </div>
         </section>
