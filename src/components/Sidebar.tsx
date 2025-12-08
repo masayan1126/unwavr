@@ -2,7 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { CalendarDays, ListTodo, AlertTriangle, Home, Archive, Rocket, Target, Timer, Calendar, Music, Lock, MessageSquare, Settings, PanelLeftClose, PanelLeftOpen, Sun } from "lucide-react";
+import { CalendarDays, ListTodo, AlertTriangle, Home, Archive, Rocket, Target, Timer, Calendar, Music, Lock, MessageSquare, Settings, PanelLeftClose, PanelLeftOpen, Sun, BarChart2 } from "lucide-react";
 import AuthButtons from "@/components/AuthButtons";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
@@ -108,6 +108,7 @@ export default function Sidebar() {
             <NavLink href="/tasks/scheduled" label="特定曜日" icon={<CalendarDays size={16} />} />
             <NavLink href="/tasks/backlog" label="積み上げ候補" icon={<Archive size={16} />} />
             <NavLink href="/milestones" label="マイルストーン" icon={<Target size={16} />} />
+            <NavLink href="/analysis" label="分析" icon={<BarChart2 size={16} />} />
 
             {/* Calendar (Google Login Check) */}
             {(() => {

@@ -27,10 +27,58 @@ export const createTaskSlice: StateCreator<AppState, [], [], TaskSlice> = (set, 
     },
     toggleTask: (taskId) =>
         set((state) => {
-            const tasks = state.tasks.map((t) => (t.id === taskId ? { ...t, completed: !t.completed } : t));
+            const now = Date.now();
+            const d = new Date();
+            d.setUTCHours(0, 0, 0, 0);
+            const todayUtc = d.getTime();
+
+            const tasks = state.tasks.map((t) => {
+                if (t.id !== taskId) return t;
+
+                const nextCompleted = !t.completed;
+                let next = { ...t, completed: nextCompleted } as Task;
+
+                if (t.type === 'scheduled') {
+                    // Scheduled tasks use dailyDoneDates for history
+                    const arr = Array.isArray(t.dailyDoneDates) ? [...t.dailyDoneDates] : [];
+                    if (nextCompleted) {
+                        if (!arr.includes(todayUtc)) arr.push(todayUtc);
+                    } else {
+                        const idx = arr.indexOf(todayUtc);
+                        if (idx >= 0) arr.splice(idx, 1);
+                    }
+                    next = { ...next, dailyDoneDates: arr } as Task;
+                    // Persist dailyDoneDates immediately
+                    fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ completed: nextCompleted, dailyDoneDates: arr })
+                    }).catch(() => { });
+                } else if (t.type === 'backlog') {
+                    // Backlog tasks use completedAt
+                    if (nextCompleted) {
+                        next.completedAt = now;
+                    } else {
+                        next.completedAt = undefined;
+                    }
+                    fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ completed: nextCompleted, completedAt: next.completedAt })
+                    }).catch(() => { });
+                } else {
+                    // Default logic (e.g. daily tasks shouldn't really use this toggle, but fail-safe)
+                    fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ completed: nextCompleted })
+                    }).catch(() => { });
+                }
+                return next;
+            });
+
             const changed = tasks.find((t) => t.id === taskId);
             const justCompleted = Boolean(changed?.completed);
-            if (changed) fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ completed: changed.completed }) }).catch(() => { });
 
             // Interaction with Pomodoro slice
             if (justCompleted && state.pomodoro.activeTaskIds.includes(taskId)) {

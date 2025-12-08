@@ -33,12 +33,15 @@ export const TaskSchema = z.object({
   milestoneId: z.string().optional(),
   pomodoroSetting: TaskPomodoroSettingSchema.optional(),
   // 毎日タスクの「今日実行」状態を日単位で保持（UTC 0時のタイムスタンプ）
+  // Scheduledタスクも同様に、完了した日をここに記録することで履歴を追跡する
   dailyDoneDates: z.array(z.number().int()).optional(),
   // 積み上げ候補を「今日やる」に設定した日を保持（UTC 0時のタイムスタンプ）
   plannedDates: z.array(z.number().int()).optional(),
   // アーカイブ機能
   archived: z.boolean().optional(),
   archivedAt: z.number().int().optional(),
+  // 完了日時（Backlogなどの単発完了タスク用）
+  completedAt: z.number().int().optional(),
   order: z.number().default(0),
 });
 export type Task = z.infer<typeof TaskSchema>;
