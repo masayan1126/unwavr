@@ -6,7 +6,8 @@ import { useToast } from "@/components/Providers";
 import { TypeBadge } from "./TypeBadge";
 
 // 文字列を20字で省略するユーティリティ関数
-function truncateText(text: string, maxLength: number = 20): string {
+function truncateText(text: string | null | undefined, maxLength: number = 20): string {
+    if (!text) return "";
     // Strip HTML tags
     const stripped = text.replace(/<[^>]*>?/gm, '');
     if (stripped.length <= maxLength) return stripped;
