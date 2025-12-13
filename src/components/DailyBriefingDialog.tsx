@@ -46,9 +46,13 @@ export default function DailyBriefingDialog({ isOpen, onClose }: DailyBriefingDi
                 language
             });
             setBriefing(text);
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            toast.show("生成に失敗しました", "error");
+            if (e.message?.includes("429") || e.message?.includes("quota") || e.message?.includes("Quota")) {
+                toast.show("Gemini APIの利用枠を超えました。しばらく待ってから再試行してください。", "error");
+            } else {
+                toast.show("生成に失敗しました", "error");
+            }
         } finally {
             setLoading(false);
         }
