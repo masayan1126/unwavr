@@ -3,7 +3,10 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import { useAppStore } from "@/lib/store";
 import { Play, Trash2, ChevronUp, ChevronDown, Plus, RefreshCw, Download } from "lucide-react";
-import PrimaryButton from "@/components/PrimaryButton";
+import { Button } from "@/components/ui/Button";
+import { PageLayout, PageHeader } from "@/components/ui/PageLayout";
+import { IconButton } from "@/components/ui/IconButton";
+import { Card } from "@/components/ui/Card";
 
 function extractVideoId(input: string): string | null {
   try {
@@ -207,19 +210,21 @@ export default function BgmPage() {
   const idxOf = (id: string) => tracks.findIndex((t) => t.id === id);
 
   return (
-    <div className="max-w-[1400px] mx-auto p-6 sm:p-10 flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">作業用BGM（YouTubeプレイリスト）</h1>
-        <button
-          className={`px-3 py-1.5 rounded border text-sm flex items-center gap-2 ${hydrating ? "opacity-70" : ""}`}
-          onClick={() => hydrate()}
-          disabled={hydrating}
-          aria-busy={hydrating}
-          title="データを再同期"
-        >
-          <RefreshCw size={16} className={hydrating ? "animate-spin" : ""} /> 再読み込み
-        </button>
-      </div>
+    <PageLayout>
+      <PageHeader
+        title="作業用BGM（YouTubeプレイリスト）"
+        actions={
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => hydrate()}
+            disabled={hydrating}
+            iconLeft={<RefreshCw size={14} className={hydrating ? "animate-spin" : ""} />}
+          >
+            再読み込み
+          </Button>
+        }
+      />
       {hydrating && <div className="text-xs opacity-70 mb-2">同期中...</div>}
       {!hydrating && tracks.length === 0 && groups.length === 0 && (
         <div className="text-xs opacity-70 mb-2">
@@ -252,7 +257,7 @@ export default function BgmPage() {
             <option key={g.id} value={g.id}>{g.name}</option>
           ))}
         </select>
-        <PrimaryButton onClick={addTrack} label="追加" iconLeft={<Plus size={14} />} />
+        <Button onClick={addTrack} iconLeft={<Plus size={14} />}>追加</Button>
         <button className="px-3 py-2 text-sm rounded border hover:bg-black/5 dark:hover:bg-white/10" onClick={clear}>全クリア</button>
         <button
           className={`px-3 py-2 text-sm rounded border hover:bg-red-50 dark:hover:bg-red-900/20 ${deletingAll ? 'opacity-70' : ''}`}
@@ -333,7 +338,7 @@ export default function BgmPage() {
         )}
       </div>
 
-    </div>
+    </PageLayout>
   );
 }
 

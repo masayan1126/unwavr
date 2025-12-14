@@ -5,6 +5,8 @@ import { Type, Database, Globe } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { Button } from "@/components/ui/Button";
 import { H1, H2, Text } from "@/components/ui/Typography";
+import { Card } from "@/components/ui/Card";
+import { PageLayout, PageHeader } from "@/components/ui/PageLayout";
 
 export default function SettingsPage() {
   const { fontSize, setFontSize, handleClearAll, geminiApiKey, setGeminiApiKey, language, setLanguage } = useSettings();
@@ -14,15 +16,17 @@ export default function SettingsPage() {
   if (!mounted) return null;
 
   return (
-    <div className="p-6 sm:p-10 max-w-[1400px] mx-auto flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <H1>設定</H1>
-        <Link className="text-sm underline opacity-80" href="/">
-          ホーム
-        </Link>
-      </div>
+    <PageLayout>
+      <PageHeader
+        title="設定"
+        actions={
+          <Link className="text-sm underline opacity-80" href="/">
+            ホーム
+          </Link>
+        }
+      />
 
-      <div className="bg-card border border-black/10 dark:border-white/10 rounded-xl p-5 flex flex-col gap-4 shadow-sm">
+      <Card padding="md" className="flex flex-col gap-4">
         <div className="flex items-center gap-2 border-b border-black/5 dark:border-white/5 pb-3">
           <Type size={18} className="opacity-70" />
           <H2>表示設定</H2>
@@ -65,9 +69,9 @@ export default function SettingsPage() {
             アプリケーション全体の文字サイズを調整します（標準: 100%）
           </Text>
         </div>
-      </div>
+      </Card>
 
-      <div className="bg-card border border-black/10 dark:border-white/10 rounded-xl p-5 flex flex-col gap-4 shadow-sm">
+      <Card padding="md" className="flex flex-col gap-4">
         <div className="flex items-center gap-2 border-b border-black/5 dark:border-white/5 pb-3">
           <Globe size={18} className="opacity-70" />
           <H2>言語設定 (Language)</H2>
@@ -101,9 +105,9 @@ export default function SettingsPage() {
             AI機能（Daily Briefingなど）の出力言語を切り替えます。
           </Text>
         </div>
-      </div>
+      </Card>
 
-      <div className="bg-card border border-black/10 dark:border-white/10 rounded-xl p-5 flex flex-col gap-4 shadow-sm">
+      <Card padding="md" className="flex flex-col gap-4">
         <div className="flex items-center gap-2 border-b border-black/5 dark:border-white/5 pb-3">
           <Database size={18} className="opacity-70" />
           <H2>データ管理</H2>
@@ -114,9 +118,9 @@ export default function SettingsPage() {
             <Button>データ管理画面へ</Button>
           </Link>
         </div>
-      </div>
+      </Card>
 
-      <div className="bg-card border border-black/10 dark:border-white/10 rounded-xl p-5 flex flex-col gap-4 shadow-sm">
+      <Card padding="md" className="flex flex-col gap-4">
         <div className="flex items-center gap-2 border-b border-black/5 dark:border-white/5 pb-3">
           <span className="opacity-70">✨</span>
           <H2>AI連携 (Gemini 2.5 Flash)</H2>
@@ -142,16 +146,17 @@ export default function SettingsPage() {
             </a>
           </div>
         </div>
-      </div>
-      <div className="bg-[var(--danger)]/5 rounded-xl p-5 flex flex-col gap-3">
-        <div className="text-sm font-medium text-[var(--danger)]">危険な操作</div>
+      </Card>
+
+      <Card padding="md" className="bg-danger/5 flex flex-col gap-3">
+        <div className="text-sm font-medium text-danger">危険な操作</div>
         <div className="text-xs opacity-80">タスク・マイルストーン・ランチャーの設定をすべて削除します。この操作は取り消せません。</div>
         <div>
           <Button variant="danger" onClick={handleClearAll} className="w-full sm:w-auto h-auto">
             すべて削除（タスク/マイルストーン/ランチャー）
           </Button>
         </div>
-      </div>
-    </div>
+      </Card>
+    </PageLayout>
   );
 }

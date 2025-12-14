@@ -11,6 +11,9 @@ import { useTasksPage } from "@/hooks/useTasksPage";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { H1 } from "@/components/ui/Typography";
+import { Card } from "@/components/ui/Card";
+import { IconButton } from "@/components/ui/IconButton";
+import { PageLayout, PageHeader } from "@/components/ui/PageLayout";
 import { TaskType } from "@/lib/types";
 import PullToRefresh from "@/components/PullToRefresh";
 
@@ -41,30 +44,26 @@ function TasksPageInner() {
 
   return (
     <PullToRefresh>
-      <div className="p-6 sm:p-10 pb-24 sm:pb-10 max-w-[1400px] mx-auto flex flex-col gap-6">
-        <header className="mb-6">
-          <div className="flex items-center justify-between">
-            <H1>すべてのタスク</H1>
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-8 h-8 p-0 rounded-full border-black/10 dark:border-white/10"
+      <PageLayout className="pb-24 sm:pb-10">
+        <PageHeader
+          title="すべてのタスク"
+          actions={
+            <>
+              <IconButton
+                icon={<RefreshCw size={14} />}
                 onClick={() => window.location.reload()}
-                title="再読み込み"
-              >
-                <RefreshCw size={14} />
-              </Button>
-              <AddTaskButton
-                onClick={() => setOpenCreate(true)}
+                label="再読み込み"
+                variant="outline"
+                className="rounded-full"
               />
+              <AddTaskButton onClick={() => setOpenCreate(true)} />
               <Link className="flex items-center gap-1 text-sm opacity-80 hover:opacity-100" href="/" title="ホーム">
                 <Home size={16} />
                 <span className="hidden md:inline underline">ホーム</span>
               </Link>
-            </div>
-          </div>
-        </header>
+            </>
+          }
+        />
 
         {/* フィルターと検索 */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
@@ -95,29 +94,29 @@ function TasksPageInner() {
 
         {/* 統計情報 */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
+          <Card padding="sm">
             <div className="text-sm opacity-60">総タスク数</div>
             <div className="text-lg font-semibold">{taskCounts.all}</div>
-          </div>
-          <div className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
+          </Card>
+          <Card padding="sm">
             <div className="text-sm opacity-60">毎日タスク</div>
             <div className="text-lg font-semibold">{taskCounts.daily}</div>
-          </div>
-          <div className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
+          </Card>
+          <Card padding="sm">
             <div className="text-sm opacity-60">特定日タスク</div>
             <div className="text-lg font-semibold">{taskCounts.scheduled}</div>
-          </div>
-          <div className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
+          </Card>
+          <Card padding="sm">
             <div className="text-sm opacity-60">積み上げ候補</div>
             <div className="text-lg font-semibold">{taskCounts.backlog}</div>
-          </div>
+          </Card>
         </div>
 
         {/* タスク一覧 */}
         <div className="space-y-6">
           {selectedType === "all" ? (
             <>
-              <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+              <Card padding="md">
                 <TaskList
                   title={`毎日タスク (${taskCounts.daily})`}
                   tasks={baseFiltered.filter(t => t.type === "daily")}
@@ -125,8 +124,8 @@ function TasksPageInner() {
                   showTypeColumn
                   showMilestoneColumn={false}
                 />
-              </section>
-              <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+              </Card>
+              <Card padding="md">
                 <TaskList
                   title={`特定曜日 (${taskCounts.scheduled})`}
                   tasks={baseFiltered.filter(t => t.type === "scheduled")}
@@ -134,8 +133,8 @@ function TasksPageInner() {
                   showTypeColumn
                   showMilestoneColumn={false}
                 />
-              </section>
-              <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+              </Card>
+              <Card padding="md">
                 <TaskList
                   title={`積み上げ候補 (${taskCounts.backlog})`}
                   tasks={baseFiltered.filter(t => t.type === "backlog")}
@@ -143,10 +142,10 @@ function TasksPageInner() {
                   showTypeColumn
                   showMilestoneColumn={false}
                 />
-              </section>
+              </Card>
             </>
           ) : (
-            <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+            <Card padding="md">
               <TaskList
                 title={`${typeLabels[selectedType]} (${filteredTasks.length})`}
                 tasks={filteredTasks}
@@ -155,14 +154,14 @@ function TasksPageInner() {
                 showTypeColumn
                 showMilestoneColumn={false}
               />
-            </section>
+            </Card>
           )}
         </div>
 
         <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規タスク">
           <TaskForm onSubmitted={(mode) => { if (mode === 'close') setOpenCreate(false); }} />
         </TaskDialog>
-      </div>
+      </PageLayout>
     </PullToRefresh>
   );
 }

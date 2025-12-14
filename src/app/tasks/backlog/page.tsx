@@ -10,6 +10,9 @@ import StylishSelect from "@/components/StylishSelect";
 import FilterBar from "@/components/FilterBar";
 import FilterChip from "@/components/FilterChip";
 import { useBacklogTasks } from "@/hooks/useBacklogTasks";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { PageLayout, PageHeader } from "@/components/ui/PageLayout";
 
 export default function BacklogPage() {
   const {
@@ -51,59 +54,66 @@ export default function BacklogPage() {
   }
 
   return (
-    <div className="p-6 sm:p-10 max-w-[1400px] mx-auto flex flex-col gap-4">
-      <header className="mb-2">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold">積み上げ候補</h1>
-          <div className="flex items-center gap-4">
-            <AddTaskButton
-              onClick={() => setOpenCreate(true)}
-            />
+    <PageLayout>
+      <PageHeader
+        title="積み上げ候補"
+        actions={
+          <>
+            <AddTaskButton onClick={() => setOpenCreate(true)} />
             <div className="relative">
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setFilterOpen((v) => !v)}
-                className="px-3 py-1.5 rounded-lg border text-sm flex items-center gap-2 bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                 aria-haspopup="dialog"
                 aria-expanded={filterOpen}
+                iconLeft={<FilterIcon size={14} className="opacity-70" />}
               >
-                <FilterIcon size={14} className="opacity-70" /> フィルター
-              </button>
+                フィルター
+              </Button>
               {filterOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setFilterOpen(false)} />
-                  <div className="absolute right-0 mt-2 z-50 w-72 border rounded bg-background text-foreground shadow-lg p-3 flex flex-col gap-3">
+                  <Card padding="sm" className="absolute right-0 mt-2 z-50 w-72 shadow-lg flex flex-col gap-3">
                     <div className="text-xs opacity-70">表示設定</div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <button
-                        type="button"
+                      <Button
+                        variant={showIncomplete ? "primary" : "outline"}
+                        size="sm"
                         onClick={() => setShowIncomplete((v) => !v)}
-                        className={`px-2 py-1 rounded-full border text-xs ${showIncomplete ? "bg-foreground text-background" : ""}`}
-                      >未完了</button>
-                      <button
-                        type="button"
+                        className="rounded-full"
+                      >
+                        未完了
+                      </Button>
+                      <Button
+                        variant={showCompleted ? "primary" : "outline"}
+                        size="sm"
                         onClick={() => setShowCompleted((v) => !v)}
-                        className={`px-2 py-1 rounded-full border text-xs ${showCompleted ? "bg-foreground text-background" : ""}`}
-                      >実行済み</button>
+                        className="rounded-full"
+                      >
+                        実行済み
+                      </Button>
                     </div>
                     <div className="flex items-center justify-end gap-2">
-                      <button
-                        type="button"
-                        className="px-2 py-1 rounded border text-xs"
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => {
                           setShowIncomplete(true);
                           setShowCompleted(true);
                         }}
-                      >リセット</button>
-                      <button type="button" className="px-2 py-1 rounded bg-foreground text-background text-xs" onClick={() => setFilterOpen(false)}>閉じる</button>
+                      >
+                        リセット
+                      </Button>
+                      <Button size="sm" onClick={() => setFilterOpen(false)}>閉じる</Button>
                     </div>
-                  </div>
+                  </Card>
                 </>
               )}
             </div>
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       {/* 適用中のフィルター表示 */}
       <div className="flex flex-wrap items-center gap-2 px-1 py-2 mb-2">
@@ -138,12 +148,9 @@ export default function BacklogPage() {
                   { value: "milestone", label: "マイルストーン" },
                 ]}
               />
-              <button
-                className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                onClick={() => setSortAscInc((v) => !v)}
-              >
+              <Button variant="secondary" size="sm" onClick={() => setSortAscInc((v) => !v)}>
                 {sortAscInc ? "昇順" : "降順"}
-              </button>
+              </Button>
               <StylishSelect
                 label="1ページあたり"
                 value={pageSizeInc}
@@ -154,24 +161,16 @@ export default function BacklogPage() {
                 options={[10, 20, 50, 100].map((n) => ({ value: n, label: String(n) }))}
               />
               <div className="flex items-center gap-2 ml-auto">
-                <button
-                  className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 transition-colors"
-                  disabled={pageInc <= 1}
-                  onClick={() => setPageInc((p) => Math.max(1, p - 1))}
-                >
+                <Button variant="secondary" size="sm" disabled={pageInc <= 1} onClick={() => setPageInc((p) => Math.max(1, p - 1))}>
                   前へ
-                </button>
-                <button
-                  className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 transition-colors"
-                  disabled={pageInc >= totalPagesInc}
-                  onClick={() => setPageInc((p) => Math.min(totalPagesInc, p + 1))}
-                >
+                </Button>
+                <Button variant="secondary" size="sm" disabled={pageInc >= totalPagesInc} onClick={() => setPageInc((p) => Math.min(totalPagesInc, p + 1))}>
                   次へ
-                </button>
+                </Button>
               </div>
             </FilterBar>
           </div>
-          <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+          <Card padding="md">
             <TaskList
               title={`未完了 (${incItems.length})`}
               tasks={incItems}
@@ -181,7 +180,7 @@ export default function BacklogPage() {
               showMilestoneColumn={false}
               enableSelection
             />
-          </section>
+          </Card>
         </>
       ) : null}
 
@@ -203,12 +202,9 @@ export default function BacklogPage() {
                   { value: "milestone", label: "マイルストーン" },
                 ]}
               />
-              <button
-                className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                onClick={() => setSortAscCom((v) => !v)}
-              >
+              <Button variant="secondary" size="sm" onClick={() => setSortAscCom((v) => !v)}>
                 {sortAscCom ? "昇順" : "降順"}
-              </button>
+              </Button>
               <StylishSelect
                 label="1ページあたり"
                 value={pageSizeCom}
@@ -219,24 +215,16 @@ export default function BacklogPage() {
                 options={[10, 20, 50, 100].map((n) => ({ value: n, label: String(n) }))}
               />
               <div className="flex items-center gap-2 ml-auto">
-                <button
-                  className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 transition-colors"
-                  disabled={pageCom <= 1}
-                  onClick={() => setPageCom((p) => Math.max(1, p - 1))}
-                >
+                <Button variant="secondary" size="sm" disabled={pageCom <= 1} onClick={() => setPageCom((p) => Math.max(1, p - 1))}>
                   前へ
-                </button>
-                <button
-                  className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 transition-colors"
-                  disabled={pageCom >= totalPagesCom}
-                  onClick={() => setPageCom((p) => Math.min(totalPagesCom, p + 1))}
-                >
+                </Button>
+                <Button variant="secondary" size="sm" disabled={pageCom >= totalPagesCom} onClick={() => setPageCom((p) => Math.min(totalPagesCom, p + 1))}>
                   次へ
-                </button>
+                </Button>
               </div>
             </FilterBar>
           </div>
-          <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+          <Card padding="md">
             <TaskList
               title={`実行済み (${comItems.length})`}
               tasks={comItems}
@@ -246,13 +234,13 @@ export default function BacklogPage() {
               showMilestoneColumn={false}
               enableSelection
             />
-          </section>
+          </Card>
         </>
       )}
       <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規タスク">
         <TaskForm onSubmitted={(mode) => { if (mode === 'close') setOpenCreate(false); }} />
       </TaskDialog>
-    </div>
+    </PageLayout>
   );
 }
 

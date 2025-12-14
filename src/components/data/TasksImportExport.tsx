@@ -3,7 +3,7 @@ import { useState, useRef } from "react";
 import { useAppStore } from "@/lib/store";
 import { useConfirm, useToast } from "@/components/Providers";
 import { TaskType, Scheduled, DateRange, type Task } from "@/lib/types";
-import PrimaryButton from "@/components/PrimaryButton";
+import { Button } from "@/components/ui/Button";
 
 type ImportResult = { imported: number; failed: number; errors: string[] };
 
@@ -368,7 +368,7 @@ export default function TasksImportExport() {
                 <div className="text-sm font-medium">エクスポート（CSV）</div>
                 <div className="flex flex-wrap items-center gap-3 text-xs" />
                 <div className="flex items-center gap-2">
-                    <PrimaryButton label="エクスポート" onClick={exportCSVChooseFile} />
+                    <Button onClick={exportCSVChooseFile}>エクスポート</Button>
                 </div>
             </div>
 

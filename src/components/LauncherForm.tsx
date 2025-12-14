@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useLauncherForm } from "@/hooks/useLauncher";
 import IconPicker from "@/components/IconPicker";
-import PrimaryButton from "@/components/PrimaryButton";
+import { Button } from "@/components/ui/Button";
 import { Plus } from "lucide-react";
 
 export default function LauncherForm() {
@@ -159,7 +159,7 @@ export default function LauncherForm() {
         )}
       </div>
       <div className="flex justify-end">
-        <PrimaryButton label="追加" type="submit" iconLeft={<Plus size={16} />} className="w-full sm:w-auto" />
+        <Button type="submit" iconLeft={<Plus size={16} />} className="w-full sm:w-auto">追加</Button>
       </div>
 
       {

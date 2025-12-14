@@ -8,6 +8,9 @@ import LauncherOnboarding from "@/components/LauncherOnboarding";
 import SectionLoader from "@/components/SectionLoader";
 import { useToast } from "@/components/Providers";
 import * as Icons from "lucide-react";
+import { PageLayout, PageHeader } from "@/components/ui/PageLayout";
+import { IconButton } from "@/components/ui/IconButton";
+import { Card } from "@/components/ui/Card";
 
 export default function LauncherPage() {
   const onboarded = useAppStore((s) => s.launcherOnboarded);
@@ -75,55 +78,56 @@ export default function LauncherPage() {
   };
 
   return (
-    <div className="p-6 sm:p-10 max-w-[1400px] mx-auto flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">ランチャー</h1>
-        <div className="flex items-center gap-2">
-          <Link href="/" className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors" title="ホームへ戻る">
-            <Icons.Home size={20} className="opacity-70" />
-          </Link>
-          <div className="relative">
-            <button
-              className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-              onClick={() => setMenuOpen(!menuOpen)}
-              title="メニュー"
-            >
-              <Icons.MoreVertical size={20} className="opacity-70" />
-            </button>
-            {menuOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-                <div className="absolute right-0 top-full mt-2 w-48 bg-background border border-border rounded-lg shadow-lg z-50 py-1 flex flex-col">
-                  <button
-                    className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground text-left w-full"
-                    onClick={() => { setShow(true); setMenuOpen(false); }}
-                  >
-                    <Icons.Plus size={16} /> 一括登録
-                  </button>
-                  <button
-                    className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground text-left w-full"
-                    onClick={() => { setImporting(true); setMenuOpen(false); }}
-                  >
-                    <Icons.Upload size={16} /> インポート
-                  </button>
-                  <button
-                    className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground text-left w-full"
-                    onClick={() => { handleExport(); setMenuOpen(false); }}
-                  >
-                    <Icons.Download size={16} /> エクスポート
-                  </button>
-                </div>
-              </>
-            )}
+    <PageLayout>
+      <PageHeader
+        title="ランチャー"
+        actions={
+          <div className="flex items-center gap-2">
+            <Link href="/" title="ホームへ戻る">
+              <IconButton icon={<Icons.Home size={18} />} variant="ghost" label="ホーム" />
+            </Link>
+            <div className="relative">
+              <IconButton
+                icon={<Icons.MoreVertical size={18} />}
+                variant="ghost"
+                onClick={() => setMenuOpen(!menuOpen)}
+                label="メニュー"
+              />
+              {menuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+                  <Card padding="none" className="absolute right-0 top-full mt-2 w-48 shadow-lg z-50 py-1 flex flex-col">
+                    <button
+                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground text-left w-full"
+                      onClick={() => { setShow(true); setMenuOpen(false); }}
+                    >
+                      <Icons.Plus size={16} /> 一括登録
+                    </button>
+                    <button
+                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground text-left w-full"
+                      onClick={() => { setImporting(true); setMenuOpen(false); }}
+                    >
+                      <Icons.Upload size={16} /> インポート
+                    </button>
+                    <button
+                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground text-left w-full"
+                      onClick={() => { handleExport(); setMenuOpen(false); }}
+                    >
+                      <Icons.Download size={16} /> エクスポート
+                    </button>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      </div>
+        }
+      />
       {hydrating ? <SectionLoader label="ランチャーを読み込み中..." lines={6} /> : <LauncherGrid />}
       <LauncherForm />
       {show && <LauncherOnboarding onClose={() => setShow(false)} />}
       {importing && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setImporting(false)}>
-          <div className="bg-background text-foreground rounded-md border border-black/10 dark:border-white/10 p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+          <Card padding="md" className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <div className="text-sm font-medium mb-3">ランチャーのインポート</div>
             <input
               type="file"
@@ -137,11 +141,11 @@ export default function LauncherPage() {
               }}
             />
             <div className="mt-3 text-xs opacity-70">選択したJSONで上書きインポートします。</div>
-          </div>
+          </Card>
         </div>
       )}
       {!onboarded && !hasShortcuts && !show && <LauncherOnboarding onClose={() => setShow(false)} />}
-    </div>
+    </PageLayout>
   );
 }
 

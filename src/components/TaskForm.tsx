@@ -6,7 +6,7 @@ import { useAppStore } from "@/lib/store";
 import { Loader2, Mic, Sparkles } from "lucide-react";
 import { parseTaskInput } from "@/lib/gemini";
 import WysiwygEditor from "@/components/WysiwygEditor";
-import PrimaryButton from "@/components/PrimaryButton";
+import { Button } from "@/components/ui/Button";
 import { copyDescriptionWithFormat, type CopyFormat } from "@/lib/taskUtils";
 import { Copy, ChevronDown } from "lucide-react";
 import { useToast } from "@/components/Providers";
@@ -569,7 +569,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
         {!task && (
           <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-border">
             <button type="button" className="btn" onClick={() => { performSave(); toast.show('タスクを追加しました', 'success'); setTimeout(() => { if (onSubmitted) onSubmitted('keep'); }, 0); }}>続けて追加</button>
-            <PrimaryButton label="追加" type="submit" />
+            <Button type="submit">追加</Button>
           </div>
         )}
       </form>

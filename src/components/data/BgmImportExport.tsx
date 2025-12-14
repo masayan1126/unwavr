@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { useToast } from "@/components/Providers";
-import PrimaryButton from "@/components/PrimaryButton";
+import { Button } from "@/components/ui/Button";
 
 function downloadText(filename: string, text: string): void {
     const blob = new Blob([text], { type: "application/json;charset=utf-8;" });
@@ -79,7 +79,7 @@ export default function BgmImportExport() {
         <div className="flex flex-col gap-6">
             <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex items-center justify-between">
                 <div className="text-sm font-medium">エクスポート（JSON）</div>
-                <PrimaryButton label="エクスポート" onClick={exportJson} />
+                <Button onClick={exportJson}>エクスポート</Button>
             </div>
 
             <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">

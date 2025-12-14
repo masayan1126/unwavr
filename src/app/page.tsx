@@ -12,6 +12,10 @@ import { useAppStore } from "@/lib/store";
 import HomePageSkeleton from "@/components/HomePageSkeleton";
 import ActiveTasksQueue from "@/components/ActiveTasksQueue";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { IconButton } from "@/components/ui/IconButton";
+import { PageLayout } from "@/components/ui/PageLayout";
 
 export default function Home() {
   const {
@@ -45,7 +49,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen p-3 sm:p-10 max-w-[1400px] mx-auto flex flex-col gap-4 sm:gap-6">
+    <PageLayout className="gap-4 sm:gap-6">
       <header
         role="banner"
         aria-label="サイトヘッダー"
@@ -70,17 +74,16 @@ export default function Home() {
           </div>
 
           {/* Reload Button */}
-          <button
-            className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-muted-foreground transition-colors"
+          <IconButton
+            icon={<RefreshCw size={18} className={hydrating ? "animate-spin" : ""} />}
             onClick={async () => {
               await hydrateFromDb();
             }}
             disabled={hydrating}
             aria-busy={hydrating}
-            title="データを再読み込み"
-          >
-            <RefreshCw size={18} className={hydrating ? "animate-spin" : ""} />
-          </button>
+            label="データを再読み込み"
+            className="rounded-full"
+          />
         </div>
       </header>
 
@@ -109,29 +112,28 @@ export default function Home() {
 
       <div className="flex flex-col gap-6">
         {/* 未完了 */}
-        <section className={`flex flex-col min-h-[320px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 shadow-sm ${activeTab === "incomplete" ? "flex" : "hidden"}`}>
+        <Card padding="md" className={`flex flex-col min-h-[320px] ${activeTab === "incomplete" ? "flex" : "hidden"}`}>
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">未完了 ({incompleteToday.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs">
-              <button
+              <Button
                 onClick={() => setOpenCreate(true)}
-                className="group flex items-center gap-1.5 px-2 md:px-3 py-1.5 bg-[#2383E2] dark:bg-[#2383E2] text-white text-sm font-medium rounded-[3px] shadow-sm hover:bg-[#2383E2]/90 transition-all"
+                iconLeft={<Plus size={16} strokeWidth={2.5} />}
+                iconRight={<ChevronDown size={14} className="opacity-70" />}
+                size="sm"
               >
-                <Plus size={16} strokeWidth={2.5} />
                 <span className="hidden md:inline">新規</span>
-                <div className="w-px h-3 bg-white/20 mx-0.5" />
-                <ChevronDown size={14} className="opacity-70 group-hover:opacity-100" />
-              </button>
+              </Button>
             </div>
           </div>
           <TaskList title="" tasks={incompleteToday.slice(0, 20)} showCreatedColumn={false} showPlannedColumn showTypeColumn showMilestoneColumn={false} enableSelection />
           <div className="mt-auto flex justify-end pt-4">
             <Link href={{ pathname: "/tasks", query: { daily: "1", backlogToday: "1", scheduledToday: "1", onlyIncomplete: "1" } }} className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
           </div>
-        </section>
+        </Card>
 
         {/* 積み上げ済み (毎日) */}
-        <section className={`flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 shadow-sm ${activeTab === "daily" ? "flex" : "hidden"}`}>
+        <Card padding="md" className={`flex flex-col min-h-[150px] ${activeTab === "daily" ? "flex" : "hidden"}`}>
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">積み上げ済み (毎日) ({dailyDoneFiltered.length})</h2>
             <div className="ml-auto flex items-center gap-2 text-xs" />
@@ -140,10 +142,10 @@ export default function Home() {
           <div className="mt-auto flex justify-end pt-4">
             <Link href="/tasks/daily" className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
           </div>
-        </section>
+        </Card>
 
         {/* 完了済み (特定曜日) */}
-        <section className={`flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 shadow-sm ${activeTab === "scheduled" ? "flex" : "hidden"}`}>
+        <Card padding="md" className={`flex flex-col min-h-[150px] ${activeTab === "scheduled" ? "flex" : "hidden"}`}>
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">完了済み (特定曜日) ({scheduledDoneFiltered.length})</h2>
           </div>
@@ -151,10 +153,10 @@ export default function Home() {
           <div className="mt-auto flex justify-end pt-4">
             <Link href="/tasks/scheduled" className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
           </div>
-        </section>
+        </Card>
 
         {/* 完了済み (積み上げ候補) */}
-        <section className={`flex flex-col min-h-[150px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 shadow-sm ${activeTab === "backlog" ? "flex" : "hidden"}`}>
+        <Card padding="md" className={`flex flex-col min-h-[150px] ${activeTab === "backlog" ? "flex" : "hidden"}`}>
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">完了済み (積み上げ候補) ({backlogDoneFiltered.length})</h2>
           </div>
@@ -162,14 +164,14 @@ export default function Home() {
           <div className="mt-auto flex justify-end pt-4">
             <Link href="/tasks/backlog" className="text-sm underline opacity-80 hover:opacity-100">一覧へ</Link>
           </div>
-        </section>
+        </Card>
       </div>
 
       {/* AddQiitaZenn は案内文削除のため一時的に非表示 */}
       <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規タスク">
         <TaskForm defaultType={defaultCreateType} onSubmitted={(mode) => { if (mode === 'close') setOpenCreate(false); }} />
       </TaskDialog>
-    </div>
+    </PageLayout>
   );
 }
 

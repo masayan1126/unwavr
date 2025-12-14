@@ -8,6 +8,9 @@ import { useScheduledTasks } from "@/hooks/useScheduledTasks";
 import SimpleTaskListPageSkeleton from "@/components/SimpleTaskListPageSkeleton";
 import StylishSelect from "@/components/StylishSelect";
 import FilterBar from "@/components/FilterBar";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { PageLayout, PageHeader } from "@/components/ui/PageLayout";
 
 export default function ScheduledTasksPage() {
   const {
@@ -33,15 +36,8 @@ export default function ScheduledTasksPage() {
   }
 
   return (
-    <div className="p-6 sm:p-10 max-w-[1400px] mx-auto flex flex-col gap-4">
-      <header className="mb-2">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold">特定曜日</h1>
-          <AddTaskButton
-            onClick={() => setOpenCreate(true)}
-          />
-        </div>
-      </header>
+    <PageLayout>
+      <PageHeader title="特定曜日" actions={<AddTaskButton onClick={() => setOpenCreate(true)} />} />
       {(
         <>
           <div className="mb-4 px-1">
@@ -60,12 +56,9 @@ export default function ScheduledTasksPage() {
                     { value: "milestone", label: "マイルストーン" },
                   ]}
                 />
-                <button
-                  className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                  onClick={() => setSortAsc((v) => !v)}
-                >
+                <Button variant="secondary" size="sm" onClick={() => setSortAsc((v) => !v)}>
                   {sortAsc ? "昇順" : "降順"}
-                </button>
+                </Button>
                 <StylishSelect
                   label="ステータス"
                   value={filterStatus}
@@ -89,33 +82,25 @@ export default function ScheduledTasksPage() {
                   options={[10, 20, 50, 100].map((n) => ({ value: n, label: String(n) }))}
                 />
                 <div className="flex items-center gap-2 ml-auto">
-                  <button
-                    className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 transition-colors"
-                    disabled={page <= 1}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  >
+                  <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
                     前へ
-                  </button>
-                  <button
-                    className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 transition-colors"
-                    disabled={page >= totalPages}
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  >
+                  </Button>
+                  <Button variant="secondary" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
                     次へ
-                  </button>
+                  </Button>
                 </div>
               </FilterBar>
             </div>
           </div>
-          <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+          <Card padding="md">
             <TaskList title="特定曜日" tasks={pageItems} showCreatedColumn={false} showPlannedColumn={false} showScheduledColumn showTypeColumn showMilestoneColumn={false} sortKey={sortKey} sortAsc={sortAsc} filterStatus={filterStatus} enableSelection />
-          </section>
+          </Card>
         </>
       )}
       <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規タスク">
         <TaskForm defaultType="scheduled" onSubmitted={(mode) => { if (mode === 'close') setOpenCreate(false); }} />
       </TaskDialog>
-    </div>
+    </PageLayout>
   );
 }
 

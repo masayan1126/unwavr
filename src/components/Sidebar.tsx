@@ -7,6 +7,7 @@ import AuthButtons from "@/components/AuthButtons";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 import DailyBriefingDialog from "./DailyBriefingDialog";
+import { IconButton } from "@/components/ui/IconButton";
 
 type NavItem = {
   href: string;
@@ -85,14 +86,13 @@ export default function Sidebar() {
               </div>
             </div>
           )}
-          <button
-            aria-label={open ? "サイドバーを閉じる" : "サイドバーを開く"}
-            title={open ? "閉じる" : "開く"}
-            className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200 hover:scale-105 active:scale-95"
+          <IconButton
+            icon={open ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
+            variant="ghost"
+            size="sm"
+            label={open ? "サイドバーを閉じる" : "サイドバーを開く"}
             onClick={() => setOpen((v) => !v)}
-          >
-            {open ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
-          </button>
+          />
         </div>
 
         {open && (
