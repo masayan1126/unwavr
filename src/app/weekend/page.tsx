@@ -3,7 +3,6 @@ import Link from "next/link";
 import { useMemo } from "react";
 import TaskList from "@/components/TaskList";
 import { useAppStore } from "@/lib/store";
-import WeekendPageSkeleton from "@/components/WeekendPageSkeleton";
 
 export default function WeekendPage() {
   const tasks = useAppStore((s) => s.tasks);
@@ -18,10 +17,6 @@ export default function WeekendPage() {
     [tasks]
   );
 
-  if (hydrating) {
-    return <WeekendPageSkeleton />;
-  }
-
   return (
     <div className="p-6 sm:p-10 max-w-4xl mx-auto flex flex-col gap-4">
       <header className="backdrop-blur-md bg-white/70 dark:bg-gray-800/70 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-5 md:p-6">
@@ -32,7 +27,16 @@ export default function WeekendPage() {
           </Link>
         </div>
       </header>
-      <TaskList title="週末・連休向け" tasks={weekend} />
+      {hydrating ? (
+        <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm space-y-2">
+          <div className="text-sm font-medium mb-4">週末・連休向け</div>
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-10 bg-muted animate-pulse rounded" />
+          ))}
+        </div>
+      ) : (
+        <TaskList title="週末・連休向け" tasks={weekend} />
+      )}
     </div>
   );
 }

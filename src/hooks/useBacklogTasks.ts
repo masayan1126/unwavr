@@ -27,7 +27,7 @@ export function useBacklogTasks() {
     const [sortKeyCom, setSortKeyCom] = useState<SortKey>("planned");
     const [sortAscCom, setSortAscCom] = useState(true);
 
-    const backlog = useMemo(() => tasks.filter((t) => t.type === "backlog"), [tasks]);
+    const backlog = useMemo(() => tasks.filter((t) => t.type === "backlog" && t.archived !== true), [tasks]);
     const incompleteBacklog = useMemo(() => backlog.filter((t) => !t.completed), [backlog]);
     const completedBacklog = useMemo(() => backlog.filter((t) => t.completed), [backlog]);
 

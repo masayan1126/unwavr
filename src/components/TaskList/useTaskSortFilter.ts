@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { Task, Milestone } from "@/lib/types";
 
 
-type SortKey = "title" | "createdAt" | "planned" | "scheduled" | "type" | "milestone";
+type SortKey = "title" | "createdAt" | "planned" | "scheduled" | "type" | "milestone" | "archivedAt";
 type FilterType = "all" | "daily" | "backlog" | "scheduled";
 type FilterStatus = "all" | "completed" | "incomplete";
 
@@ -71,6 +71,11 @@ export function useTaskSortFilter({
                     const ma = milestones.find((m) => m.id === a.milestoneId)?.title ?? "";
                     const mb = milestones.find((m) => m.id === b.milestoneId)?.title ?? "";
                     return dir * ma.localeCompare(mb);
+                }
+                if (sortKey === "archivedAt") {
+                    const aa = a.archivedAt ?? 0;
+                    const ab = b.archivedAt ?? 0;
+                    return dir * (aa - ab);
                 }
                 return 0;
             });

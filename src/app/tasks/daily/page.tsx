@@ -5,7 +5,6 @@ import TaskDialog from "@/components/TaskCreateDialog";
 import TaskForm from "@/components/TaskForm";
 import { useState } from "react";
 import { useDailyTasks } from "@/hooks/useDailyTasks";
-import SimpleTaskListPageSkeleton from "@/components/SimpleTaskListPageSkeleton";
 import StylishSelect from "@/components/StylishSelect";
 import FilterBar from "@/components/FilterBar";
 import { Button } from "@/components/ui/Button";
@@ -31,10 +30,6 @@ export default function DailyTasksPage() {
   } = useDailyTasks();
   const [openCreate, setOpenCreate] = useState(false);
 
-  if (hydrating) {
-    return <SimpleTaskListPageSkeleton />;
-  }
-
   return (
     <PageLayout>
       <PageHeader title="毎日" actions={<AddTaskButton onClick={() => setOpenCreate(true)} />} />
@@ -42,7 +37,7 @@ export default function DailyTasksPage() {
         <>
           <div className="mb-4 px-1">
             <div className="flex items-center justify-between">
-              <div className="text-xs opacity-70">{page} / {totalPages}（全 {total} 件）</div>
+              <div className="text-xs opacity-70">{hydrating ? "-" : `${page} / ${totalPages}（全 ${total} 件）`}</div>
               <FilterBar>
                 <StylishSelect
                   label="ソート"
@@ -92,7 +87,16 @@ export default function DailyTasksPage() {
             </div>
           </div>
           <Card padding="md">
-            <TaskList title="毎日" tasks={pageItems} showCreatedColumn={false} showPlannedColumn={false} showTypeColumn showMilestoneColumn={false} sortKey={sortKey} sortAsc={sortAsc} filterStatus={filterStatus} enableSelection />
+            {hydrating ? (
+              <div className="space-y-2">
+                <div className="text-sm font-medium mb-4">毎日</div>
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-10 bg-muted animate-pulse rounded" />
+                ))}
+              </div>
+            ) : (
+              <TaskList title="毎日" tasks={pageItems} showCreatedColumn={false} showPlannedColumn={false} showTypeColumn showMilestoneColumn={false} sortKey={sortKey} sortAsc={sortAsc} filterStatus={filterStatus} enableSelection />
+            )}
           </Card>
         </>
       )}

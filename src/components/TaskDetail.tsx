@@ -9,6 +9,7 @@ import RichText from "@/components/RichText";
 import { Split, Loader2 } from "lucide-react";
 import { breakdownTask } from "@/lib/gemini";
 import { useState } from "react";
+import { Button } from "@/components/ui/Button";
 
 function formatDow(days?: number[]): string {
   if (!days || days.length === 0) return "-";
@@ -118,15 +119,16 @@ export default function TaskDetail({ taskId, backHref }: { taskId: string; backH
             進捗: {(task.completedPomodoros ?? 0)}/{task.estimatedPomodoros ?? 0} ポモ
           </div>
           <div className="mt-2 flex gap-2">
-            <button className="px-3 py-1 rounded border text-sm" onClick={() => toggle(task.id)}>
+            <Button variant="secondary" size="sm" onClick={() => toggle(task.id)}>
               {task.completed ? "未完了に戻す" : "完了にする"}
-            </button>
-            <button
-              className={`px-3 py-1 rounded border text-sm ${activeId === task.id ? "bg-foreground text-background" : ""}`}
+            </Button>
+            <Button
+              variant={activeId === task.id ? "primary" : "secondary"}
+              size="sm"
               onClick={() => setActive(activeId === task.id ? undefined : task.id)}
             >
               {activeId === task.id ? "ポモ対象解除" : "ポモ対象に設定"}
-            </button>
+            </Button>
           </div>
         </div>
 

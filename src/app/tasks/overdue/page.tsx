@@ -3,7 +3,6 @@ import TaskList from "@/components/TaskList";
 import { useAppStore } from "@/lib/store";
 import { isOverdue } from "@/lib/taskUtils";
 import Link from "next/link";
-import SimpleTaskListPageSkeleton from "@/components/SimpleTaskListPageSkeleton";
 import { useToast } from "@/components/Providers";
 import { ArrowRight } from "lucide-react";
 
@@ -15,10 +14,6 @@ export default function OverdueTasksPage() {
   const now = new Date();
   const todayLocalMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const overdue = tasks.filter((t) => isOverdue(t, todayLocalMidnight));
-
-  if (hydrating) {
-    return <SimpleTaskListPageSkeleton />;
-  }
 
   const handleMoveAll = () => {
     if (overdue.length === 0) return;
@@ -45,7 +40,16 @@ export default function OverdueTasksPage() {
           <Link className="text-sm underline opacity-80" href="/">ホーム</Link>
         </div>
       </div>
-      <TaskList title="期限切れ" tasks={overdue} showCreatedColumn showPlannedColumn showTypeColumn enableSelection enableBulkDueUpdate />
+      {hydrating ? (
+        <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm space-y-2">
+          <div className="text-sm font-medium mb-4">期限切れ</div>
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-10 bg-muted animate-pulse rounded" />
+          ))}
+        </div>
+      ) : (
+        <TaskList title="期限切れ" tasks={overdue} showCreatedColumn showPlannedColumn showTypeColumn enableSelection enableBulkDueUpdate />
+      )}
     </div>
   );
 }

@@ -65,7 +65,7 @@ export default function WysiwygEditor({ value, onChange, className, onBlur }: Wy
   return (
     <div className={`${className ?? ""} flex flex-col border border-black/10 dark:border-white/10 rounded-xl overflow-hidden bg-card shadow-sm focus-within:ring-2 focus-within:ring-[var(--primary)]/20 transition-all`}>
       <div className="flex-1 min-h-0 max-h-[60vh] overflow-y-auto flex flex-col">
-        <div className="sticky top-0 z-10 bg-muted/50 backdrop-blur-sm border-b border-black/5 dark:border-white/5 flex flex-wrap gap-1 p-2 shrink-0">
+        <div className="sticky top-0 z-10 bg-muted border-b border-black/10 dark:border-white/10 flex flex-wrap gap-1 p-2 shrink-0">
           <ToolbarButton onClick={() => editor?.chain().focus().setParagraph().run()} label="P" isActive={editor?.isActive('paragraph')} />
           <ToolbarButton onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()} label="H1" isActive={editor?.isActive('heading', { level: 1 })} />
           <ToolbarButton onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} label="H2" isActive={editor?.isActive('heading', { level: 2 })} />
@@ -98,7 +98,7 @@ function ToolbarButton({ onClick, label, isActive }: { onClick: () => void, labe
   return (
     <button
       type="button"
-      className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors ${isActive ? "bg-[var(--primary)] text-white" : "hover:bg-black/5 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground"}`}
+      className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors ${isActive ? "bg-[var(--primary)] text-[var(--primary-foreground)]" : "hover:bg-black/10 dark:hover:bg-white/15 text-foreground/80 hover:text-foreground"}`}
       onClick={onClick}
     >
       {label}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Reorder } from "framer-motion";
-import { ChevronDown, CheckCircle2, Circle, Archive, Trash2, ArrowRight, Calendar, Copy, Edit, Play, Pause } from "lucide-react";
+import { ChevronDown, CheckCircle2, Circle, Archive, Trash2, ArrowRight, Calendar, Copy, Edit, Play, Pause, RotateCcw, Type, CalendarPlus, CalendarCheck, CalendarRange, Tag, Flag, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Task } from "@/lib/types";
 import { useAppStore } from "@/lib/store";
 import { useConfirm, useToast } from "@/components/Providers";
@@ -10,6 +10,8 @@ import { getTodayDateInput, getTomorrowDateInput } from "@/lib/taskUtils";
 import { TaskRow } from "./TaskRow";
 import { useTaskSortFilter } from "./useTaskSortFilter";
 
+type SortKey = "title" | "createdAt" | "planned" | "scheduled" | "type" | "milestone" | "archivedAt";
+
 export default function TaskList({
     title,
     tasks,
@@ -18,12 +20,16 @@ export default function TaskList({
     showScheduledColumn = false,
     showTypeColumn = true,
     showMilestoneColumn = false,
-    sortKey,
-    sortAsc,
+    showArchivedAtColumn = false,
+    sortKey: initialSortKey,
+    sortAsc: initialSortAsc,
     filterType = "all",
     filterStatus = "all",
     enableSelection = false,
     enableBulkDueUpdate = false,
+    enableArchiveActions = false,
+    onBulkRestore,
+    onBulkPermanentDelete,
 }: {
     title: string;
     tasks: Task[];
@@ -32,13 +38,35 @@ export default function TaskList({
     showScheduledColumn?: boolean;
     showTypeColumn?: boolean;
     showMilestoneColumn?: boolean;
-    sortKey?: "title" | "createdAt" | "planned" | "scheduled" | "type" | "milestone";
+    showArchivedAtColumn?: boolean;
+    sortKey?: SortKey;
     sortAsc?: boolean;
     filterType?: "all" | "daily" | "backlog" | "scheduled";
     filterStatus?: "all" | "completed" | "incomplete";
     enableSelection?: boolean;
     enableBulkDueUpdate?: boolean;
+    enableArchiveActions?: boolean;
+    onBulkRestore?: (ids: string[]) => void;
+    onBulkPermanentDelete?: (ids: string[]) => void;
 }) {
+    const [sortKey, setSortKey] = useState<SortKey | undefined>(initialSortKey);
+    const [sortAsc, setSortAsc] = useState<boolean>(initialSortAsc ?? true);
+
+    const handleSort = (key: SortKey) => {
+        if (sortKey === key) {
+            setSortAsc(!sortAsc);
+        } else {
+            setSortKey(key);
+            setSortAsc(true);
+        }
+    };
+
+    const getSortIcon = (key: SortKey) => {
+        if (sortKey !== key) {
+            return <ArrowUpDown size={12} className="opacity-40" />;
+        }
+        return sortAsc ? <ArrowUp size={12} /> : <ArrowDown size={12} />;
+    };
     const updateTask = useAppStore((s) => s.updateTask);
     const updateTaskOrder = useAppStore((s) => s.updateTaskOrder);
     const removeTask = useAppStore((s) => s.removeTask);
@@ -307,11 +335,40 @@ export default function TaskList({
                                         <Archive size={14} className="opacity-70" />
                                         <span>アーカイブ (毎日)</span>
                                     </button>
-                                    <div className="h-px bg-border/50 my-1" />
-                                    <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-sm text-xs text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors" onClick={bulkDelete}>
-                                        <Trash2 size={14} className="opacity-70" />
-                                        <span>削除</span>
-                                    </button>
+                                    {!enableArchiveActions && (
+                                        <>
+                                            <div className="h-px bg-border/50 my-1" />
+                                            <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-sm text-xs text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors" onClick={bulkDelete}>
+                                                <Trash2 size={14} className="opacity-70" />
+                                                <span>削除</span>
+                                            </button>
+                                        </>
+                                    )}
+                                    {enableArchiveActions && (
+                                        <>
+                                            <div className="h-px bg-border/50 my-1" />
+                                            <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-sm text-xs hover:bg-accent hover:text-accent-foreground transition-colors" onClick={() => {
+                                                const ids = filteredSorted.filter((t) => selected[t.id]).map((t) => t.id);
+                                                if (ids.length > 0 && onBulkRestore) {
+                                                    onBulkRestore(ids);
+                                                    setSelected({});
+                                                }
+                                            }}>
+                                                <RotateCcw size={14} className="opacity-70" />
+                                                <span>復元</span>
+                                            </button>
+                                            <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-sm text-xs text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors" onClick={() => {
+                                                const ids = filteredSorted.filter((t) => selected[t.id]).map((t) => t.id);
+                                                if (ids.length > 0 && onBulkPermanentDelete) {
+                                                    onBulkPermanentDelete(ids);
+                                                    setSelected({});
+                                                }
+                                            }}>
+                                                <Trash2 size={14} className="opacity-70" />
+                                                <span>完全削除</span>
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                                 {enableBulkDueUpdate && (
                                     <>
@@ -365,13 +422,13 @@ export default function TaskList({
                                     </button>
                                 </div>
                             )}
-                            <div className="flex-1 px-2">タイトル</div>
-                            {showCreatedColumn && <div className="hidden sm:block w-[120px] px-2">作成日</div>}
-                            {showPlannedColumn && <div className="hidden sm:block w-[120px] px-2">実行日</div>}
-                            {showScheduledColumn && <div className="hidden sm:block w-[160px] px-2">設定（曜日/期間）</div>}
-                            {showTypeColumn && <div className="hidden sm:block w-[128px] px-2">種別</div>}
-                            {showMilestoneColumn && <div className="hidden sm:block w-[160px] px-2">マイルストーン</div>}
-
+                            <button type="button" onClick={() => handleSort("title")} className="flex-1 px-2 flex items-center gap-1.5 hover:text-foreground cursor-pointer"><Type size={12} className="opacity-60" />タイトル {getSortIcon("title")}</button>
+                            {showCreatedColumn && <button type="button" onClick={() => handleSort("createdAt")} className="hidden sm:flex w-[120px] px-2 items-center gap-1.5 hover:text-foreground cursor-pointer"><CalendarPlus size={12} className="opacity-60" />作成日 {getSortIcon("createdAt")}</button>}
+                            {showPlannedColumn && <button type="button" onClick={() => handleSort("planned")} className="hidden sm:flex w-[120px] px-2 items-center gap-1.5 hover:text-foreground cursor-pointer"><CalendarCheck size={12} className="opacity-60" />実行日 {getSortIcon("planned")}</button>}
+                            {showScheduledColumn && <button type="button" onClick={() => handleSort("scheduled")} className="hidden sm:flex w-[160px] px-2 items-center gap-1.5 hover:text-foreground cursor-pointer"><CalendarRange size={12} className="opacity-60" />設定 {getSortIcon("scheduled")}</button>}
+                            {showTypeColumn && <button type="button" onClick={() => handleSort("type")} className="hidden sm:flex w-[128px] px-2 items-center gap-1.5 hover:text-foreground cursor-pointer"><Tag size={12} className="opacity-60" />種別 {getSortIcon("type")}</button>}
+                            {showMilestoneColumn && <button type="button" onClick={() => handleSort("milestone")} className="hidden sm:flex w-[160px] px-2 items-center gap-1.5 hover:text-foreground cursor-pointer"><Flag size={12} className="opacity-60" />マイルストーン {getSortIcon("milestone")}</button>}
+                            {showArchivedAtColumn && <button type="button" onClick={() => handleSort("archivedAt")} className="hidden sm:flex w-[120px] px-2 items-center gap-1.5 hover:text-foreground cursor-pointer"><Archive size={12} className="opacity-60" />アーカイブ日 {getSortIcon("archivedAt")}</button>}
                         </div>
 
                         {/* Body */}
@@ -394,6 +451,7 @@ export default function TaskList({
                                             showScheduledColumn={showScheduledColumn}
                                             showTypeColumn={showTypeColumn}
                                             showMilestoneColumn={showMilestoneColumn}
+                                            showArchivedAtColumn={showArchivedAtColumn}
                                             editingPlannedTaskId={editingPlannedTaskId}
                                             tempPlannedDate={tempPlannedDate}
                                             setTempPlannedDate={setTempPlannedDate}

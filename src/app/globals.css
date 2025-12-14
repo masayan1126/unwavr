@@ -492,3 +492,10 @@ html.dark ::-webkit-scrollbar-thumb {
 html.dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
+/* Prose内の画像に枠線を追加（背景と同化防止） */
+.prose img {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--muted);
+}

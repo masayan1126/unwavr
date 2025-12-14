@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import { useAppStore } from "@/lib/store";
+import { Button } from "@/components/ui/Button";
 
 export default function Milestones() {
   const milestones = useAppStore((s) => s.milestones);
@@ -65,22 +66,22 @@ export default function Milestones() {
       <div className="flex items-center justify-between mb-2">
         <div className="text-xs uppercase tracking-wide opacity-70">マイルストーン</div>
         <div className="flex gap-2">
-          <button
+          <Button
             onClick={handleExport}
-            style={{ backgroundColor: "var(--primary)" }}
-            className="px-3 py-1.5 rounded border text-xs text-white dark:text-background border-transparent disabled:opacity-50 hover:opacity-80"
+            size="sm"
             disabled={milestones.length === 0}
             title="CSV形式（日本語ヘッダー）でダウンロードします"
           >
             CSVエクスポート
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => fileInputRef.current?.click()}
-            className="px-3 py-1 rounded border text-xs hover:bg-gray-100 dark:hover:bg-gray-800"
+            variant="secondary"
+            size="sm"
             title="CSV/JSONのどちらでもインポートできます（推奨: CSV）"
           >
             CSVインポート
-          </button>
+          </Button>
           <input
             ref={fileInputRef}
             type="file"
@@ -123,7 +124,7 @@ export default function Milestones() {
           value={target}
           onChange={(e) => setTarget(parseInt(e.target.value || "1", 10))}
         />
-        <button className="px-3 py-1 rounded bg-foreground text-background text-sm">追加</button>
+        <Button type="submit" size="sm">追加</Button>
       </form>
 
       <div className="flex flex-col divide-y divide-black/5 dark:divide-white/5">

@@ -55,16 +55,20 @@ export const createTaskSlice: StateCreator<AppState, [], [], TaskSlice> = (set, 
                         body: JSON.stringify({ completed: nextCompleted, dailyDoneDates: arr })
                     }).catch(() => { });
                 } else if (t.type === 'backlog') {
-                    // Backlog tasks use completedAt
+                    // Backlog tasks use completedAt and get archived when completed
                     if (nextCompleted) {
                         next.completedAt = now;
+                        next.archived = true;
+                        next.archivedAt = now;
                     } else {
                         next.completedAt = undefined;
+                        next.archived = false;
+                        next.archivedAt = undefined;
                     }
                     fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ completed: nextCompleted, completedAt: next.completedAt })
+                        body: JSON.stringify({ completed: nextCompleted, completedAt: next.completedAt, archived: next.archived, archivedAt: next.archivedAt })
                     }).catch(() => { });
                 } else {
                     // Default logic (e.g. daily tasks shouldn't really use this toggle, but fail-safe)

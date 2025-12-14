@@ -130,7 +130,6 @@ export default function Sidebar() {
               return <NavLink href="/calendar" label="カレンダー" icon={<Calendar size={16} />} />;
             })()}
 
-            <NavLink href="/tasks/incomplete" label="未完了タスク" icon={<AlertTriangle size={16} />} />
             <NavLink href="/tasks/archived" label="アーカイブ" icon={<Archive size={16} />} />
 
             {/* Focus Section */}
@@ -154,24 +153,19 @@ export default function Sidebar() {
             {/* System Section */}
             <SectionHeader label="System" />
             <NavLink href="/settings" label="設定" icon={<Settings size={16} />} />
-
-            <div className="mt-3 pt-3 border-t border-black/10 dark:border-white/10 text-xs opacity-80 flex flex-col gap-1">
-              <Link href="/terms" className="hover:underline">利用規約</Link>
-              <Link href="/privacy" className="hover:underline">プライバシーポリシー</Link>
-            </div>
           </nav>
         )}
 
         {open && (
-          <div className="mt-auto flex flex-col gap-3">
+          <div className="mt-auto pt-3 border-t border-black/10 dark:border-white/10 flex flex-col gap-3">
             <AuthButtons />
-            <Link
-              href="/unwavr"
-              className="text-xxs opacity-70 hover:opacity-100 underline underline-offset-4"
-            >
-              プロダクトサイト
-            </Link>
-            <div className="text-xxs opacity-60">v0.1.0</div>
+            <div className="flex items-center justify-between text-xxs opacity-60">
+              <div className="flex gap-3">
+                <Link href="/terms" className="hover:opacity-100 hover:underline">利用規約</Link>
+                <Link href="/privacy" className="hover:opacity-100 hover:underline">プライバシー</Link>
+              </div>
+              <span>v0.1.0</span>
+            </div>
           </div>
         )}
       </div>

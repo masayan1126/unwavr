@@ -1,6 +1,7 @@
 "use client";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { LogOut } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
 function GoogleIcon({ size = 14 }: { size?: number }) {
   return (
@@ -29,16 +30,19 @@ export default function AuthButtons({ collapsed = false }: { collapsed?: boolean
       );
     }
     return (
-      <button
+      <Button
         onClick={() => signIn("google")}
-        className="flex items-center gap-2 px-3 py-1 rounded-[3px] border text-sm hover:bg-black/5 dark:hover:bg-white/10"
+        variant="secondary"
+        size="sm"
         title="Googleでログイン"
+        iconLeft={
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-white">
+            <GoogleIcon />
+          </span>
+        }
       >
-        <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-white">
-          <GoogleIcon />
-        </span>
-        <span>Googleでログイン</span>
-      </button>
+        Googleでログイン
+      </Button>
     );
   }
 
@@ -55,22 +59,23 @@ export default function AuthButtons({ collapsed = false }: { collapsed?: boolean
   }
 
   return (
-    <div className="flex items-center gap-2">
-      {session.user?.image ? (
-        <img src={session.user.image} alt="avatar" className="w-5 h-5 rounded-full" />
-      ) : (
-        <div className="w-5 h-5 rounded-full bg-black/10 dark:bg-white/20" />
-      )}
-      <span className="text-xs opacity-80 truncate max-w-[120px]" title={session.user?.email ?? ""}>
-        {session.user?.email || session.user?.name}
-      </span>
+    <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2 min-w-0">
+        {session.user?.image ? (
+          <img src={session.user.image} alt="avatar" className="w-7 h-7 rounded-full flex-shrink-0" />
+        ) : (
+          <div className="w-7 h-7 rounded-full bg-black/10 dark:bg-white/20 flex-shrink-0" />
+        )}
+        <span className="text-xs opacity-80 truncate" title={session.user?.email ?? ""}>
+          {session.user?.email || session.user?.name}
+        </span>
+      </div>
       <button
         onClick={() => signOut({ callbackUrl: '/auth/signin' })}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-[3px] border text-sm whitespace-nowrap hover:bg-black/5 dark:hover:bg-white/10"
+        className="flex-shrink-0 p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
         title="ログアウト"
       >
         <LogOut size={16} />
-        <span>ログアウト</span>
       </button>
     </div>
   );

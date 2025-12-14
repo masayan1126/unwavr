@@ -27,7 +27,10 @@ export const useTasksPage = () => {
         const overdueFlag = searchParams.get("overdue") === "1";
         const onlyIncomplete = searchParams.get("onlyIncomplete") === "1";
 
-        let filtered = tasks.filter((task) => {
+        // Filter out archived tasks first
+        const activeTasks = tasks.filter((task) => task.archived !== true);
+
+        let filtered = activeTasks.filter((task) => {
             if (dailyFlag || backlogTodayFlag || scheduledTodayFlag || overdueFlag) {
                 if (onlyIncomplete) {
                     if (task.type === "daily") {
@@ -60,14 +63,19 @@ export const useTasksPage = () => {
 
     const filteredTasks = useMemo(() => {
         if (selectedType === "all") return baseFiltered;
-        return baseFiltered.filter((t) => t.type === selectedType);
+        let filtered = baseFiltered.filter((t) => t.type === selectedType);
+        // 積み上げ候補フィルター時は完了済みを除外（アーカイブで表示）
+        if (selectedType === "backlog") {
+            filtered = filtered.filter((t) => !t.completed);
+        }
+        return filtered;
     }, [baseFiltered, selectedType]);
 
     const taskCounts = useMemo(() => {
         return {
             all: baseFiltered.length,
             daily: baseFiltered.filter(t => t.type === "daily").length,
-            backlog: baseFiltered.filter(t => t.type === "backlog").length,
+            backlog: baseFiltered.filter(t => t.type === "backlog" && !t.completed).length,
             scheduled: baseFiltered.filter(t => t.type === "scheduled").length,
         };
     }, [baseFiltered]);

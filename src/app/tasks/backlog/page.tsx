@@ -5,7 +5,6 @@ import AddTaskButton from "@/components/AddTaskButton";
 import TaskDialog from "@/components/TaskCreateDialog";
 import TaskForm from "@/components/TaskForm";
 import { Filter as FilterIcon } from "lucide-react";
-import BacklogPageSkeleton from "@/components/BacklogPageSkeleton";
 import StylishSelect from "@/components/StylishSelect";
 import FilterBar from "@/components/FilterBar";
 import FilterChip from "@/components/FilterChip";
@@ -48,10 +47,6 @@ export default function BacklogPage() {
   } = useBacklogTasks();
 
   const [openCreate, setOpenCreate] = useState(false);
-
-  if (hydrating) {
-    return <BacklogPageSkeleton />;
-  }
 
   return (
     <PageLayout>
@@ -134,7 +129,7 @@ export default function BacklogPage() {
       {showIncomplete ? (
         <>
           <div className="flex items-center justify-between mb-2">
-            <div className="text-xs opacity-70">{pageInc} / {totalPagesInc}（全 {totalInc} 件）</div>
+            <div className="text-xs opacity-70">{hydrating ? "-" : `${pageInc} / ${totalPagesInc}（全 ${totalInc} 件）`}</div>
             <FilterBar>
               <StylishSelect
                 label="ソート"
@@ -171,24 +166,33 @@ export default function BacklogPage() {
             </FilterBar>
           </div>
           <Card padding="md">
-            <TaskList
-              title={`未完了 (${incItems.length})`}
-              tasks={incItems}
-              showCreatedColumn={false}
-              showPlannedColumn
-              showTypeColumn
-              showMilestoneColumn={false}
-              enableSelection
-            />
+            {hydrating ? (
+              <div className="space-y-2">
+                <div className="text-sm font-medium mb-4">未完了</div>
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-10 bg-muted animate-pulse rounded" />
+                ))}
+              </div>
+            ) : (
+              <TaskList
+                title={`未完了 (${incItems.length})`}
+                tasks={incItems}
+                showCreatedColumn={false}
+                showPlannedColumn
+                showTypeColumn
+                showMilestoneColumn={false}
+                enableSelection
+              />
+            )}
           </Card>
         </>
       ) : null}
 
       {/* 実行済みの積み上げ候補 */}
-      {showCompleted && totalCom > 0 && (
+      {showCompleted && (hydrating || totalCom > 0) && (
         <>
           <div className="flex items-center justify-between mb-2 mt-4">
-            <div className="text-xs opacity-70">{pageCom} / {totalPagesCom}（全 {totalCom} 件）</div>
+            <div className="text-xs opacity-70">{hydrating ? "-" : `${pageCom} / ${totalPagesCom}（全 ${totalCom} 件）`}</div>
             <FilterBar>
               <StylishSelect
                 label="ソート"
@@ -225,15 +229,24 @@ export default function BacklogPage() {
             </FilterBar>
           </div>
           <Card padding="md">
-            <TaskList
-              title={`実行済み (${comItems.length})`}
-              tasks={comItems}
-              showCreatedColumn={false}
-              showPlannedColumn
-              showTypeColumn
-              showMilestoneColumn={false}
-              enableSelection
-            />
+            {hydrating ? (
+              <div className="space-y-2">
+                <div className="text-sm font-medium mb-4">実行済み</div>
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-10 bg-muted animate-pulse rounded" />
+                ))}
+              </div>
+            ) : (
+              <TaskList
+                title={`実行済み (${comItems.length})`}
+                tasks={comItems}
+                showCreatedColumn={false}
+                showPlannedColumn
+                showTypeColumn
+                showMilestoneColumn={false}
+                enableSelection
+              />
+            )}
           </Card>
         </>
       )}

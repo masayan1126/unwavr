@@ -1,11 +1,15 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
-import { useConfirm } from "@/components/Providers";
+import { RotateCcw, Trash2 } from "lucide-react";
+import { useConfirm, useToast } from "@/components/Providers";
 import { useAppStore } from "@/lib/store";
 import { Task } from "@/lib/types";
-import SimpleTaskListPageSkeleton from "@/components/SimpleTaskListPageSkeleton";
 import StylishSelect from "@/components/StylishSelect";
 import FilterBar from "@/components/FilterBar";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { PageLayout, PageHeader } from "@/components/ui/PageLayout";
+import { TaskTable, PRESETS, mergeConfig, BulkAction } from "@/components/TaskTable";
 
 export default function ArchivedTasksPage(): React.ReactElement {
   const [items, setItems] = useState<Task[]>([]);
@@ -14,8 +18,14 @@ export default function ArchivedTasksPage(): React.ReactElement {
   const [pageSize, setPageSize] = useState<number>(10);
   const [loading, setLoading] = useState<boolean>(true);
   const { updateTask, hydrateFromDb } = useAppStore();
+  const confirm = useConfirm();
+  const toast = useToast();
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil((total || 0) / pageSize)), [total, pageSize]);
+
+  // 並び替え
+  const [sortKey, setSortKey] = useState<'title' | 'archivedAt'>('archivedAt');
+  const [sortAsc, setSortAsc] = useState<boolean>(false);
 
   useEffect(() => {
     setLoading(true);
@@ -27,130 +37,126 @@ export default function ArchivedTasksPage(): React.ReactElement {
       .finally(() => setLoading(false));
   }, [page, pageSize]);
 
-  const restore = async (task: Task) => {
-    await fetch(`/api/db/tasks/${encodeURIComponent(task.id)}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ archived: false, archivedAt: null }),
-    }).catch(() => { });
-    setItems((prev) => prev.filter((t) => t.id !== task.id));
-    updateTask(task.id, { archived: false, archivedAt: undefined });
+  const handleBulkRestore = async (ids: string[]) => {
+    if (ids.length === 0) return;
+    await Promise.all(ids.map((id) =>
+      fetch(`/api/db/tasks/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ archived: false, archivedAt: null }),
+      }).catch(() => { })
+    ));
+    setItems((prev) => prev.filter((t) => !ids.includes(t.id)));
+    for (const id of ids) {
+      updateTask(id, { archived: false, archivedAt: undefined });
+    }
     hydrateFromDb();
+    toast.show(`${ids.length}件を復元しました`, 'success');
   };
 
-  const [selected, setSelected] = useState<Record<string, boolean>>({});
-  const allChecked = useMemo(() => items.length > 0 && items.every((t) => selected[t.id]), [items, selected]);
-  const toggleAll = (checked: boolean) => setSelected(Object.fromEntries(items.map((t) => [t.id, checked])));
-  const toggleOne = (id: string, checked: boolean) => setSelected((s) => ({ ...s, [id]: checked }));
-  const selectedIds = useMemo(() => items.filter((t) => selected[t.id]).map((t) => t.id), [items, selected]);
-  const confirm = useConfirm();
-  const bulkDelete = async () => {
-    if (selectedIds.length === 0) return;
-    const ok = await confirm(`${selectedIds.length}件を削除しますか？この操作は取り消せません。`, { tone: 'danger', confirmText: '削除' });
+  const handleBulkPermanentDelete = async (ids: string[]) => {
+    if (ids.length === 0) return;
+    const ok = await confirm(`${ids.length}件を完全に削除しますか？この操作は取り消せません。`, { tone: 'danger', confirmText: '削除' });
     if (!ok) return;
-    // 個別DELETE（RLS適用のため）
-    await Promise.all(selectedIds.map((id) => fetch(`/api/db/tasks/${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => { })));
-    setItems((prev) => prev.filter((t) => !selectedIds.includes(t.id)));
-    setSelected({});
+    await Promise.all(ids.map((id) => fetch(`/api/db/tasks/${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => { })));
+    setItems((prev) => prev.filter((t) => !ids.includes(t.id)));
     hydrateFromDb();
+    toast.show(`${ids.length}件を削除しました`, 'success');
   };
 
-  // 並び替え（タイトル/アーカイブ日時）
-  const [sortKey, setSortKey] = useState<'title' | 'archivedAt'>('archivedAt');
-  const [sortAsc, setSortAsc] = useState<boolean>(false);
-  const sorted = useMemo(() => {
-    const arr = items.slice();
-    arr.sort((a, b) => {
-      if (sortKey === 'title') {
-        const res = (a.title ?? '').localeCompare(b.title ?? '');
-        return sortAsc ? res : -res;
-      }
-      const av = a.archivedAt ?? 0;
-      const bv = b.archivedAt ?? 0;
-      return sortAsc ? av - bv : bv - av;
-    });
-    return arr;
-  }, [items, sortKey, sortAsc]);
+  // 一括操作アクション
+  const bulkActions: BulkAction[] = useMemo(() => [
+    {
+      id: "restore",
+      label: "復元",
+      icon: <RotateCcw size={14} />,
+      onClick: (ids) => handleBulkRestore(ids),
+    },
+    {
+      id: "delete",
+      label: "完全削除",
+      icon: <Trash2 size={14} />,
+      onClick: (ids) => handleBulkPermanentDelete(ids),
+      variant: "danger" as const,
+    },
+  ], []);
 
-  if (loading) {
-    return <SimpleTaskListPageSkeleton />;
-  }
+  // TaskTableの設定
+  const tableConfig = useMemo(() => mergeConfig(PRESETS.archived, {
+    sorting: {
+      key: sortKey,
+      ascending: sortAsc,
+      onSortChange: (key, asc) => {
+        setSortKey(key as 'title' | 'archivedAt');
+        setSortAsc(asc);
+      },
+    },
+    bulkActions: {
+      enabled: true,
+      actions: bulkActions,
+    },
+  }), [sortKey, sortAsc, bulkActions]);
 
   return (
-    <div className="p-6 sm:p-10 max-w-[1400px] mx-auto flex flex-col gap-4">
-      <header className="mb-6">
+    <PageLayout>
+      <PageHeader title="アーカイブ済みタスク" />
+
+      {/* フィルターバー */}
+      <div className="mb-4 px-1">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">アーカイブ済みタスク</h1>
-          <div className="flex items-center gap-3">
-            <FilterBar>
-              <StylishSelect
-                label="1ページあたり"
-                value={pageSize}
-                onChange={(v) => {
-                  setPageSize(Number(v));
-                  setPage(1);
-                }}
-                options={[10, 20, 50, 100].map((n) => ({ value: n, label: String(n) }))}
-              />
-              <button
-                className="px-3 py-1.5 rounded-lg border text-sm bg-white/5 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 transition-colors"
-                onClick={bulkDelete}
-                disabled={selectedIds.length === 0}
-                title="選択したタスクを削除"
-              >
-                選択削除
-              </button>
-            </FilterBar>
-          </div>
+          <div className="text-xs opacity-70">{loading ? "-" : `${page} / ${totalPages}（全 ${total} 件）`}</div>
+          <FilterBar>
+            <StylishSelect
+              label="ソート"
+              value={sortKey}
+              onChange={(v) => setSortKey(v as 'title' | 'archivedAt')}
+              options={[
+                { value: 'archivedAt', label: 'アーカイブ日' },
+                { value: 'title', label: 'タイトル' },
+              ]}
+            />
+            <Button variant="secondary" size="sm" onClick={() => setSortAsc((v) => !v)}>
+              {sortAsc ? "昇順" : "降順"}
+            </Button>
+            <StylishSelect
+              label="1ページあたり"
+              value={pageSize}
+              onChange={(v) => {
+                setPageSize(Number(v));
+                setPage(1);
+              }}
+              options={[10, 20, 50, 100].map((n) => ({ value: n, label: String(n) }))}
+            />
+            <div className="flex items-center gap-2 ml-auto">
+              <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                前へ
+              </Button>
+              <Button variant="secondary" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+                次へ
+              </Button>
+            </div>
+          </FilterBar>
         </div>
-      </header>
-      {items.length === 0 ? (
-        <p className="text-sm text-black/60 dark:text-white/60">アーカイブ済みのタスクはありません。</p>
+      </div>
+
+      {/* テーブル */}
+      {loading ? (
+        <Card padding="md">
+          <div className="space-y-2">
+            <div className="text-sm font-medium mb-4">アーカイブ済み</div>
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-10 bg-muted animate-pulse rounded" />
+            ))}
+          </div>
+        </Card>
       ) : (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <label className="text-sm flex items-center gap-2"><input type="checkbox" checked={allChecked} onChange={(e) => toggleAll(e.target.checked)} /> 全選択</label>
-            <span className="text-xs opacity-70">{selectedIds.length} 件選択中</span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="table-fixed w-full border-separate border-spacing-0">
-              <thead>
-                <tr className="text-[12px] font-medium opacity-70">
-                  <th className="w-[40px] px-2 py-1 text-left"></th>
-                  <th className="px-2 py-1 text-left">タイトル
-                    <button className="ml-2 text-[11px] underline opacity-70" onClick={() => { setSortKey('title'); setSortAsc((v) => sortKey === 'title' ? !v : true); }}>並び替え{sortKey === 'title' ? (sortAsc ? '▲' : '▼') : ''}</button>
-                  </th>
-                  <th className="w-[120px] px-2 py-1 text-left">種別</th>
-                  <th className="w-[140px] px-2 py-1 text-left">アーカイブ日
-                    <button className="ml-2 text-[11px] underline opacity-70" onClick={() => { setSortKey('archivedAt'); setSortAsc((v) => sortKey === 'archivedAt' ? !v : false); }}>並び替え{sortKey === 'archivedAt' ? (sortAsc ? '▲' : '▼') : ''}</button>
-                  </th>
-                  <th className="w-[120px] px-2 py-1 text-left">操作</th>
-                </tr>
-              </thead>
-              <tbody className="align-top">
-                {sorted.map((t) => (
-                  <tr key={t.id} className="border-t border-black/5 dark:border-white/5">
-                    <td className="px-2 py-1"><input type="checkbox" checked={!!selected[t.id]} onChange={(e) => toggleOne(t.id, e.target.checked)} /></td>
-                    <td className="px-2 py-1 overflow-hidden"><div className="truncate font-medium">{t.title}</div></td>
-                    <td className="px-2 py-1 text-xs opacity-80">{t.type}</td>
-                    <td className="px-2 py-1 text-xs opacity-80">{t.archivedAt ? new Date(t.archivedAt).toLocaleDateString() : '-'}</td>
-                    <td className="px-2 py-1">
-                      <button style={{ borderColor: "var(--primary)", color: "var(--primary)" }} className="px-3 py-1.5 text-sm rounded-md border hover:opacity-80 transition-colors" onClick={() => restore(t)}>復元</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="flex items-center justify-between pt-4">
-            <button className="px-3 py-1 rounded border text-sm disabled:opacity-50" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>前へ</button>
-            <div className="text-xs opacity-70">{page} / {totalPages}（全 {total} 件）</div>
-            <button className="px-3 py-1 rounded border text-sm disabled:opacity-50" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>次へ</button>
-          </div>
-        </div>
+        <TaskTable
+          title="アーカイブ済み"
+          tasks={items}
+          config={tableConfig}
+          emptyMessage="アーカイブ済みのタスクはありません。"
+        />
       )}
-    </div>
+    </PageLayout>
   );
 }
-
-

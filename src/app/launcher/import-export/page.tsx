@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useAppStore } from "@/lib/store";
 import { useToast, useConfirm } from "@/components/Providers";
 import { useState } from "react";
+import { Button } from "@/components/ui/Button";
 
 export default function LauncherImportExportPage() {
   const exportLaunchers = useAppStore((s) => s.exportLaunchers);
@@ -23,7 +24,7 @@ export default function LauncherImportExportPage() {
 
       <div className="border rounded p-4 border-[var(--border)] flex items-center justify-between">
         <div className="text-sm font-medium">エクスポート（JSON）</div>
-        <button style={{ backgroundColor: "var(--primary)" }} className="px-3 py-1.5 rounded text-sm text-white dark:text-background border border-transparent hover:opacity-80" onClick={async () => {
+        <Button size="sm" onClick={async () => {
           const fileName = `launchers_${Date.now()}.json`;
           const data = {
             categories: useAppStore.getState().launcherCategories,
@@ -77,7 +78,7 @@ export default function LauncherImportExportPage() {
           }
         }}>
           エクスポート
-        </button>
+        </Button>
       </div>
 
       <div className="border rounded p-4 border-[var(--border)] flex flex-col gap-3">
@@ -88,7 +89,7 @@ export default function LauncherImportExportPage() {
           <input type="checkbox" checked={replace} onChange={(e) => setReplace(e.target.checked)} /> 既存を置き換える
         </label>
         <div className="flex items-center gap-2">
-          <button className="px-3 py-1 rounded border text-sm" onClick={() => {
+          <Button size="sm" onClick={() => {
             try {
               const res = importLaunchers(text, replace);
               setResult(res);
@@ -97,8 +98,8 @@ export default function LauncherImportExportPage() {
             } catch {
               toast.show('インポート失敗', 'error');
             }
-          }}>インポート</button>
-          <button className="px-3 py-1 rounded border text-sm" onClick={() => setText("")}>クリア</button>
+          }}>インポート</Button>
+          <Button variant="secondary" size="sm" onClick={() => setText("")}>クリア</Button>
         </div>
         {result && (
           <div className="text-sm">
@@ -114,7 +115,7 @@ export default function LauncherImportExportPage() {
 
       <div className="border rounded p-4 border-[var(--border)] flex items-center justify-between">
         <div className="text-sm font-medium">サンプル投入（ランチャー）</div>
-        <button className="px-3 py-1 rounded border text-sm" onClick={async () => {
+        <Button variant="secondary" size="sm" onClick={async () => {
           const ok = await confirm('サンプルのランチャー設定をDBに投入します。続行しますか？', { confirmText: '投入' });
           if (!ok) return;
           try {
@@ -130,7 +131,7 @@ export default function LauncherImportExportPage() {
           } catch {
             toast.show('投入に失敗しました', 'error');
           }
-        }}>デモデータ投入</button>
+        }}>デモデータ投入</Button>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePomodoro } from "@/hooks/usePomodoro";
 import { NoticeToast } from "@/components/Toast";
+import { Button } from "@/components/ui/Button";
 
 // デフォルト値（SSR用）
 const DEFAULT_SECONDS = 25 * 60;
@@ -157,23 +158,23 @@ export default function Pomodoro() {
       </div>
       <div className="flex gap-2 items-center mb-3">
         {!displayIsRunning ? (
-          <button className="px-3 py-1 rounded bg-foreground text-background text-sm" onClick={() => { ensureAudio(); start(); }}>
+          <Button size="sm" onClick={() => { ensureAudio(); start(); }}>
             スタート
-          </button>
+          </Button>
         ) : (
-          <button className="px-3 py-1 rounded bg-foreground text-background text-sm" onClick={() => stop()}>
+          <Button size="sm" onClick={() => stop()}>
             ストップ
-          </button>
+          </Button>
         )}
-        <button className="px-3 py-1 rounded border text-sm" onClick={() => reset()}>
+        <Button variant="secondary" size="sm" onClick={() => reset()}>
           リセット
-        </button>
-        <button className="px-3 py-1 rounded border text-sm" onClick={() => { ensureAudio(); start(false); }}>
+        </Button>
+        <Button variant="secondary" size="sm" onClick={() => { ensureAudio(); start(false); }}>
           作業開始
-        </button>
-        <button className="px-3 py-1 rounded border text-sm" onClick={() => { ensureAudio(); start(true); }}>
+        </Button>
+        <Button variant="secondary" size="sm" onClick={() => { ensureAudio(); start(true); }}>
           休憩開始
-        </button>
+        </Button>
       </div>
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div>

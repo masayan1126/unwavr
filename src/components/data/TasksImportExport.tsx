@@ -380,8 +380,9 @@ export default function TasksImportExport() {
                 <div className="text-sm font-medium">サンプル投入（タスク）</div>
                 <div className="text-xs opacity-80">役割を選ぶと、毎日/積み上げ候補/特定曜日を含むリアルなサンプルをDBに投入します。</div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <button
-                        className="px-3 py-1 rounded-[3px] border text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                    <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={async () => {
                             const ok = await confirm('エンジニア向けのサンプルを投入します。続行しますか？', { confirmText: '投入' });
                             if (!ok) return;
@@ -393,10 +394,11 @@ export default function TasksImportExport() {
                                 toast.show('投入に失敗しました', 'error');
                             }
                         }}
-                    >エンジニア</button>
+                    >エンジニア</Button>
 
-                    <button
-                        className="px-3 py-1 rounded-[3px] border text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                    <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={async () => {
                             const ok = await confirm('デザイナー向けのサンプルを投入します。続行しますか？', { confirmText: '投入' });
                             if (!ok) return;
@@ -408,10 +410,11 @@ export default function TasksImportExport() {
                                 toast.show('投入に失敗しました', 'error');
                             }
                         }}
-                    >デザイナー</button>
+                    >デザイナー</Button>
 
-                    <button
-                        className="px-3 py-1 rounded-[3px] border text-sm hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                    <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={async () => {
                             const ok = await confirm('動画クリエイター向けのサンプルを投入します。続行しますか？', { confirmText: '投入' });
                             if (!ok) return;
@@ -423,14 +426,14 @@ export default function TasksImportExport() {
                                 toast.show('投入に失敗しました', 'error');
                             }
                         }}
-                    >動画クリエイター</button>
+                    >動画クリエイター</Button>
                 </div>
             </div>
 
             <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                     <div className="text-sm font-medium">インポート履歴</div>
-                    <button className="text-xs underline opacity-80" onClick={() => { clearHistory(); toast.show('履歴をすべて削除しました', 'success'); }}>履歴をすべて削除</button>
+                    <Button variant="ghost" size="sm" onClick={() => { clearHistory(); toast.show('履歴をすべて削除しました', 'success'); }}>履歴をすべて削除</Button>
                 </div>
                 {history.length === 0 ? (
                     <div className="text-sm opacity-70">履歴なし</div>

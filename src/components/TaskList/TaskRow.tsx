@@ -26,6 +26,7 @@ interface TaskRowProps {
     showScheduledColumn?: boolean;
     showTypeColumn?: boolean;
     showMilestoneColumn?: boolean;
+    showArchivedAtColumn?: boolean;
     editingPlannedTaskId: string | null;
     tempPlannedDate: string;
     setTempPlannedDate: (date: string) => void;
@@ -34,7 +35,7 @@ interface TaskRowProps {
     startEditPlannedDate: (task: Task) => void;
 }
 
-export function TaskRow({ task, onEdit, onContext, enableSelection, selected, onSelectOne, showCreatedColumn, showPlannedColumn, showScheduledColumn, showTypeColumn, showMilestoneColumn, editingPlannedTaskId, tempPlannedDate, setTempPlannedDate, savePlannedDate, cancelEditPlannedDate, startEditPlannedDate }: TaskRowProps) {
+export function TaskRow({ task, onEdit, onContext, enableSelection, selected, onSelectOne, showCreatedColumn, showPlannedColumn, showScheduledColumn, showTypeColumn, showMilestoneColumn, showArchivedAtColumn, editingPlannedTaskId, tempPlannedDate, setTempPlannedDate, savePlannedDate, cancelEditPlannedDate, startEditPlannedDate }: TaskRowProps) {
     const toggle = useAppStore((s) => s.toggleTask);
     const toggleDailyToday = useAppStore((s) => s.toggleDailyDoneForToday);
     const activeTaskIds = useAppStore((s) => s.pomodoro.activeTaskIds);
@@ -79,6 +80,8 @@ export function TaskRow({ task, onEdit, onContext, enableSelection, selected, on
             className="relative overflow-hidden"
             dragListener={false}
             dragControls={controls}
+            initial={false}
+            transition={{ duration: 0 }}
         >
             {/* Swipe Background Layer */}
             <div className="absolute inset-0 flex justify-between items-center px-4 pointer-events-none z-0">
@@ -191,14 +194,15 @@ export function TaskRow({ task, onEdit, onContext, enableSelection, selected, on
                             title={task.title}
                         >
                             <div className="text-sm font-medium truncate flex items-center gap-2">
-                                {truncateText(task.title, 20)}
+                                <span className="sm:hidden">{truncateText(task.title, 20)}</span>
+                                <span className="hidden sm:inline">{task.title}</span>
                                 {isActive && (
                                     <span className="inline-flex items-center gap-1.5 text-xxs font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/30">
                                         着手中 #{activeIndex + 1}
                                     </span>
                                 )}
                             </div>
-                            {task.description && <div className="text-xs opacity-70 truncate">{truncateText(task.description, 20)}</div>}
+                            {task.description && <div className="text-xs opacity-70 truncate"><span className="sm:hidden">{truncateText(task.description, 20)}</span><span className="hidden sm:inline">{truncateText(task.description, 60)}</span></div>}
                         </button>
                     </div>
 
@@ -272,9 +276,7 @@ export function TaskRow({ task, onEdit, onContext, enableSelection, selected, on
                                         ? "毎日"
                                         : task.type === "scheduled"
                                             ? (scheduledDaysLabel ? `特定曜日（${scheduledDaysLabel}）` : "特定曜日")
-                                            : isPlannedToday
-                                                ? "今日やる"
-                                                : "積み上げ候補"
+                                            : "積み上げ候補"
                                 }
                             />
                         </div>
@@ -284,7 +286,11 @@ export function TaskRow({ task, onEdit, onContext, enableSelection, selected, on
                             {milestone ? truncateText(milestone.title, 20) : <span className="opacity-40">-</span>}
                         </div>
                     )}
-
+                    {showArchivedAtColumn && (
+                        <div className="hidden sm:block w-[120px] text-xs opacity-80 whitespace-nowrap flex-shrink-0 px-2">
+                            {task.archivedAt ? new Date(task.archivedAt).toLocaleDateString() : <span className="opacity-40">-</span>}
+                        </div>
+                    )}
 
                 </div>
             </motion.div>

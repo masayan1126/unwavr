@@ -174,8 +174,17 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
     setDesc("");
     setScheduled(undefined);
     setMilestoneId("");
+    setEst(0);
     setPlannedDates([(() => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); return d.getTime(); })()]);
+    setPlannedDateInput(() => {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${dd}`;
+    });
     setType("backlog");
+    setLastSavedAt(null);
   };
 
   const onSubmit = (e: React.FormEvent) => {
@@ -325,12 +334,12 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
                 音声入力中...
               </span>
             )}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground ml-auto">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground ml-auto min-h-[20px]">
               {isSaving ? (
                 <span className="inline-flex items-center gap-1"><Loader2 size={14} className="animate-spin" /> 保存中...</span>
               ) : lastSavedAt ? (
                 <span>保存済み</span>
-              ) : null}
+              ) : <span className="invisible">保存済み</span>}
             </div>
           </div>
         </div>
@@ -438,9 +447,10 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
                       onChange={(e) => setRangeEnd(e.target.value)}
                       onBlur={performSave}
                     />
-                    <button
+                    <Button
                       type="button"
-                      className="px-2 py-1 rounded border border-border text-xs hover:bg-black/5"
+                      variant="secondary"
+                      size="sm"
                       onClick={() => {
                         if (!rangeStart || !rangeEnd) return;
                         const startDate = new Date(rangeStart);
@@ -459,7 +469,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
                       }}
                     >
                       期間追加
-                    </button>
+                    </Button>
                   </div>
                   {(scheduled?.dateRanges?.length ?? 0) > 0 && (
                     <div className="flex flex-col gap-1 text-xs">
@@ -567,9 +577,18 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
           />
         </div>
         {!task && (
-          <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-border">
-            <button type="button" className="btn" onClick={() => { performSave(); toast.show('タスクを追加しました', 'success'); setTimeout(() => { if (onSubmitted) onSubmitted('keep'); }, 0); }}>続けて追加</button>
-            <Button type="submit">追加</Button>
+          <div className="flex justify-end mt-4 pt-4 border-t border-border">
+            <Button
+              type="button"
+              onClick={() => {
+                performSave();
+                toast.show('タスクを追加しました', 'success');
+                resetForm();
+              }}
+              className="bg-white text-black border border-black/20 hover:bg-gray-100"
+            >
+              続けて追加
+            </Button>
           </div>
         )}
       </form>
