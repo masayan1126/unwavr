@@ -219,7 +219,9 @@ export default function TasksImportExport() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `tasks_export_${Date.now()}.csv`;
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+        a.download = `tasks_export_${dateStr}.csv`;
         a.click();
         URL.revokeObjectURL(url);
         toast.show('CSVをエクスポートしました', 'success');
@@ -263,7 +265,9 @@ export default function TasksImportExport() {
     }
 
     async function exportCSVChooseFile(): Promise<void> {
-        const fileName = `tasks_export_${Date.now()}.csv`;
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+        const fileName = `tasks_export_${dateStr}.csv`;
         // Feature detection for File System Access API
         const anyWindow = window as unknown as {
             showSaveFilePicker?: (options?: unknown) => Promise<FileSystemFileHandle>;
