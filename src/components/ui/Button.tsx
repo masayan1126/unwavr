@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 
-export type ButtonVariant = "primary" | "secondary" | "success" | "danger" | "outline" | "ghost";
+export type ButtonVariant = "primary" | "accent" | "soft" | "secondary" | "success" | "danger" | "outline" | "ghost";
 export type ButtonSize = "sm" | "md" | "lg";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -27,16 +27,31 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             fullWidth,
             children,
             disabled,
+            style,
             ...props
         },
         ref
     ) => {
-        const variants = {
-            primary: "bg-primary text-white hover:opacity-90 border-transparent",
+        // Option B: ウォームアクセント - インラインスタイルでCSS変数を適用
+        const variantStyles: Record<ButtonVariant, React.CSSProperties> = {
+            primary: { backgroundColor: "var(--primary)" },
+            accent: { backgroundColor: "var(--accent)" },
+            soft: { backgroundColor: "var(--soft)" },
+            secondary: {},
+            success: {},
+            danger: {},
+            outline: {},
+            ghost: {},
+        };
+
+        const variantClasses: Record<ButtonVariant, string> = {
+            primary: "text-white dark:text-background border-transparent hover:opacity-90",
+            accent: "text-white dark:text-background border-transparent hover:opacity-90",
+            soft: "text-foreground border-transparent hover:opacity-90",
             secondary: "bg-transparent border-border text-foreground hover:bg-black/5 dark:hover:bg-white/5",
-            success: "bg-success text-white hover:opacity-90 border-transparent",
-            danger: "bg-danger text-white hover:opacity-90 border-transparent",
-            outline: "bg-transparent border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5",
+            success: "bg-success text-white border-transparent hover:opacity-90",
+            danger: "bg-danger text-white border-transparent hover:opacity-90",
+            outline: "bg-transparent border-black/15 dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/5",
             ghost: "bg-transparent border-transparent hover:bg-black/5 dark:hover:bg-white/5",
         };
 
@@ -50,12 +65,13 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             <button
                 ref={ref}
                 disabled={disabled || isLoading}
+                style={{ ...variantStyles[variant], ...style }}
                 className={clsx(
                     "inline-flex items-center justify-center rounded-[var(--radius-sm)] border font-medium",
                     "transition-all duration-[var(--transition-fast)]",
                     "disabled:opacity-50 disabled:cursor-not-allowed",
                     "focus:outline-none focus:ring-2 focus:ring-primary/20",
-                    variants[variant],
+                    variantClasses[variant],
                     sizes[size],
                     fullWidth && "w-full",
                     className

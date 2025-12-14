@@ -11,7 +11,7 @@ export default function BacklogPageSkeleton() {
         <div className="flex items-center justify-between">
           <div className="h-7 w-32 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
           <div className="flex items-center gap-4">
-            <div className="h-8 w-20 rounded bg-[#2383E2]/30 animate-pulse" />
+            <div className="h-8 w-20 rounded bg-[var(--primary)]/30 animate-pulse" />
             <div className="h-8 w-24 rounded border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 animate-pulse" />
           </div>
         </div>

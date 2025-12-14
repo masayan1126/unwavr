@@ -65,7 +65,7 @@ export default function AuthButtons({ collapsed = false }: { collapsed?: boolean
         {session.user?.email || session.user?.name}
       </span>
       <button
-        onClick={() => signOut()}
+        onClick={() => signOut({ callbackUrl: '/auth/signin' })}
         className="flex items-center gap-2 px-3 py-1.5 rounded-[3px] border text-sm whitespace-nowrap hover:bg-black/5 dark:hover:bg-white/10"
         title="ログアウト"
       >

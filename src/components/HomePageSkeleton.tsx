@@ -38,7 +38,7 @@ export default function HomePageSkeleton() {
         <div className="mb-2 flex gap-2 items-center">
           <div className="h-5 w-24 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
           <div className="ml-auto">
-            <div className="h-8 w-20 rounded bg-[#2383E2]/30 animate-pulse" />
+            <div className="h-8 w-20 rounded bg-[var(--primary)]/30 animate-pulse" />
           </div>
         </div>
         <div className="space-y-2 flex-1">

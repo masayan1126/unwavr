@@ -46,7 +46,8 @@ export default function AddQiitaZenn() {
       {/* この案内文は削除要求により非表示 */}
       <button
         onClick={handleAdd}
-        className="px-4 py-2 bg-[var(--primary)] text-white rounded-md text-sm hover:opacity-90 transition-colors"
+        style={{ backgroundColor: "var(--primary)" }}
+        className="px-4 py-2 text-white dark:text-background rounded-md text-sm hover:opacity-90 transition-colors"
       >
         追加する
       </button>

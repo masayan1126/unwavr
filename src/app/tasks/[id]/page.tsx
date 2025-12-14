@@ -242,9 +242,10 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
             <div className="flex flex-wrap items-center gap-2 mb-6 pb-4 border-b border-[var(--border)]">
               <button
                 onClick={() => setActiveTask(isActive ? undefined : task.id)}
+                style={!isActive ? { backgroundColor: "var(--primary)" } : undefined}
                 className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${isActive
                   ? "bg-green-500 text-white"
-                  : "bg-[var(--primary)] text-white hover:opacity-90"
+                  : "text-white dark:text-background hover:opacity-90"
                   }`}
               >
                 {isActive ? <Pause size={14} /> : <Play size={14} />}
@@ -554,7 +555,8 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
             <button
               onClick={() => handleSave()}
               disabled={!title.trim()}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--primary)] text-white rounded-lg font-medium hover:opacity-90 disabled:opacity-50 transition-colors"
+              style={{ backgroundColor: "var(--primary)" }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-white dark:text-background rounded-lg font-medium hover:opacity-90 disabled:opacity-50 transition-colors"
             >
               <CheckCircle2 size={16} />
               保存

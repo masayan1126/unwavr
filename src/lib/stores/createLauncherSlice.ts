@@ -92,6 +92,37 @@ export const createLauncherSlice: StateCreator<AppState, [], [], LauncherSlice> 
             const errors: string[] = [];
             const importedCategories = parsed.categories?.length ?? 0;
             const importedShortcuts = parsed.shortcuts?.length ?? 0;
+
+            const currentState = get();
+
+            // replaceの場合は既存データを削除
+            if (replace) {
+                // 既存のショートカットを削除
+                for (const s of currentState.launcherShortcuts) {
+                    fetch(`/api/db/launchers/shortcuts/${encodeURIComponent(s.id)}`, { method: 'DELETE' }).catch(() => { });
+                }
+                // 既存のカテゴリを削除
+                for (const c of currentState.launcherCategories) {
+                    fetch(`/api/db/launchers/categories/${encodeURIComponent(c.id)}`, { method: 'DELETE' }).catch(() => { });
+                }
+            }
+
+            // インポートしたデータをDBに保存
+            if (parsed.categories && parsed.categories.length > 0) {
+                fetch('/api/db/launchers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ categories: parsed.categories })
+                }).catch(() => { });
+            }
+            if (parsed.shortcuts && parsed.shortcuts.length > 0) {
+                fetch('/api/db/launchers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ shortcuts: parsed.shortcuts })
+                }).catch(() => { });
+            }
+
             set((state) => ({
                 launcherCategories: replace ? (parsed.categories ?? []) : [...state.launcherCategories, ...(parsed.categories ?? [])],
                 launcherShortcuts: replace ? (parsed.shortcuts ?? []) : [...state.launcherShortcuts, ...(parsed.shortcuts ?? [])],

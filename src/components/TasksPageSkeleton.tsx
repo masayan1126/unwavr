@@ -13,7 +13,7 @@ export default function TasksPageSkeleton() {
           <div className="h-7 w-40 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
           <div className="flex items-center gap-4">
             <div className="h-8 w-8 rounded-full bg-black/10 dark:bg-white/10 animate-pulse" />
-            <div className="h-8 w-20 rounded bg-[#2383E2]/30 animate-pulse" />
+            <div className="h-8 w-20 rounded bg-[var(--primary)]/30 animate-pulse" />
             <div className="h-5 w-14 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
           </div>
         </div>

@@ -15,10 +15,13 @@ const AddTaskButton = forwardRef<HTMLButtonElement, AddTaskButtonProps>(
             <button
                 ref={ref}
                 onClick={onClick}
+                style={{
+                    backgroundColor: "#37352F",
+                }}
                 className={clsx(
                     "group flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-[3px]",
-                    "bg-[var(--primary)] text-white shadow-md transition-all duration-200",
-                    "hover:bg-[var(--primary)]/90 hover:shadow-lg hover:scale-[1.02] active:scale-95",
+                    "text-white shadow-md transition-all duration-200",
+                    "hover:opacity-90 hover:shadow-lg hover:scale-[1.02] active:scale-95",
                     className
                 )}
             >

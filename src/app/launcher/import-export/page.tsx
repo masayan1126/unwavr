@@ -23,7 +23,7 @@ export default function LauncherImportExportPage() {
 
       <div className="border rounded p-4 border-[var(--border)] flex items-center justify-between">
         <div className="text-sm font-medium">エクスポート（JSON）</div>
-        <button className="px-3 py-1.5 rounded text-sm bg-[var(--primary)] text-[#0f172a] border border-transparent hover:opacity-80" onClick={async () => {
+        <button style={{ backgroundColor: "var(--primary)" }} className="px-3 py-1.5 rounded text-sm text-white dark:text-background border border-transparent hover:opacity-80" onClick={async () => {
           const fileName = `launchers_${Date.now()}.json`;
           const data = {
             categories: useAppStore.getState().launcherCategories,
