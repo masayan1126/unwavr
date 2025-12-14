@@ -104,9 +104,11 @@ export default function Sidebar() {
             {/* Tasks Section */}
             <SectionHeader label="Tasks & Planning" />
             <NavLink href="/tasks" label="すべてのタスク" icon={<ListTodo size={16} />} exact={true} />
+            {/* 一時的に非表示
             <NavLink href="/tasks/daily" label="毎日" icon={<ListTodo size={16} />} />
             <NavLink href="/tasks/scheduled" label="特定曜日" icon={<CalendarDays size={16} />} />
             <NavLink href="/tasks/backlog" label="積み上げ候補" icon={<Archive size={16} />} />
+            */}
             <NavLink href="/milestones" label="マイルストーン" icon={<Target size={16} />} />
             <NavLink href="/analysis" label="分析" icon={<BarChart2 size={16} />} />
 
