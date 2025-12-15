@@ -28,10 +28,10 @@ export default function Toast({ message, type = "info", onClose, durationMs = 30
   }, [onClose, durationMs]);
 
   const accent =
-    type === "success" ? "bg-[var(--primary)]" :
-      type === "warning" ? "bg-[var(--warning)]" :
-        type === "error" ? "bg-[var(--danger)]" :
-          "bg-[var(--primary)]";
+    type === "success" ? "bg-success" :
+      type === "warning" ? "bg-warning" :
+        type === "error" ? "bg-danger" :
+          "bg-primary";
 
   const Icon =
     type === "success" ? CheckCircle2 :
@@ -40,9 +40,9 @@ export default function Toast({ message, type = "info", onClose, durationMs = 30
           Info;
 
   const isError = type === "error";
-  const baseContainer = "pointer-events-auto flex items-start gap-3 rounded-lg backdrop-blur shadow-lg px-4 py-3 w-[320px] sm:w-[360px] border";
-  const normalContainer = "border-[var(--border)] bg-white/90 dark:bg-neutral-900/90";
-  const errorContainer = "bg-[var(--danger)] text-white border-[var(--danger)]";
+  const baseContainer = "pointer-events-auto flex items-start gap-3 rounded-[var(--radius-md)] backdrop-blur shadow-token-lg px-4 py-3 w-[320px] sm:w-[360px] border";
+  const normalContainer = "border-border bg-white/90 dark:bg-neutral-900/90";
+  const errorContainer = "bg-danger text-white border-danger";
 
   // スマートフォン: 上部中央、デスクトップ: 指定位置（右寄せ）
   // sm以上では指定のpositionに従う（bottom指定時はbottom、top指定時はtop）

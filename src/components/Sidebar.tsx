@@ -52,12 +52,12 @@ export default function Sidebar() {
     return (
       <Link
         href={href}
-        className={`group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 ${active
+        className={`group flex items-center gap-2.5 px-3 py-2 rounded-[var(--radius-md)] text-sm transition-fast ${active
           ? "bg-primary/10 text-primary font-medium"
           : "text-muted-foreground hover:bg-muted hover:text-foreground"
           }`}
       >
-        <span className={`transition-transform duration-200 ${active ? "scale-110" : "group-hover:scale-110"}`}>
+        <span className={`transition-fast ${active ? "scale-110" : "group-hover:scale-110"}`}>
           {icon}
         </span>
         <span className="truncate">{label}</span>
@@ -147,9 +147,9 @@ export default function Sidebar() {
             <NavLink href="/assistant" label="Unwavr AI" icon={<MessageSquare size={16} />} />
             <button
               onClick={() => setShowBriefing(true)}
-              className="group flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200 text-muted-foreground hover:bg-muted hover:text-foreground text-left w-full"
+              className="group flex items-center gap-2.5 px-3 py-2 rounded-[var(--radius-md)] text-sm transition-fast text-muted-foreground hover:bg-muted hover:text-foreground text-left w-full"
             >
-              <span className="group-hover:scale-110 transition-transform duration-200">
+              <span className="group-hover:scale-110 transition-fast">
                 <Sun size={16} />
               </span>
               <span className="truncate">Daily Briefing</span>
@@ -162,7 +162,7 @@ export default function Sidebar() {
         )}
 
         {open && (
-          <div className="mt-auto pt-3 border-t border-black/10 dark:border-white/10 flex flex-col gap-3">
+          <div className="mt-auto pt-3 border-t border-border flex flex-col gap-3">
             <AuthButtons />
             <div className="flex items-center justify-between text-xxs opacity-60">
               <div className="flex gap-3">

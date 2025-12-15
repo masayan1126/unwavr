@@ -21,9 +21,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                 <input
                     ref={ref}
                     className={clsx(
-                        "w-full bg-transparent border border-black/10 dark:border-white/10 rounded-[3px] transition-all duration-200",
-                        "placeholder:text-black/30 dark:placeholder:text-white/30",
-                        "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary",
+                        "w-full bg-transparent border border-border rounded-[var(--radius-sm)] transition-base",
+                        "placeholder:text-muted-foreground/50",
+                        "focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] focus:border-primary",
                         "disabled:opacity-50 disabled:cursor-not-allowed",
                         iconLeft ? "pl-9" : "pl-3",
                         iconRight ? "pr-9" : "pr-3",

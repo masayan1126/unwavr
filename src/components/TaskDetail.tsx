@@ -52,7 +52,7 @@ export default function TaskDetail({ taskId, backHref }: { taskId: string; backH
         <h2 className="text-lg font-semibold flex items-center gap-2">
           {task.title}
           {activeId === task.id && (
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/30">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-primary/10 text-primary border-primary/30">
               着手中
             </span>
           )}
@@ -110,7 +110,7 @@ export default function TaskDetail({ taskId, backHref }: { taskId: string; backH
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className="border rounded p-3 border-black/10 dark:border-white/10">
+        <div className="border rounded-[var(--radius-md)] p-3 border-border">
           <div className="text-xs uppercase opacity-60 mb-2">基本情報</div>
           <div className="text-sm">種別: {task.type === "daily" ? "毎日" : task.type === "backlog" ? "積み上げ候補" : "曜日/連休"}</div>
           <div className="text-sm">今日対象: {today ? "はい" : "いいえ"}</div>
@@ -132,7 +132,7 @@ export default function TaskDetail({ taskId, backHref }: { taskId: string; backH
           </div>
         </div>
 
-        <div className="border rounded p-3 border-black/10 dark:border-white/10">
+        <div className="border rounded-[var(--radius-md)] p-3 border-border">
           <div className="text-xs uppercase opacity-60 mb-2">スケジュール</div>
           {task.type !== "scheduled" ? (
             <div className="text-sm opacity-70">スケジュール指定なし</div>
@@ -158,7 +158,7 @@ export default function TaskDetail({ taskId, backHref }: { taskId: string; backH
         </div>
       </div>
 
-      <div className="border rounded p-3 border-black/10 dark:border-white/10">
+      <div className="border rounded-[var(--radius-md)] p-3 border-border">
         <div className="text-xs uppercase opacity-60 mb-2">マイルストーン</div>
         {milestone ? (
           <div className="text-sm">
@@ -170,15 +170,16 @@ export default function TaskDetail({ taskId, backHref }: { taskId: string; backH
       </div>
 
       <div className="flex justify-end">
-        <button
-          className="px-3 py-1 rounded bg-[var(--danger)] text-white text-sm"
+        <Button
+          variant="danger"
+          size="sm"
           onClick={() => {
             remove(task.id);
             router.push(backHref);
           }}
         >
           削除
-        </button>
+        </Button>
       </div>
     </div>
   );

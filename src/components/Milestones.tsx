@@ -135,7 +135,7 @@ function MilestoneDialog({
           <div>
             <label className="text-sm font-medium mb-2 block">タイトル</label>
             <input
-              className="w-full border border-border rounded-lg px-4 py-3 bg-transparent text-base focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full border border-border rounded-[var(--radius-md)] px-4 py-3 bg-transparent text-base focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] transition-fast"
               placeholder="達成したい目標"
               value={editing.title}
               onChange={(e) => setEditing({ ...editing, title: e.target.value })}
@@ -149,7 +149,7 @@ function MilestoneDialog({
             <input
               type="number"
               min={1}
-              className="w-full border border-border rounded-lg px-4 py-3 bg-transparent text-base focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full border border-border rounded-[var(--radius-md)] px-4 py-3 bg-transparent text-base focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] transition-fast"
               value={editing.targetUnits}
               onChange={(e) => setEditing({ ...editing, targetUnits: parseInt(e.target.value || "1", 10) })}
             />
@@ -159,7 +159,7 @@ function MilestoneDialog({
           <div>
             <label className="text-sm font-medium mb-2 block">タグ（任意）</label>
             <input
-              className="w-full border border-border rounded-lg px-4 py-3 bg-transparent text-base focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full border border-border rounded-[var(--radius-md)] px-4 py-3 bg-transparent text-base focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] transition-fast"
               placeholder="例: 仕事、健康、学習..."
               value={editing.tag}
               onChange={(e) => setEditing({ ...editing, tag: e.target.value })}
@@ -511,7 +511,7 @@ export default function Milestones() {
                   </div>
 
                   {/* カード */}
-                  <div className="bg-card rounded-lg shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-border">
+                  <div className="bg-card rounded-[var(--radius-lg)] shadow-token-sm hover:shadow-token-md transition-base overflow-hidden border border-border">
                     <div className="p-4 pt-5">
                       {/* タイトルとアクション */}
                       <div className="flex items-start justify-between gap-2 mb-2">

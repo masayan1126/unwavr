@@ -45,6 +45,18 @@ export const H3 = ({ className, children, ...props }: TypographyProps) => (
     </h3>
 );
 
+export const H4 = ({ className, children, ...props }: TypographyProps) => (
+    <h4
+        className={clsx(
+            "text-sm font-semibold",
+            className
+        )}
+        {...props}
+    >
+        {children}
+    </h4>
+);
+
 export const Text = ({ className, children, variant = "default", ...props }: TextProps) => {
     const variants = {
         default: "text-sm text-foreground",
@@ -93,4 +105,16 @@ export const Caption = ({ className, children, ...props }: TypographyProps) => (
     >
         {children}
     </span>
+);
+
+export const Code = ({ className, children, ...props }: TypographyProps) => (
+    <code
+        className={clsx(
+            "font-mono text-sm bg-muted px-1.5 py-0.5 rounded-[var(--radius-sm)]",
+            className
+        )}
+        {...props}
+    >
+        {children}
+    </code>
 );

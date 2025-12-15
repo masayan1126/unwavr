@@ -23,9 +23,9 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
             <div
                 ref={ref}
                 className={clsx(
-                    "bg-sidebar rounded-[var(--radius-lg)] shadow-sm",
-                    "transition-shadow duration-[var(--transition-base)]",
-                    hoverable && "hover:shadow-md cursor-pointer",
+                    "bg-sidebar rounded-[var(--radius-lg)] shadow-token-sm",
+                    "transition-base",
+                    hoverable && "hover:shadow-token-md cursor-pointer",
                     paddings[padding],
                     className
                 )}

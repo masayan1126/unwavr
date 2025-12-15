@@ -39,6 +39,20 @@
   --transition-fast: 120ms ease;
   --transition-base: 200ms ease;
   --transition-slow: 300ms ease;
+
+  /* Shadow tokens */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* Focus ring tokens */
+  --ring-width: 2px;
+  --ring-offset: 0px;
+  --ring-color: rgba(55, 53, 47, 0.2);
+  --ring-color-accent: rgba(217, 115, 13, 0.3);
+  --ring-color-danger: rgba(235, 87, 87, 0.3);
 }
 
 @theme inline {
@@ -120,6 +134,39 @@
   transition: all var(--transition-slow);
 }
 
+/* Focus ring utility - unified focus states */
+@utility focus-ring {
+  outline: none;
+  box-shadow: 0 0 0 var(--ring-width) var(--ring-color);
+}
+
+@utility focus-ring-accent {
+  outline: none;
+  box-shadow: 0 0 0 var(--ring-width) var(--ring-color-accent);
+}
+
+@utility focus-ring-danger {
+  outline: none;
+  box-shadow: 0 0 0 var(--ring-width) var(--ring-color-danger);
+}
+
+/* Shadow utilities */
+@utility shadow-token-xs {
+  box-shadow: var(--shadow-xs);
+}
+
+@utility shadow-token-sm {
+  box-shadow: var(--shadow-sm);
+}
+
+@utility shadow-token-md {
+  box-shadow: var(--shadow-md);
+}
+
+@utility shadow-token-lg {
+  box-shadow: var(--shadow-lg);
+}
+
 /* Interactive hover utilities */
 .hover-lift {
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
@@ -127,7 +174,7 @@
 
 .hover-lift:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .hover-scale {
@@ -143,7 +190,7 @@
 }
 
 .hover-glow:hover {
-  box-shadow: 0 0 0 3px rgba(35, 131, 226, 0.2);
+  box-shadow: 0 0 0 3px var(--ring-color-accent);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -180,6 +227,18 @@
     --tag-daily: #37352F;
     --tag-scheduled: #5A4428;
     --tag-backlog: #5A302D;
+
+    /* Shadow tokens (dark) */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+
+    /* Focus ring tokens (dark) */
+    --ring-color: rgba(235, 235, 234, 0.25);
+    --ring-color-accent: rgba(255, 163, 68, 0.35);
+    --ring-color-danger: rgba(235, 87, 87, 0.35);
   }
 }
 
@@ -324,63 +383,6 @@ h6 {
   color: var(--muted-foreground);
 }
 
-/* Unified UI utilities */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 0.75rem;
-  /* px-3 py-2 */
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  /* rounded-[3px] */
-  font-size: 0.875rem;
-  /* text-sm */
-  background: transparent;
-  transition: background-color 120ms ease, box-shadow 120ms ease;
-}
-
-.btn-primary {
-  background: var(--foreground);
-  color: var(--background);
-  border-color: var(--foreground);
-}
-
-.btn-danger {
-  color: var(--danger);
-  border-color: var(--danger);
-}
-
-.btn-block {
-  width: 100%;
-}
-
-.btn-icon-gap {
-  gap: 0.5rem;
-}
-
-/* ボタンのホバー時もテーブル行と同等のホバー感を付与（背景色付きボタンは除外） */
-@media (hover: hover) {
-  .btn:hover {
-    background: rgba(0, 0, 0, 0.05);
-  }
-
-  html.dark .btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-  }
-
-  /* 背景色（bg-*) が付与されていない素のボタンにのみ適用 */
-  button:hover:not(.btn-primary):not([class*="bg-"]),
-  a.button:hover:not(.btn-primary):not([class*="bg-"]) {
-    background: rgba(0, 0, 0, 0.05);
-  }
-
-  html.dark button:hover:not(.btn-primary):not([class*="bg-"]),
-  html.dark a.button:hover:not(.btn-primary):not([class*="bg-"]) {
-    background: rgba(255, 255, 255, 0.08);
-  }
-}
-
 .dialog-card {
   width: 92vw;
   max-width: 960px;
@@ -477,20 +479,22 @@ input[type="submit"][disabled] {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-sm);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.25);
 }
 
-html.dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-}
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+  }
 
-html.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
 }
 
 /* Prose内の画像に枠線を追加（背景と同化防止） */

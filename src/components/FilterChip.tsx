@@ -21,10 +21,10 @@ export default function FilterChip({
             type="button"
             onClick={onClick}
             className={clsx(
-                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 border",
+                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-fast border",
                 active
-                    ? "bg-[var(--primary)] text-white border-[var(--primary)] shadow-sm"
-                    : "bg-transparent text-gray-600 dark:text-gray-400 border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5",
+                    ? "bg-primary text-primary-foreground border-primary shadow-token-sm"
+                    : "bg-transparent text-muted-foreground border-border hover:bg-black/5 dark:hover:bg-white/5",
                 className
             )}
         >

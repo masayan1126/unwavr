@@ -155,7 +155,7 @@ export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: Qui
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-[9998] transition-opacity duration-200 backdrop-blur-[2px]"
+        className="fixed inset-0 bg-black/50 z-[9998] transition-base backdrop-blur-[2px]"
         onClick={handleClose}
         aria-hidden="true"
       />
@@ -167,11 +167,11 @@ export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: Qui
           aria-modal="true"
           aria-labelledby="quick-add-title"
           aria-describedby="quick-add-description"
-          className="bg-background border border-[var(--border)] rounded-lg shadow-2xl w-full max-w-2xl mx-4 pointer-events-auto transform transition-all duration-200 ease-out"
+          className="bg-background border border-border rounded-[var(--radius-lg)] shadow-token-xl w-full max-w-2xl mx-4 pointer-events-auto transform transition-base"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="px-6 py-4 border-b border-black/10 dark:border-white/10 flex items-center justify-between">
+          <div className="px-6 py-4 border-b border-border flex items-center justify-between">
             <div>
               <h2 id="quick-add-title" className="text-lg font-semibold">
                 クイックタスク追加
