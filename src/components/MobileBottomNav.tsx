@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ListTodo, MessageSquare, Settings } from "lucide-react";
+import { Home, Target, ListTodo, MessageSquare, Settings } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 
@@ -9,6 +9,7 @@ type Item = { href: string; label: string; icon: React.ReactNode };
 
 const items: Item[] = [
     { href: "/", label: "ホーム", icon: <Home size={22} strokeWidth={2} /> },
+    { href: "/milestones", label: "目標", icon: <Target size={22} strokeWidth={2} /> },
     { href: "/tasks", label: "タスク", icon: <ListTodo size={22} strokeWidth={2} /> },
     { href: "/assistant", label: "AI", icon: <MessageSquare size={22} strokeWidth={2} /> },
     { href: "/settings", label: "設定", icon: <Settings size={22} strokeWidth={2} /> },
@@ -24,7 +25,7 @@ export default function MobileBottomNav() {
     return (
         <div className="md:hidden fixed bottom-0 inset-x-0 z-[9999] pointer-events-none">
             <nav className="pointer-events-auto bg-[var(--sidebar)] border-t border-border pb-[env(safe-area-inset-bottom)]">
-                <ul className="grid grid-cols-4 h-14 items-center relative">
+                <ul className="grid grid-cols-5 h-14 items-center relative">
                     {items.map((it) => {
                         const active = pathname === it.href || (it.href !== "/" && pathname.startsWith(it.href));
                         return (

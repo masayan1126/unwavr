@@ -76,6 +76,7 @@ export default function LayoutChrome({ children }: { children: ReactNode }): Rea
         <PomodoroTopBar />
         <NotificationBars />
         <main className="flex-1 pb-20 md:pb-0">
+          <MobileBackButton />
           {children}
         </main>
       </div>
@@ -84,7 +85,6 @@ export default function LayoutChrome({ children }: { children: ReactNode }): Rea
       <GlobalBgmPlayer />
       <CookieConsentConditional />
       <MobileBottomNav />
-      <MobileBackButton />
 
       {/* クイックタスク追加モーダル */}
       <QuickAddTaskModal

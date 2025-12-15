@@ -18,12 +18,16 @@ export default function MobileBackButton() {
     if (shouldHide) return null;
 
     return (
-        <button
-            onClick={() => router.back()}
-            className="md:hidden fixed top-3 left-3 z-[9998] w-9 h-9 flex items-center justify-center rounded-full bg-background/80 backdrop-blur border border-border shadow-sm active:scale-95 transition-transform"
-            aria-label="戻る"
-        >
-            <ChevronLeft size={20} strokeWidth={2} />
-        </button>
+        <div className="md:hidden sticky top-0 z-[100] bg-background border-b border-border">
+            <div className="h-12 flex items-center px-2">
+                <button
+                    onClick={() => router.back()}
+                    className="p-1 text-primary active:opacity-60 transition-opacity"
+                    aria-label="戻る"
+                >
+                    <ChevronLeft size={28} strokeWidth={2} />
+                </button>
+            </div>
+        </div>
     );
 }
