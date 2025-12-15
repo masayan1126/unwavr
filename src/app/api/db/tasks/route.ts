@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { PostgrestError } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseAdmin } from '@/lib/supabaseClient';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 
 export async function GET(req: NextRequest) {
-  if (!supabase) return NextResponse.json({ items: [] });
+  if (!supabaseAdmin) return NextResponse.json({ items: [] });
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string } | undefined)?.id;
   if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
   const selectOpts: { count?: 'exact' | 'planned' | 'estimated' } = {};
   if (limit != null) selectOpts.count = 'exact';
-  let query = supabase.from('tasks').select('*', selectOpts).eq('user_id', userId);
+  let query = supabaseAdmin.from('tasks').select('*', selectOpts).eq('user_id', userId);
   if (archived === 'only') {
     query = query.eq('archived', true).order('archivedAt', { ascending: false, nullsFirst: false });
   } else if (archived === 'all') {
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!supabase) return NextResponse.json({ error: 'not configured' }, { status: 400 });
+  if (!supabaseAdmin) return NextResponse.json({ error: 'not configured' }, { status: 400 });
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string } | undefined)?.id;
   if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
   }
   payload.user_id = userId;
 
-  const { data, error } = await supabase.from('tasks').insert(payload).select('*').single();
+  const { data, error } = await supabaseAdmin.from('tasks').insert(payload).select('*').single();
   if (error) {
     const err = error as PostgrestError;
     console.error('Supabase insert error (tasks):', { message: err.message, details: err.details, hint: err.hint, code: err.code });

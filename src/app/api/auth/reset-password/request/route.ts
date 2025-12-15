@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseAdmin } from "@/lib/supabaseClient";
 import { SignJWT } from "jose";
 import { Resend } from "resend";
 
 const Schema = z.object({ email: z.string().email() });
 
 export async function POST(req: NextRequest) {
-  if (!supabase) return NextResponse.json({ error: "not configured" }, { status: 400 });
+  if (!supabaseAdmin) return NextResponse.json({ error: "not configured" }, { status: 400 });
   const { email } = Schema.parse(await req.json());
-  const { data } = await supabase.from("users").select("id").eq("email", email.toLowerCase()).maybeSingle();
+  const { data } = await supabaseAdmin.from("users").select("id").eq("email", email.toLowerCase()).maybeSingle();
   if (!data) return NextResponse.json({ ok: true });
   const secret = new TextEncoder().encode(process.env.RESET_TOKEN_SECRET || process.env.NEXTAUTH_SECRET || "dev-secret");
   const token = await new SignJWT({ sub: String(data.id), email: email.toLowerCase(), t: "reset" })
