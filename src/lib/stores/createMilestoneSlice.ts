@@ -11,6 +11,14 @@ export const createMilestoneSlice: StateCreator<AppState, [], [], MilestoneSlice
             fetch('/api/db/milestones', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(m) }).catch(() => { });
             return { milestones: [...state.milestones, m] };
         }),
+    updateMilestone: (milestoneId, update) =>
+        set((state) => {
+            const milestones = state.milestones.map((m) =>
+                m.id === milestoneId ? { ...m, ...update } : m
+            );
+            fetch(`/api/db/milestones/${encodeURIComponent(milestoneId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update) }).catch(() => { });
+            return { milestones };
+        }),
     updateMilestoneProgress: (milestoneId, delta) =>
         set((state) => {
             const milestones = state.milestones.map((m) =>

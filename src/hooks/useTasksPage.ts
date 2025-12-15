@@ -3,12 +3,14 @@ import { useSearchParams } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { TaskType } from "@/lib/types";
 import { isOverdue, isDailyDoneToday, isBacklogPlannedToday, isScheduledForToday } from "@/lib/taskUtils";
+import type { MilestoneFilter } from "@/components/AdvancedSearchDialog";
 
 export const useTasksPage = () => {
     const tasks = useAppStore((s) => s.tasks);
     const hydrating = useAppStore((s) => s.hydrating);
     const [selectedType, setSelectedType] = useState<TaskType | "all">("all");
     const [searchQuery, setSearchQuery] = useState("");
+    const [milestoneFilter, setMilestoneFilter] = useState<MilestoneFilter>("all");
     const searchParams = useSearchParams();
     const [openCreate, setOpenCreate] = useState(false);
 
@@ -58,8 +60,21 @@ export const useTasksPage = () => {
                 task.id.toLowerCase().includes(query)
             );
         }
+
+        // マイルストーンフィルター適用
+        if (milestoneFilter !== "all") {
+            if (milestoneFilter === "with") {
+                filtered = filtered.filter((task) => !!task.milestoneId);
+            } else if (milestoneFilter === "without") {
+                filtered = filtered.filter((task) => !task.milestoneId);
+            } else {
+                // 特定のマイルストーンIDでフィルター
+                filtered = filtered.filter((task) => task.milestoneId === milestoneFilter);
+            }
+        }
+
         return filtered;
-    }, [tasks, searchQuery, searchParams]);
+    }, [tasks, searchQuery, searchParams, milestoneFilter]);
 
     const filteredTasks = useMemo(() => {
         if (selectedType === "all") return baseFiltered;
@@ -86,6 +101,8 @@ export const useTasksPage = () => {
         setSelectedType,
         searchQuery,
         setSearchQuery,
+        milestoneFilter,
+        setMilestoneFilter,
         openCreate,
         setOpenCreate,
         filteredTasks,

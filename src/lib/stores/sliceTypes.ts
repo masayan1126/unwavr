@@ -25,6 +25,7 @@ export interface TaskSlice {
 export interface MilestoneSlice {
     milestones: Milestone[];
     addMilestone: (input: Omit<Milestone, "id">) => void;
+    updateMilestone: (milestoneId: string, update: Partial<Omit<Milestone, "id">>) => void;
     updateMilestoneProgress: (milestoneId: string, delta: number) => void;
     removeMilestone: (milestoneId: string) => void;
     exportMilestones: () => string;

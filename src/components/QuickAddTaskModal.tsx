@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAppStore } from "@/lib/store";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
-import { Mic, X } from "lucide-react";
+import { Mic, X, Target } from "lucide-react";
 import { useToast } from "@/components/Providers";
 
 interface QuickAddTaskModalProps {
@@ -14,10 +14,12 @@ interface QuickAddTaskModalProps {
 
 export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: QuickAddTaskModalProps) {
   const [title, setTitle] = useState("");
+  const [milestoneId, setMilestoneId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const addTask = useAppStore((state) => state.addTask);
+  const milestones = useAppStore((state) => state.milestones);
   const toast = useToast();
 
   const { listening, toggle: toggleSpeech } = useSpeechRecognition({
@@ -64,6 +66,7 @@ export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: Qui
     }
 
     setTitle("");
+    setMilestoneId("");
     setError(null);
     onClose();
   }, [isSubmitting, listening, toggleSpeech, onClose]);
@@ -104,12 +107,14 @@ export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: Qui
         plannedDates: [todayUtc],
         estimatedPomodoros: 0,
         order: 0,
+        milestoneId: milestoneId || undefined,
       });
 
       toast.show(`タスク「${title.trim()}」を追加しました`, "success");
 
       // フォームをリセットして連続追加可能に
       setTitle("");
+      setMilestoneId("");
 
       // フォーカスを保持
       if (inputRef.current) {
@@ -216,6 +221,26 @@ export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: Qui
                 <Mic size={20} />
               </button>
             </div>
+
+            {/* マイルストーン選択 */}
+            {milestones.length > 0 && (
+              <div className="mt-3 flex items-center gap-2">
+                <Target size={16} className="text-muted-foreground shrink-0" />
+                <select
+                  value={milestoneId}
+                  onChange={(e) => setMilestoneId(e.target.value)}
+                  disabled={isSubmitting}
+                  className="flex-1 px-3 py-2 border border-[var(--border)] rounded-lg bg-transparent text-sm disabled:opacity-50 focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
+                >
+                  <option value="">マイルストーン: 未選択</option>
+                  {milestones.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.title} ({m.currentUnits}/{m.targetUnits})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {listening && (
               <div className="mt-3 text-sm text-[var(--danger)] flex items-center gap-2">

@@ -110,13 +110,7 @@ export default function Sidebar() {
             <NavLink href="/tasks/scheduled" label="特定曜日" icon={<CalendarDays size={16} />} />
             <NavLink href="/tasks/backlog" label="積み上げ候補" icon={<Archive size={16} />} />
             */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm opacity-70 cursor-not-allowed select-none bg-transparent" title="準備中">
-              <div className="flex items-center gap-1">
-                <Target size={16} className="opacity-80" />
-                <Lock size={14} className="opacity-80" />
-              </div>
-              <span className="truncate">マイルストーン</span>
-            </div>
+            <NavLink href="/milestones" label="マイルストーン" icon={<Target size={16} />} />
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm opacity-70 cursor-not-allowed select-none bg-transparent" title="準備中">
               <div className="flex items-center gap-1">
                 <BarChart2 size={16} className="opacity-80" />

@@ -64,9 +64,11 @@ export type PomodoroState = z.infer<typeof PomodoroStateSchema>;
 export const MilestoneSchema = z.object({
   id: z.string(),
   title: z.string().min(1),
+  description: z.string().optional(),
   targetUnits: z.number().int().min(1),
   currentUnits: z.number().int().min(0).default(0),
   dueDate: z.number().int().optional(),
+  tag: z.string().optional(),
   order: z.number().default(0),
 });
 export type Milestone = z.infer<typeof MilestoneSchema>;

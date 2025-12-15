@@ -1,10 +1,11 @@
 "use client";
-import { Suspense } from "react";
-import { Search, RefreshCw } from "lucide-react";
+import { Suspense, useState } from "react";
+import { Search, RefreshCw, SlidersHorizontal } from "lucide-react";
 import TaskList from "@/components/TaskList";
 import TaskDialog from "@/components/TaskCreateDialog";
 import AddTaskButton from "@/components/AddTaskButton";
 import TaskForm from "@/components/TaskForm";
+import AdvancedSearchDialog from "@/components/AdvancedSearchDialog";
 import { useTasksPage } from "@/hooks/useTasksPage";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -21,12 +22,19 @@ function TasksPageInner() {
     setSelectedType,
     searchQuery,
     setSearchQuery,
+    milestoneFilter,
+    setMilestoneFilter,
     openCreate,
     setOpenCreate,
     filteredTasks,
     taskCounts,
     baseFiltered,
   } = useTasksPage();
+
+  const [openAdvancedSearch, setOpenAdvancedSearch] = useState(false);
+
+  // フィルターがアクティブかどうか
+  const isFilterActive = milestoneFilter !== "all";
 
   const typeLabels: Record<TaskType | "all", string> = {
     all: "すべて",
@@ -56,13 +64,20 @@ function TasksPageInner() {
             ))}
           </div>
 
-          <div className="flex-1 min-w-[200px] max-w-md">
+          <div className="flex-1 min-w-[200px] max-w-md flex gap-2">
             <Input
               type="text"
               placeholder="タスクを検索..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               iconLeft={<Search size={14} />}
+            />
+            <IconButton
+              icon={<SlidersHorizontal size={14} />}
+              onClick={() => setOpenAdvancedSearch(true)}
+              label="詳細検索"
+              variant={isFilterActive ? "solid" : "outline"}
+              className={`rounded-full shrink-0 ${isFilterActive ? "bg-primary text-primary-foreground" : "border-black/10 dark:border-white/10"}`}
             />
           </div>
 
@@ -174,6 +189,13 @@ function TasksPageInner() {
         <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規タスク">
           <TaskForm onSubmitted={(mode) => { if (mode === 'close') setOpenCreate(false); }} />
         </TaskDialog>
+
+        <AdvancedSearchDialog
+          isOpen={openAdvancedSearch}
+          onClose={() => setOpenAdvancedSearch(false)}
+          milestoneFilter={milestoneFilter}
+          onMilestoneFilterChange={setMilestoneFilter}
+        />
       </PageLayout>
     </PullToRefresh>
   );
