@@ -11,6 +11,8 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#3b82f6",
     icons: [
       { src: "/unwavr-logo.svg", sizes: "any", type: "image/svg+xml" },
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
     ],
   };
 }

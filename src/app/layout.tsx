@@ -72,9 +72,12 @@ export const metadata: Metadata = {
     follow: true,
   },
   icons: {
-    icon: [{ url: "/unwavr-logo.svg" }],
-    shortcut: [{ url: "/unwavr-logo.svg" }],
-    apple: [{ url: "/unwavr-logo.svg" }],
+    icon: [
+      { url: "/unwavr-logo.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+    ],
+    shortcut: [{ url: "/icon-192.png" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
   category: "productivity",
   appleWebApp: {

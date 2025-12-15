@@ -22,8 +22,8 @@ export default function MobileBottomNav() {
     if (shouldHide) return null;
 
     return (
-        <div className="md:hidden fixed bottom-0 inset-x-0 z-[9999] pointer-events-none pb-[env(safe-area-inset-bottom)]">
-            <nav className="pointer-events-auto bg-[var(--sidebar)] border-t border-border">
+        <div className="md:hidden fixed bottom-0 inset-x-0 z-[9999] pointer-events-none">
+            <nav className="pointer-events-auto bg-[var(--sidebar)] border-t border-border pb-[env(safe-area-inset-bottom)]">
                 <ul className="grid grid-cols-4 h-14 items-center relative">
                     {items.map((it) => {
                         const active = pathname === it.href || (it.href !== "/" && pathname.startsWith(it.href));
