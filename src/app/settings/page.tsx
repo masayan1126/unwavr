@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Type, Database, Globe } from "lucide-react";
+import { Type, Database, Globe, Palette } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { Button } from "@/components/ui/Button";
 import { H1, H2, Text } from "@/components/ui/Typography";
@@ -68,6 +68,24 @@ export default function SettingsPage() {
           <Text className="text-xs opacity-60 mt-1">
             アプリケーション全体の文字サイズを調整します（標準: 100%）
           </Text>
+        </div>
+      </Card>
+
+      <Card padding="md" className="flex flex-col gap-4">
+        <div className="flex items-center gap-2 border-b border-black/5 dark:border-white/5 pb-3">
+          <Palette size={18} className="opacity-70" />
+          <H2>テーマ・デザイン</H2>
+        </div>
+        <div className="text-sm">
+          <Text className="opacity-80 mb-3">
+            カラーパレット、角の丸み、シャドウなどのデザインをカスタマイズできます。
+          </Text>
+          <Link href="/button-showcase">
+            <Button variant="soft">
+              <Palette size={14} />
+              Design Systemを開く
+            </Button>
+          </Link>
         </div>
       </Card>
 

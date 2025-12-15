@@ -13,18 +13,18 @@
   --popover: #FFFFFF;
   --popover-foreground: #37352F;
 
-  /* Semantic color tokens - Option B: ウォームアクセント */
-  --primary: #37352F;
+  /* Semantic color tokens - Cool Blue */
+  --primary: #1E40AF;
   --primary-foreground: #FFFFFF;
-  --primary-hover: #2D2B27;
-  --accent: #D9730D;
+  --primary-hover: #1E3A8A;
+  --accent: #3B82F6;
   --accent-foreground: #FFFFFF;
-  --accent-hover: #BF6309;
-  --soft: #FBF8F3;
-  --soft-hover: #F5EFE5;
-  --warning: #D9730D;
-  --danger: #EB5757;
-  --success: #059669;
+  --accent-hover: #2563EB;
+  --soft: #EFF6FF;
+  --soft-hover: #DBEAFE;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --success: #10B981;
 
   /* Text hierarchy */
   --text-secondary: var(--muted-foreground);
@@ -47,12 +47,12 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 
-  /* Focus ring tokens */
+  /* Focus ring tokens - Cool Blue */
   --ring-width: 2px;
   --ring-offset: 0px;
-  --ring-color: rgba(55, 53, 47, 0.2);
-  --ring-color-accent: rgba(217, 115, 13, 0.3);
-  --ring-color-danger: rgba(235, 87, 87, 0.3);
+  --ring-color: rgba(30, 64, 175, 0.2);
+  --ring-color-accent: rgba(59, 130, 246, 0.3);
+  --ring-color-danger: rgba(239, 68, 68, 0.3);
 }
 
 @theme inline {
@@ -206,18 +206,18 @@
     --popover: #202020;
     --popover-foreground: #D4D4D4;
 
-    /* Dark theme semantic tokens - Option B: ウォームアクセント */
-    --primary: #EBEBEA;
-    --primary-foreground: #191919;
-    --primary-hover: #D3D3D2;
-    --accent: #FFA344;
-    --accent-foreground: #191919;
-    --accent-hover: #E89030;
-    --soft: #2F2A26;
-    --soft-hover: #3D3632;
-    --warning: #D9730D;
-    --danger: #EB5757;
-    --success: #10B981;
+    /* Dark theme semantic tokens - Cool Blue */
+    --primary: #93C5FD;
+    --primary-foreground: #18181B;
+    --primary-hover: #60A5FA;
+    --accent: #60A5FA;
+    --accent-foreground: #18181B;
+    --accent-hover: #3B82F6;
+    --soft: #1E3A8A;
+    --soft-hover: #1E40AF;
+    --warning: #FBBF24;
+    --danger: #F87171;
+    --success: #34D399;
 
     /* Text hierarchy */
     --text-secondary: var(--muted-foreground);
@@ -235,10 +235,10 @@
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
 
-    /* Focus ring tokens (dark) */
-    --ring-color: rgba(235, 235, 234, 0.25);
-    --ring-color-accent: rgba(255, 163, 68, 0.35);
-    --ring-color-danger: rgba(235, 87, 87, 0.35);
+    /* Focus ring tokens (dark) - Cool Blue */
+    --ring-color: rgba(147, 197, 253, 0.25);
+    --ring-color-accent: rgba(96, 165, 250, 0.35);
+    --ring-color-danger: rgba(248, 113, 113, 0.35);
   }
 }
 

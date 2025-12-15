@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { CalendarDays, ListTodo, AlertTriangle, Home, Archive, Rocket, Target, Timer, Calendar, Music, Lock, MessageSquare, Settings, PanelLeftClose, PanelLeftOpen, Sun, BarChart2 } from "lucide-react";
 import AuthButtons from "@/components/AuthButtons";
@@ -8,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 import DailyBriefingDialog from "./DailyBriefingDialog";
 import { IconButton } from "@/components/ui/IconButton";
+import { UnwavrLogo } from "@/components/ui/UnwavrLogo";
 
 type NavItem = {
   href: string;
@@ -78,7 +78,7 @@ export default function Sidebar() {
           {open && (
             <div className="flex items-center gap-3 min-w-0 group cursor-pointer">
               <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
-                <Image src="/unwavr-logo.svg" alt="unwavr logo" width={24} height={24} className="w-6 h-6 shrink-0" />
+                <UnwavrLogo size={24} className="shrink-0" />
               </div>
               <div className="flex flex-col min-w-0">
                 <div className="text-sm font-bold tracking-tight text-foreground truncate" title="unwavr">unwavr</div>

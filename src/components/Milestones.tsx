@@ -181,8 +181,7 @@ function MilestoneDialog({
         <div className="flex items-center justify-between px-6 py-4 border-t border-border shrink-0">
           <div>
             {!isNew && onDelete && (
-              <Button variant="ghost" onClick={onDelete} className="text-red-500 hover:text-red-600 hover:bg-red-500/10">
-                <Trash2 size={14} className="mr-1" />
+              <Button variant="ghost" onClick={onDelete} iconLeft={<Trash2 size={14} />} className="text-danger hover:text-danger hover:bg-danger/10">
                 削除
               </Button>
             )}

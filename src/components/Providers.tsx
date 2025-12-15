@@ -3,6 +3,7 @@ import { SessionProvider, useSession } from "next-auth/react";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useAppStore } from "@/lib/store";
 import Toast from "@/components/Toast";
+import ThemeLoader from "@/components/ThemeLoader";
 
 function AuthHydrator() {
   const { status } = useSession();
@@ -111,6 +112,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         <ToastProvider>
           {children}
           <AuthHydrator />
+          <ThemeLoader />
           {/* Pomodoro ticker: requestAnimationFrameで常時進行（バックグラウンドでもcatch-up可能）*/}
           <PomodoroTicker />
           <MotionBlurDuringScroll />
