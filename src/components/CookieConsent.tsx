@@ -26,7 +26,7 @@ export default function CookieConsent() {
   if (status !== "unset") return null;
 
   return (
-    <div className="fixed bottom-0 inset-x-0 z-[1000]">
+    <div className="fixed bottom-16 md:bottom-0 inset-x-0 z-[1000] pb-[env(safe-area-inset-bottom)] md:pb-0">
       <div className="mx-auto max-w-5xl m-4 p-4 rounded-lg border border-black/10 dark:border-white/10 bg-white/90 dark:bg-neutral-900/90 backdrop-blur shadow">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <div className="text-sm leading-6 flex-1">

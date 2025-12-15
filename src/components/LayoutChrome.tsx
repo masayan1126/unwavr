@@ -8,6 +8,7 @@ import OnboardingGuide from "@/components/OnboardingGuide";
 import GlobalLauncherBarConditional from "@/components/GlobalLauncherBarConditional";
 import CookieConsentConditional from "@/components/CookieConsentConditional";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import MobileBackButton from "@/components/MobileBackButton";
 import PomodoroTopBar from "@/components/PomodoroTopBar";
 import QuickAddTaskModal from "@/components/QuickAddTaskModal";
 import { useAppStore } from "@/lib/store";
@@ -83,6 +84,7 @@ export default function LayoutChrome({ children }: { children: ReactNode }): Rea
       <GlobalBgmPlayer />
       <CookieConsentConditional />
       <MobileBottomNav />
+      <MobileBackButton />
 
       {/* クイックタスク追加モーダル */}
       <QuickAddTaskModal
