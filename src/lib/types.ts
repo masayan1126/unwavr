@@ -158,3 +158,26 @@ export type BgmSearchResult = {
   thumbnail: string;
   duration: number;
 };
+
+// AI使用量管理
+export type PlanType = 'free' | 'personal' | 'pro';
+
+export const PLAN_LIMITS: Record<PlanType, { messages: number; label: string; price: number }> = {
+  free: { messages: 3, label: 'Free', price: 0 },
+  personal: { messages: 30, label: 'Personal', price: 600 },
+  pro: { messages: 100, label: 'Pro', price: 1200 },
+};
+
+export type AIUsage = {
+  currentCount: number;
+  limitCount: number;
+  plan: PlanType;
+  yearMonth: string;
+};
+
+export type AIUsageCheckResult = {
+  allowed: boolean;
+  current: number;
+  limit: number;
+  plan: PlanType;
+};

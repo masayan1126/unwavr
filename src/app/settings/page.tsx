@@ -1,8 +1,9 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Type, Database, Globe, Palette } from "lucide-react";
+import { Type, Database, Globe, Palette, Sparkles } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
+import { useAIUsage } from "@/hooks/useAIUsage";
 import { Button } from "@/components/ui/Button";
 import { H1, H2, Text } from "@/components/ui/Typography";
 import { Card } from "@/components/ui/Card";
@@ -10,6 +11,7 @@ import { PageLayout, PageHeader } from "@/components/ui/PageLayout";
 
 export default function SettingsPage() {
   const { fontSize, setFontSize, handleClearAll, geminiApiKey, setGeminiApiKey, language, setLanguage } = useSettings();
+  const aiUsage = useAIUsage();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -140,28 +142,72 @@ export default function SettingsPage() {
 
       <Card padding="md" className="flex flex-col gap-4">
         <div className="flex items-center gap-2 border-b border-black/5 dark:border-white/5 pb-3">
-          <span className="opacity-70">✨</span>
-          <H2>AI連携 (Gemini 2.5 Flash)</H2>
+          <Sparkles size={18} className="opacity-70" />
+          <H2>AI連携</H2>
         </div>
-        <div className="text-sm flex flex-col gap-3">
-          <Text className="opacity-80">
-            Gemini APIキーを設定すると、Unwavr AI機能が利用可能になります。
-            キーはブラウザにのみ保存され、サーバーには送信されません。
-          </Text>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium opacity-70">Gemini API Key</label>
-            <input
-              type="password"
-              placeholder="AIzaSy..."
-              className="border rounded px-3 py-2 text-sm bg-background w-full max-w-md"
-              value={geminiApiKey}
-              onChange={(e) => setGeminiApiKey(e.target.value)}
-            />
+        <div className="text-sm flex flex-col gap-4">
+          {/* AI使用量表示 */}
+          <div className="flex flex-col gap-2 p-3 bg-black/5 dark:bg-white/5 rounded-lg">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">今月のAI使用量</span>
+              <span className="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary">
+                {aiUsage.planLabel}プラン
+              </span>
+            </div>
+            {aiUsage.loading ? (
+              <div className="text-xs opacity-60">読み込み中...</div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-2 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        aiUsage.isLimitReached
+                          ? "bg-danger"
+                          : aiUsage.percentage >= 80
+                          ? "bg-warning"
+                          : "bg-primary"
+                      }`}
+                      style={{ width: `${Math.min(100, aiUsage.percentage)}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-mono w-20 text-right">
+                    {aiUsage.current} / {aiUsage.limit}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs opacity-60">
+                  <span>残り {aiUsage.remaining} 回</span>
+                  {aiUsage.isLimitReached && (
+                    <Link href="/pricing" className="text-primary underline">
+                      プランをアップグレード
+                    </Link>
+                  )}
+                </div>
+              </>
+            )}
           </div>
-          <div className="text-xs opacity-60">
-            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">
-              APIキーを取得する
-            </a>
+
+          {/* Gemini APIキー設定 */}
+          <div className="flex flex-col gap-2">
+            <Text className="opacity-80">
+              Gemini APIキーを設定すると、ローカルAI機能（タスク分割など）が利用可能になります。
+              キーはブラウザにのみ保存され、サーバーには送信されません。
+            </Text>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium opacity-70">Gemini API Key（オプション）</label>
+              <input
+                type="password"
+                placeholder="AIzaSy..."
+                className="border rounded px-3 py-2 text-sm bg-background w-full max-w-md"
+                value={geminiApiKey}
+                onChange={(e) => setGeminiApiKey(e.target.value)}
+              />
+            </div>
+            <div className="text-xs opacity-60">
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">
+                APIキーを取得する
+              </a>
+            </div>
           </div>
         </div>
       </Card>

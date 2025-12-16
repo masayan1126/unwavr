@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
+import { checkAndIncrementAIUsage } from "@/lib/aiUsage";
+import { PLAN_LIMITS } from "@/lib/types";
 
 type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
 
@@ -24,6 +28,27 @@ async function maybeHandleCommand(messages: ChatMessage[]): Promise<Response | n
 export async function POST(req: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return NextResponse.json({ error: "not configured" }, { status: 400 });
+
+  // 認証チェック
+  const session = await getServerSession(authOptions);
+  const userId = (session?.user as { id?: string } | undefined)?.id;
+  if (!userId) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  // AI使用量チェック（上限に達していたら拒否）
+  const usageCheck = await checkAndIncrementAIUsage(userId);
+  if (!usageCheck.allowed) {
+    const planInfo = PLAN_LIMITS[usageCheck.plan];
+    return NextResponse.json({
+      error: "limit_exceeded",
+      message: `月間上限（${usageCheck.limit}回）に達しました。プランをアップグレードしてください。`,
+      current: usageCheck.current,
+      limit: usageCheck.limit,
+      plan: usageCheck.plan,
+      planLabel: planInfo.label,
+    }, { status: 429 });
+  }
 
   let body: { messages: ChatMessage[]; system?: string; model?: string; max_tokens?: number; temperature?: number };
   try {

@@ -102,7 +102,7 @@ export default function ChatAssistant() {
       <div ref={listRef} className="flex-1 overflow-auto p-4 space-y-4">
         {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-60 gap-2">
-            <p>Gemini 2.5 Flash アシスタント</p>
+            <p>AI アシスタント</p>
             <p className="text-xs">「牛乳を買うタスクを追加して」「今日のタスクを教えて」など話しかけてください</p>
           </div>
         )}
