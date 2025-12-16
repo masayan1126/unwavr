@@ -159,13 +159,57 @@ export type BgmSearchResult = {
   duration: number;
 };
 
-// AI使用量管理
+// プラン管理
 export type PlanType = 'free' | 'personal' | 'pro';
 
-export const PLAN_LIMITS: Record<PlanType, { messages: number; label: string; price: number }> = {
-  free: { messages: 3, label: 'Free', price: 0 },
-  personal: { messages: 30, label: 'Personal', price: 600 },
-  pro: { messages: 100, label: 'Pro', price: 1200 },
+export type PlanLimits = {
+  label: string;
+  price: number;
+  // AI
+  messages: number;
+  // リソース
+  tasks: number;
+  milestones: number;
+  bgmTracks: number;
+  bgmGroups: number;
+  launcherShortcuts: number;
+  launcherCategories: number;
+};
+
+export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
+  free: {
+    label: 'Free',
+    price: 0,
+    messages: 3,
+    tasks: 30,
+    milestones: 5,
+    bgmTracks: 20,
+    bgmGroups: 3,
+    launcherShortcuts: 10,
+    launcherCategories: 3,
+  },
+  personal: {
+    label: 'Personal',
+    price: 600,
+    messages: 30,
+    tasks: 200,
+    milestones: 30,
+    bgmTracks: 200,
+    bgmGroups: 20,
+    launcherShortcuts: 100,
+    launcherCategories: 20,
+  },
+  pro: {
+    label: 'Pro',
+    price: 1200,
+    messages: 100,
+    tasks: -1, // 無制限
+    milestones: -1,
+    bgmTracks: -1,
+    bgmGroups: -1,
+    launcherShortcuts: -1,
+    launcherCategories: -1,
+  },
 };
 
 export type AIUsage = {

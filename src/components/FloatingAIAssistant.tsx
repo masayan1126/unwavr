@@ -2,12 +2,25 @@
 import { useRef, useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useAppStore } from "@/lib/store";
-import { processUserRequest, processBgmRequest, isBgmRelatedMessage } from "@/lib/gemini";
+import { isBgmRelatedMessage } from "@/lib/gemini";
 import { useToast } from "@/components/Providers";
 import { Loader2, Sparkles, X, Send, ChevronDown, Maximize2, Minimize2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import BgmSearchResultCard from "./BgmSearchResultCard";
 import { BgmSearchResult } from "@/lib/types";
+
+// Server API response types
+type AIActionResponse =
+    | { type: "chat"; message: string }
+    | { type: "create_task"; task: Record<string, unknown>; message: string }
+    | { type: "update_task"; taskId: string; updates: Record<string, unknown>; message: string }
+    | { type: "delete_task"; taskId: string; message: string }
+    | { type: "complete_task"; taskId: string; message: string };
+
+type BGMActionResponse =
+    | { type: "search_bgm"; query: string; mood?: string; message: string }
+    | { type: "play_existing"; groupName?: string; message: string }
+    | { type: "bgm_chat"; message: string };
 
 type Msg = { role: "user" | "model"; content: string; searchResults?: BgmSearchResult[] };
 
@@ -130,7 +143,6 @@ export default function FloatingAIAssistant() {
 
     const pageContext = getPageContext(pathname || "/");
 
-    const apiKey = useAppStore((s) => s.geminiApiKey);
     const tasks = useAppStore((s) => s.tasks);
     const addTask = useAppStore((s) => s.addTask);
     const updateTask = useAppStore((s) => s.updateTask);
@@ -389,11 +401,6 @@ export default function FloatingAIAssistant() {
             }
         }
 
-        if (!apiKey) {
-            toast.show("設定画面でGemini APIキーを設定してください", "error");
-            return;
-        }
-
         const newMessages = [...messages, { role: "user" as const, content }];
         setMessages(newMessages);
         setInput("");
@@ -402,7 +409,25 @@ export default function FloatingAIAssistant() {
         try {
             // Check if this is a BGM-related request
             if (isBgmRelatedMessage(content)) {
-                const bgmResult = await processBgmRequest(apiKey, content);
+                const res = await fetch("/api/ai/gemini", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ type: "bgm_request", message: content }),
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json();
+                    if (errData.error === "limit_exceeded") {
+                        setMessages((m) => [
+                            ...m,
+                            { role: "model", content: `${errData.message}\n\n[料金プラン](/pricing)からアップグレードできます。` },
+                        ]);
+                        return;
+                    }
+                    throw new Error(errData.error || "API error");
+                }
+
+                const bgmResult: BGMActionResponse = await res.json();
 
                 if (bgmResult.type === "search_bgm") {
                     // Search YouTube
@@ -464,7 +489,7 @@ export default function FloatingAIAssistant() {
                     setMessages((m) => [...m, { role: "model", content: bgmResult.message }]);
                 }
             } else {
-                // Task-related request (existing logic)
+                // Task-related request - call server API
                 const currentTasks = tasks.map((t) => ({
                     id: t.id,
                     title: t.title,
@@ -479,7 +504,30 @@ export default function FloatingAIAssistant() {
                     parts: [{ text: m.content }],
                 }));
 
-                const result = await processUserRequest(apiKey, history, content, currentTasks);
+                const res = await fetch("/api/ai/gemini", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        type: "task_request",
+                        message: content,
+                        history,
+                        tasks: currentTasks,
+                    }),
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json();
+                    if (errData.error === "limit_exceeded") {
+                        setMessages((m) => [
+                            ...m,
+                            { role: "model", content: `${errData.message}\n\n[料金プラン](/pricing)からアップグレードできます。` },
+                        ]);
+                        return;
+                    }
+                    throw new Error(errData.error || "API error");
+                }
+
+                const result: AIActionResponse = await res.json();
 
                 // Execute action
                 switch (result.type) {
@@ -511,7 +559,7 @@ export default function FloatingAIAssistant() {
                 ...m,
                 {
                     role: "model",
-                    content: "エラーが発生しました。APIキーやネットワーク接続を確認してください。",
+                    content: "エラーが発生しました。ネットワーク接続を確認してください。",
                 },
             ]);
         } finally {
@@ -652,7 +700,7 @@ export default function FloatingAIAssistant() {
                             <div className="relative flex items-center">
                                 <input
                                     className="w-full bg-muted/50 border-none rounded-full pl-4 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                    placeholder={apiKey ? "メッセージを入力... ( / でコマンド)" : "APIキーを設定してください"}
+                                    placeholder="メッセージを入力... ( / でコマンド)"
                                     value={input}
                                     onChange={(e) => handleInputChange(e.target.value)}
                                     onFocus={() => {

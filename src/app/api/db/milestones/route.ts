@@ -3,6 +3,7 @@ import type { PostgrestError } from '@supabase/supabase-js';
 import { supabaseAdmin } from '@/lib/supabaseClient';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
+import { checkResourceLimit, getResourceLimitMessage } from '@/lib/resourceLimits';
 
 export async function GET() {
   if (!supabaseAdmin) return NextResponse.json({ items: [] });
@@ -22,6 +23,19 @@ export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string } | undefined)?.id;
   if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+
+  // リソース制限チェック
+  const limitCheck = await checkResourceLimit(userId, 'milestones');
+  if (!limitCheck.allowed) {
+    return NextResponse.json({
+      error: 'limit_exceeded',
+      message: getResourceLimitMessage(limitCheck),
+      current: limitCheck.current,
+      limit: limitCheck.limit,
+      plan: limitCheck.plan,
+    }, { status: 429 });
+  }
+
   const body = await req.json();
   const payload = { ...body, user_id: userId } as Record<string, unknown>;
   const { data, error } = await supabaseAdmin.from('milestones').insert(payload).select('*').single();

@@ -3,6 +3,7 @@ import type { PostgrestError } from '@supabase/supabase-js';
 import { supabaseAdmin } from '@/lib/supabaseClient';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
+import { checkResourceLimit, getResourceLimitMessage } from '@/lib/resourceLimits';
 
 export async function GET(req: NextRequest) {
   if (!supabaseAdmin) return NextResponse.json({ items: [] });
@@ -41,6 +42,19 @@ export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string } | undefined)?.id;
   if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+
+  // リソース制限チェック
+  const limitCheck = await checkResourceLimit(userId, 'tasks');
+  if (!limitCheck.allowed) {
+    return NextResponse.json({
+      error: 'limit_exceeded',
+      message: getResourceLimitMessage(limitCheck),
+      current: limitCheck.current,
+      limit: limitCheck.limit,
+      plan: limitCheck.plan,
+    }, { status: 429 });
+  }
+
   const raw = await req.json();
   // 最小限の必須カラムに限定し、undefinedは送らない
   const payload: Record<string, unknown> = {};

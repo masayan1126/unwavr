@@ -131,10 +131,10 @@ export default function PricingPage() {
           <div className="text-3xl font-bold mb-1">¥0<span className="text-base font-medium opacity-70">/月</span></div>
           <div className="text-xs opacity-70 mb-4">個人向けお試し</div>
           <ul className="text-sm space-y-2 mb-5">
-            <li>・タスク/マイルストーン/ポモドーロ 基本機能</li>
+            <li>・タスク {PLAN_LIMITS.free.tasks}件 / マイルストーン {PLAN_LIMITS.free.milestones}件</li>
             <li>・Googleカレンダー 読み取り</li>
-            <li>・Unwavr AI 月3メッセージ</li>
-            <li>・BGM 20トラック / ランチャー 10件</li>
+            <li>・Unwavr AI 月{PLAN_LIMITS.free.messages}メッセージ</li>
+            <li>・BGM {PLAN_LIMITS.free.bgmTracks}トラック / ランチャー {PLAN_LIMITS.free.launcherShortcuts}件</li>
             <li>・サポート: コミュニティ</li>
           </ul>
           <div
@@ -153,9 +153,10 @@ export default function PricingPage() {
           <div className="text-3xl font-bold mb-1">¥600<span className="text-base font-medium opacity-70">/月</span></div>
           <div className="text-xs opacity-70 mb-1">年払い: ¥6,000（約2ヶ月分お得）</div>
           <ul className="text-sm space-y-2 mb-5 mt-3">
+            <li>・タスク {PLAN_LIMITS.personal.tasks}件 / マイルストーン {PLAN_LIMITS.personal.milestones}件</li>
             <li>・Googleカレンダー 書き込み</li>
-            <li>・Unwavr AI 月30メッセージ</li>
-            <li>・BGM 200トラック / ランチャー 100件</li>
+            <li>・Unwavr AI 月{PLAN_LIMITS.personal.messages}メッセージ</li>
+            <li>・BGM {PLAN_LIMITS.personal.bgmTracks}トラック / ランチャー {PLAN_LIMITS.personal.launcherShortcuts}件</li>
             <li>・通知/サウンド強化、優先メールサポート</li>
           </ul>
           <div
@@ -176,10 +177,10 @@ export default function PricingPage() {
           <div className="text-3xl font-bold mb-1">¥1,200<span className="text-base font-medium opacity-70">/月</span></div>
           <div className="text-xs opacity-70 mb-1">年払い: ¥12,000</div>
           <ul className="text-sm space-y-2 mb-5 mt-3">
-            <li>・Unwavr AI 月100メッセージ（上位モデル選択可）</li>
+            <li>・タスク/マイルストーン/BGM/ランチャー 無制限</li>
+            <li>・Unwavr AI 月{PLAN_LIMITS.pro.messages}メッセージ（上位モデル選択可）</li>
             <li>・テンプレ/自動化、エクスポート自動化、RAG準備</li>
-            <li>・Googleタスク連携、BGM/ランチャー無制限</li>
-            <li>・優先サポート（メール＋簡易チャット）</li>
+            <li>・Googleタスク連携、優先サポート</li>
           </ul>
           <div
             className={`mt-auto inline-flex items-center justify-center px-4 py-2 rounded border text-sm ${

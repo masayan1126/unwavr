@@ -18,8 +18,8 @@ export const useSettings = () => {
         toast.show("すべて削除しました", "success");
     };
 
-    const geminiApiKey = useAppStore((s) => s.geminiApiKey);
-    const setGeminiApiKey = useAppStore((s) => s.setGeminiApiKey);
+    const aiModel = useAppStore((s) => s.aiModel);
+    const setAIModel = useAppStore((s) => s.setAIModel);
 
     const language = useAppStore((s) => s.language);
     const setLanguage = useAppStore((s) => s.setLanguage);
@@ -27,8 +27,8 @@ export const useSettings = () => {
     return {
         fontSize,
         setFontSize,
-        geminiApiKey,
-        setGeminiApiKey,
+        aiModel,
+        setAIModel,
         handleClearAll,
         language,
         setLanguage,

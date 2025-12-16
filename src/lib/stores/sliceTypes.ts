@@ -109,7 +109,16 @@ export interface UISlice {
     setLanguage: (lang: 'ja' | 'en') => void;
 }
 
+export type GeminiModel = 'gemini-2.5-flash-preview-05-20' | 'gemini-3-pro-preview';
+
+export const GEMINI_MODELS: { value: GeminiModel; label: string; description: string }[] = [
+    { value: 'gemini-2.5-flash-preview-05-20', label: 'Gemini 2.5 Flash', description: '高速・軽量（推奨）' },
+    { value: 'gemini-3-pro-preview', label: 'Gemini 3 Pro', description: '最高性能・高度な推論（Proプラン推奨）' },
+];
+
 export interface AISlice {
     geminiApiKey: string;
     setGeminiApiKey: (key: string) => void;
+    aiModel: GeminiModel;
+    setAIModel: (model: GeminiModel) => void;
 }

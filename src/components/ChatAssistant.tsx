@@ -1,10 +1,17 @@
 import { useRef, useState, useEffect } from "react";
 import { useAppStore } from "@/lib/store";
-import { processUserRequest } from "@/lib/gemini";
 import { useToast } from "@/components/Providers";
 import { Loader2 } from "lucide-react";
 
 type Msg = { role: "user" | "model"; content: string };
+
+// Server API response type
+type AIActionResponse =
+  | { type: "chat"; message: string }
+  | { type: "create_task"; task: Record<string, unknown>; message: string }
+  | { type: "update_task"; taskId: string; updates: Record<string, unknown>; message: string }
+  | { type: "delete_task"; taskId: string; message: string }
+  | { type: "complete_task"; taskId: string; message: string };
 
 export default function ChatAssistant() {
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -12,7 +19,6 @@ export default function ChatAssistant() {
   const [loading, setLoading] = useState(false);
   const listRef = useRef<HTMLDivElement | null>(null);
 
-  const apiKey = useAppStore((s) => s.geminiApiKey);
   const tasks = useAppStore((s) => s.tasks);
   const addTask = useAppStore((s) => s.addTask);
   const updateTask = useAppStore((s) => s.updateTask);
@@ -37,11 +43,6 @@ export default function ChatAssistant() {
     const content = input.trim();
     if (!content || loading) return;
 
-    if (!apiKey) {
-      toast.show("設定画面でGemini APIキーを設定してください", "error");
-      return;
-    }
-
     const newMessages = [...messages, { role: "user" as const, content }];
     setMessages(newMessages);
     setInput("");
@@ -63,7 +64,30 @@ export default function ChatAssistant() {
         parts: [{ text: m.content }]
       }));
 
-      const result = await processUserRequest(apiKey, history, content, currentTasks);
+      const res = await fetch("/api/ai/gemini", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "task_request",
+          message: content,
+          history,
+          tasks: currentTasks,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        if (errData.error === "limit_exceeded") {
+          setMessages((m) => [
+            ...m,
+            { role: "model", content: `${errData.message}\n\n[料金プラン](/pricing)からアップグレードできます。` },
+          ]);
+          return;
+        }
+        throw new Error(errData.error || "API error");
+      }
+
+      const result: AIActionResponse = await res.json();
 
       // Execute action
       switch (result.type) {
@@ -91,7 +115,7 @@ export default function ChatAssistant() {
     } catch (e) {
       console.error(e);
       toast.show("エラーが発生しました", "error");
-      setMessages((m) => [...m, { role: "model", content: "エラーが発生しました。APIキーやネットワーク接続を確認してください。" }]);
+      setMessages((m) => [...m, { role: "model", content: "エラーが発生しました。ネットワーク接続を確認してください。" }]);
     } finally {
       setLoading(false);
     }
@@ -128,10 +152,10 @@ export default function ChatAssistant() {
       <div className="border-t p-3 bg-background flex items-center gap-2">
         <input
           className="flex-1 border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-          placeholder={mounted && apiKey ? "メッセージを入力..." : "設定画面でAPIキーを設定してください"}
+          placeholder={mounted ? "メッセージを入力..." : "読み込み中..."}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          disabled={!mounted || !apiKey || loading}
+          disabled={!mounted || loading}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -142,7 +166,7 @@ export default function ChatAssistant() {
         <button
           className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50 hover:opacity-90 transition-opacity"
           onClick={send}
-          disabled={loading || !input.trim() || !mounted || !apiKey}
+          disabled={loading || !input.trim() || !mounted}
         >
           送信
         </button>
@@ -155,5 +179,3 @@ export default function ChatAssistant() {
     </div>
   );
 }
-
-
