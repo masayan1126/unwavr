@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useSession, signIn } from "next-auth/react";
 import {
   addDays,
@@ -18,12 +18,19 @@ import { getDate as getDayOfMonth, getDay } from "date-fns";
 // import { useAppStore } from "@/lib/store";
 // import { isTaskForToday, Task } from "@/lib/types";
 import { ja } from "date-fns/locale";
+import { RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
 
 type GCalEvent = {
   id: string;
   summary?: string;
   start?: { dateTime?: string; date?: string };
   end?: { dateTime?: string; date?: string };
+};
+
+type SyncPreview = {
+  taskCount: number;
+  dateCount: number;
+  tasks: { id: string; title: string; plannedDates: number[] }[];
 };
 
 function toDate(value?: string) {
@@ -152,6 +159,72 @@ export default function CalendarPage() {
   const [formEnd, setFormEnd] = useState("");
   const [dragOverKey, setDragOverKey] = useState<string | null>(null);
 
+  const sessionAccessToken = (session as unknown as { access_token?: string })?.access_token;
+  const isGoogleConnected = !!sessionAccessToken;
+
+  // タスク同期関連のstate
+  const [syncPreview, setSyncPreview] = useState<SyncPreview | null>(null);
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [syncResult, setSyncResult] = useState<{ success: boolean; synced: number; failed: number } | null>(null);
+  const [showSyncDialog, setShowSyncDialog] = useState(false);
+
+  // 同期対象タスクの件数を取得
+  const fetchSyncPreview = useCallback(async () => {
+    try {
+      const res = await fetch("/api/calendar/sync-tasks");
+      if (res.ok) {
+        const data = await res.json();
+        setSyncPreview(data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch sync preview:", e);
+    }
+  }, []);
+
+  // タスク同期を実行
+  const executeSyncTasks = async () => {
+    if (!sessionAccessToken) return;
+
+    setSyncLoading(true);
+    setSyncResult(null);
+
+    try {
+      const res = await fetch("/api/calendar/sync-tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        setSyncResult({ success: true, synced: data.synced, failed: data.failed });
+        // カレンダーを再読み込み
+        const timeMin = monthStart.toISOString();
+        const timeMax = monthEnd.toISOString();
+        const eventsRes = await fetch(`/api/calendar/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}`, {
+          headers: { Authorization: `Bearer ${sessionAccessToken}` },
+        });
+        const eventsData = await eventsRes.json();
+        setEvents(eventsData.items ?? []);
+        // プレビューを再取得
+        fetchSyncPreview();
+      } else {
+        setSyncResult({ success: false, synced: 0, failed: 0 });
+      }
+    } catch (e) {
+      console.error("Sync failed:", e);
+      setSyncResult({ success: false, synced: 0, failed: 0 });
+    } finally {
+      setSyncLoading(false);
+    }
+  };
+
+  // Google連携時に同期対象件数を取得
+  useEffect(() => {
+    if (isGoogleConnected) {
+      fetchSyncPreview();
+    }
+  }, [isGoogleConnected, fetchSyncPreview]);
+
   const openCreateDialog = (date: Date) => {
     setDialogMode("create");
     setEditingEvent(null);
@@ -254,9 +327,6 @@ export default function CalendarPage() {
     }
   };
 
-  const accessToken = (session as unknown as { access_token?: string })?.access_token;
-  const isGoogleConnected = !!accessToken;
-
   return (
     <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
       <div className="flex items-center justify-between mb-3">
@@ -301,7 +371,23 @@ export default function CalendarPage() {
           <span className="inline-block w-3 h-3 rounded border" style={{ backgroundColor: "#039BE5", borderColor: "#039BE5" }} />
           <span>予定（Google）</span>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-3">
+          {/* タスク同期ボタン */}
+          {isGoogleConnected && (
+            <button
+              onClick={() => setShowSyncDialog(true)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border text-xs hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              title="バックログタスクをGoogleカレンダーに同期"
+            >
+              <RefreshCw size={12} />
+              <span>タスク同期</span>
+              {syncPreview && syncPreview.taskCount > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-medium">
+                  {syncPreview.taskCount}
+                </span>
+              )}
+            </button>
+          )}
           <span>今月: {daysInMonth}日 / 平日: {weekdaysInMonth}日</span>
         </div>
       </div>
@@ -485,6 +571,129 @@ export default function CalendarPage() {
                 <button className="px-3 py-1 rounded bg-foreground text-background text-sm" onClick={submitDialog}>保存</button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* タスク同期ダイアログ */}
+      {showSyncDialog && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+          onClick={() => setShowSyncDialog(false)}
+        >
+          <div
+            className="w-[92vw] max-w-md bg-background text-foreground border rounded-lg p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <RefreshCw size={18} className="text-primary" />
+              <span className="text-sm font-semibold">タスクをGoogleカレンダーに同期</span>
+            </div>
+
+            {syncResult ? (
+              // 同期結果表示
+              <div className="flex flex-col gap-4">
+                <div className={`flex items-center gap-3 p-4 rounded-lg ${syncResult.success ? "bg-green-50 dark:bg-green-950/30" : "bg-red-50 dark:bg-red-950/30"}`}>
+                  {syncResult.success ? (
+                    <CheckCircle size={24} className="text-green-600" />
+                  ) : (
+                    <AlertCircle size={24} className="text-red-600" />
+                  )}
+                  <div>
+                    <div className="text-sm font-medium">
+                      {syncResult.success ? "同期が完了しました" : "同期に失敗しました"}
+                    </div>
+                    {syncResult.success && (
+                      <div className="text-xs opacity-70 mt-1">
+                        {syncResult.synced}件のイベントを作成しました
+                        {syncResult.failed > 0 && `（${syncResult.failed}件失敗）`}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowSyncDialog(false);
+                    setSyncResult(null);
+                  }}
+                  className="px-4 py-2 rounded bg-foreground text-background text-sm"
+                >
+                  閉じる
+                </button>
+              </div>
+            ) : syncPreview ? (
+              // プレビュー表示
+              <div className="flex flex-col gap-4">
+                <div className="text-sm opacity-80">
+                  実行日が設定されているバックログタスクをGoogleカレンダーに終日イベントとして登録します。
+                </div>
+
+                <div className="bg-black/5 dark:bg-white/5 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium">同期対象</span>
+                    <span className="text-xs opacity-70">
+                      {syncPreview.taskCount}タスク / {syncPreview.dateCount}件のイベント
+                    </span>
+                  </div>
+
+                  {syncPreview.tasks.length > 0 ? (
+                    <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
+                      {syncPreview.tasks.slice(0, 10).map((task) => (
+                        <div key={task.id} className="flex items-start gap-2 text-xs">
+                          <span className="shrink-0 mt-0.5">📋</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="truncate">{task.title}</div>
+                            <div className="text-[10px] opacity-60">
+                              {task.plannedDates.map((d) => format(new Date(d), "M/d")).join(", ")}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {syncPreview.tasks.length > 10 && (
+                        <div className="text-xs opacity-60 text-center pt-1">
+                          他 {syncPreview.tasks.length - 10} タスク...
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-xs opacity-60 text-center py-4">
+                      同期対象のタスクがありません
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => setShowSyncDialog(false)}
+                    className="px-4 py-2 rounded border text-sm"
+                  >
+                    キャンセル
+                  </button>
+                  <button
+                    onClick={executeSyncTasks}
+                    disabled={syncLoading || syncPreview.taskCount === 0}
+                    className="px-4 py-2 rounded bg-foreground text-background text-sm disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {syncLoading ? (
+                      <>
+                        <RefreshCw size={14} className="animate-spin" />
+                        同期中...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw size={14} />
+                        同期を実行
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // ローディング
+              <div className="flex items-center justify-center py-8">
+                <RefreshCw size={24} className="animate-spin opacity-50" />
+              </div>
+            )}
           </div>
         </div>
       )}
