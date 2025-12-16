@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { useAppStore } from "@/lib/store";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { Mic, X, Target } from "lucide-react";
@@ -13,12 +14,14 @@ interface QuickAddTaskModalProps {
 }
 
 export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: QuickAddTaskModalProps) {
+  const { data: session } = useSession();
   const [title, setTitle] = useState("");
   const [milestoneId, setMilestoneId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const addTask = useAppStore((state) => state.addTask);
+  const updateTask = useAppStore((state) => state.updateTask);
   const milestones = useAppStore((state) => state.milestones);
   const toast = useToast();
 
@@ -99,9 +102,10 @@ export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: Qui
       // 今日の日付をUTCタイムスタンプで取得
       const today = new Date();
       const todayUtc = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+      const trimmedTitle = title.trim();
 
       const newId = addTask({
-        title: title.trim(),
+        title: trimmedTitle,
         description: undefined,
         type: "backlog",
         plannedDates: [todayUtc],
@@ -110,7 +114,42 @@ export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: Qui
         milestoneId: milestoneId || undefined,
       });
 
-      toast.show(`タスク「${title.trim()}」を追加しました`, "success");
+      // Googleカレンダーに同期
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const accessToken = (session as any)?.access_token;
+      if (accessToken) {
+        try {
+          const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+          const res = await fetch("/api/calendar/events", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              summary: `📋 ${trimmedTitle}`,
+              start: { date: dateStr },
+              end: { date: dateStr },
+            }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const googleEventId = data.id;
+            // タスクにGoogleイベントIDを紐付け
+            const newGoogleEvents: Record<string, string> = {};
+            newGoogleEvents[String(todayUtc)] = googleEventId;
+            updateTask(newId, { plannedDateGoogleEvents: newGoogleEvents });
+            toast.show(`タスク「${trimmedTitle}」を追加し、Googleカレンダーに同期しました`, "success");
+          } else {
+            toast.show(`タスク「${trimmedTitle}」を追加しました（Google同期に失敗）`, "warning");
+          }
+        } catch (err) {
+          console.error("[QuickAddTaskModal] Google Calendar sync error:", err);
+          toast.show(`タスク「${trimmedTitle}」を追加しました（Google同期に失敗）`, "warning");
+        }
+      } else {
+        toast.show(`タスク「${trimmedTitle}」を追加しました`, "success");
+      }
 
       // フォームをリセットして連続追加可能に
       setTitle("");

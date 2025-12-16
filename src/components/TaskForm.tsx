@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from "react";
+import { useSession } from "next-auth/react";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { Scheduled, TaskType, type Task } from "@/lib/types";
 import { useAppStore } from "@/lib/store";
@@ -21,7 +22,9 @@ export type TaskFormHandle = { save: () => void };
 
 function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: React.Ref<TaskFormHandle>) {
   const toast = useToast();
+  const { data: session } = useSession();
   const addTask = useAppStore((s) => s.addTask);
+  const updateTask = useAppStore((s) => s.updateTask);
   const milestones = useAppStore((s) => s.milestones);
   const [title, setTitle] = useState("");
   const [type, setType] = useState<TaskType>(defaultType ?? "backlog");
@@ -135,6 +138,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
       if (!draftTaskId) {
         // 新規作成時: タイトル未入力なら保存しない
         if (!trimmed) return;
+        const taskPlannedDates = type === "backlog" ? plannedDates : [];
         const newId = addTask({
           title: trimmed,
           description: desc || undefined,
@@ -142,11 +146,46 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
           scheduled,
           milestoneId: milestoneId || undefined,
           dailyDoneDates: [],
-          plannedDates: type === "backlog" ? plannedDates : [],
+          plannedDates: taskPlannedDates,
           estimatedPomodoros: Number.isFinite(est) ? est : 0,
           order: 0,
         });
         setDraftTaskId(newId);
+
+        // Googleカレンダーに同期（backlogタスクでplannedDatesがある場合）
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const accessToken = (session as any)?.access_token;
+        if (accessToken && type === "backlog" && taskPlannedDates.length > 0) {
+          (async () => {
+            try {
+              const dt = new Date(taskPlannedDates[0]);
+              const dateStr = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+              const res = await fetch("/api/calendar/events", {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  summary: `📋 ${trimmed}`,
+                  description: desc || undefined,
+                  start: { date: dateStr },
+                  end: { date: dateStr },
+                }),
+              });
+              if (res.ok) {
+                const data = await res.json();
+                const googleEventId = data.id;
+                // タスクにGoogleイベントIDを紐付け
+                const newGoogleEvents: Record<string, string> = {};
+                newGoogleEvents[String(taskPlannedDates[0])] = googleEventId;
+                updateTask(newId, { plannedDateGoogleEvents: newGoogleEvents });
+              }
+            } catch (err) {
+              console.error("[TaskForm] Google Calendar sync error:", err);
+            }
+          })();
+        }
       } else {
         const updatePayload: Partial<Task> = {
           description: desc || undefined,
@@ -164,7 +203,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
       setTimeout(() => { isSubmittingRef.current = false; }, 0);
       setTimeout(() => setIsSaving(false), 150);
     }
-  }, [addTask, desc, milestoneId, plannedDates, scheduled, title, type, draftTaskId, est, task]);
+  }, [addTask, updateTask, desc, milestoneId, plannedDates, scheduled, title, type, draftTaskId, est, task, session]);
 
   useImperativeHandle(ref, () => ({ save: performSave }), [performSave]);
 

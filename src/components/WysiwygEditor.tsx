@@ -8,9 +8,178 @@ import Underline from "@tiptap/extension-underline";
 import Heading from "@tiptap/extension-heading";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
+import { Table } from "@tiptap/extension-table";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TableCell } from "@tiptap/extension-table-cell";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { Extension } from "@tiptap/core";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { DOMParser as ProseMirrorDOMParser } from "@tiptap/pm/model";
 import { SlashCommand } from "./SlashCommand/extension";
 import AIPromptDialog from "./AIPromptDialog";
 import "tippy.js/dist/tippy.css";
+
+// マークダウンテーブル記法をHTMLテーブルに変換する関数
+function parseMarkdownTable(text: string): string | null {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return null;
+
+  // テーブル行を解析（パイプで区切られた行を検出）
+  const tableLines: string[][] = [];
+  let separatorIndex = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line.startsWith('|') && !line.includes('|')) continue;
+
+    // セパレータ行を検出 (例: |---|---|---)
+    if (/^\|?[\s\-:]+\|[\s\-:|]+\|?$/.test(line)) {
+      separatorIndex = tableLines.length;
+      tableLines.push([]);
+      continue;
+    }
+
+    // セルを抽出
+    const cells = line
+      .replace(/^\|/, '')
+      .replace(/\|$/, '')
+      .split('|')
+      .map(cell => cell.trim());
+
+    if (cells.length > 0) {
+      tableLines.push(cells);
+    }
+  }
+
+  // 有効なテーブルか確認（ヘッダー + セパレータ + 少なくとも1行のデータ）
+  if (tableLines.length < 2 || separatorIndex === -1) {
+    // セパレータなしでもテーブルとして解析を試みる
+    if (tableLines.length >= 1 && tableLines.every(row => row.length > 0)) {
+      // 最初の行をヘッダーとして扱う
+      const headerRow = tableLines[0];
+      const bodyRows = tableLines.slice(1);
+
+      let html = '<table><thead><tr>';
+      for (const cell of headerRow) {
+        html += `<th>${escapeHtml(cell)}</th>`;
+      }
+      html += '</tr></thead>';
+
+      if (bodyRows.length > 0) {
+        html += '<tbody>';
+        for (const row of bodyRows) {
+          if (row.length === 0) continue;
+          html += '<tr>';
+          for (let i = 0; i < headerRow.length; i++) {
+            html += `<td>${escapeHtml(row[i] || '')}</td>`;
+          }
+          html += '</tr>';
+        }
+        html += '</tbody>';
+      }
+      html += '</table>';
+      return html;
+    }
+    return null;
+  }
+
+  // ヘッダー行とデータ行を取得
+  const headerRows = tableLines.slice(0, separatorIndex);
+  const dataRows = tableLines.slice(separatorIndex + 1).filter(row => row.length > 0);
+
+  if (headerRows.length === 0) return null;
+
+  const columnCount = Math.max(...tableLines.filter(r => r.length > 0).map(r => r.length));
+
+  let html = '<table><thead>';
+  for (const headerRow of headerRows) {
+    html += '<tr>';
+    for (let i = 0; i < columnCount; i++) {
+      html += `<th>${escapeHtml(headerRow[i] || '')}</th>`;
+    }
+    html += '</tr>';
+  }
+  html += '</thead>';
+
+  if (dataRows.length > 0) {
+    html += '<tbody>';
+    for (const row of dataRows) {
+      html += '<tr>';
+      for (let i = 0; i < columnCount; i++) {
+        html += `<td>${escapeHtml(row[i] || '')}</td>`;
+      }
+      html += '</tr>';
+    }
+    html += '</tbody>';
+  }
+  html += '</table>';
+
+  return html;
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// テキストがマークダウンテーブルかどうかを判定
+function isMarkdownTable(text: string): boolean {
+  const lines = text.trim().split('\n');
+  if (lines.length < 1) return false;
+
+  // パイプ文字を含む行があるかチェック
+  const pipeLines = lines.filter(line => line.includes('|'));
+  if (pipeLines.length < 1) return false;
+
+  // セパレータ行のパターンをチェック
+  const hasSeparator = lines.some(line => /^\|?[\s\-:]+\|[\s\-:|]+\|?$/.test(line.trim()));
+
+  // パイプで区切られた複数列があるかチェック
+  const hasMultipleColumns = pipeLines.some(line => {
+    const cells = line.replace(/^\|/, '').replace(/\|$/, '').split('|');
+    return cells.length >= 2;
+  });
+
+  return hasMultipleColumns && (hasSeparator || pipeLines.length >= 2);
+}
+
+// マークダウンテーブルペースト用のカスタム拡張
+const MarkdownTablePaste = Extension.create({
+  name: 'markdownTablePaste',
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey('markdownTablePaste'),
+        props: {
+          handlePaste: (view, event) => {
+            const text = event.clipboardData?.getData('text/plain');
+            if (text && isMarkdownTable(text)) {
+              const tableHtml = parseMarkdownTable(text);
+              if (tableHtml) {
+                event.preventDefault();
+                // HTMLをProseMirrorのスライスに変換して挿入
+                const { schema } = view.state;
+                const parser = ProseMirrorDOMParser.fromSchema(schema);
+                const dom = document.createElement('div');
+                dom.innerHTML = tableHtml;
+                const slice = parser.parseSlice(dom);
+                const tr = view.state.tr.replaceSelection(slice);
+                view.dispatch(tr);
+                return true;
+              }
+            }
+            return false;
+          },
+        },
+      }),
+    ];
+  },
+});
 
 type WysiwygEditorProps = {
   value: string;
@@ -28,6 +197,16 @@ export default function WysiwygEditor({ value, onChange, className, onBlur }: Wy
       Heading.configure({ levels: [1, 2, 3] }),
       TaskList,
       TaskItem.configure({ nested: true }),
+      Table.configure({
+        resizable: true,
+        HTMLAttributes: {
+          class: 'table-auto border-collapse w-full',
+        },
+      }),
+      TableRow,
+      TableCell,
+      TableHeader,
+      MarkdownTablePaste,
       SlashCommand,
     ],
     content: value || "",
@@ -82,6 +261,8 @@ export default function WysiwygEditor({ value, onChange, className, onBlur }: Wy
           <ToolbarButton onClick={() => editor?.chain().focus().toggleBlockquote().run()} label='"' isActive={editor?.isActive('blockquote')} />
           <ToolbarButton onClick={() => editor?.chain().focus().setHorizontalRule().run()} label="—" />
           <ToolbarButton onClick={() => editor?.chain().focus().toggleCode().run()} label="< >" isActive={editor?.isActive('code')} />
+          <div className="w-px h-4 bg-black/10 dark:bg-white/10 mx-1 self-center" />
+          <ToolbarButton onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} label="⊞ Table" isActive={editor?.isActive('table')} />
         </div>
         <EditorContent editor={editor} className="tiptap prose prose-sm max-w-none dark:prose-invert w-full min-h-[300px] flex-1" />
       </div>

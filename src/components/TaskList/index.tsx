@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Reorder } from "framer-motion";
-import { ChevronDown, CheckCircle2, Circle, Archive, Trash2, ArrowRight, Calendar, Copy, Edit, Play, Pause, RotateCcw, Type, CalendarPlus, CalendarCheck, CalendarRange, Tag, Flag, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { ChevronDown, CheckCircle2, Circle, Archive, Trash2, ArrowRight, Calendar, Copy, Edit, Play, Pause, RotateCcw, Type, CalendarPlus, CalendarCheck, CalendarRange, Tag, Flag, ArrowUpDown, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { Task } from "@/lib/types";
 import { useAppStore } from "@/lib/store";
 import { useConfirm, useToast } from "@/components/Providers";
@@ -49,8 +50,10 @@ export default function TaskList({
     onBulkRestore?: (ids: string[]) => void;
     onBulkPermanentDelete?: (ids: string[]) => void;
 }) {
+    const { data: session } = useSession();
     const [sortKey, setSortKey] = useState<SortKey | undefined>(initialSortKey);
     const [sortAsc, setSortAsc] = useState<boolean>(initialSortAsc ?? true);
+    const [isSyncingPlannedDate, setIsSyncingPlannedDate] = useState(false);
 
     const handleSort = (key: SortKey) => {
         if (sortKey === key) {
@@ -174,6 +177,37 @@ export default function TaskList({
     const archiveDailyTasks = useAppStore((s) => s.archiveDailyTasks);
     const confirm = useConfirm();
 
+    // Googleカレンダーからイベントを削除するヘルパー
+    const deleteGoogleCalendarEvents = useCallback(async (task: Task) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const accessToken = (session as any)?.access_token;
+        if (!accessToken) return;
+
+        const googleEvents = task.plannedDateGoogleEvents ?? {};
+        const eventIds = Object.values(googleEvents);
+
+        for (const eventId of eventIds) {
+            if (!eventId) continue;
+            try {
+                await fetch(`/api/calendar/events/${eventId}`, {
+                    method: "DELETE",
+                    headers: { Authorization: `Bearer ${accessToken}` },
+                });
+            } catch (err) {
+                console.error("[deleteGoogleCalendarEvents] Failed to delete event:", eventId, err);
+            }
+        }
+    }, [session]);
+
+    // タスク削除（Googleカレンダー同期付き）
+    const handleDeleteTask = useCallback(async (task: Task) => {
+        // Googleカレンダーのイベントを削除
+        await deleteGoogleCalendarEvents(task);
+        // ローカルタスクを削除
+        removeTask(task.id);
+        toast.show('タスクを削除しました', 'success');
+    }, [deleteGoogleCalendarEvents, removeTask, toast]);
+
     async function bulkComplete() {
         if (Object.values(selected).every((v) => !v)) return;
         const ids = filteredSorted.filter((t) => selected[t.id]).map((t) => t.id);
@@ -201,13 +235,17 @@ export default function TaskList({
         toast.show(`${dailies.length}件をアーカイブしました`, "success");
     }
     async function bulkDelete() {
-        const ids = filteredSorted.filter((t) => selected[t.id]).map((t) => t.id);
-        if (!ids.length) return;
-        const ok = await confirm(`${ids.length}件を削除しますか？この操作は取り消せません。`, { tone: 'danger', confirmText: '削除' });
+        const tasksToDelete = filteredSorted.filter((t) => selected[t.id]);
+        if (!tasksToDelete.length) return;
+        const ok = await confirm(`${tasksToDelete.length}件を削除しますか？この操作は取り消せません。`, { tone: 'danger', confirmText: '削除' });
         if (!ok) return;
-        for (const id of ids) removeTask(id);
+        // Googleカレンダーのイベントを削除
+        for (const task of tasksToDelete) {
+            await deleteGoogleCalendarEvents(task);
+            removeTask(task.id);
+        }
         setSelected({});
-        toast.show(`${ids.length}件を削除しました`, "success");
+        toast.show(`${tasksToDelete.length}件を削除しました`, "success");
     }
 
     async function bulkUpdateDueDate() {
@@ -218,14 +256,69 @@ export default function TaskList({
         const dt = new Date(bulkDateInput);
         if (isNaN(dt.getTime())) return;
         const stamp = Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate());
+        const dateStr = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const accessToken = (session as any)?.access_token;
+        let syncedCount = 0;
+
         for (const t of filteredSorted) {
             if (!selected[t.id]) continue;
             if (t.type === 'backlog') {
-                updateTask(t.id, { plannedDates: [stamp] });
+                let googleEventId: string | undefined;
+                const existingGoogleEvents = t.plannedDateGoogleEvents ?? {};
+                const existingEventId = Object.values(existingGoogleEvents)[0];
+
+                // Googleカレンダーに同期
+                if (accessToken) {
+                    try {
+                        if (existingEventId) {
+                            const res = await fetch(`/api/calendar/events/${existingEventId}`, {
+                                method: "PATCH",
+                                headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+                                body: JSON.stringify({ start: { date: dateStr }, end: { date: dateStr } }),
+                            });
+                            if (res.ok) googleEventId = existingEventId;
+                        } else {
+                            const res = await fetch("/api/calendar/events", {
+                                method: "POST",
+                                headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    summary: `📋 ${t.title}`,
+                                    description: t.description || undefined,
+                                    start: { date: dateStr },
+                                    end: { date: dateStr },
+                                }),
+                            });
+                            if (res.ok) {
+                                const data = await res.json();
+                                googleEventId = data.id;
+                            }
+                        }
+                        if (googleEventId) syncedCount++;
+                    } catch (err) {
+                        console.error("[bulkUpdateDueDate] Sync error for task:", t.id, err);
+                    }
+                }
+
+                const newGoogleEvents: Record<string, string> = {};
+                if (googleEventId) {
+                    newGoogleEvents[String(stamp)] = googleEventId;
+                }
+
+                updateTask(t.id, {
+                    plannedDates: [stamp],
+                    plannedDateGoogleEvents: newGoogleEvents,
+                });
             }
         }
         setSelected({});
-        toast.show(`${ids.length}件の実行日を更新しました`, "success");
+        toast.show(
+            syncedCount > 0
+                ? `${ids.length}件の実行日を更新し、${syncedCount}件をGoogleカレンダーに同期しました`
+                : `${ids.length}件の実行日を更新しました`,
+            syncedCount > 0 ? "success" : "warning"
+        );
     }
 
     async function bulkPostponeToTomorrow() {
@@ -235,14 +328,69 @@ export default function TaskList({
         const tomorrowInput = getTomorrowDateInput();
         const dt = new Date(tomorrowInput);
         const stamp = Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate());
+        const dateStr = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const accessToken = (session as any)?.access_token;
+        let syncedCount = 0;
+
         for (const t of filteredSorted) {
             if (!selected[t.id]) continue;
             if (t.type === 'backlog') {
-                updateTask(t.id, { plannedDates: [stamp] });
+                let googleEventId: string | undefined;
+                const existingGoogleEvents = t.plannedDateGoogleEvents ?? {};
+                const existingEventId = Object.values(existingGoogleEvents)[0];
+
+                // Googleカレンダーに同期
+                if (accessToken) {
+                    try {
+                        if (existingEventId) {
+                            const res = await fetch(`/api/calendar/events/${existingEventId}`, {
+                                method: "PATCH",
+                                headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+                                body: JSON.stringify({ start: { date: dateStr }, end: { date: dateStr } }),
+                            });
+                            if (res.ok) googleEventId = existingEventId;
+                        } else {
+                            const res = await fetch("/api/calendar/events", {
+                                method: "POST",
+                                headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    summary: `📋 ${t.title}`,
+                                    description: t.description || undefined,
+                                    start: { date: dateStr },
+                                    end: { date: dateStr },
+                                }),
+                            });
+                            if (res.ok) {
+                                const data = await res.json();
+                                googleEventId = data.id;
+                            }
+                        }
+                        if (googleEventId) syncedCount++;
+                    } catch (err) {
+                        console.error("[bulkPostponeToTomorrow] Sync error for task:", t.id, err);
+                    }
+                }
+
+                const newGoogleEvents: Record<string, string> = {};
+                if (googleEventId) {
+                    newGoogleEvents[String(stamp)] = googleEventId;
+                }
+
+                updateTask(t.id, {
+                    plannedDates: [stamp],
+                    plannedDateGoogleEvents: newGoogleEvents,
+                });
             }
         }
         setSelected({});
-        toast.show(`${ids.length}件を明日に繰り越しました`, "success");
+        toast.show(
+            syncedCount > 0
+                ? `${ids.length}件を明日に繰り越し、${syncedCount}件をGoogleカレンダーに同期しました`
+                : `${ids.length}件を明日に繰り越しました`,
+            syncedCount > 0 ? "success" : "warning"
+        );
     }
 
     function startEditPlannedDate(task: Task) {
@@ -260,7 +408,7 @@ export default function TaskList({
         }
     }
 
-    function savePlannedDate(taskId: string) {
+    const savePlannedDate = useCallback(async (taskId: string) => {
         if (!tempPlannedDate) {
             setEditingPlannedTaskId(null);
             return;
@@ -281,11 +429,107 @@ export default function TaskList({
             return;
         }
 
-        updateTask(taskId, { plannedDates: [stamp] });
-        toast.show('実行日を更新しました', 'success');
+        setIsSyncingPlannedDate(true);
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const accessToken = (session as any)?.access_token;
+        console.log("[savePlannedDate] session:", session);
+        console.log("[savePlannedDate] accessToken:", accessToken ? "exists" : "undefined");
+        let googleEventId: string | undefined;
+
+        // 既存のGoogleイベントIDを取得
+        const existingGoogleEvents = currentTask?.plannedDateGoogleEvents ?? {};
+        const existingEventId = Object.values(existingGoogleEvents)[0];
+
+        // Googleカレンダーに同期
+        if (accessToken && currentTask) {
+            try {
+                const dateStr = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+                console.log("[savePlannedDate] dateStr:", dateStr);
+                console.log("[savePlannedDate] existingEventId:", existingEventId);
+
+                if (existingEventId) {
+                    // 既存のイベントを更新
+                    console.log("[savePlannedDate] Updating existing event...");
+                    const res = await fetch(`/api/calendar/events/${existingEventId}`, {
+                        method: "PATCH",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            start: { date: dateStr },
+                            end: { date: dateStr },
+                        }),
+                    });
+                    console.log("[savePlannedDate] PATCH response status:", res.status);
+                    if (res.ok) {
+                        googleEventId = existingEventId;
+                        console.log("[savePlannedDate] Event updated:", googleEventId);
+                    } else {
+                        const errorText = await res.text();
+                        console.error("[savePlannedDate] Failed to update event:", res.status, errorText);
+                    }
+                } else {
+                    // 新規イベントを作成
+                    console.log("[savePlannedDate] Creating new event...");
+                    const res = await fetch("/api/calendar/events", {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            summary: `📋 ${currentTask.title}`,
+                            description: currentTask.description || undefined,
+                            start: { date: dateStr },
+                            end: { date: dateStr },
+                        }),
+                    });
+                    console.log("[savePlannedDate] POST response status:", res.status);
+                    if (res.ok) {
+                        const data = await res.json();
+                        googleEventId = data.id;
+                        console.log("[savePlannedDate] Event created:", googleEventId);
+                    } else {
+                        const errorText = await res.text();
+                        console.error("[savePlannedDate] Failed to create event:", res.status, errorText);
+                    }
+                }
+            } catch (err) {
+                console.error("[savePlannedDate] Google Calendar sync error:", err);
+            }
+        } else {
+            console.log("[savePlannedDate] Skipping Google sync - accessToken:", !!accessToken, "currentTask:", !!currentTask);
+        }
+
+        // ローカルを更新
+        const newGoogleEvents: Record<string, string> = {};
+        if (googleEventId) {
+            newGoogleEvents[String(stamp)] = googleEventId;
+        }
+
+        updateTask(taskId, {
+            plannedDates: [stamp],
+            plannedDateGoogleEvents: newGoogleEvents,
+        });
+
+        setIsSyncingPlannedDate(false);
+        let message: string;
+        let toastType: 'success' | 'warning' | 'error' = 'success';
+        if (googleEventId) {
+            message = '実行日を更新し、Googleカレンダーに同期しました';
+        } else if (!accessToken) {
+            message = '実行日を更新しました（Googleアカウントでログインするとカレンダー同期できます）';
+            toastType = 'warning';
+        } else {
+            message = '実行日を更新しました（Google同期に失敗）';
+            toastType = 'error';
+        }
+        toast.show(message, toastType);
         setEditingPlannedTaskId(null);
         setTempPlannedDate("");
-    }
+    }, [tempPlannedDate, storeTasks, session, updateTask, toast]);
 
     function cancelEditPlannedDate() {
         setEditingPlannedTaskId(null);
@@ -443,6 +687,7 @@ export default function TaskList({
                                             task={t}
                                             onEdit={(task: Task) => openEdit(task)}
                                             onContext={(e: React.MouseEvent, task: Task) => { e.preventDefault(); e.stopPropagation(); setCtxTask(task); setCtxPos({ x: e.clientX, y: e.clientY }); }}
+                                            onDelete={handleDeleteTask}
                                             enableSelection={enableSelection}
                                             selected={selected[t.id]}
                                             onSelectOne={(id: string, checked: boolean) => onSelectOne(id, checked)}
@@ -528,8 +773,7 @@ export default function TaskList({
                             onClick={async () => {
                                 const ok = await confirm(`「${ctxTask.title}」を削除しますか？`, { tone: 'danger', confirmText: '削除' });
                                 if (ok) {
-                                    removeTask(ctxTask.id);
-                                    toast.show('タスクを削除しました', 'success');
+                                    await handleDeleteTask(ctxTask);
                                 }
                                 setCtxTask(null);
                             }}

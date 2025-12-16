@@ -72,6 +72,7 @@ export default function TaskTimeBlock({
             slotIndex,
             startTime: slot.startTime,
             endTime: slot.endTime,
+            googleEventId: slot.googleEventId,
           })
         );
         e.dataTransfer.effectAllowed = "move";

@@ -19,7 +19,7 @@ import {
 } from "date-fns";
 import { getDate as getDayOfMonth, getDay } from "date-fns";
 import { ja } from "date-fns/locale";
-import { Calendar } from "lucide-react";
+import { Calendar, Loader2 } from "lucide-react";
 import DayDetailPanel from "@/components/calendar/DayDetailPanel";
 import { useAppStore } from "@/lib/store";
 import { Task } from "@/lib/types";
@@ -50,6 +50,7 @@ export default function CalendarPage() {
   const [currentMonth, setCurrentMonth] = useState<Date>(startOfMonth(new Date()));
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [isMovingTask, setIsMovingTask] = useState(false); // タスク移動中のローディング状態
 
   const monthStart = useMemo(() => startOfMonth(currentMonth), [currentMonth]);
   const monthEnd = useMemo(() => endOfMonth(currentMonth), [currentMonth]);
@@ -71,7 +72,8 @@ export default function CalendarPage() {
     return cnt;
   }, [monthStart, daysInMonth]);
 
-  useEffect(() => {
+  // Googleカレンダーイベントを取得する関数
+  const fetchGoogleEvents = useCallback(() => {
     if (status !== "authenticated") return;
     const accessToken = (session as unknown as { access_token?: string })?.access_token;
     if (!accessToken) return;
@@ -83,12 +85,16 @@ export default function CalendarPage() {
       .then((r) => r.json())
       .then((d) => setEvents(d.items ?? []))
       .catch(() => { });
+  }, [session, status, monthStart, monthEnd]);
+
+  useEffect(() => {
+    fetchGoogleEvents();
     // Google Tasks (ToDo) も取得（締切のあるものは日付に表示）
     // fetch(`/api/tasks`, { headers: { Authorization: `Bearer ${accessToken}` } })
     //   .then((r) => r.json())
     //   .then((d) => setGTasks(d.items ?? []))
     //   .catch(() => {});
-  }, [session, status, monthStart, monthEnd]);
+  }, [fetchGoogleEvents]);
 
   const eventsByDate = useMemo(() => {
     const map = new Map<string, GCalEvent[]>();
@@ -104,44 +110,136 @@ export default function CalendarPage() {
   }, [events]);
 
   // タスクを日付ごとにグループ化（plannedDatesに基づく）
-  // Googleカレンダーに同期済み（同じタイトルのイベントがある）タスクは除外
+  // Googleカレンダーに同期済み（plannedDateGoogleEventsにIDがある）タスクは除外
   const tasksByDate = useMemo(() => {
     const map = new Map<string, Task[]>();
     for (const task of tasks) {
       if (task.archived) continue;
       if (task.type !== "backlog") continue;
       const plannedDates = task.plannedDates ?? [];
+      const googleEvents = task.plannedDateGoogleEvents ?? {};
+
       for (const ts of plannedDates) {
         const dateKey = format(new Date(ts), "yyyy-MM-dd");
-        // この日にGoogleカレンダーで同じタイトルのイベントがあるかチェック
-        const eventsOnDate = eventsByDate.get(dateKey) ?? [];
-        const isSyncedToGoogle = eventsOnDate.some(
-          (ev) => ev.summary === task.title || ev.summary === `📋 ${task.title}`
-        );
-        if (isSyncedToGoogle) continue; // 同期済みなら黄色表示しない
+
+        // この日付にGoogleイベントIDが紐付いている場合は、Googleカレンダーに同期済み
+        // → 黄色表示しない（青のGoogleイベントとして表示される）
+        const hasGoogleEventForDate = Object.keys(googleEvents).some((key) => {
+          const eventDate = new Date(Number(key));
+          return format(eventDate, "yyyy-MM-dd") === dateKey;
+        });
+        if (hasGoogleEventForDate) continue;
+
         const list = map.get(dateKey) ?? [];
         list.push(task);
         map.set(dateKey, list);
       }
     }
     return map;
-  }, [tasks, eventsByDate]);
+  }, [tasks]);
 
-  // タスクを別の日に移動（ローカルのみ）
-  const moveTaskToDate = useCallback((taskId: string, fromDateUtc: number, toDateUtc: number) => {
+  // タスクの日付を移動し、GoogleカレンダーイベントIDも更新
+  const moveTaskToDate = useCallback((
+    taskId: string,
+    fromDateUtc: number,
+    toDateUtc: number,
+    googleEventId?: string // 新しいまたは更新されたイベントID
+  ) => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
 
-    const plannedDates = [...(task.plannedDates ?? [])];
-    const fromIdx = plannedDates.indexOf(fromDateUtc);
-    if (fromIdx >= 0) {
-      plannedDates.splice(fromIdx, 1);
+    // ローカルタイムゾーンでの日付を取得
+    const fromDateLocal = new Date(fromDateUtc);
+    const fromYear = fromDateLocal.getFullYear();
+    const fromMonth = fromDateLocal.getMonth();
+    const fromDay = fromDateLocal.getDate();
+
+    console.log("[moveTaskToDate] Moving task", task.title);
+    console.log("[moveTaskToDate] from:", `${fromYear}-${fromMonth + 1}-${fromDay}`, "to:", format(new Date(toDateUtc), "yyyy-MM-dd"));
+
+    // 元の日付を削除、移動先を追加
+    const newPlannedDates = (task.plannedDates ?? []).filter(d => {
+      const dt = new Date(d);
+      return !(dt.getFullYear() === fromYear && dt.getMonth() === fromMonth && dt.getDate() === fromDay);
+    });
+
+    // 移動先の日付を追加（同じ日がなければ）
+    const toDateLocal = new Date(toDateUtc);
+    const alreadyExists = newPlannedDates.some(d => {
+      const dt = new Date(d);
+      return dt.getFullYear() === toDateLocal.getFullYear() &&
+             dt.getMonth() === toDateLocal.getMonth() &&
+             dt.getDate() === toDateLocal.getDate();
+    });
+    if (!alreadyExists) {
+      newPlannedDates.push(toDateUtc);
     }
-    if (!plannedDates.includes(toDateUtc)) {
-      plannedDates.push(toDateUtc);
+
+    // GoogleイベントIDのマッピングを更新
+    const newGoogleEvents = { ...(task.plannedDateGoogleEvents ?? {}) };
+    // 元の日付のエントリを削除（キーは元のタイムスタンプ文字列）
+    const oldKeys = Object.keys(newGoogleEvents).filter(key => {
+      const dt = new Date(Number(key));
+      return dt.getFullYear() === fromYear && dt.getMonth() === fromMonth && dt.getDate() === fromDay;
+    });
+    oldKeys.forEach(key => delete newGoogleEvents[key]);
+
+    // 新しい日付にイベントIDを設定
+    if (googleEventId) {
+      newGoogleEvents[String(toDateUtc)] = googleEventId;
     }
-    updateTask(taskId, { plannedDates });
+
+    console.log("[moveTaskToDate] Final plannedDates:", newPlannedDates);
+    console.log("[moveTaskToDate] Final plannedDateGoogleEvents:", newGoogleEvents);
+
+    updateTask(taskId, {
+      plannedDates: newPlannedDates,
+      plannedDateGoogleEvents: newGoogleEvents,
+    });
   }, [tasks, updateTask]);
+
+  // タスクに日付を追加し、GoogleカレンダーイベントIDを紐付け
+  const addPlannedDateWithGoogleEvent = useCallback((
+    taskId: string,
+    dateUtc: number,
+    googleEventId: string
+  ) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const newPlannedDates = [...(task.plannedDates ?? [])];
+    if (!newPlannedDates.includes(dateUtc)) {
+      newPlannedDates.push(dateUtc);
+    }
+
+    const newGoogleEvents = { ...(task.plannedDateGoogleEvents ?? {}) };
+    newGoogleEvents[String(dateUtc)] = googleEventId;
+
+    updateTask(taskId, {
+      plannedDates: newPlannedDates,
+      plannedDateGoogleEvents: newGoogleEvents,
+    });
+  }, [tasks, updateTask]);
+
+  // タスクに紐づくGoogleイベントIDを取得
+  const getGoogleEventIdForDate = useCallback((task: Task, dateUtc: number): string | undefined => {
+    const googleEvents = task.plannedDateGoogleEvents ?? {};
+    // 完全一致で検索
+    if (googleEvents[String(dateUtc)]) {
+      return googleEvents[String(dateUtc)];
+    }
+    // 同じ日付のキーを検索（タイムスタンプが異なる場合）
+    const targetDate = new Date(dateUtc);
+    for (const key of Object.keys(googleEvents)) {
+      const keyDate = new Date(Number(key));
+      if (keyDate.getFullYear() === targetDate.getFullYear() &&
+          keyDate.getMonth() === targetDate.getMonth() &&
+          keyDate.getDate() === targetDate.getDate()) {
+        return googleEvents[key];
+      }
+    }
+    return undefined;
+  }, []);
 
   const create = async () => {
     const accessToken = (session as unknown as { access_token?: string })?.access_token;
@@ -334,6 +432,12 @@ export default function CalendarPage() {
         <div className="text-sm font-semibold flex items-center gap-2">
           <Calendar size={16} />
           カレンダー（Google同期）
+          {isMovingTask && (
+            <span className="flex items-center gap-1 text-xs text-primary animate-pulse">
+              <Loader2 size={12} className="animate-spin" />
+              移動中...
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-4">
           {/* ビューモード切り替え */}
@@ -506,9 +610,93 @@ export default function CalendarPage() {
 
                   // タスクのD&D処理
                   if (payload.type === "calendar-task" && payload.taskId && payload.fromDateUtc != null) {
-                    // cellDateUtcと同じ計算方法を使用（Date.UTC）
-                    const toDateUtc = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
-                    moveTaskToDate(payload.taskId, payload.fromDateUtc, toDateUtc);
+                    // 二重操作防止
+                    if (isMovingTask) {
+                      console.log("[Calendar onDrop] Already moving task, ignoring");
+                      return;
+                    }
+
+                    console.log("[Calendar onDrop] Processing calendar-task", payload);
+                    setIsMovingTask(true);
+
+                    try {
+                      const toDateUtc = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+                      const fromDateStr = format(new Date(payload.fromDateUtc), "yyyy-MM-dd");
+                      const targetDateStr = format(d, "yyyy-MM-dd");
+
+                      // 同じ日への移動は無視
+                      if (fromDateStr === targetDateStr) {
+                        console.log("[Calendar onDrop] Same date, ignoring");
+                        return;
+                      }
+
+                      const accessToken = (session as unknown as { access_token?: string })?.access_token;
+                      const task = tasks.find(t => t.id === payload.taskId);
+
+                      if (accessToken && task) {
+                        // 既存のGoogleイベントIDを取得
+                        const existingEventId = getGoogleEventIdForDate(task, payload.fromDateUtc);
+                        let newEventId: string | undefined;
+
+                        if (existingEventId) {
+                          // 既存イベントを更新（日付を変更）
+                          console.log("[Calendar onDrop] Updating existing event", existingEventId, "to", targetDateStr);
+                          const res = await fetch(`/api/calendar/events/${existingEventId}`, {
+                            method: "PATCH",
+                            headers: {
+                              Authorization: `Bearer ${accessToken}`,
+                              "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                              start: { date: targetDateStr },
+                              end: { date: targetDateStr },
+                            }),
+                          });
+                          if (res.ok) {
+                            console.log("[Calendar onDrop] Event updated successfully");
+                            newEventId = existingEventId;
+                          } else {
+                            console.error("[Calendar onDrop] Failed to update event", await res.text());
+                          }
+                        } else {
+                          // 新規イベントを作成
+                          console.log("[Calendar onDrop] Creating new event for", task.title, "on", targetDateStr);
+                          const res = await fetch("/api/calendar/events", {
+                            method: "POST",
+                            headers: {
+                              Authorization: `Bearer ${accessToken}`,
+                              "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                              summary: `📋 ${task.title}`,
+                              description: task.description || undefined,
+                              start: { date: targetDateStr },
+                              end: { date: targetDateStr },
+                            }),
+                          });
+                          if (res.ok) {
+                            const data = await res.json();
+                            newEventId = data.id;
+                            console.log("[Calendar onDrop] Event created successfully", newEventId);
+                          } else {
+                            console.error("[Calendar onDrop] Failed to create event", await res.text());
+                          }
+                        }
+
+                        // ローカルのplannedDatesとGoogleイベントIDマッピングを更新
+                        moveTaskToDate(payload.taskId, payload.fromDateUtc, toDateUtc, newEventId);
+
+                        // Googleカレンダーを再取得
+                        fetchGoogleEvents();
+                      } else {
+                        // Google未連携の場合はローカルのみ更新
+                        moveTaskToDate(payload.taskId, payload.fromDateUtc, toDateUtc);
+                      }
+                    } catch (err) {
+                      console.error("[Calendar onDrop] Error moving task", err);
+                    } finally {
+                      setIsMovingTask(false);
+                    }
                     return;
                   }
 
@@ -716,6 +904,7 @@ export default function CalendarPage() {
           <DayDetailPanel
             date={detailDate}
             onClose={() => setDetailDate(null)}
+            onGoogleCalendarUpdate={fetchGoogleEvents}
           />
         </div>
       )}

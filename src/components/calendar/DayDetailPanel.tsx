@@ -3,7 +3,8 @@
 import { useMemo, useState, useCallback } from "react";
 import { format, isToday } from "date-fns";
 import { ja } from "date-fns/locale";
-import { X, Clock, GripVertical } from "lucide-react";
+import { X, Clock, GripVertical, Loader2 } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useAppStore } from "@/lib/store";
 import { Task, TimeSlot } from "@/lib/types";
 import TimelineGrid from "./TimelineGrid";
@@ -13,13 +14,23 @@ import DroppableTimeSlot from "./DroppableTimeSlot";
 type DayDetailPanelProps = {
   date: Date;
   onClose: () => void;
+  onGoogleCalendarUpdate?: () => void; // Google同期後にイベントを再取得
 };
 
-export default function DayDetailPanel({ date, onClose }: DayDetailPanelProps) {
+export default function DayDetailPanel({ date, onClose, onGoogleCalendarUpdate }: DayDetailPanelProps) {
+  const { data: session, status } = useSession();
   const tasks = useAppStore((s) => s.tasks);
   const addTimeSlot = useAppStore((s) => s.addTimeSlot);
   const removeTimeSlot = useAppStore((s) => s.removeTimeSlot);
   const updateTimeSlot = useAppStore((s) => s.updateTimeSlot);
+
+  // Google認証済みかどうか
+  const accessToken = (session as unknown as { access_token?: string })?.access_token;
+  const isGoogleAuthenticated = status === "authenticated" && !!accessToken;
+
+  // 同期中の状態
+  const [syncing, setSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   // 日付をUTC 0時のタイムスタンプに変換（カレンダー日付ベース）
   const dateUtc = useMemo(() => {
@@ -187,36 +198,242 @@ export default function DayDetailPanel({ date, onClose }: DayDetailPanelProps) {
     setShowTimeInput(true);
   }, []);
 
-  const handleAddTimeSlot = useCallback(() => {
+  // Googleカレンダーにイベントを作成
+  const syncToGoogle = useCallback(
+    async (
+      task: Task,
+      slot: { date: number; startTime: string; endTime: string }
+    ): Promise<string | undefined> => {
+      if (!isGoogleAuthenticated || !accessToken) {
+        console.log("[syncToGoogle] Not authenticated", { isGoogleAuthenticated, hasAccessToken: !!accessToken });
+        return undefined;
+      }
+      try {
+        console.log("[syncToGoogle] Creating event", { taskTitle: task.title, slot });
+        const res = await fetch("/api/calendar/timeslot-sync", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            taskTitle: task.title,
+            taskDescription: task.description,
+            date: slot.date,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          console.log("[syncToGoogle] Success", data.googleEventId);
+          setSyncError(null);
+          return data.googleEventId;
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          console.error("[syncToGoogle] API Error", res.status, errorData);
+          setSyncError("Googleカレンダーへの同期に失敗しました");
+        }
+      } catch (err) {
+        console.error("[syncToGoogle] Exception", err);
+        setSyncError("Googleカレンダーへの同期に失敗しました");
+      }
+      return undefined;
+    },
+    [isGoogleAuthenticated, accessToken]
+  );
+
+  // Googleカレンダーのイベントを更新
+  const updateGoogleEvent = useCallback(
+    async (
+      googleEventId: string,
+      task: Task,
+      slot: { date: number; startTime: string; endTime: string }
+    ): Promise<boolean> => {
+      if (!isGoogleAuthenticated || !accessToken) {
+        console.log("[updateGoogleEvent] Not authenticated");
+        return false;
+      }
+      try {
+        console.log("[updateGoogleEvent] Updating event", { googleEventId, taskTitle: task.title, slot });
+        const res = await fetch("/api/calendar/timeslot-sync", {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            googleEventId,
+            taskTitle: task.title,
+            taskDescription: task.description,
+            date: slot.date,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+          }),
+        });
+        if (res.ok) {
+          console.log("[updateGoogleEvent] Success");
+          setSyncError(null);
+          return true;
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          console.error("[updateGoogleEvent] API Error", res.status, errorData);
+          setSyncError("Googleカレンダーの更新に失敗しました");
+          return false;
+        }
+      } catch (err) {
+        console.error("[updateGoogleEvent] Exception", err);
+        setSyncError("Googleカレンダーの更新に失敗しました");
+        return false;
+      }
+    },
+    [isGoogleAuthenticated, accessToken]
+  );
+
+  // Googleカレンダーからイベントを削除
+  const deleteGoogleEvent = useCallback(
+    async (googleEventId: string): Promise<boolean> => {
+      if (!isGoogleAuthenticated || !accessToken) return false;
+      try {
+        const res = await fetch(
+          `/api/calendar/timeslot-sync?googleEventId=${encodeURIComponent(googleEventId)}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        return res.ok;
+      } catch {
+        return false;
+      }
+    },
+    [isGoogleAuthenticated, accessToken]
+  );
+
+  const handleAddTimeSlot = useCallback(async () => {
     if (!selectedTask) return;
-    addTimeSlot(selectedTask.id, {
+    const slot = {
       date: dateUtc,
       startTime: inputStartTime,
       endTime: inputEndTime,
-    });
+    };
+
+    setSyncing(true);
+    try {
+      // Googleカレンダーに同期
+      const googleEventId = await syncToGoogle(selectedTask, slot);
+
+      // ローカルに保存（googleEventId付き）
+      addTimeSlot(selectedTask.id, {
+        ...slot,
+        googleEventId,
+      });
+
+      // Googleカレンダーの表示を更新
+      if (googleEventId) {
+        onGoogleCalendarUpdate?.();
+      }
+    } finally {
+      setSyncing(false);
+    }
+
     setSelectedTask(null);
     setShowTimeInput(false);
-  }, [selectedTask, dateUtc, inputStartTime, inputEndTime, addTimeSlot]);
+  }, [selectedTask, dateUtc, inputStartTime, inputEndTime, addTimeSlot, syncToGoogle, onGoogleCalendarUpdate]);
 
-  const handleRemoveSlot = useCallback((taskId: string, slotIndex: number) => {
-    removeTimeSlot(taskId, slotIndex);
-  }, [removeTimeSlot]);
+  const handleRemoveSlot = useCallback(
+    async (taskId: string, slotIndex: number, googleEventId?: string) => {
+      setSyncing(true);
+      try {
+        // Googleカレンダーから削除
+        if (googleEventId) {
+          const deleted = await deleteGoogleEvent(googleEventId);
+          if (deleted) {
+            onGoogleCalendarUpdate?.();
+          }
+        }
+        // ローカルから削除
+        removeTimeSlot(taskId, slotIndex);
+      } finally {
+        setSyncing(false);
+      }
+    },
+    [removeTimeSlot, deleteGoogleEvent, onGoogleCalendarUpdate]
+  );
+
+  // 新規TimeSlotを追加してGoogleカレンダーに同期するヘルパー
+  const addNewTimeSlotWithSync = useCallback(
+    async (taskId: string, newStartTime: string, hour: number, minute: number) => {
+      // デフォルト1時間のスロットを作成
+      const endHour = hour + 1;
+      const endMinute = minute;
+      const newEndTime = `${endHour.toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`;
+
+      const newSlot = {
+        date: dateUtc,
+        startTime: newStartTime,
+        endTime: newEndTime,
+      };
+
+      console.log("[addNewTimeSlotWithSync] newSlot", newSlot);
+
+      const task = tasks.find((t) => t.id === taskId);
+      if (!task) {
+        console.log("[addNewTimeSlotWithSync] Task not found");
+        return;
+      }
+
+      console.log("[addNewTimeSlotWithSync] Task found", task.title);
+      console.log("[addNewTimeSlotWithSync] isGoogleAuthenticated", isGoogleAuthenticated);
+
+      setSyncing(true);
+      try {
+        // Googleカレンダーに同期
+        console.log("[addNewTimeSlotWithSync] Creating new event");
+        const googleEventId = await syncToGoogle(task, newSlot);
+        console.log("[addNewTimeSlotWithSync] googleEventId", googleEventId);
+
+        // ローカルに保存（googleEventId付き）
+        addTimeSlot(taskId, {
+          ...newSlot,
+          googleEventId,
+        });
+
+        // Googleカレンダーの表示を更新
+        if (googleEventId) {
+          onGoogleCalendarUpdate?.();
+        }
+      } finally {
+        setSyncing(false);
+      }
+    },
+    [dateUtc, tasks, addTimeSlot, syncToGoogle, onGoogleCalendarUpdate, isGoogleAuthenticated]
+  );
 
   // D&Dでタスクをドロップしたときの処理
   const handleTimelineDrop = useCallback(
-    (hour: number, minute: number, data: unknown) => {
+    async (hour: number, minute: number, data: unknown) => {
+      console.log("[handleTimelineDrop] Called", { hour, minute, data });
+
       const dropData = data as {
         type?: string;
         taskId?: string;
         slotIndex?: number;
         startTime?: string;
         endTime?: string;
+        googleEventId?: string;
       };
+
+      console.log("[handleTimelineDrop] dropData", dropData);
 
       const newStartTime = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
 
       // タイムライン内の既存タスクを移動
       if (dropData.type === "task-time-block" && dropData.taskId && dropData.slotIndex !== undefined) {
+        console.log("[handleTimelineDrop] Processing task-time-block");
+
         // 元の開始・終了時刻から時間長を計算して新しい終了時刻を算出
         const [oldStartH, oldStartM] = (dropData.startTime || "00:00").split(":").map(Number);
         const [oldEndH, oldEndM] = (dropData.endTime || "01:00").split(":").map(Number);
@@ -228,29 +445,76 @@ export default function DayDetailPanel({ date, onClose }: DayDetailPanelProps) {
         const newEndMinute = newEndMinutes % 60;
         const newEndTime = `${newEndHour.toString().padStart(2, "0")}:${newEndMinute.toString().padStart(2, "0")}`;
 
-        updateTimeSlot(dropData.taskId, dropData.slotIndex, {
+        const newSlot = {
           date: dateUtc,
           startTime: newStartTime,
           endTime: newEndTime,
-        });
+        };
+
+        console.log("[handleTimelineDrop] newSlot", newSlot);
+
+        const task = tasks.find((t) => t.id === dropData.taskId);
+        if (!task) {
+          console.log("[handleTimelineDrop] Task not found");
+          return;
+        }
+
+        console.log("[handleTimelineDrop] Task found", task.title);
+        console.log("[handleTimelineDrop] isGoogleAuthenticated", isGoogleAuthenticated);
+
+        setSyncing(true);
+        try {
+          let googleEventId = dropData.googleEventId;
+          let googleSynced = false;
+
+          console.log("[handleTimelineDrop] Existing googleEventId", googleEventId);
+
+          if (googleEventId) {
+            // 既存のGoogleカレンダーイベントを更新
+            console.log("[handleTimelineDrop] Updating existing event");
+            googleSynced = await updateGoogleEvent(googleEventId, task, newSlot);
+          } else {
+            // Googleカレンダーに新規同期（未同期タスクの場合）
+            console.log("[handleTimelineDrop] Creating new event");
+            googleEventId = await syncToGoogle(task, newSlot);
+            googleSynced = !!googleEventId;
+          }
+
+          console.log("[handleTimelineDrop] googleSynced", googleSynced, "googleEventId", googleEventId);
+
+          // ローカルを更新（googleEventIdを保持）
+          updateTimeSlot(dropData.taskId, dropData.slotIndex, {
+            ...newSlot,
+            googleEventId,
+          });
+
+          // Googleカレンダーの表示を更新
+          if (googleSynced) {
+            onGoogleCalendarUpdate?.();
+          }
+        } finally {
+          setSyncing(false);
+        }
         return;
       }
 
-      // 未スケジュールタスクを新規追加
+      // 未スケジュールタスクを新規追加（DayDetailPanel内からのドラッグ）
       if (dropData.type === "unscheduled-task" && dropData.taskId) {
-        // デフォルト1時間のスロットを作成
-        const endHour = hour + 1;
-        const endMinute = minute;
-        const newEndTime = `${endHour.toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`;
-
-        addTimeSlot(dropData.taskId, {
-          date: dateUtc,
-          startTime: newStartTime,
-          endTime: newEndTime,
-        });
+        console.log("[handleTimelineDrop] Processing unscheduled-task");
+        await addNewTimeSlotWithSync(dropData.taskId, newStartTime, hour, minute);
+        return;
       }
+
+      // カレンダーグリッドからのドラッグ（黄色いタスクアイテム）
+      if (dropData.type === "calendar-task" && dropData.taskId) {
+        console.log("[handleTimelineDrop] Processing calendar-task");
+        await addNewTimeSlotWithSync(dropData.taskId, newStartTime, hour, minute);
+        return;
+      }
+
+      console.log("[handleTimelineDrop] No matching type, dropData.type:", dropData.type);
     },
-    [dateUtc, addTimeSlot, updateTimeSlot]
+    [dateUtc, tasks, updateTimeSlot, syncToGoogle, updateGoogleEvent, onGoogleCalendarUpdate, isGoogleAuthenticated, addNewTimeSlotWithSync]
   );
 
   return (
@@ -261,9 +525,23 @@ export default function DayDetailPanel({ date, onClose }: DayDetailPanelProps) {
           <div className="text-lg font-semibold">
             {format(date, "M月d日", { locale: ja })}
           </div>
-          <div className="text-xs text-muted-foreground">
+          <div className="text-xs text-muted-foreground flex items-center gap-2">
             {format(date, "EEEE", { locale: ja })}
+            {syncing && (
+              <span className="flex items-center gap-1 text-primary">
+                <Loader2 size={10} className="animate-spin" />
+                同期中
+              </span>
+            )}
+            {!isGoogleAuthenticated && (
+              <span className="text-[10px] text-amber-600 dark:text-amber-400">
+                Google未連携
+              </span>
+            )}
           </div>
+          {syncError && (
+            <div className="text-[10px] text-red-500 mt-1">{syncError}</div>
+          )}
         </div>
         <button
           onClick={onClose}
@@ -352,8 +630,10 @@ export default function DayDetailPanel({ date, onClose }: DayDetailPanelProps) {
               </button>
               <button
                 onClick={handleAddTimeSlot}
-                className="px-3 py-1 text-sm bg-foreground text-background rounded hover:opacity-90 transition-opacity"
+                disabled={syncing}
+                className="px-3 py-1 text-sm bg-foreground text-background rounded hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-1"
               >
+                {syncing && <Loader2 size={12} className="animate-spin" />}
                 追加
               </button>
             </div>
@@ -387,7 +667,7 @@ export default function DayDetailPanel({ date, onClose }: DayDetailPanelProps) {
                   onClick={() => {
                     // 編集モード（簡易的に削除ボタンを表示）
                     if (confirm(`「${task.title}」の時間枠を削除しますか？`)) {
-                      handleRemoveSlot(task.id, slotIndex);
+                      handleRemoveSlot(task.id, slotIndex, slot.googleEventId);
                     }
                   }}
                 />

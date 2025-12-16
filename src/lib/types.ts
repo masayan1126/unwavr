@@ -25,6 +25,7 @@ export const TimeSlotSchema = z.object({
   date: z.number().int(),           // UTC 0時のタイムスタンプ
   startTime: z.string(),            // "09:00" 形式
   endTime: z.string(),              // "10:30" 形式
+  googleEventId: z.string().optional(), // GoogleカレンダーイベントID
 });
 export type TimeSlot = z.infer<typeof TimeSlotSchema>;
 
@@ -45,6 +46,8 @@ export const TaskSchema = z.object({
   dailyDoneDates: z.array(z.number().int()).optional(),
   // 積み上げ候補を「今日やる」に設定した日を保持（UTC 0時のタイムスタンプ）
   plannedDates: z.array(z.number().int()).optional(),
+  // plannedDatesに対応するGoogleカレンダーイベントID（キー: 日付タイムスタンプ文字列）
+  plannedDateGoogleEvents: z.record(z.string(), z.string()).optional(),
   // アーカイブ機能
   archived: z.boolean().optional(),
   archivedAt: z.number().int().optional(),

@@ -6,7 +6,7 @@ type DroppableTimeSlotProps = {
   startHour?: number;
   endHour?: number;
   hourHeight?: number;
-  onDrop?: (hour: number, minute: number, data: unknown) => void;
+  onDrop?: (hour: number, minute: number, data: unknown) => void | Promise<void>;
   children?: React.ReactNode;
 };
 

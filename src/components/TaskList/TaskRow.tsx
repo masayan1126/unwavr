@@ -18,6 +18,7 @@ interface TaskRowProps {
     task: Task;
     onEdit: (task: Task) => void;
     onContext: (e: React.MouseEvent, task: Task) => void;
+    onDelete: (task: Task) => void;
     enableSelection?: boolean;
     selected?: boolean;
     onSelectOne: (id: string, checked: boolean) => void;
@@ -35,7 +36,7 @@ interface TaskRowProps {
     startEditPlannedDate: (task: Task) => void;
 }
 
-export function TaskRow({ task, onEdit, onContext, enableSelection, selected, onSelectOne, showCreatedColumn, showPlannedColumn, showScheduledColumn, showTypeColumn, showMilestoneColumn, showArchivedAtColumn, editingPlannedTaskId, tempPlannedDate, setTempPlannedDate, savePlannedDate, cancelEditPlannedDate, startEditPlannedDate }: TaskRowProps) {
+export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, selected, onSelectOne, showCreatedColumn, showPlannedColumn, showScheduledColumn, showTypeColumn, showMilestoneColumn, showArchivedAtColumn, editingPlannedTaskId, tempPlannedDate, setTempPlannedDate, savePlannedDate, cancelEditPlannedDate, startEditPlannedDate }: TaskRowProps) {
     const toggle = useAppStore((s) => s.toggleTask);
     const toggleDailyToday = useAppStore((s) => s.toggleDailyDoneForToday);
     const activeTaskIds = useAppStore((s) => s.pomodoro.activeTaskIds);
@@ -113,14 +114,8 @@ export function TaskRow({ task, onEdit, onContext, enableSelection, selected, on
                             toast.show(`「${task.title}」を${task.completed ? '未完了' : '完了'}にしました`, 'success');
                         }
                     } else if (offset < -threshold) {
-                        // Left swipe: Delete
-                        // We need to confirm deletion, but for swipe UX, maybe just delete with undo toast?
-                        // For now, let's use the existing confirm logic if possible, or just delete.
-                        // Ideally we should have an undo feature.
-                        // For safety, let's just trigger the context menu logic or similar.
-                        // But user asked for swipe delete. Let's do it.
-                        useAppStore.getState().removeTask(task.id);
-                        toast.show('タスクを削除しました', 'success');
+                        // Left swipe: Delete with Google Calendar sync
+                        onDelete(task);
                     }
                 }}
             >

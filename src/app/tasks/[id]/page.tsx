@@ -1,8 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { use } from "react";
+import { useSession } from "next-auth/react";
 import { useToast } from "@/components/Providers";
 import { useAppStore } from "@/lib/store";
 import { TaskType, Scheduled } from "@/lib/types";
@@ -30,6 +31,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   const { id } = use(params);
   const toast = useToast();
   const searchParams = useSearchParams();
+  const { data: session } = useSession();
   const task = useAppStore((s) => s.tasks.find((t) => t.id === id));
   const activeTaskId = useAppStore((s) => s.pomodoro.activeTaskId);
   const setActiveTask = useAppStore((s) => s.setActiveTask);
@@ -44,8 +46,10 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   const [pomodoroWorkMinutes, setPomodoroWorkMinutes] = useState<number | "">("");
   const [milestoneId, setMilestoneId] = useState("");
   const [plannedDates, setPlannedDates] = useState<number[]>([]);
+  const [plannedDateGoogleEvents, setPlannedDateGoogleEvents] = useState<Record<string, string>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // スケジュール設定用の状態
   const [rangeStart, setRangeStart] = useState<string>("");
@@ -65,6 +69,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
     setPomodoroWorkMinutes(task.pomodoroSetting?.workDurationSec ? Math.floor(task.pomodoroSetting.workDurationSec / 60) : "");
     setMilestoneId(task.milestoneId || "");
     setPlannedDates(task.plannedDates || []);
+    setPlannedDateGoogleEvents(task.plannedDateGoogleEvents || {});
 
     // スケジュール設定の初期化
     if (task.scheduled) {
@@ -120,7 +125,8 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
       estimatedPomodoros: estimatedPomodoros || 0,
       pomodoroSetting: pomodoroWorkMinutes ? { workDurationSec: Number(pomodoroWorkMinutes) * 60 } : undefined,
       milestoneId: milestoneId || undefined,
-      plannedDates: type === "backlog" ? plannedDates : []
+      plannedDates: type === "backlog" ? plannedDates : [],
+      plannedDateGoogleEvents: type === "backlog" ? plannedDateGoogleEvents : {},
     });
 
     if (!keepEditing) {
@@ -145,21 +151,136 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
     });
   };
 
-  const addPlannedDate = () => {
+  const addPlannedDate = useCallback(async () => {
+    if (isSyncing || !task) return;
+
     const today = new Date();
     const todayUtc = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
-    if (!plannedDates.includes(todayUtc)) {
-      setPlannedDates(prev => {
-        const next = [...prev, todayUtc];
-        setTimeout(() => handleSave(true), 0);
-        return next;
-      });
-    }
-  };
 
-  const removePlannedDate = (date: number) => {
-    setPlannedDates(prev => prev.filter(d => d !== date));
-  };
+    if (plannedDates.includes(todayUtc)) {
+      toast.show("今日は既に予定日に追加されています", "warning");
+      return;
+    }
+
+    setIsSyncing(true);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const accessToken = (session as any)?.access_token;
+    console.log("[addPlannedDate] session:", session);
+    console.log("[addPlannedDate] accessToken:", accessToken ? "exists" : "undefined");
+    let googleEventId: string | undefined;
+
+    // Googleカレンダーにイベントを作成
+    if (accessToken) {
+      try {
+        const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+        console.log("[addPlannedDate] Creating event with dateStr:", dateStr);
+        const res = await fetch("/api/calendar/events", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            summary: task.title,
+            start: { date: dateStr },
+            end: { date: dateStr },
+          }),
+        });
+
+        console.log("[addPlannedDate] Response status:", res.status);
+        if (res.ok) {
+          const data = await res.json();
+          googleEventId = data.id;
+          console.log("[addPlannedDate] Event created:", googleEventId);
+        } else {
+          const errorText = await res.text();
+          console.error("[addPlannedDate] Failed to create event:", res.status, errorText);
+        }
+      } catch (err) {
+        console.error("[addPlannedDate] Google Calendar sync error:", err);
+      }
+    } else {
+      console.log("[addPlannedDate] No accessToken, skipping Google sync");
+    }
+
+    // ローカルの状態を更新
+    const newPlannedDates = [...plannedDates, todayUtc];
+    const newGoogleEvents = { ...plannedDateGoogleEvents };
+    if (googleEventId) {
+      newGoogleEvents[String(todayUtc)] = googleEventId;
+    }
+
+    setPlannedDates(newPlannedDates);
+    setPlannedDateGoogleEvents(newGoogleEvents);
+
+    // タスクを保存
+    updateTask(task.id, {
+      plannedDates: newPlannedDates,
+      plannedDateGoogleEvents: newGoogleEvents,
+    });
+
+    setIsSyncing(false);
+    let message: string;
+    let toastType: 'success' | 'warning' | 'error' = 'success';
+    if (googleEventId) {
+      message = "予定日を追加し、Googleカレンダーに同期しました";
+    } else if (!accessToken) {
+      message = "予定日を追加しました（Googleアカウントでログインするとカレンダー同期できます）";
+      toastType = "warning";
+    } else {
+      message = "予定日を追加しました（Google同期に失敗）";
+      toastType = "error";
+    }
+    toast.show(message, toastType);
+  }, [isSyncing, task, plannedDates, plannedDateGoogleEvents, session, updateTask, toast]);
+
+  const removePlannedDate = useCallback(async (date: number) => {
+    if (isSyncing || !task) return;
+
+    setIsSyncing(true);
+
+    // Googleカレンダーから削除
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const accessToken = (session as any)?.access_token;
+    const googleEventId = plannedDateGoogleEvents[String(date)];
+
+    if (accessToken && googleEventId) {
+      try {
+        const res = await fetch(`/api/calendar/events/${googleEventId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (res.ok) {
+          console.log("Google Calendar event deleted:", googleEventId);
+        } else {
+          console.error("Failed to delete Google Calendar event:", await res.text());
+        }
+      } catch (err) {
+        console.error("Google Calendar delete error:", err);
+      }
+    }
+
+    // ローカルの状態を更新
+    const newPlannedDates = plannedDates.filter(d => d !== date);
+    const newGoogleEvents = { ...plannedDateGoogleEvents };
+    delete newGoogleEvents[String(date)];
+
+    setPlannedDates(newPlannedDates);
+    setPlannedDateGoogleEvents(newGoogleEvents);
+
+    // タスクを保存
+    updateTask(task.id, {
+      plannedDates: newPlannedDates,
+      plannedDateGoogleEvents: newGoogleEvents,
+    });
+
+    setIsSyncing(false);
+    toast.show("予定日を削除しました", "success");
+  }, [isSyncing, task, plannedDates, plannedDateGoogleEvents, session, updateTask, toast]);
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -526,19 +647,32 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                   <button
                     type="button"
                     onClick={addPlannedDate}
-                    className="inline-flex items-center gap-2 px-3 py-2 text-sm border border-[var(--border)] rounded-lg hover:bg-white/5 transition-colors"
+                    disabled={isSyncing}
+                    className="inline-flex items-center gap-2 px-3 py-2 text-sm border border-[var(--border)] rounded-lg hover:bg-white/5 transition-colors disabled:opacity-50"
                   >
-                    <Calendar size={14} />
-                    今日を追加
+                    {isSyncing ? (
+                      <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Calendar size={14} />
+                    )}
+                    {isSyncing ? "同期中..." : "今日を追加"}
                   </button>
                   {plannedDates.length > 0 && (
                     <div className="space-y-2 mt-3">
                       {plannedDates.map(date => (
                         <div key={date} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                          <span className="text-sm">{formatDate(date)}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">{formatDate(date)}</span>
+                            {plannedDateGoogleEvents[String(date)] && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
+                                Google連携済
+                              </span>
+                            )}
+                          </div>
                           <button
-                            onClick={() => { removePlannedDate(date); setTimeout(() => handleSave(), 0); }}
-                            className="text-[var(--danger)] text-sm hover:underline"
+                            onClick={() => removePlannedDate(date)}
+                            disabled={isSyncing}
+                            className="text-[var(--danger)] text-sm hover:underline disabled:opacity-50"
                           >
                             削除
                           </button>
