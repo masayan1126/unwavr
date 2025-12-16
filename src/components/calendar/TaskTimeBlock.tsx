@@ -10,6 +10,8 @@ type TaskTimeBlockProps = {
   slotIndex: number;
   startHour?: number;
   hourHeight?: number;
+  column?: number;
+  totalColumns?: number;
   onClick?: () => void;
   onDragStart?: (e: React.DragEvent) => void;
 };
@@ -26,25 +28,39 @@ export default function TaskTimeBlock({
   slotIndex,
   startHour = 6,
   hourHeight = 60,
+  column = 0,
+  totalColumns = 1,
   onClick,
   onDragStart,
 }: TaskTimeBlockProps) {
   const position = useMemo(() => {
     const top = getTimePosition(slot.startTime, startHour, hourHeight);
     const height = getTimeHeight(slot.startTime, slot.endTime, hourHeight);
-    return { top, height: Math.max(height, 24) }; // 最小高さ24px
-  }, [slot.startTime, slot.endTime, startHour, hourHeight]);
+
+    // 並列表示の場合の幅と位置を計算
+    const widthPercent = 100 / totalColumns;
+    const leftPercent = column * widthPercent;
+
+    return {
+      top,
+      height: Math.max(height, 24), // 最小高さ24px
+      width: `calc(${widthPercent}% - 8px)`,
+      left: `calc(${leftPercent}% + 4px)`,
+    };
+  }, [slot.startTime, slot.endTime, startHour, hourHeight, column, totalColumns]);
 
   const colors = typeColors[task.type] || typeColors.backlog;
 
   return (
     <div
-      className={`absolute left-1 right-1 rounded border-l-4 px-2 py-1 cursor-pointer
+      className={`absolute rounded border-l-4 px-2 py-1 cursor-grab active:cursor-grabbing
         hover:shadow-md transition-shadow overflow-hidden
         ${colors.bg} ${colors.border}`}
       style={{
         top: position.top,
         height: position.height,
+        width: position.width,
+        left: position.left,
       }}
       draggable
       onDragStart={(e) => {
@@ -58,6 +74,7 @@ export default function TaskTimeBlock({
             endTime: slot.endTime,
           })
         );
+        e.dataTransfer.effectAllowed = "move";
         onDragStart?.(e);
       }}
       onClick={onClick}

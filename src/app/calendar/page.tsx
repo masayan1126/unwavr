@@ -4,6 +4,7 @@ import { useSession, signIn } from "next-auth/react";
 import {
   addDays,
   addMonths,
+  addWeeks,
   endOfMonth,
   endOfWeek,
   format,
@@ -13,10 +14,12 @@ import {
   parseISO,
   startOfMonth,
   startOfWeek,
+  subDays,
+  subWeeks,
 } from "date-fns";
 import { getDate as getDayOfMonth, getDay } from "date-fns";
 import { ja } from "date-fns/locale";
-import { RefreshCw, CheckCircle, AlertCircle, Calendar } from "lucide-react";
+import { Calendar } from "lucide-react";
 import DayDetailPanel from "@/components/calendar/DayDetailPanel";
 import { useAppStore } from "@/lib/store";
 import { Task } from "@/lib/types";
@@ -26,12 +29,6 @@ type GCalEvent = {
   summary?: string;
   start?: { dateTime?: string; date?: string };
   end?: { dateTime?: string; date?: string };
-};
-
-type SyncPreview = {
-  taskCount: number;
-  dateCount: number;
-  tasks: { id: string; title: string; plannedDates: number[] }[];
 };
 
 function toDate(value?: string) {
@@ -107,6 +104,7 @@ export default function CalendarPage() {
   }, [events]);
 
   // タスクを日付ごとにグループ化（plannedDatesに基づく）
+  // Googleカレンダーに同期済み（同じタイトルのイベントがある）タスクは除外
   const tasksByDate = useMemo(() => {
     const map = new Map<string, Task[]>();
     for (const task of tasks) {
@@ -115,15 +113,21 @@ export default function CalendarPage() {
       const plannedDates = task.plannedDates ?? [];
       for (const ts of plannedDates) {
         const dateKey = format(new Date(ts), "yyyy-MM-dd");
+        // この日にGoogleカレンダーで同じタイトルのイベントがあるかチェック
+        const eventsOnDate = eventsByDate.get(dateKey) ?? [];
+        const isSyncedToGoogle = eventsOnDate.some(
+          (ev) => ev.summary === task.title || ev.summary === `📋 ${task.title}`
+        );
+        if (isSyncedToGoogle) continue; // 同期済みなら黄色表示しない
         const list = map.get(dateKey) ?? [];
         list.push(task);
         map.set(dateKey, list);
       }
     }
     return map;
-  }, [tasks]);
+  }, [tasks, eventsByDate]);
 
-  // タスクを別の日に移動
+  // タスクを別の日に移動（ローカルのみ）
   const moveTaskToDate = useCallback((taskId: string, fromDateUtc: number, toDateUtc: number) => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
@@ -213,68 +217,12 @@ export default function CalendarPage() {
   const sessionAccessToken = (session as unknown as { access_token?: string })?.access_token;
   const isGoogleConnected = !!sessionAccessToken;
 
-  // タスク同期関連のstate
-  const [syncPreview, setSyncPreview] = useState<SyncPreview | null>(null);
-  const [syncLoading, setSyncLoading] = useState(false);
-  const [syncResult, setSyncResult] = useState<{ success: boolean; synced: number; failed: number } | null>(null);
-  const [showSyncDialog, setShowSyncDialog] = useState(false);
-
-  // 同期対象タスクの件数を取得
-  const fetchSyncPreview = useCallback(async () => {
-    try {
-      const res = await fetch("/api/calendar/sync-tasks");
-      if (res.ok) {
-        const data = await res.json();
-        setSyncPreview(data);
-      }
-    } catch (e) {
-      console.error("Failed to fetch sync preview:", e);
-    }
-  }, []);
-
-  // タスク同期を実行
-  const executeSyncTasks = async () => {
-    if (!sessionAccessToken) return;
-
-    setSyncLoading(true);
-    setSyncResult(null);
-
-    try {
-      const res = await fetch("/api/calendar/sync-tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await res.json();
-
-      if (res.ok) {
-        setSyncResult({ success: true, synced: data.synced, failed: data.failed });
-        // カレンダーを再読み込み
-        const timeMin = monthStart.toISOString();
-        const timeMax = monthEnd.toISOString();
-        const eventsRes = await fetch(`/api/calendar/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}`, {
-          headers: { Authorization: `Bearer ${sessionAccessToken}` },
-        });
-        const eventsData = await eventsRes.json();
-        setEvents(eventsData.items ?? []);
-        // プレビューを再取得
-        fetchSyncPreview();
-      } else {
-        setSyncResult({ success: false, synced: 0, failed: 0 });
-      }
-    } catch (e) {
-      console.error("Sync failed:", e);
-      setSyncResult({ success: false, synced: 0, failed: 0 });
-    } finally {
-      setSyncLoading(false);
-    }
-  };
-
-  // Google連携時に同期対象件数を取得
+  // 日ビューの場合は詳細パネルを自動で表示
   useEffect(() => {
-    if (isGoogleConnected) {
-      fetchSyncPreview();
+    if (viewMode === "day") {
+      setDetailDate(currentDate);
     }
-  }, [isGoogleConnected, fetchSyncPreview]);
+  }, [viewMode, currentDate]);
 
   const openCreateDialog = (date: Date) => {
     setDialogMode("create");
@@ -387,10 +335,80 @@ export default function CalendarPage() {
           <Calendar size={16} />
           カレンダー（Google同期）
         </div>
-        <div className="flex items-center gap-2 text-sm">
-          <button className="px-2 py-1 border rounded" onClick={() => setCurrentMonth(addMonths(currentMonth, -1))}>{"<"}</button>
-          <div className="min-w-[8rem] text-center">{format(currentMonth, "yyyy年 M月")}</div>
-          <button className="px-2 py-1 border rounded" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>{">"}</button>
+        <div className="flex items-center gap-4">
+          {/* ビューモード切り替え */}
+          <div className="flex items-center border rounded overflow-hidden text-xs">
+            <button
+              className={`px-3 py-1.5 transition-colors ${viewMode === "day" ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/5"}`}
+              onClick={() => {
+                setViewMode("day");
+                setCurrentDate(new Date());
+              }}
+            >
+              日
+            </button>
+            <button
+              className={`px-3 py-1.5 border-x transition-colors ${viewMode === "week" ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/5"}`}
+              onClick={() => {
+                setViewMode("week");
+                setCurrentDate(new Date());
+              }}
+            >
+              週
+            </button>
+            <button
+              className={`px-3 py-1.5 transition-colors ${viewMode === "month" ? "bg-foreground text-background" : "hover:bg-black/5 dark:hover:bg-white/5"}`}
+              onClick={() => setViewMode("month")}
+            >
+              月
+            </button>
+          </div>
+          {/* ナビゲーション */}
+          <div className="flex items-center gap-2 text-sm">
+            <button
+              className="px-2 py-1 border rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              onClick={() => {
+                if (viewMode === "month") {
+                  setCurrentMonth(addMonths(currentMonth, -1));
+                } else if (viewMode === "week") {
+                  setCurrentDate(subWeeks(currentDate, 1));
+                } else {
+                  setCurrentDate(subDays(currentDate, 1));
+                }
+              }}
+            >
+              {"<"}
+            </button>
+            <button
+              className="px-2 py-1 border rounded text-xs hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              onClick={() => {
+                const today = new Date();
+                setCurrentDate(today);
+                setCurrentMonth(startOfMonth(today));
+              }}
+            >
+              今日
+            </button>
+            <div className="min-w-[10rem] text-center text-sm">
+              {viewMode === "month" && format(currentMonth, "yyyy年 M月")}
+              {viewMode === "week" && `${format(weekStart, "M/d")} - ${format(weekEnd, "M/d")}`}
+              {viewMode === "day" && format(currentDate, "yyyy年 M月d日 (E)", { locale: ja })}
+            </div>
+            <button
+              className="px-2 py-1 border rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              onClick={() => {
+                if (viewMode === "month") {
+                  setCurrentMonth(addMonths(currentMonth, 1));
+                } else if (viewMode === "week") {
+                  setCurrentDate(addWeeks(currentDate, 1));
+                } else {
+                  setCurrentDate(addDays(currentDate, 1));
+                }
+              }}
+            >
+              {">"}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -428,41 +446,37 @@ export default function CalendarPage() {
           <span>予定（Google）</span>
         </div>
         <div className="ml-auto flex items-center gap-3">
-          {/* タスク同期ボタン */}
-          {isGoogleConnected && (
-            <button
-              onClick={() => setShowSyncDialog(true)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border text-xs hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-              title="バックログタスクをGoogleカレンダーに同期"
-            >
-              <RefreshCw size={12} />
-              <span>タスク同期</span>
-              {syncPreview && syncPreview.taskCount > 0 && (
-                <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-medium">
-                  {syncPreview.taskCount}
-                </span>
-              )}
-            </button>
-          )}
-          <span>今月: {daysInMonth}日 / 平日: {weekdaysInMonth}日</span>
+          {viewMode === "month" && <span>今月: {daysInMonth}日 / 平日: {weekdaysInMonth}日</span>}
+          {viewMode === "week" && <span>週間ビュー</span>}
+          {viewMode === "day" && <span>日間ビュー</span>}
         </div>
       </div>
 
-      <div className="grid grid-cols-7 text-xs mb-1 opacity-70">
-        {["日", "月", "火", "水", "木", "金", "土"].map((w) => (
-          <div key={w} className="px-2 py-1 text-center">{w}</div>
-        ))}
-      </div>
-      <div className="grid grid-cols-7 gap-1">
+      {/* 曜日ヘッダー（日ビュー以外） */}
+      {viewMode !== "day" && (
+        <div className="grid grid-cols-7 text-xs mb-1 opacity-70">
+          {["日", "月", "火", "水", "木", "金", "土"].map((w) => (
+            <div key={w} className="px-2 py-1 text-center">{w}</div>
+          ))}
+        </div>
+      )}
+      {/* カレンダーグリッド */}
+      <div className={`grid gap-1 ${viewMode === "day" ? "grid-cols-1" : "grid-cols-7"}`}>
         {days.map((d) => {
           const key = format(d, "yyyy-MM-dd");
           const todays = eventsByDate.get(key) ?? [];
           const dayTasks = tasksByDate.get(key) ?? [];
           const cellDateUtc = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())).getTime();
-          const inMonth = isSameMonth(d, monthStart);
+          const inMonth = viewMode === "month" ? isSameMonth(d, monthStart) : true;
           const dow = d.getDay();
+          // ビューモードに応じたセルのスタイル
+          const cellHeight = viewMode === "day"
+            ? "min-h-[400px]"
+            : viewMode === "week"
+              ? "min-h-32 sm:min-h-40"
+              : "min-h-20 sm:min-h-24 md:min-h-28";
           const cls = [
-            "border rounded min-h-20 sm:min-h-24 md:min-h-28 p-1 flex flex-col gap-1 cursor-pointer",
+            `border rounded ${cellHeight} p-1 flex flex-col gap-1 cursor-pointer`,
             inMonth ? "" : "opacity-50",
             isToday(d) ? "ring-2 ring-foreground" : "",
             dow === 0 ? "bg-[var(--danger)]/5 border-[var(--danger)]/20" : "",
@@ -492,9 +506,8 @@ export default function CalendarPage() {
 
                   // タスクのD&D処理
                   if (payload.type === "calendar-task" && payload.taskId && payload.fromDateUtc != null) {
-                    const targetDate = new Date(d);
-                    targetDate.setUTCHours(0, 0, 0, 0);
-                    const toDateUtc = targetDate.getTime();
+                    // cellDateUtcと同じ計算方法を使用（Date.UTC）
+                    const toDateUtc = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
                     moveTaskToDate(payload.taskId, payload.fromDateUtc, toDateUtc);
                     return;
                   }
@@ -560,12 +573,20 @@ export default function CalendarPage() {
               }}
             >
               <div className="text-[11px] opacity-70 flex items-center justify-between">
-                <span>{format(d, "d")}</span>
+                <span>
+                  {viewMode === "day" ? (
+                    format(d, "M月d日 (E)", { locale: ja })
+                  ) : viewMode === "week" ? (
+                    `${format(d, "d")} (${format(d, "E", { locale: ja })})`
+                  ) : (
+                    format(d, "d")
+                  )}
+                </span>
                 {isSameDay(d, new Date()) && <span className="text-[10px] px-1 rounded bg-foreground text-background">今日</span>}
               </div>
-              <div className="flex flex-col gap-1 mt-1 overflow-hidden">
+              <div className="flex flex-col gap-1 mt-1 overflow-hidden flex-1">
                 {/* Google Calendar イベント */}
-                {todays.slice(0, 2).map((ev) => (
+                {todays.slice(0, viewMode === "day" ? 20 : viewMode === "week" ? 5 : 2).map((ev) => (
                   <div
                     key={ev.id}
                     className="text-[11px] truncate px-1 py-0.5 rounded cursor-pointer text-white"
@@ -588,11 +609,11 @@ export default function CalendarPage() {
                     {ev.summary || "(無題)"}
                   </div>
                 ))}
-                {todays.length > 2 && (
-                  <div className="text-[10px] opacity-60 px-1">+{todays.length - 2}件（予定）</div>
+                {todays.length > (viewMode === "day" ? 20 : viewMode === "week" ? 5 : 2) && (
+                  <div className="text-[10px] opacity-60 px-1">+{todays.length - (viewMode === "day" ? 20 : viewMode === "week" ? 5 : 2)}件（予定）</div>
                 )}
                 {/* タスク（積み上げ候補のplannedDates） */}
-                {dayTasks.slice(0, 2).map((task) => (
+                {dayTasks.slice(0, viewMode === "day" ? 20 : viewMode === "week" ? 5 : 2).map((task) => (
                   <div
                     key={task.id}
                     className="text-[11px] truncate px-1 py-0.5 rounded cursor-grab active:cursor-grabbing"
@@ -616,8 +637,8 @@ export default function CalendarPage() {
                     📋 {task.title}
                   </div>
                 ))}
-                {dayTasks.length > 2 && (
-                  <div className="text-[10px] opacity-60 px-1">+{dayTasks.length - 2}件（タスク）</div>
+                {dayTasks.length > (viewMode === "day" ? 20 : viewMode === "week" ? 5 : 2) && (
+                  <div className="text-[10px] opacity-60 px-1">+{dayTasks.length - (viewMode === "day" ? 20 : viewMode === "week" ? 5 : 2)}件（タスク）</div>
                 )}
               </div>
             </div>
@@ -687,134 +708,15 @@ export default function CalendarPage() {
         </div>
       )}
 
-      {/* タスク同期ダイアログ */}
-      {showSyncDialog && (
-        <div
-          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-          onClick={() => setShowSyncDialog(false)}
-        >
-          <div
-            className="w-[92vw] max-w-md bg-background text-foreground border rounded-lg p-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <RefreshCw size={18} className="text-primary" />
-              <span className="text-sm font-semibold">タスクをGoogleカレンダーに同期</span>
-            </div>
-
-            {syncResult ? (
-              // 同期結果表示
-              <div className="flex flex-col gap-4">
-                <div className={`flex items-center gap-3 p-4 rounded-lg ${syncResult.success ? "bg-green-50 dark:bg-green-950/30" : "bg-red-50 dark:bg-red-950/30"}`}>
-                  {syncResult.success ? (
-                    <CheckCircle size={24} className="text-green-600" />
-                  ) : (
-                    <AlertCircle size={24} className="text-red-600" />
-                  )}
-                  <div>
-                    <div className="text-sm font-medium">
-                      {syncResult.success ? "同期が完了しました" : "同期に失敗しました"}
-                    </div>
-                    {syncResult.success && (
-                      <div className="text-xs opacity-70 mt-1">
-                        {syncResult.synced}件のイベントを作成しました
-                        {syncResult.failed > 0 && `（${syncResult.failed}件失敗）`}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    setShowSyncDialog(false);
-                    setSyncResult(null);
-                  }}
-                  className="px-4 py-2 rounded bg-foreground text-background text-sm"
-                >
-                  閉じる
-                </button>
-              </div>
-            ) : syncPreview ? (
-              // プレビュー表示
-              <div className="flex flex-col gap-4">
-                <div className="text-sm opacity-80">
-                  実行日が設定されているバックログタスクをGoogleカレンダーに終日イベントとして登録します。
-                </div>
-
-                <div className="bg-black/5 dark:bg-white/5 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium">同期対象</span>
-                    <span className="text-xs opacity-70">
-                      {syncPreview.taskCount}タスク / {syncPreview.dateCount}件のイベント
-                    </span>
-                  </div>
-
-                  {syncPreview.tasks.length > 0 ? (
-                    <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
-                      {syncPreview.tasks.slice(0, 10).map((task) => (
-                        <div key={task.id} className="flex items-start gap-2 text-xs">
-                          <span className="shrink-0 mt-0.5">📋</span>
-                          <div className="flex-1 min-w-0">
-                            <div className="truncate">{task.title}</div>
-                            <div className="text-[10px] opacity-60">
-                              {task.plannedDates.map((d) => format(new Date(d), "M/d")).join(", ")}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      {syncPreview.tasks.length > 10 && (
-                        <div className="text-xs opacity-60 text-center pt-1">
-                          他 {syncPreview.tasks.length - 10} タスク...
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-xs opacity-60 text-center py-4">
-                      同期対象のタスクがありません
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <button
-                    onClick={() => setShowSyncDialog(false)}
-                    className="px-4 py-2 rounded border text-sm"
-                  >
-                    キャンセル
-                  </button>
-                  <button
-                    onClick={executeSyncTasks}
-                    disabled={syncLoading || syncPreview.taskCount === 0}
-                    className="px-4 py-2 rounded bg-foreground text-background text-sm disabled:opacity-50 flex items-center gap-2"
-                  >
-                    {syncLoading ? (
-                      <>
-                        <RefreshCw size={14} className="animate-spin" />
-                        同期中...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw size={14} />
-                        同期を実行
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              // ローディング
-              <div className="flex items-center justify-center py-8">
-                <RefreshCw size={24} className="animate-spin opacity-50" />
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
 
       {/* 日間詳細パネル */}
       {detailDate && (
         <div className="w-96 bg-[var(--sidebar)] rounded-xl shadow-sm overflow-hidden">
-          <DayDetailPanel date={detailDate} onClose={() => setDetailDate(null)} />
+          <DayDetailPanel
+            date={detailDate}
+            onClose={() => setDetailDate(null)}
+          />
         </div>
       )}
     </div>
