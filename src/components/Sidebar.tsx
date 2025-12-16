@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, ListTodo, AlertTriangle, Home, Archive, Rocket, Target, Timer, Calendar, Music, Lock, MessageSquare, Settings, PanelLeftClose, PanelLeftOpen, Sun, BarChart2, GripVertical, CreditCard } from "lucide-react";
+import { CalendarDays, ListTodo, AlertTriangle, Home, Archive, Rocket, Target, Timer, Calendar, Music, Lock, MessageSquare, Settings, PanelLeftClose, PanelLeftOpen, Sun, BarChart2, GripVertical, CreditCard, Gauge } from "lucide-react";
 import AuthButtons from "@/components/AuthButtons";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -34,6 +34,7 @@ const DEFAULT_NAV_ITEMS: NavItemData[] = [
   { id: "bgm", href: "/bgm", label: "BGMプレイリスト", icon: <Music size={16} /> },
   { id: "assistant", href: "/assistant", label: "Unwavr AI", icon: <MessageSquare size={16} /> },
   { id: "briefing", href: "#briefing", label: "Daily Briefing", icon: <Sun size={16} />, isButton: true },
+  { id: "usage", href: "/usage", label: "使用量", icon: <Gauge size={16} /> },
   { id: "pricing", href: "/pricing", label: "料金プラン", icon: <CreditCard size={16} /> },
   { id: "settings", href: "/settings", label: "設定", icon: <Settings size={16} /> },
 ];

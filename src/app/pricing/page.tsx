@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { ChevronDown } from "lucide-react";
 import { PLAN_LIMITS, PlanType } from "@/lib/types";
 
 export default function PricingPage() {
@@ -11,6 +12,8 @@ export default function PricingPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [showCodeInput, setShowCodeInput] = useState(false);
+  const [showDowngrade, setShowDowngrade] = useState(false);
+  const [downgradeLoading, setDowngradeLoading] = useState(false);
 
   // 現在のプランを取得
   useEffect(() => {
@@ -56,6 +59,37 @@ export default function PricingPage() {
     }
   };
 
+  const handleDowngrade = async (targetPlan: PlanType) => {
+    if (!confirm(`${PLAN_LIMITS[targetPlan].label}プランにダウングレードしますか？`)) return;
+    setDowngradeLoading(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/plan/downgrade", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetPlan }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage({ type: "success", text: data.message });
+        setCurrentPlan(targetPlan);
+        setShowDowngrade(false);
+      } else {
+        setMessage({ type: "error", text: data.message || "エラーが発生しました" });
+      }
+    } catch {
+      setMessage({ type: "error", text: "通信エラーが発生しました" });
+    } finally {
+      setDowngradeLoading(false);
+    }
+  };
+
+  const getDowngradeOptions = (): PlanType[] => {
+    const planOrder: PlanType[] = ["free", "personal", "pro"];
+    const currentIndex = planOrder.indexOf(currentPlan);
+    return planOrder.slice(0, currentIndex);
+  };
+
   const getPlanButtonText = (plan: PlanType) => {
     if (!session?.user) return "今すぐ使う";
     if (currentPlan === plan) return "現在のプラン";
@@ -73,52 +107,86 @@ export default function PricingPage() {
       </div>
 
       {session?.user && (
-        <div className="bg-black/5 dark:bg-white/5 rounded-lg p-4 flex items-center justify-between">
-          <div>
-            <span className="text-sm opacity-70">現在のプラン: </span>
-            <span className="font-semibold">{PLAN_LIMITS[currentPlan].label}</span>
-          </div>
-          {currentPlan === "free" && (
+        <div className="bg-black/5 dark:bg-white/5 rounded-lg p-4 flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-sm opacity-70">現在のプラン: </span>
+              <span className="font-semibold">{PLAN_LIMITS[currentPlan].label}</span>
+            </div>
             <button
               onClick={() => setShowCodeInput(!showCodeInput)}
               className="text-sm px-3 py-1.5 rounded bg-foreground text-background hover:opacity-90"
             >
               コードでアップグレード
             </button>
-          )}
-        </div>
-      )}
-
-      {/* 秘密コード入力エリア */}
-      {showCodeInput && (
-        <div className="border rounded-lg p-4 flex flex-col gap-3">
-          <div className="text-sm font-medium">アップグレードコードを入力</div>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              placeholder="数字コードを入力"
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              className="flex-1 px-3 py-2 border rounded text-sm"
-              maxLength={10}
-            />
-            <button
-              onClick={handleUpgrade}
-              disabled={!code || loading}
-              className="px-4 py-2 rounded bg-foreground text-background text-sm disabled:opacity-50"
-            >
-              {loading ? "処理中..." : "適用"}
-            </button>
           </div>
+
+          {/* メッセージ表示 */}
           {message && (
             <div
-              className={`text-sm ${
-                message.type === "success" ? "text-green-600" : "text-red-600"
+              className={`text-sm px-3 py-2 rounded ${
+                message.type === "success"
+                  ? "bg-green-500/10 text-green-600"
+                  : "bg-red-500/10 text-red-600"
               }`}
             >
               {message.text}
+            </div>
+          )}
+
+          {/* アップグレードコード入力 */}
+          {showCodeInput && (
+            <div className="border rounded-lg p-4 flex flex-col gap-3">
+              <div className="text-sm font-medium">アップグレードコードを入力</div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="数字コードを入力"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                  className="flex-1 px-3 py-2 border rounded text-sm bg-background"
+                  maxLength={10}
+                />
+                <button
+                  onClick={handleUpgrade}
+                  disabled={!code || loading}
+                  className="px-4 py-2 rounded bg-foreground text-background text-sm disabled:opacity-50"
+                >
+                  {loading ? "処理中..." : "適用"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ダウングレードオプション */}
+          {currentPlan !== "free" && (
+            <div className="border-t border-black/5 dark:border-white/5 pt-3">
+              <button
+                onClick={() => setShowDowngrade(!showDowngrade)}
+                className="flex items-center gap-1 text-xs opacity-60 hover:opacity-80 transition-opacity"
+              >
+                <ChevronDown
+                  size={14}
+                  className={`transition-transform ${showDowngrade ? "rotate-180" : ""}`}
+                />
+                プランをダウングレード
+              </button>
+              {showDowngrade && (
+                <div className="flex flex-wrap gap-2 pt-3">
+                  {getDowngradeOptions().map((plan) => (
+                    <button
+                      key={plan}
+                      onClick={() => handleDowngrade(plan)}
+                      disabled={downgradeLoading}
+                      className="text-xs px-3 py-1.5 rounded border hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50"
+                    >
+                      {PLAN_LIMITS[plan].label}プランに変更
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
