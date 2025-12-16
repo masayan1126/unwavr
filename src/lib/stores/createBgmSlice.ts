@@ -1,5 +1,5 @@
 import { StateCreator } from "zustand";
-import { BgmTrack, BgmGroup } from "../types";
+import { BgmTrack, BgmGroup, BgmSearchResult } from "../types";
 import { AppState } from "../storeTypes";
 import { BgmSlice } from "./sliceTypes";
 
@@ -15,6 +15,8 @@ export const createBgmSlice: StateCreator<AppState, [], [], BgmSlice> = (set) =>
     bgmGroups: [],
     bgmCurrentTrackId: undefined,
     bgmMiniPos: undefined,
+    bgmSearchResults: [],
+    bgmSearchLoading: false,
     addBgmTrack: (input) =>
         set((state) => {
             const newTrack = { ...input, id: createBgmId(), createdAt: Date.now() } as BgmTrack;
@@ -81,4 +83,7 @@ export const createBgmSlice: StateCreator<AppState, [], [], BgmSlice> = (set) =>
     playBgmTrack: (trackId: string) => set({ bgmCurrentTrackId: trackId }),
     stopBgm: () => set({ bgmCurrentTrackId: undefined }),
     setBgmMiniPos: (pos) => set({ bgmMiniPos: pos }),
+    setBgmSearchResults: (results: BgmSearchResult[]) => set({ bgmSearchResults: results }),
+    setBgmSearchLoading: (loading: boolean) => set({ bgmSearchLoading: loading }),
+    clearBgmSearchResults: () => set({ bgmSearchResults: [] }),
 });

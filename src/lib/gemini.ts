@@ -24,7 +24,9 @@ export async function processUserRequest(
 
     const systemPrompt = `
     You are an intelligent task management assistant. You can manage tasks based on user requests.
-    
+
+    IMPORTANT: You MUST always respond in Japanese (日本語). All "reply" fields MUST be in Japanese.
+
     Current Tasks:
     ${taskContext}
 
@@ -42,6 +44,7 @@ export async function processUserRequest(
 
     Rules:
     - Return ONLY valid JSON.
+    - ALWAYS respond in Japanese (日本語). The "reply" field MUST be in Japanese.
     - If the user asks to update/delete/complete a task, you MUST find the matching ID from the "Current Tasks" list. If ambiguous, ask for clarification (tool: chat).
     - For "scheduled" tasks, "daysOfWeek" is 0-6 (Sunday-Saturday).
     - For dates, use timestamps (number) or "YYYY-MM-DD" strings where appropriate. Current time: ${new Date().toISOString()}.
@@ -51,7 +54,7 @@ export async function processUserRequest(
       3. Backlog tasks (type: "backlog") where "plannedDates" includes today's date (YYYY-MM-DD) AND are NOT completed.
          - STRICTLY EXCLUDE backlog tasks that do not have today's date in "plannedDates".
          - If "plannedDates" is empty or null, do NOT include it.
-    - "reply" should be a friendly message confirming the action or answering the question.
+    - "reply" should be a friendly message in Japanese confirming the action or answering the question.
     - When asked to summarize or list tasks, ALWAYS use a Markdown table for better visualization.
     - CRITICAL: Whenever you mention a task title in your response (whether in a table, list, or sentence), YOU MUST wrap it in a Markdown link to allow filtering: [Task Title](/tasks?taskId=TaskId).
       Example:
@@ -60,14 +63,14 @@ export async function processUserRequest(
       | :--- | :--- | :--- |
       | ⬜️ 未完了 | [**タスクA**](/tasks?taskId=task-id-a) | 毎日 |
       | ✅ 完了 | [**タスクB**](/tasks?taskId=task-id-b) | 特定曜日 |
-      
+
       "[タスクA](/tasks?taskId=task-id-a)を完了しました。"
     `;
 
     const chat = model.startChat({
         history: [
             { role: "user", parts: [{ text: systemPrompt }] },
-            { role: "model", parts: [{ text: "Understood. I am ready to help you manage your tasks. Please provide your request." }] },
+            { role: "model", parts: [{ text: "了解しました。タスク管理のお手伝いをします。何でもお申し付けください。" }] },
             ...history
         ],
     });
@@ -226,4 +229,100 @@ export async function generateDailyBriefing(apiKey: string, context: BriefingCon
     const result = await model.generateContent(prompt);
     const response = await result.response;
     return response.text();
+}
+
+// BGM AI Action Types
+export type BGMAIAction =
+    | { type: "search_bgm"; query: string; mood?: string; message: string }
+    | { type: "play_existing"; groupName?: string; message: string }
+    | { type: "bgm_chat"; message: string };
+
+export async function processBgmRequest(
+    apiKey: string,
+    message: string
+): Promise<BGMAIAction> {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+    const systemPrompt = `
+    You are a BGM (background music) assistant. Analyze the user's request and generate a YouTube search query.
+
+    IMPORTANT: You MUST always respond in Japanese (日本語). All "reply" fields MUST be in Japanese.
+
+    Available Tools (return as JSON):
+    1. search_bgm: Search for music/videos on YouTube
+       Format: { "tool": "search_bgm", "parameters": { "query": "optimized search query", "mood": "relaxing|energetic|focus|sleep|chill" }, "reply": "日本語で応答..." }
+    2. play_existing: Play from existing playlist (if user mentions specific playlist)
+       Format: { "tool": "play_existing", "parameters": { "groupName": "..." }, "reply": "日本語で応答..." }
+    3. bgm_chat: General conversation about music
+       Format: { "tool": "bgm_chat", "parameters": {}, "reply": "日本語で応答..." }
+
+    Query Generation Rules:
+    - Generate search queries optimized for YouTube music search
+    - Add relevant keywords like "BGM", "music", "playlist", "1 hour", "mix" for better results
+    - For Japanese requests, you can use Japanese or English keywords depending on what works best
+    - Examples:
+      - "気分が上がる曲" → "upbeat happy music BGM playlist"
+      - "集中力を上げたい" → "focus concentration study music lo-fi BGM"
+      - "作業用BGM" → "work study BGM playlist 1 hour"
+      - "ASMR" → "ASMR relaxing sounds"
+      - "リラックスしたい" → "relaxing calm music BGM chill"
+      - "テンション上げたい" → "energetic upbeat music workout BGM"
+      - "眠れる曲" → "sleep music relaxing BGM 1 hour"
+      - "ジャズ" → "jazz music BGM playlist"
+      - "カフェっぽい曲" → "cafe music jazz BGM"
+
+    Rules:
+    - Return ONLY valid JSON
+    - ALWAYS respond in Japanese (日本語). The "reply" field MUST be in Japanese.
+    - "reply" should be a friendly, natural Japanese message (例: 「集中できる曲を探しますね！」「作業用BGMをお探しします」)
+    - Generate high-quality search queries that will return good music results
+    `;
+
+    const result = await model.generateContent([systemPrompt, message]);
+    const responseText = await result.response.text();
+
+    try {
+        const jsonMatch = responseText.match(/```json\n([\s\S]*)\n```/) || responseText.match(/{[\s\S]*}/);
+
+        if (jsonMatch) {
+            const jsonStr = jsonMatch[0].replace(/```json|```/g, "");
+            const parsed = JSON.parse(jsonStr);
+
+            switch (parsed.tool) {
+                case "search_bgm":
+                    return {
+                        type: "search_bgm",
+                        query: parsed.parameters.query,
+                        mood: parsed.parameters.mood,
+                        message: parsed.reply
+                    };
+                case "play_existing":
+                    return {
+                        type: "play_existing",
+                        groupName: parsed.parameters.groupName,
+                        message: parsed.reply
+                    };
+                default:
+                    return { type: "bgm_chat", message: parsed.reply || responseText };
+            }
+        } else {
+            return { type: "bgm_chat", message: responseText };
+        }
+    } catch (e) {
+        console.error("Failed to parse BGM Gemini response", e);
+        return { type: "bgm_chat", message: responseText };
+    }
+}
+
+// Check if a message is BGM-related
+export function isBgmRelatedMessage(message: string): boolean {
+    const bgmKeywords = [
+        '曲', '音楽', 'BGM', 'bgm', '再生', 'かけて', 'ながして', '流して',
+        'ASMR', 'asmr', 'ミュージック', 'music', 'プレイリスト', 'playlist',
+        '聴きたい', '聞きたい', 'リラックス', '集中', '作業用', 'テンション',
+        '眠', 'ジャズ', 'jazz', 'ロック', 'rock', 'ポップ', 'pop',
+        'クラシック', 'classical', 'カフェ', 'cafe', 'チル', 'chill', 'lo-fi', 'lofi'
+    ];
+    return bgmKeywords.some(keyword => message.toLowerCase().includes(keyword.toLowerCase()));
 }

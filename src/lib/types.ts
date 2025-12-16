@@ -151,3 +151,10 @@ export type BgmGroup = {
   color?: string;
   parentId?: string;
 };
+
+export type BgmSearchResult = {
+  videoId: string;
+  title: string;
+  thumbnail: string;
+  duration: number;
+};

@@ -1,4 +1,4 @@
-import { Task, Milestone, LauncherShortcut, LauncherCategory, BgmTrack, BgmGroup, PomodoroState, ImportHistoryEntry } from "../types";
+import { Task, Milestone, LauncherShortcut, LauncherCategory, BgmTrack, BgmGroup, BgmSearchResult, PomodoroState, ImportHistoryEntry } from "../types";
 
 export interface TaskSlice {
     tasks: Task[];
@@ -55,6 +55,8 @@ export interface BgmSlice {
     bgmGroups: BgmGroup[];
     bgmCurrentTrackId?: string;
     bgmMiniPos?: { x: number; y: number };
+    bgmSearchResults: BgmSearchResult[];
+    bgmSearchLoading: boolean;
     addBgmTrack: (input: Omit<BgmTrack, "id" | "createdAt">) => void;
     removeBgmTrack: (id: string) => void;
     updateBgmTrack: (id: string, update: Partial<Omit<BgmTrack, "id">>) => void;
@@ -68,6 +70,9 @@ export interface BgmSlice {
     playBgmTrack: (trackId: string) => void;
     stopBgm: () => void;
     setBgmMiniPos: (pos: { x: number; y: number }) => void;
+    setBgmSearchResults: (results: BgmSearchResult[]) => void;
+    setBgmSearchLoading: (loading: boolean) => void;
+    clearBgmSearchResults: () => void;
 }
 
 export interface PomodoroSlice {

@@ -42,9 +42,9 @@ export default function GlobalBgmPlayer() {
 
     return (
         <div
-            className={`fixed z-50 transition-all duration-300 shadow-xl bg-black rounded-lg overflow-hidden border border-white/10 ${isMinimized
-                ? "bottom-20 right-4 w-64 h-16 flex items-center"
-                : "bottom-20 right-4 w-80 sm:w-96 aspect-video"
+            className={`fixed z-[199000] transition-all duration-300 shadow-xl bg-black rounded-lg overflow-hidden border border-white/10 ${isMinimized
+                ? "bottom-20 left-4 md:bottom-4 md:left-4 w-64 h-16 flex items-center"
+                : "bottom-20 left-4 md:bottom-4 md:left-4 w-80 sm:w-96 aspect-video"
                 }`}
         >
             {isMinimized ? (

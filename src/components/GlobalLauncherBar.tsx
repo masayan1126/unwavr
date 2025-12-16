@@ -17,22 +17,46 @@ export default function GlobalLauncherBar() {
 
   return (
     <>
-      {/* Toggle Button - Fixed to the right edge, visible when closed or open */}
+      {/* Toggle Button - Modern floating pill design */}
       <button
         aria-label={isLauncherOpen ? "ランチャーを閉じる" : "ランチャーを開く"}
         onClick={toggleLauncher}
-        className={`fixed z-[100000] top-1/2 -translate-y-1/2 transition-all duration-300 hidden xl:flex
-          ${isLauncherOpen ? 'right-[260px]' : 'right-0'}
-          w-8 h-16 bg-background/60 backdrop-blur-md border border-r-0 border-white/10 shadow-lg
-          rounded-l-2xl items-center justify-center hover:bg-background/80 text-foreground/70 hover:text-foreground
+        className={`fixed z-[100000] top-1/2 -translate-y-1/2 transition-all duration-300 ease-out hidden xl:flex
+          ${isLauncherOpen ? 'right-[268px]' : 'right-2'}
           group
         `}
       >
-        {isLauncherOpen ? (
-          <Icons.ChevronRight size={20} className="transition-transform group-hover:scale-110" />
-        ) : (
-          <Icons.ChevronLeft size={20} className="transition-transform group-hover:scale-110" />
-        )}
+        <div className={`
+          relative flex items-center justify-center
+          w-6 h-14 rounded-full
+          bg-gradient-to-b from-white/10 to-white/5
+          backdrop-blur-xl
+          border border-white/20
+          shadow-[0_4px_20px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.1)]
+          hover:shadow-[0_4px_24px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.15)]
+          hover:border-white/30
+          hover:from-white/15 hover:to-white/8
+          transition-all duration-200
+          overflow-hidden
+        `}>
+          {/* Subtle glow effect on hover */}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-primary/20 via-transparent to-transparent" />
+
+          {/* Icon with smooth rotation */}
+          <div className={`
+            relative z-10 transition-all duration-300
+            ${isLauncherOpen ? 'rotate-0' : 'rotate-180'}
+            text-foreground/60 group-hover:text-foreground
+          `}>
+            <Icons.ChevronRight size={14} strokeWidth={2.5} />
+          </div>
+
+          {/* Animated dots indicator */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex flex-col gap-0.5">
+            <div className={`w-1 h-1 rounded-full bg-foreground/30 group-hover:bg-primary/60 transition-all duration-200 ${!isLauncherOpen ? 'scale-100' : 'scale-75 opacity-50'}`} />
+            <div className={`w-1 h-1 rounded-full bg-foreground/20 group-hover:bg-primary/40 transition-all duration-200 delay-75 ${!isLauncherOpen ? 'scale-100' : 'scale-75 opacity-50'}`} />
+          </div>
+        </div>
       </button>
 
       {/* Sidebar Container */}
