@@ -331,4 +331,64 @@ export const createTaskSlice: StateCreator<AppState, [], [], TaskSlice> = (set, 
             });
             return { tasks };
         }),
+    // 時間スロット管理
+    addTimeSlot: (taskId, slot) =>
+        set((state) => {
+            const tasks = state.tasks.map((t) => {
+                if (t.id !== taskId) return t;
+                const timeSlots = [...(t.timeSlots ?? []), slot];
+                const next = { ...t, timeSlots } as Task;
+                fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ timeSlots })
+                }).catch(() => { });
+                return next;
+            });
+            return { tasks };
+        }),
+    updateTimeSlot: (taskId, slotIndex, update) =>
+        set((state) => {
+            const tasks = state.tasks.map((t) => {
+                if (t.id !== taskId) return t;
+                const timeSlots = [...(t.timeSlots ?? [])];
+                if (slotIndex < 0 || slotIndex >= timeSlots.length) return t;
+                timeSlots[slotIndex] = { ...timeSlots[slotIndex], ...update };
+                const next = { ...t, timeSlots } as Task;
+                fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ timeSlots })
+                }).catch(() => { });
+                return next;
+            });
+            return { tasks };
+        }),
+    removeTimeSlot: (taskId, slotIndex) =>
+        set((state) => {
+            const tasks = state.tasks.map((t) => {
+                if (t.id !== taskId) return t;
+                const timeSlots = [...(t.timeSlots ?? [])];
+                if (slotIndex < 0 || slotIndex >= timeSlots.length) return t;
+                timeSlots.splice(slotIndex, 1);
+                const next = { ...t, timeSlots } as Task;
+                fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ timeSlots })
+                }).catch(() => { });
+                return next;
+            });
+            return { tasks };
+        }),
+    getTasksForDate: (date) => {
+        return get().tasks.filter((t) => {
+            if (t.archived === true) return false;
+            // タスクにtimeSlotsがあり、指定日に該当するスロットがあるか確認
+            if (t.timeSlots?.some((slot) => slot.date === date)) return true;
+            // または、plannedDatesに含まれるか確認
+            if (t.type === 'backlog' && t.plannedDates?.includes(date)) return true;
+            return false;
+        });
+    },
 });

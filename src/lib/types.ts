@@ -20,6 +20,14 @@ export const TaskPomodoroSettingSchema = z.object({
 });
 export type TaskPomodoroSetting = z.infer<typeof TaskPomodoroSettingSchema>;
 
+// 時間スロット（カレンダーでの時間指定スケジュール用）
+export const TimeSlotSchema = z.object({
+  date: z.number().int(),           // UTC 0時のタイムスタンプ
+  startTime: z.string(),            // "09:00" 形式
+  endTime: z.string(),              // "10:30" 形式
+});
+export type TimeSlot = z.infer<typeof TimeSlotSchema>;
+
 export const TaskSchema = z.object({
   id: z.string(),
   title: z.string().min(1),
@@ -43,6 +51,8 @@ export const TaskSchema = z.object({
   // 完了日時（Backlogなどの単発完了タスク用）
   completedAt: z.number().int().optional(),
   order: z.number().default(0),
+  // 時間スロット（カレンダーでの時間指定スケジュール）
+  timeSlots: z.array(TimeSlotSchema).optional(),
 });
 export type Task = z.infer<typeof TaskSchema>;
 

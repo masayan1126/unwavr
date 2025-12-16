@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
   const allow = [
     'id', 'title', 'type', 'createdAt', 'completed', 'completedPomodoros',
     'description', 'estimatedPomodoros', 'milestoneId',
-    'plannedDates', 'dailyDoneDates', 'scheduled',
+    'plannedDates', 'dailyDoneDates', 'scheduled', 'timeSlots',
   ];
   for (const k of allow) {
     if (raw[k] !== undefined) payload[k] = raw[k];

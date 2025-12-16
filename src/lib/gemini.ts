@@ -7,7 +7,9 @@ export type AIAction =
     | { type: "create_task"; task: Partial<Task>; message: string }
     | { type: "update_task"; taskId: string; updates: Partial<Task>; message: string }
     | { type: "delete_task"; taskId: string; message: string }
-    | { type: "complete_task"; taskId: string; message: string };
+    | { type: "complete_task"; taskId: string; message: string }
+    | { type: "schedule_task"; taskId: string; date: string; startTime: string; endTime: string; message: string }
+    | { type: "create_and_schedule"; task: Partial<Task>; date: string; startTime: string; endTime: string; message: string };
 
 export async function processUserRequest(
     apiKey: string,
@@ -39,7 +41,13 @@ export async function processUserRequest(
        Format: { "tool": "delete_task", "parameters": { "taskId": "..." }, "reply": "..." }
     4. complete_task: Mark a task as completed. Find the Task ID from the Current Tasks list.
        Format: { "tool": "complete_task", "parameters": { "taskId": "..." }, "reply": "..." }
-    5. chat: General conversation or if the user's request is unclear or if no tool is needed.
+    5. schedule_task: Schedule an existing task to a specific time slot on the calendar.
+       Format: { "tool": "schedule_task", "parameters": { "taskId": "...", "date": "YYYY-MM-DD", "startTime": "HH:MM", "endTime": "HH:MM" }, "reply": "..." }
+       Example: User says "明日の9時から10時に資料作成をスケジュール" → Find taskId for "資料作成" and schedule it.
+    6. create_and_schedule: Create a new task AND schedule it immediately.
+       Format: { "tool": "create_and_schedule", "parameters": { "title": "...", "type": "backlog", "date": "YYYY-MM-DD", "startTime": "HH:MM", "endTime": "HH:MM" }, "reply": "..." }
+       Example: User says "明日の14時から会議を追加して" → Create a new task "会議" and schedule it for tomorrow at 14:00.
+    7. chat: General conversation or if the user's request is unclear or if no tool is needed.
        Format: { "tool": "chat", "parameters": {}, "reply": "..." }
 
     Rules:
@@ -94,6 +102,24 @@ export async function processUserRequest(
                     return { type: "delete_task", taskId: parsed.parameters.taskId, message: parsed.reply };
                 case "complete_task":
                     return { type: "complete_task", taskId: parsed.parameters.taskId, message: parsed.reply };
+                case "schedule_task":
+                    return {
+                        type: "schedule_task",
+                        taskId: parsed.parameters.taskId,
+                        date: parsed.parameters.date,
+                        startTime: parsed.parameters.startTime,
+                        endTime: parsed.parameters.endTime,
+                        message: parsed.reply
+                    };
+                case "create_and_schedule":
+                    return {
+                        type: "create_and_schedule",
+                        task: parsed.parameters,
+                        date: parsed.parameters.date,
+                        startTime: parsed.parameters.startTime,
+                        endTime: parsed.parameters.endTime,
+                        message: parsed.reply
+                    };
                 default:
                     return { type: "chat", message: parsed.reply || responseText };
             }

@@ -15,10 +15,11 @@ import {
   startOfWeek,
 } from "date-fns";
 import { getDate as getDayOfMonth, getDay } from "date-fns";
-// import { useAppStore } from "@/lib/store";
-// import { isTaskForToday, Task } from "@/lib/types";
 import { ja } from "date-fns/locale";
-import { RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
+import { RefreshCw, CheckCircle, AlertCircle, Calendar } from "lucide-react";
+import DayDetailPanel from "@/components/calendar/DayDetailPanel";
+import { useAppStore } from "@/lib/store";
+import { Task } from "@/lib/types";
 
 type GCalEvent = {
   id: string;
@@ -38,23 +39,29 @@ function toDate(value?: string) {
   return parseISO(value);
 }
 
+type ViewMode = "day" | "week" | "month";
+
 export default function CalendarPage() {
   const { data: session, status } = useSession();
-  // const tasks = useAppStore((s) => s.tasks);
-  // const addTask = useAppStore((s) => s.addTask);
-  // const updateTask = useAppStore((s) => s.updateTask);
-  // const removeTask = useAppStore((s) => s.removeTask);
+  const tasks = useAppStore((s) => s.tasks);
+  const updateTask = useAppStore((s) => s.updateTask);
   const [events, setEvents] = useState<GCalEvent[]>([]);
   // const [gTasks, setGTasks] = useState<any[]>([]);
   const [title, setTitle] = useState("");
   const [startInput, setStartInput] = useState("");
   const [endInput, setEndInput] = useState("");
-  const [currentMonth, setCurrentMonth] = useState<Date>(startOfMonth(new Date()))
+  const [currentMonth, setCurrentMonth] = useState<Date>(startOfMonth(new Date()));
+  const [viewMode, setViewMode] = useState<ViewMode>("month");
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
 
   const monthStart = useMemo(() => startOfMonth(currentMonth), [currentMonth]);
   const monthEnd = useMemo(() => endOfMonth(currentMonth), [currentMonth]);
   const gridStart = useMemo(() => startOfWeek(monthStart, { weekStartsOn: 0, locale: ja }), [monthStart]);
   const gridEnd = useMemo(() => endOfWeek(monthEnd, { weekStartsOn: 0, locale: ja }), [monthEnd]);
+
+  // 週ビュー用の開始・終了日
+  const weekStart = useMemo(() => startOfWeek(currentDate, { weekStartsOn: 0, locale: ja }), [currentDate]);
+  const weekEnd = useMemo(() => endOfWeek(currentDate, { weekStartsOn: 0, locale: ja }), [currentDate]);
 
   const daysInMonth = useMemo(() => getDayOfMonth(monthEnd), [monthEnd]);
   const weekdaysInMonth = useMemo(() => {
@@ -99,6 +106,39 @@ export default function CalendarPage() {
     return map;
   }, [events]);
 
+  // タスクを日付ごとにグループ化（plannedDatesに基づく）
+  const tasksByDate = useMemo(() => {
+    const map = new Map<string, Task[]>();
+    for (const task of tasks) {
+      if (task.archived) continue;
+      if (task.type !== "backlog") continue;
+      const plannedDates = task.plannedDates ?? [];
+      for (const ts of plannedDates) {
+        const dateKey = format(new Date(ts), "yyyy-MM-dd");
+        const list = map.get(dateKey) ?? [];
+        list.push(task);
+        map.set(dateKey, list);
+      }
+    }
+    return map;
+  }, [tasks]);
+
+  // タスクを別の日に移動
+  const moveTaskToDate = useCallback((taskId: string, fromDateUtc: number, toDateUtc: number) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const plannedDates = [...(task.plannedDates ?? [])];
+    const fromIdx = plannedDates.indexOf(fromDateUtc);
+    if (fromIdx >= 0) {
+      plannedDates.splice(fromIdx, 1);
+    }
+    if (!plannedDates.includes(toDateUtc)) {
+      plannedDates.push(toDateUtc);
+    }
+    updateTask(taskId, { plannedDates });
+  }, [tasks, updateTask]);
+
   const create = async () => {
     const accessToken = (session as unknown as { access_token?: string })?.access_token;
     if (!accessToken) return;
@@ -129,13 +169,23 @@ export default function CalendarPage() {
 
   const days: Date[] = useMemo(() => {
     const arr: Date[] = [];
-    let d = gridStart;
-    while (d <= gridEnd) {
-      arr.push(d);
-      d = addDays(d, 1);
+    if (viewMode === "day") {
+      arr.push(currentDate);
+    } else if (viewMode === "week") {
+      let d = weekStart;
+      while (d <= weekEnd) {
+        arr.push(d);
+        d = addDays(d, 1);
+      }
+    } else {
+      let d = gridStart;
+      while (d <= gridEnd) {
+        arr.push(d);
+        d = addDays(d, 1);
+      }
     }
     return arr;
-  }, [gridStart, gridEnd]);
+  }, [viewMode, currentDate, weekStart, weekEnd, gridStart, gridEnd]);
 
   // const isTaskOnDate = (task: Task, date: Date) => {
   //   if (task.type === "daily" || task.type === "scheduled") return isTaskForToday(task, date);
@@ -158,6 +208,7 @@ export default function CalendarPage() {
   const [formStart, setFormStart] = useState("");
   const [formEnd, setFormEnd] = useState("");
   const [dragOverKey, setDragOverKey] = useState<string | null>(null);
+  const [detailDate, setDetailDate] = useState<Date | null>(null);
 
   const sessionAccessToken = (session as unknown as { access_token?: string })?.access_token;
   const isGoogleConnected = !!sessionAccessToken;
@@ -328,9 +379,14 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+    <div className="flex gap-4">
+      {/* 月間カレンダー */}
+      <div className={`bg-[var(--sidebar)] rounded-xl p-5 shadow-sm transition-all ${detailDate ? "flex-1" : "w-full"}`}>
       <div className="flex items-center justify-between mb-3">
-        <div className="text-sm font-semibold">カレンダー（Google同期）</div>
+        <div className="text-sm font-semibold flex items-center gap-2">
+          <Calendar size={16} />
+          カレンダー（Google同期）
+        </div>
         <div className="flex items-center gap-2 text-sm">
           <button className="px-2 py-1 border rounded" onClick={() => setCurrentMonth(addMonths(currentMonth, -1))}>{"<"}</button>
           <div className="min-w-[8rem] text-center">{format(currentMonth, "yyyy年 M月")}</div>
@@ -401,10 +457,12 @@ export default function CalendarPage() {
         {days.map((d) => {
           const key = format(d, "yyyy-MM-dd");
           const todays = eventsByDate.get(key) ?? [];
+          const dayTasks = tasksByDate.get(key) ?? [];
+          const cellDateUtc = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())).getTime();
           const inMonth = isSameMonth(d, monthStart);
           const dow = d.getDay();
           const cls = [
-            "border rounded min-h-24 p-1 flex flex-col gap-1 cursor-pointer",
+            "border rounded min-h-20 sm:min-h-24 md:min-h-28 p-1 flex flex-col gap-1 cursor-pointer",
             inMonth ? "" : "opacity-50",
             isToday(d) ? "ring-2 ring-foreground" : "",
             dow === 0 ? "bg-[var(--danger)]/5 border-[var(--danger)]/20" : "",
@@ -430,25 +488,50 @@ export default function CalendarPage() {
                 const data = e.dataTransfer.getData("application/json");
                 if (!data) return;
                 try {
-                  const payload = JSON.parse(data) as { id: string; start?: string; end?: string };
+                  const payload = JSON.parse(data) as { type?: string; id?: string; taskId?: string; fromDateUtc?: number; start?: string; end?: string };
+
+                  // タスクのD&D処理
+                  if (payload.type === "calendar-task" && payload.taskId && payload.fromDateUtc != null) {
+                    const targetDate = new Date(d);
+                    targetDate.setUTCHours(0, 0, 0, 0);
+                    const toDateUtc = targetDate.getTime();
+                    moveTaskToDate(payload.taskId, payload.fromDateUtc, toDateUtc);
+                    return;
+                  }
+
+                  // Google Calendarイベントの処理
                   if (!payload.id) return;
                   const accessToken = (session as unknown as { access_token?: string })?.access_token;
                   if (!accessToken) return;
 
-                  // compute duration from original event if possible
-                  const originalStart = payload.start ? parseISO(payload.start) : undefined;
-                  const originalEnd = payload.end ? parseISO(payload.end) : undefined;
-                  const durationMs = originalStart && originalEnd ? (originalEnd.getTime() - originalStart.getTime()) : 30 * 60 * 1000;
+                  // 終日イベントかどうかを判定（dateTimeがなくdateのみの場合は終日イベント）
+                  const isAllDayEvent = payload.start && !payload.start.includes("T");
+                  const targetDateStr = format(d, "yyyy-MM-dd");
 
-                  // set new start at 09:00 on this cell date, keep same duration
-                  const startLocal = new Date(d);
-                  startLocal.setHours(9, 0, 0, 0);
-                  const endLocal = new Date(startLocal.getTime() + durationMs);
+                  let body: { start: { date?: string; dateTime?: string }; end: { date?: string; dateTime?: string } };
 
-                  const body = {
-                    start: { dateTime: startLocal.toISOString() },
-                    end: { dateTime: endLocal.toISOString() },
-                  };
+                  if (isAllDayEvent) {
+                    // 終日イベントの場合はdate形式を維持
+                    body = {
+                      start: { date: targetDateStr },
+                      end: { date: targetDateStr },
+                    };
+                  } else {
+                    // 時間指定イベントの場合
+                    const originalStart = payload.start ? parseISO(payload.start) : undefined;
+                    const originalEnd = payload.end ? parseISO(payload.end) : undefined;
+                    const durationMs = originalStart && originalEnd ? (originalEnd.getTime() - originalStart.getTime()) : 30 * 60 * 1000;
+
+                    const startLocal = new Date(d);
+                    startLocal.setHours(9, 0, 0, 0);
+                    const endLocal = new Date(startLocal.getTime() + durationMs);
+
+                    body = {
+                      start: { dateTime: startLocal.toISOString() },
+                      end: { dateTime: endLocal.toISOString() },
+                    };
+                  }
+
                   await fetch(`/api/calendar/events/${payload.id}`, {
                     method: "PATCH",
                     headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
@@ -466,9 +549,9 @@ export default function CalendarPage() {
                 setDragOverKey(null);
               }}
               onClick={(e) => {
-                // 何も選択されていないセル（余白）をクリックしたら作成ダイアログ
+                // 何も選択されていないセル（余白）をクリックしたら詳細パネルを表示
                 if ((e.target as HTMLElement).dataset.kind !== "event") {
-                  openCreateDialog(d);
+                  setDetailDate(d);
                 }
               }}
               onContextMenu={(e) => {
@@ -480,7 +563,8 @@ export default function CalendarPage() {
                 <span>{format(d, "d")}</span>
                 {isSameDay(d, new Date()) && <span className="text-[10px] px-1 rounded bg-foreground text-background">今日</span>}
               </div>
-              <div className="flex flex-col gap-1 mt-1">
+              <div className="flex flex-col gap-1 mt-1 overflow-hidden">
+                {/* Google Calendar イベント */}
                 {todays.slice(0, 2).map((ev) => (
                   <div
                     key={ev.id}
@@ -506,6 +590,34 @@ export default function CalendarPage() {
                 ))}
                 {todays.length > 2 && (
                   <div className="text-[10px] opacity-60 px-1">+{todays.length - 2}件（予定）</div>
+                )}
+                {/* タスク（積み上げ候補のplannedDates） */}
+                {dayTasks.slice(0, 2).map((task) => (
+                  <div
+                    key={task.id}
+                    className="text-[11px] truncate px-1 py-0.5 rounded cursor-grab active:cursor-grabbing"
+                    style={{ backgroundColor: "var(--warning)", border: "1px solid var(--warning)", color: "var(--warning-foreground, #000)" }}
+                    title={task.title}
+                    data-kind="event"
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData("application/json", JSON.stringify({
+                        type: "calendar-task",
+                        taskId: task.id,
+                        fromDateUtc: cellDateUtc,
+                      }));
+                      e.dataTransfer.effectAllowed = "move";
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDetailDate(d);
+                    }}
+                  >
+                    📋 {task.title}
+                  </div>
+                ))}
+                {dayTasks.length > 2 && (
+                  <div className="text-[10px] opacity-60 px-1">+{dayTasks.length - 2}件（タスク）</div>
                 )}
               </div>
             </div>
@@ -698,7 +810,13 @@ export default function CalendarPage() {
         </div>
       )}
     </div>
+
+      {/* 日間詳細パネル */}
+      {detailDate && (
+        <div className="w-96 bg-[var(--sidebar)] rounded-xl shadow-sm overflow-hidden">
+          <DayDetailPanel date={detailDate} onClose={() => setDetailDate(null)} />
+        </div>
+      )}
+    </div>
   );
 }
-
-

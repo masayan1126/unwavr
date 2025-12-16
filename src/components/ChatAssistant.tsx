@@ -11,7 +11,9 @@ type AIActionResponse =
   | { type: "create_task"; task: Record<string, unknown>; message: string }
   | { type: "update_task"; taskId: string; updates: Record<string, unknown>; message: string }
   | { type: "delete_task"; taskId: string; message: string }
-  | { type: "complete_task"; taskId: string; message: string };
+  | { type: "complete_task"; taskId: string; message: string }
+  | { type: "schedule_task"; taskId: string; date: string; startTime: string; endTime: string; message: string }
+  | { type: "create_and_schedule"; task: Record<string, unknown>; date: string; startTime: string; endTime: string; message: string };
 
 export default function ChatAssistant() {
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -24,6 +26,7 @@ export default function ChatAssistant() {
   const updateTask = useAppStore((s) => s.updateTask);
   const removeTask = useAppStore((s) => s.removeTask);
   const completeTasks = useAppStore((s) => s.completeTasks);
+  const addTimeSlot = useAppStore((s) => s.addTimeSlot);
 
   const toast = useToast();
   const [mounted, setMounted] = useState(false);
@@ -108,6 +111,31 @@ export default function ChatAssistant() {
           completeTasks([result.taskId]);
           toast.show("タスクを完了しました", "success");
           break;
+        case "schedule_task": {
+          // 日付文字列をUTCタイムスタンプに変換
+          const dateUtc = new Date(result.date + "T00:00:00Z").getTime();
+          addTimeSlot(result.taskId, {
+            date: dateUtc,
+            startTime: result.startTime,
+            endTime: result.endTime,
+          });
+          toast.show("タスクをスケジュールしました", "success");
+          break;
+        }
+        case "create_and_schedule": {
+          // タスクを作成
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const newTaskId = addTask(result.task as any);
+          // 時間スロットを追加
+          const scheduleDateUtc = new Date(result.date + "T00:00:00Z").getTime();
+          addTimeSlot(newTaskId, {
+            date: scheduleDateUtc,
+            startTime: result.startTime,
+            endTime: result.endTime,
+          });
+          toast.show("タスクを作成しスケジュールしました", "success");
+          break;
+        }
       }
 
       setMessages((m) => [...m, { role: "model", content: result.message }]);

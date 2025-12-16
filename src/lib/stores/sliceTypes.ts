@@ -1,4 +1,4 @@
-import { Task, Milestone, LauncherShortcut, LauncherCategory, BgmTrack, BgmGroup, BgmSearchResult, PomodoroState, ImportHistoryEntry } from "../types";
+import { Task, Milestone, LauncherShortcut, LauncherCategory, BgmTrack, BgmGroup, BgmSearchResult, PomodoroState, ImportHistoryEntry, TimeSlot } from "../types";
 
 export interface TaskSlice {
     tasks: Task[];
@@ -20,6 +20,11 @@ export interface TaskSlice {
     weekendOrHolidayTasks: () => Task[];
     clearTasks: () => void;
     moveTasksToToday: (taskIds: string[]) => void;
+    // 時間スロット管理
+    addTimeSlot: (taskId: string, slot: TimeSlot) => void;
+    updateTimeSlot: (taskId: string, slotIndex: number, update: Partial<TimeSlot>) => void;
+    removeTimeSlot: (taskId: string, slotIndex: number) => void;
+    getTasksForDate: (date: number) => Task[];
 }
 
 export interface MilestoneSlice {
