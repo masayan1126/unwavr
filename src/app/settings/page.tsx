@@ -45,21 +45,21 @@ export default function SettingsPage() {
               <input
                 type="range"
                 min="80"
-                max="120"
-                step="5"
+                max="150"
+                step="2"
                 list="fontsize-markers"
                 value={fontSize}
                 onChange={(e) => setFontSize(Number(e.target.value))}
                 className="w-full h-1.5 bg-black/10 dark:bg-white/10 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-sm hover:[&::-webkit-slider-thumb]:scale-110 transition-all relative z-10"
               />
               <datalist id="fontsize-markers" className="absolute w-full flex justify-between px-[6px] pointer-events-none top-1/2 -translate-y-1/2">
-                {[80, 85, 90, 95, 100, 105, 110, 115, 120].map((val) => (
+                {[80, 90, 100, 110, 120, 130, 140, 150].map((val) => (
                   <option key={val} value={val} className="w-1 h-1 rounded-full bg-black/20 dark:bg-white/20" label={val === 100 ? "|" : ""} />
                 ))}
               </datalist>
               <div className="absolute w-full flex justify-between px-[6px] pointer-events-none h-1 top-1/2 -translate-y-1/2">
-                {[...Array(9)].map((_, i) => (
-                  <div key={i} className={`w-1 h-1 rounded-full ${i === 4 ? "bg-primary/50 w-1.5 h-1.5 -ml-[1px]" : "bg-black/10 dark:bg-white/10"}`} />
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className={`w-1 h-1 rounded-full ${i === 2 ? "bg-primary/50 w-1.5 h-1.5 -ml-[1px]" : "bg-black/10 dark:bg-white/10"}`} />
                 ))}
               </div>
             </div>

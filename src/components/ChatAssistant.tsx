@@ -147,6 +147,11 @@ export default function ChatAssistant() {
           送信
         </button>
       </div>
+      <div className="text-center py-2 border-t bg-muted/20">
+        <p className="text-[10px] text-muted-foreground">
+          チャット履歴はサーバーに保存されません。入力内容はAIモデルの学習に使用されません。
+        </p>
+      </div>
     </div>
   );
 }

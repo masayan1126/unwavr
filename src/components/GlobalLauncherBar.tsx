@@ -42,13 +42,13 @@ export default function GlobalLauncherBar() {
           {/* Subtle glow effect on hover */}
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-primary/20 via-transparent to-transparent" />
 
-          {/* Icon with smooth rotation */}
+          {/* Icon */}
           <div className={`
             relative z-10 transition-all duration-300
-            ${isLauncherOpen ? 'rotate-0' : 'rotate-180'}
             text-foreground/60 group-hover:text-foreground
+            ${isLauncherOpen ? 'opacity-100' : 'opacity-70'}
           `}>
-            <Icons.ChevronRight size={14} strokeWidth={2.5} />
+            <Icons.Rocket size={14} strokeWidth={2} />
           </div>
 
           {/* Animated dots indicator */}

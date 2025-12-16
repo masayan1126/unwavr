@@ -88,7 +88,7 @@ export const authOptions: NextAuthOptions = {
   ],
   session: { strategy: "jwt" },
   callbacks: {
-    async jwt({ token, account }) {
+    async jwt({ token, account, user }) {
       // 初回ログイン時
       if (account) {
         const acc = account as unknown as Record<string, unknown>;
@@ -99,8 +99,20 @@ export const authOptions: NextAuthOptions = {
         token.expires_at = Math.floor(Date.now() / 1000) + expiresIn - 60;
         token.refresh_token = refreshToken;
         token.provider = account.provider;
-        // NextAuth の token.sub はプロバイダの subject（安定ID）
-        if (typeof (token as { sub?: unknown }).sub === "string") {
+
+        // DBのユーザーIDを取得して使用（email重複時の不整合を防ぐ）
+        const email = user?.email?.toLowerCase();
+        if (email && supabaseAdmin) {
+          const { data } = await supabaseAdmin.from("users").select("id").eq("email", email).maybeSingle();
+          if (data?.id) {
+            (token as Record<string, unknown>).user_id = String(data.id);
+          } else {
+            // 新規ユーザー: token.subを使用
+            if (typeof (token as { sub?: unknown }).sub === "string") {
+              (token as Record<string, unknown>).user_id = (token as { sub?: string }).sub;
+            }
+          }
+        } else if (typeof (token as { sub?: unknown }).sub === "string") {
           (token as Record<string, unknown>).user_id = (token as { sub?: string }).sub;
         }
         return token;

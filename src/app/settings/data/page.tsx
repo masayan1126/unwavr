@@ -4,8 +4,9 @@ import Link from "next/link";
 import TasksImportExport from "@/components/data/TasksImportExport";
 import MilestonesImportExport from "@/components/data/MilestonesImportExport";
 import BgmImportExport from "@/components/data/BgmImportExport";
+import SettingsImportExport from "@/components/data/SettingsImportExport";
 
-type Tab = "tasks" | "milestones" | "bgm";
+type Tab = "tasks" | "milestones" | "bgm" | "settings";
 
 export default function DataSettingsPage() {
     const [activeTab, setActiveTab] = useState<Tab>("tasks");
@@ -47,12 +48,22 @@ export default function DataSettingsPage() {
                 >
                     BGM
                 </button>
+                <button
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "settings"
+                            ? "border-primary text-primary"
+                            : "border-transparent text-muted-foreground hover:text-foreground"
+                        }`}
+                    onClick={() => setActiveTab("settings")}
+                >
+                    設定
+                </button>
             </div>
 
             <div className="mt-4">
                 {activeTab === "tasks" && <TasksImportExport />}
                 {activeTab === "milestones" && <MilestonesImportExport />}
                 {activeTab === "bgm" && <BgmImportExport />}
+                {activeTab === "settings" && <SettingsImportExport />}
             </div>
         </div>
     );

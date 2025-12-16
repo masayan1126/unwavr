@@ -9,12 +9,7 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-import { Trash2 } from "lucide-react";
-
-type Msg = { role: "user" | "model"; content: string; timestamp: number };
-
-const HISTORY_KEY = "unwavr:chat_history";
-const EXPIRATION_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
+type Msg = { role: "user" | "model"; content: string };
 
 export default function AssistantPage() {
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -34,33 +29,7 @@ export default function AssistantPage() {
 
   useEffect(() => {
     setMounted(true);
-    // Load history
-    try {
-      const saved = localStorage.getItem(HISTORY_KEY);
-      if (saved) {
-        const parsed: Msg[] = JSON.parse(saved);
-        const now = Date.now();
-        // Filter out expired messages
-        const valid = parsed.filter(m => now - m.timestamp < EXPIRATION_MS);
-        setMessages(valid);
-        if (valid.length !== parsed.length) {
-          localStorage.setItem(HISTORY_KEY, JSON.stringify(valid));
-        }
-      }
-    } catch (e) {
-      console.error("Failed to load chat history", e);
-    }
   }, []);
-
-  // Save history on change
-  useEffect(() => {
-    if (!mounted) return;
-    if (messages.length > 0) {
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(messages));
-    } else {
-      localStorage.removeItem(HISTORY_KEY);
-    }
-  }, [messages, mounted]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -68,14 +37,6 @@ export default function AssistantPage() {
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
   }, [messages, loading]);
-
-  const clearHistory = () => {
-    if (confirm("チャット履歴をすべて削除しますか？")) {
-      setMessages([]);
-      localStorage.removeItem(HISTORY_KEY);
-      toast.show("履歴を削除しました", "success");
-    }
-  };
 
   const send = async (textOverride?: string) => {
     const content = textOverride || input.trim();
@@ -86,8 +47,7 @@ export default function AssistantPage() {
       return;
     }
 
-    const now = Date.now();
-    const newMessages = [...messages, { role: "user" as const, content, timestamp: now }];
+    const newMessages = [...messages, { role: "user" as const, content }];
     setMessages(newMessages);
     if (!textOverride) setInput("");
     setLoading(true);
@@ -131,12 +91,12 @@ export default function AssistantPage() {
           break;
       }
 
-      setMessages((m) => [...m, { role: "model", content: result.message, timestamp: Date.now() }]);
+      setMessages((m) => [...m, { role: "model", content: result.message }]);
 
     } catch (e) {
       console.error(e);
       toast.show("エラーが発生しました", "error");
-      setMessages((m) => [...m, { role: "model", content: "エラーが発生しました。APIキーやネットワーク接続を確認してください。", timestamp: Date.now() }]);
+      setMessages((m) => [...m, { role: "model", content: "エラーが発生しました。APIキーやネットワーク接続を確認してください。" }]);
     } finally {
       setLoading(false);
     }
@@ -151,21 +111,9 @@ export default function AssistantPage() {
           <Sparkles className="text-primary" />
           <h1 className="text-xl font-semibold">Unwavr AI</h1>
         </div>
-        <div className="flex items-center gap-4">
-          {messages.length > 0 && (
-            <button
-              onClick={clearHistory}
-              className="text-xs text-muted-foreground hover:text-destructive flex items-center gap-1 transition-colors"
-              title="履歴を削除"
-            >
-              <Trash2 size={14} />
-              履歴を削除
-            </button>
-          )}
-          <Link className="text-sm underline opacity-80" href="/">
-            ホーム
-          </Link>
-        </div>
+        <Link className="text-sm underline opacity-80" href="/">
+          ホーム
+        </Link>
       </div>
 
       <div className="flex-1 bg-card border border-border rounded-2xl shadow-sm flex flex-col overflow-hidden">
@@ -272,6 +220,9 @@ export default function AssistantPage() {
           </div>
           <div className="text-center mt-2">
             <p className="text-[10px] opacity-40">Gemini 2.0 Flashを使用しています</p>
+            <p className="text-[10px] opacity-40 mt-1">
+              チャット履歴はサーバーに保存されません。入力内容はAIモデルの学習に使用されません。
+            </p>
           </div>
         </div>
       </div>

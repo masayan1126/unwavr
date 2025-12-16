@@ -680,6 +680,9 @@ export default function FloatingAIAssistant() {
                                     {loading ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                                 </button>
                             </div>
+                            <p className="text-center text-[10px] text-muted-foreground mt-2 px-2">
+                                履歴は保存されません・学習に使用されません
+                            </p>
                         </div>
                     </motion.div>
                 )}
