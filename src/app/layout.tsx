@@ -73,10 +73,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: "/favicon.png", type: "image/png", sizes: "192x192" },
       { url: "/unwavr-logo.svg", type: "image/svg+xml" },
       { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
     ],
-    shortcut: [{ url: "/icon-192.png" }],
+    shortcut: [{ url: "/favicon.png" }],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
   category: "productivity",
