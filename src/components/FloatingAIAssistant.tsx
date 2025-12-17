@@ -132,14 +132,29 @@ function getPageContext(pathname: string): PageContext {
 }
 
 export default function FloatingAIAssistant() {
-    const [isOpen, setIsOpen] = useState(false);
+    const [desktopOpen, setDesktopOpen] = useState(false);
     const [messages, setMessages] = useState<Msg[]>([]);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     const [size, setSize] = useState<Size>("normal");
     const [showCommands, setShowCommands] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
     const listRef = useRef<HTMLDivElement | null>(null);
     const pathname = usePathname();
+
+    // Mobile: use store state, Desktop: use local state
+    const aiChatOpen = useAppStore((s) => s.aiChatOpen);
+    const setAIChatOpen = useAppStore((s) => s.setAIChatOpen);
+    const isOpen = isMobile ? aiChatOpen : desktopOpen;
+    const setIsOpen = isMobile ? setAIChatOpen : setDesktopOpen;
+
+    // Detect mobile
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
 
     const pageContext = getPageContext(pathname || "/");
 
@@ -574,13 +589,15 @@ export default function FloatingAIAssistant() {
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className={`fixed bottom-36 md:bottom-20 right-4 bg-card border border-border shadow-2xl rounded-2xl z-[200000] flex flex-col overflow-hidden transition-all duration-200 ${
-                            size === "large"
-                                ? "w-[calc(100vw-32px)] sm:w-[750px] lg:w-[850px] h-[calc(100vh-120px)] sm:h-[700px] max-h-[80vh]"
-                                : "w-[calc(100vw-32px)] sm:w-[500px] h-[500px] max-h-[60vh] sm:max-h-[550px]"
+                        initial={{ opacity: 0, y: isMobile ? 100 : 20, scale: isMobile ? 1 : 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: isMobile ? 100 : 20, scale: isMobile ? 1 : 0.9 }}
+                        className={`fixed bg-card border border-border shadow-2xl z-[200000] flex flex-col overflow-hidden transition-all duration-200 ${
+                            isMobile
+                                ? "inset-x-0 bottom-14 top-12 rounded-none border-x-0 border-b-0"
+                                : size === "large"
+                                    ? "bottom-20 right-4 w-[750px] lg:w-[850px] h-[700px] max-h-[80vh] rounded-2xl"
+                                    : "bottom-20 right-4 w-[500px] h-[550px] max-h-[550px] rounded-2xl"
                         }`}
                     >
                         {/* Header */}
@@ -590,13 +607,15 @@ export default function FloatingAIAssistant() {
                                 <span>Unwavr AI</span>
                             </div>
                             <div className="flex items-center gap-1">
-                                <button
-                                    onClick={() => setSize(size === "normal" ? "large" : "normal")}
-                                    className="p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors"
-                                    title={size === "normal" ? "拡大" : "縮小"}
-                                >
-                                    {size === "normal" ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
-                                </button>
+                                {!isMobile && (
+                                    <button
+                                        onClick={() => setSize(size === "normal" ? "large" : "normal")}
+                                        className="p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors"
+                                        title={size === "normal" ? "拡大" : "縮小"}
+                                    >
+                                        {size === "normal" ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
+                                    </button>
+                                )}
                                 <button
                                     onClick={() => setIsOpen(false)}
                                     className="p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors"
@@ -736,16 +755,18 @@ export default function FloatingAIAssistant() {
                 )}
             </AnimatePresence>
 
-            {/* Floating Trigger Button */}
-            <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsOpen(!isOpen)}
-                className={`fixed bottom-18 md:bottom-10 right-[10%] md:right-8 translate-x-1/2 md:translate-x-0 z-[200000] w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-colors ${isOpen ? "bg-muted text-foreground" : "bg-primary text-primary-foreground"
-                    }`}
-            >
-                {isOpen ? <X size={24} /> : <Sparkles size={24} />}
-            </motion.button>
+            {/* Floating Trigger Button - Desktop only */}
+            {!isMobile && (
+                <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setIsOpen(!isOpen)}
+                    className={`fixed bottom-10 right-8 z-[200000] w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-colors ${isOpen ? "bg-muted text-foreground" : "bg-primary text-primary-foreground"
+                        }`}
+                >
+                    {isOpen ? <X size={24} /> : <Sparkles size={24} />}
+                </motion.button>
+            )}
         </>
     );
 }

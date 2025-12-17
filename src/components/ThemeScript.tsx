@@ -1,11 +1,6 @@
-"use client";
+// This script runs before React hydration to prevent theme flashing (FOUC)
+// It reads the theme from localStorage and applies CSS variables synchronously
 
-import { useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
-
-const STORAGE_KEY = "unwavr-theme-preferences";
-
-// Color palette definitions (must match button-showcase/page.tsx)
 const colorPalettes: Record<string, { light: Record<string, string>; dark: Record<string, string> }> = {
   warmAccent: {
     light: { primary: "#D9730D", primaryHover: "#BF6309", accent: "#37352F", accentHover: "#2D2B27", soft: "#FEF3E2", softHover: "#FDECC8", success: "#059669", danger: "#EB5757", warning: "#F59E0B" },
@@ -137,130 +132,83 @@ const transitionOptions: Record<string, string> = {
   slow: "400ms",
 };
 
-type ThemePreferences = {
-  palette: string;
-  borderRadius: string;
-  shadowIntensity: string;
-  transitionSpeed: string;
-};
+// Generate the inline script that will be injected into <head>
+function generateThemeScript(): string {
+  // Stringify the data for embedding
+  const palettesJson = JSON.stringify(colorPalettes);
+  const radiusJson = JSON.stringify(borderRadiusOptions);
+  const transitionJson = JSON.stringify(transitionOptions);
 
-function applyThemeCSS(prefs: ThemePreferences) {
-  const palette = colorPalettes[prefs.palette] || colorPalettes.warmAccent;
-  const light = palette.light;
-  const dark = palette.dark;
-  const radiusVal = borderRadiusOptions[prefs.borderRadius] || "3px";
-  const transitionVal = transitionOptions[prefs.transitionSpeed] || "120ms";
+  return `
+(function() {
+  try {
+    var STORAGE_KEY = "unwavr-theme-preferences";
+    var saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
 
-  const css = `
-    :root {
-      --primary: ${light.primary};
-      --primary-foreground: #FFFFFF;
-      --primary-hover: ${light.primaryHover};
-      --accent: ${light.accent};
-      --accent-foreground: #FFFFFF;
-      --accent-hover: ${light.accentHover};
-      --soft: ${light.soft};
-      --soft-hover: ${light.softHover};
-      --success: ${light.success};
-      --danger: ${light.danger};
-      --warning: ${light.warning};
-      --radius-sm: ${Math.max(parseInt(radiusVal) * 0.5, 0)}px;
-      --radius-md: ${radiusVal};
-      --radius-lg: ${Math.min(parseInt(radiusVal) * 2, 24)}px;
-      --transition-fast: ${transitionVal} ease;
-      --ring-color: ${light.primary}33;
-      --ring-color-accent: ${light.accent}4D;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --primary: ${dark.primary};
-        --primary-foreground: #18181B;
-        --primary-hover: ${dark.primaryHover};
-        --accent: ${dark.accent};
-        --accent-foreground: #18181B;
-        --accent-hover: ${dark.accentHover};
-        --soft: ${dark.soft};
-        --soft-hover: ${dark.softHover};
-        --success: ${dark.success};
-        --danger: ${dark.danger};
-        --warning: ${dark.warning};
-        --ring-color: ${dark.primary}40;
-        --ring-color-accent: ${dark.accent}59;
-      }
-    }
-  `;
+    var prefs = JSON.parse(saved);
+    var palettes = ${palettesJson};
+    var radiusOpts = ${radiusJson};
+    var transitionOpts = ${transitionJson};
 
-  // Remove existing theme styles (both init and override)
-  const initStyle = document.getElementById("unwavr-theme-init");
-  if (initStyle) {
-    initStyle.remove();
-  }
-  const existingStyle = document.getElementById("unwavr-theme-override");
-  if (existingStyle) {
-    existingStyle.remove();
-  }
+    var palette = palettes[prefs.palette];
+    if (!palette) return;
 
-  // Inject new style
-  const styleEl = document.createElement("style");
-  styleEl.id = "unwavr-theme-override";
-  styleEl.textContent = css;
-  document.head.appendChild(styleEl);
+    var light = palette.light;
+    var dark = palette.dark;
+    var radiusVal = radiusOpts[prefs.borderRadius] || "3px";
+    var transitionVal = transitionOpts[prefs.transitionSpeed] || "120ms";
+    var radiusNum = parseInt(radiusVal) || 0;
+
+    var css = ":root{" +
+      "--primary:" + light.primary + ";" +
+      "--primary-foreground:#FFFFFF;" +
+      "--primary-hover:" + light.primaryHover + ";" +
+      "--accent:" + light.accent + ";" +
+      "--accent-foreground:#FFFFFF;" +
+      "--accent-hover:" + light.accentHover + ";" +
+      "--soft:" + light.soft + ";" +
+      "--soft-hover:" + light.softHover + ";" +
+      "--success:" + light.success + ";" +
+      "--danger:" + light.danger + ";" +
+      "--warning:" + light.warning + ";" +
+      "--radius-sm:" + Math.max(radiusNum * 0.5, 0) + "px;" +
+      "--radius-md:" + radiusVal + ";" +
+      "--radius-lg:" + Math.min(radiusNum * 2, 24) + "px;" +
+      "--transition-fast:" + transitionVal + " ease;" +
+      "--ring-color:" + light.primary + "33;" +
+      "--ring-color-accent:" + light.accent + "4D;" +
+    "}" +
+    "@media(prefers-color-scheme:dark){:root{" +
+      "--primary:" + dark.primary + ";" +
+      "--primary-foreground:#18181B;" +
+      "--primary-hover:" + dark.primaryHover + ";" +
+      "--accent:" + dark.accent + ";" +
+      "--accent-foreground:#18181B;" +
+      "--accent-hover:" + dark.accentHover + ";" +
+      "--soft:" + dark.soft + ";" +
+      "--soft-hover:" + dark.softHover + ";" +
+      "--success:" + dark.success + ";" +
+      "--danger:" + dark.danger + ";" +
+      "--warning:" + dark.warning + ";" +
+      "--ring-color:" + dark.primary + "40;" +
+      "--ring-color-accent:" + dark.accent + "59;" +
+    "}}";
+
+    var style = document.createElement("style");
+    style.id = "unwavr-theme-init";
+    style.textContent = css;
+    document.head.appendChild(style);
+  } catch(e) {}
+})();
+`;
 }
 
-export default function ThemeLoader() {
-  const { status } = useSession();
-  const loadedRef = useRef(false);
-
-  useEffect(() => {
-    if (loadedRef.current) return;
-
-    async function loadTheme() {
-      // First, try localStorage for immediate application
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const prefs = JSON.parse(saved) as ThemePreferences;
-          if (prefs.palette && colorPalettes[prefs.palette]) {
-            applyThemeCSS(prefs);
-          }
-        }
-      } catch {
-        // Ignore localStorage errors
-      }
-
-      // If authenticated, try to load from API
-      if (status === "authenticated") {
-        try {
-          const res = await fetch("/api/db/preferences");
-          if (res.ok) {
-            const data = await res.json();
-            if (data.preferences) {
-              const prefs: ThemePreferences = {
-                palette: data.preferences.theme_palette || "warmAccent",
-                borderRadius: data.preferences.border_radius || "subtle",
-                shadowIntensity: data.preferences.shadow_intensity || "normal",
-                transitionSpeed: data.preferences.transition_speed || "fast",
-              };
-              if (prefs.palette && colorPalettes[prefs.palette]) {
-                applyThemeCSS(prefs);
-                // Update localStorage with server data
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
-              }
-            }
-          }
-        } catch {
-          // Ignore API errors, keep localStorage theme
-        }
-      }
-
-      loadedRef.current = true;
-    }
-
-    // Only load after we know the auth status
-    if (status !== "loading") {
-      loadTheme();
-    }
-  }, [status]);
-
-  return null;
+export default function ThemeScript() {
+  return (
+    <script
+      id="theme-script"
+      dangerouslySetInnerHTML={{ __html: generateThemeScript() }}
+    />
+  );
 }

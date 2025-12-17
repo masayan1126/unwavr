@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono, Noto_Sans_JP, Space_Grotesk } from "next/font/go
 import "./globals.css";
 import Providers from "@/components/Providers";
 import LayoutChrome from "@/components/LayoutChrome";
+import ThemeScript from "@/components/ThemeScript";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -106,7 +107,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja">
+    <html lang="ja" suppressHydrationWarning>
+      <head>
+        <ThemeScript />
+      </head>
       <body suppressHydrationWarning className={`${inter.variable} ${spaceGrotesk.variable} ${notoSansJp.variable} ${jetbrainsMono.variable} antialiased`}>
         <Providers>
           <LayoutChrome>{children}</LayoutChrome>

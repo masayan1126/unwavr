@@ -126,4 +126,7 @@ export interface AISlice {
     setGeminiApiKey: (key: string) => void;
     aiModel: GeminiModel;
     setAIModel: (model: GeminiModel) => void;
+    aiChatOpen: boolean;
+    setAIChatOpen: (open: boolean) => void;
+    toggleAIChat: () => void;
 }

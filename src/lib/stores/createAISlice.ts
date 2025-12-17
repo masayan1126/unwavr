@@ -2,7 +2,7 @@ import { StateCreator } from "zustand";
 import { AppState } from "../storeTypes";
 import { AISlice, GeminiModel } from "./sliceTypes";
 
-export const createAISlice: StateCreator<AppState, [], [], AISlice> = (set) => ({
+export const createAISlice: StateCreator<AppState, [], [], AISlice> = (set, get) => ({
     geminiApiKey: (typeof window !== 'undefined' ? safeLocalStorageGet("geminiApiKey") || "" : ""),
     setGeminiApiKey: (key: string) => {
         safeLocalStorageSet("geminiApiKey", key);
@@ -19,6 +19,9 @@ export const createAISlice: StateCreator<AppState, [], [], AISlice> = (set) => (
             body: JSON.stringify({ custom_settings: { ai_model: model } }),
         }).catch(() => {});
     },
+    aiChatOpen: false,
+    setAIChatOpen: (open: boolean) => set({ aiChatOpen: open }),
+    toggleAIChat: () => set({ aiChatOpen: !get().aiChatOpen }),
 });
 
 function safeLocalStorageGet(key: string): string | null {

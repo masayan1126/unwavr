@@ -12,12 +12,6 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
 
 const Card = forwardRef<HTMLDivElement, CardProps>(
     ({ className, padding = "md", hoverable = false, children, ...props }, ref) => {
-        const paddings = {
-            none: "",
-            sm: "p-3",
-            md: "p-5",
-            lg: "p-6",
-        };
 
         return (
             <div
@@ -26,7 +20,6 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
                     "rounded-[var(--radius-lg)]",
                     "transition-base",
                     hoverable && "hover:shadow-token-md cursor-pointer",
-                    paddings[padding],
                     className
                 )}
                 {...props}
