@@ -326,7 +326,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
       <div className="flex items-center gap-4 mb-6">
         <button
           onClick={() => router.back()}
-          className="p-2 rounded-lg border border-[var(--border)] hover:bg-[var(--sidebar)] transition-colors"
+          className="p-2 rounded-lg border border-[var(--border)] hover:bg-background transition-colors"
           title="戻る"
         >
           <ArrowLeft size={18} />
@@ -358,7 +358,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
         /* 表示モード */
         <div className="space-y-6">
           {/* メインカード */}
-          <div className="bg-[var(--sidebar)] rounded-xl p-6 border border-[var(--border)]">
+          <div className="bg-background rounded-xl p-6 border border-[var(--border)]">
             {/* アクションボタン */}
             <div className="flex flex-wrap items-center gap-2 mb-6 pb-4 border-b border-[var(--border)]">
               <button
@@ -503,7 +503,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
       ) : (
         /* 編集モード */
         <div className="space-y-6">
-          <div className="bg-[var(--sidebar)] rounded-xl p-6 border border-[var(--border)]">
+          <div className="bg-background rounded-xl p-6 border border-[var(--border)]">
             <div className="space-y-5">
               <div>
                 <label className="block text-sm font-medium mb-2 opacity-80">タイトル</label>
@@ -709,7 +709,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
       {showDeleteConfirm && (
         <div className="fixed inset-0 flex items-center justify-center z-[100000]">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)} />
-          <div className="relative z-10 bg-[var(--sidebar)] border border-[var(--border)] p-6 rounded-xl max-w-md mx-4 shadow-2xl">
+          <div className="relative z-10 bg-background border border-[var(--border)] p-6 rounded-xl max-w-md mx-4 shadow-2xl">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-[var(--danger)]/10">
                 <Trash2 size={20} className="text-[var(--danger)]" />

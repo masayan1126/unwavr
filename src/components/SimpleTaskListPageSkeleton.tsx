@@ -31,7 +31,7 @@ export default function SimpleTaskListPageSkeleton() {
       </div>
 
       {/* タスクリスト */}
-      <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+      <section className="bg-background rounded-xl p-5 shadow-sm">
         <div className="h-5 w-16 rounded bg-black/10 dark:bg-white/10 animate-pulse mb-4" />
         <div className="space-y-2">
           {[...Array(10)].map((_, i) => (

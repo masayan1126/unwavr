@@ -60,8 +60,8 @@ export const H4 = ({ className, children, ...props }: TypographyProps) => (
 export const Text = ({ className, children, variant = "default", ...props }: TextProps) => {
     const variants = {
         default: "text-sm text-foreground",
-        muted: "text-sm text-muted-foreground",
-        small: "text-xs text-muted-foreground",
+        muted: "text-sm",
+        small: "text-xs",
     };
 
     return (
@@ -86,7 +86,7 @@ export const Label = ({ className, children, ...props }: TypographyProps) => (
 export const SectionTitle = ({ className, children, ...props }: TypographyProps) => (
     <div
         className={clsx(
-            "text-xxs uppercase tracking-wider text-muted-foreground/60 font-semibold",
+            "text-xxs uppercase tracking-wider font-semibold",
             className
         )}
         {...props}
@@ -98,7 +98,7 @@ export const SectionTitle = ({ className, children, ...props }: TypographyProps)
 export const Caption = ({ className, children, ...props }: TypographyProps) => (
     <span
         className={clsx(
-            "text-xs text-muted-foreground",
+            "text-xs",
             className
         )}
         {...props}

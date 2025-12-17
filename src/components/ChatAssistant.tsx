@@ -153,7 +153,7 @@ export default function ChatAssistant() {
     <div className="border rounded-xl w-full max-w-3xl mx-auto h-[70svh] flex flex-col bg-card shadow-sm overflow-hidden">
       <div ref={listRef} className="flex-1 overflow-auto p-4 space-y-4">
         {messages.length === 0 && (
-          <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-60 gap-2">
+          <div className="h-full flex flex-col items-center justify-center opacity-70 opacity-60 gap-2">
             <p>AI アシスタント</p>
             <p className="text-xs">「牛乳を買うタスクを追加して」「今日のタスクを教えて」など話しかけてください</p>
           </div>
@@ -200,7 +200,7 @@ export default function ChatAssistant() {
         </button>
       </div>
       <div className="text-center py-2 border-t bg-muted/20">
-        <p className="text-[10px] text-muted-foreground">
+        <p className="text-[10px] opacity-70">
           チャット履歴はサーバーに保存されません。入力内容はAIモデルの学習に使用されません。
         </p>
       </div>

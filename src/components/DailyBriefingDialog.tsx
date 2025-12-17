@@ -81,7 +81,7 @@ export default function DailyBriefingDialog({ isOpen, onClose }: DailyBriefingDi
 
                     <div className="p-6 overflow-y-auto flex-1">
                         {loading ? (
-                            <div className="flex flex-col items-center justify-center h-40 gap-4 text-muted-foreground">
+                            <div className="flex flex-col items-center justify-center h-40 gap-4 opacity-70">
                                 <Loader2 size={32} className="animate-spin text-primary" />
                                 <p>今日のブリーフィングを作成中...</p>
                             </div>
@@ -90,7 +90,7 @@ export default function DailyBriefingDialog({ isOpen, onClose }: DailyBriefingDi
                                 <ReactMarkdown>{briefing}</ReactMarkdown>
                             </div>
                         ) : (
-                            <div className="text-center text-muted-foreground">
+                            <div className="text-center opacity-70">
                                 <p>ブリーフィングを生成できませんでした。</p>
                                 <button onClick={handleGenerate} className="mt-2 text-primary underline">再試行</button>
                             </div>
@@ -101,7 +101,7 @@ export default function DailyBriefingDialog({ isOpen, onClose }: DailyBriefingDi
                         <button
                             onClick={handleGenerate}
                             disabled={loading}
-                            className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+                            className="text-sm opacity-70 hover:opacity-100 flex items-center gap-1"
                         >
                             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
                             再生成

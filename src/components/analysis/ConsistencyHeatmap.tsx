@@ -118,7 +118,7 @@ export function ConsistencyHeatmap({ tasks, range = '3m' }: ConsistencyHeatmapPr
                     );
                 })}
             </div>
-            <div className="mt-2 text-xs text-muted-foreground flex gap-4">
+            <div className="mt-2 text-xs flex gap-4">
                 <span>Total Days: {daysToShow}</span>
                 <span>Average Consistency: {Math.round(Array.from(stats.values()).reduce((acc, curr) => acc + (curr.total > 0 ? curr.completed / curr.total : 0), 0) / (stats.size || 1) * 100)}%</span>
             </div>

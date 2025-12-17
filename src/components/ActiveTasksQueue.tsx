@@ -87,7 +87,7 @@ export default function ActiveTasksQueue({ className }: { className?: string }) 
                                         }}
                                         className={`p-1.5 rounded-full transition-colors ${isTimerRunning
                                             ? "bg-primary text-primary-foreground hover:opacity-90"
-                                            : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                                            : "bg-muted hover:bg-muted/80 opacity-70"
                                             }`}
                                         title={isTimerRunning ? "一時停止" : "タイマー開始"}
                                     >
@@ -99,7 +99,7 @@ export default function ActiveTasksQueue({ className }: { className?: string }) 
                                             toggleTask(task.id);
                                             toast.show(`「${task.title}」を完了しました`, "success");
                                         }}
-                                        className="p-1.5 rounded-full hover:bg-green-500/10 text-muted-foreground hover:text-green-500 transition-colors"
+                                        className="p-1.5 rounded-full hover:bg-green-500/10 opacity-70 hover:text-green-500 transition-colors"
                                         title="完了にする"
                                     >
                                         <CheckCircle2 size={16} />
@@ -107,7 +107,7 @@ export default function ActiveTasksQueue({ className }: { className?: string }) 
 
                                     <button
                                         onClick={() => removeActiveTask(task.id)}
-                                        className="p-1.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                                        className="p-1.5 rounded-full hover:bg-destructive/10 opacity-70 hover:text-destructive transition-colors"
                                         title="着手中から外す"
                                     >
                                         <X size={16} />

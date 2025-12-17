@@ -84,7 +84,7 @@ export default function TaskTimeBlock({
         {task.title}
       </div>
       {position.height >= 36 && (
-        <div className="text-[10px] text-muted-foreground">
+        <div className="text-[10px]">
           {slot.startTime} - {slot.endTime}
         </div>
       )}

@@ -24,7 +24,7 @@ export default function MobileBottomNav() {
 
     return (
         <div className="md:hidden fixed bottom-0 inset-x-0 z-[9999] pointer-events-none">
-            <nav className="pointer-events-auto bg-[var(--sidebar)] border-t border-border pb-[env(safe-area-inset-bottom)]">
+            <nav className="pointer-events-auto bg-background border-t border-border pb-[env(safe-area-inset-bottom)]">
                 <ul className="grid grid-cols-5 h-14 items-center relative">
                     {items.map((it) => {
                         const active = pathname === it.href || (it.href !== "/" && pathname.startsWith(it.href));
@@ -37,12 +37,12 @@ export default function MobileBottomNav() {
                                     <motion.div
                                         whileTap={{ scale: 0.9 }}
                                         transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                                        className={`${active ? "text-primary" : "text-muted-foreground"}`}
+                                        className={`${active ? "text-primary" : ""}`}
                                     >
                                         {it.icon}
                                     </motion.div>
                                     <span
-                                        className={`text-[10px] font-medium mt-0.5 ${active ? "text-primary" : "text-muted-foreground"}`}
+                                        className={`text-[10px] font-medium mt-0.5 ${active ? "text-primary" : ""}`}
                                     >
                                         {it.label}
                                     </span>

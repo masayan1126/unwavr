@@ -41,7 +41,7 @@ export default function OverdueTasksPage() {
         </div>
       </div>
       {hydrating ? (
-        <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm space-y-2">
+        <div className="bg-background rounded-xl p-5 shadow-sm space-y-2">
           <div className="text-sm font-medium mb-4">期限切れ</div>
           {[...Array(5)].map((_, i) => (
             <div key={i} className="h-10 bg-muted animate-pulse rounded" />

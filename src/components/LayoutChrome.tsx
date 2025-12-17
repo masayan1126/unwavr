@@ -8,7 +8,7 @@ import OnboardingGuide from "@/components/OnboardingGuide";
 import GlobalLauncherBarConditional from "@/components/GlobalLauncherBarConditional";
 import CookieConsentConditional from "@/components/CookieConsentConditional";
 import MobileBottomNav from "@/components/MobileBottomNav";
-import MobileBackButton from "@/components/MobileBackButton";
+import MobileHeader from "@/components/MobileHeader";
 import PomodoroTopBar from "@/components/PomodoroTopBar";
 import QuickAddTaskModal from "@/components/QuickAddTaskModal";
 import { useAppStore } from "@/lib/store";
@@ -77,7 +77,7 @@ export default function LayoutChrome({ children }: { children: ReactNode }): Rea
         <PomodoroTopBar />
         <NotificationBars />
         <main className="flex-1 pb-20 md:pb-0">
-          <MobileBackButton />
+          <MobileHeader />
           {children}
         </main>
       </div>

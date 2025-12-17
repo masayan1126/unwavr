@@ -22,7 +22,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                     ref={ref}
                     className={clsx(
                         "w-full bg-transparent border border-border rounded-[var(--radius-sm)] transition-base",
-                        "placeholder:text-muted-foreground/50",
+                        "placeholder:opacity-50",
                         "focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] focus:border-primary",
                         "disabled:opacity-50 disabled:cursor-not-allowed",
                         iconLeft ? "pl-9" : "pl-3",

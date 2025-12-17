@@ -17,7 +17,7 @@ export default function LauncherForm() {
   } = useLauncherForm();
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-3 bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+    <form onSubmit={submit} className="flex flex-col gap-3 bg-background rounded-xl p-5 shadow-sm">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <label className="text-sm">種類</label>
         <select
@@ -98,14 +98,14 @@ export default function LauncherForm() {
         <div className="flex items-center gap-4 border-b border-border/50 mb-4">
           <button
             type="button"
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "icon" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "icon" ? "border-primary text-primary" : "border-transparent hover:opacity-100 opacity-70"}`}
             onClick={() => setActiveTab("icon")}
           >
             アイコン
           </button>
           <button
             type="button"
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "image" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "image" ? "border-primary text-primary" : "border-transparent hover:opacity-100 opacity-70"}`}
             onClick={() => setActiveTab("image")}
           >
             画像

@@ -59,7 +59,7 @@ export default function Home() {
             <div className="w-px h-4 bg-border" />
             <time
               dateTime={new Date().toISOString()}
-              className="font-medium text-muted-foreground tabular-nums"
+              className="font-medium opacity-70 tabular-nums"
               suppressHydrationWarning
             >
               {nowLabel}
@@ -95,7 +95,7 @@ export default function Home() {
             onClick={() => setActiveTab(tab.id as "incomplete" | "daily" | "scheduled" | "backlog")}
             className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${activeTab === tab.id
               ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
+              : "bg-muted opacity-70 hover:bg-muted/80"
               }`}
           >
             {tab.label}

@@ -350,7 +350,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
         <div className="flex flex-col gap-2">
           <div className="flex gap-2 items-center">
             <input
-              className={`text-4xl font-bold bg-transparent border-none p-0 focus:ring-0 placeholder:text-muted-foreground/40 w-full ${listening ? "ring-2 ring-[var(--danger)]/60 rounded" : ""}`}
+              className={`text-4xl font-bold bg-transparent border-none p-0 focus:ring-0 placeholder:opacity-40 w-full ${listening ? "ring-2 ring-[var(--danger)]/60 rounded" : ""}`}
               placeholder="無題"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -373,7 +373,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
                 音声入力中...
               </span>
             )}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground ml-auto min-h-[20px]">
+            <div className="flex items-center gap-2 text-xs ml-auto min-h-[20px]">
               {isSaving ? (
                 <span className="inline-flex items-center gap-1"><Loader2 size={14} className="animate-spin" /> 保存中...</span>
               ) : lastSavedAt ? (
@@ -385,7 +385,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
         <div className="flex flex-col gap-1 text-sm">
           {/* Type Property */}
           <div className="flex items-center min-h-[32px]">
-            <div className="w-[140px] text-muted-foreground flex items-center gap-2">タイプ</div>
+            <div className="w-[140px] flex items-center gap-2">タイプ</div>
             <div className="flex-1">
               <select
                 className="bg-transparent border-none hover:bg-black/5 dark:hover:bg-white/10 rounded px-2 py-1 cursor-pointer w-full md:w-auto focus:ring-0"
@@ -408,7 +408,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
 
           {/* Estimate Property */}
           <div className="flex items-center min-h-[32px]">
-            <div className="w-[140px] text-muted-foreground flex items-center gap-2">見積ポモドーロ</div>
+            <div className="w-[140px] flex items-center gap-2">見積ポモドーロ</div>
             <div className="flex-1">
               <input
                 type="number"
@@ -423,7 +423,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
 
           {/* Milestone Property */}
           <div className="flex items-center min-h-[32px]">
-            <div className="w-[140px] text-muted-foreground flex items-center gap-2">マイルストーン</div>
+            <div className="w-[140px] flex items-center gap-2">マイルストーン</div>
             <div className="flex-1">
               <select
                 className="bg-transparent border-none hover:bg-black/5 dark:hover:bg-white/10 rounded px-2 py-1 cursor-pointer w-full md:w-auto focus:ring-0"
@@ -444,7 +444,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
           {/* Scheduled Specifics */}
           {type === "scheduled" && (
             <div className="flex items-start min-h-[32px] mt-1">
-              <div className="w-[140px] text-muted-foreground flex items-center gap-2 pt-1">曜日・期間</div>
+              <div className="w-[140px] flex items-center gap-2 pt-1">曜日・期間</div>
               <div className="flex-1 flex flex-col gap-2">
                 <div className="flex gap-1 flex-wrap">
                   {["日", "月", "火", "水", "木", "金", "土"].map((label, idx) => {
@@ -539,7 +539,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
           {/* Backlog Specifics */}
           {type === "backlog" && (
             <div className="flex items-center min-h-[32px]">
-              <div className="w-[140px] text-muted-foreground flex items-center gap-2">実行日</div>
+              <div className="w-[140px] flex items-center gap-2">実行日</div>
               <div className="flex-1 flex items-center gap-2">
                 <input
                   type="date"
@@ -590,7 +590,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
 
         <div className="flex flex-col gap-2 min-h-[200px]">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-muted-foreground">説明</label>
+            <label className="text-sm font-medium">説明</label>
             <div className="flex items-center gap-2">
               <button
                 type="button"

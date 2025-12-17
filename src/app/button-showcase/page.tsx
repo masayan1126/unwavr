@@ -894,7 +894,7 @@ function SectionHeader({ icon: Icon, title, description }: { icon: React.Element
       </div>
       <div>
         <h3 className="font-semibold text-foreground">{title}</h3>
-        {description && <p className="text-sm text-muted-foreground mt-0.5">{description}</p>}
+        {description && <p className="text-sm opacity-70 mt-0.5">{description}</p>}
       </div>
     </div>
   );
@@ -949,7 +949,7 @@ function ColorSwatch({ color, label, size = "md" }: { color: string; label?: str
         style={{ backgroundColor: color }}
         title={label}
       />
-      {label && <span className="text-[10px] text-muted-foreground">{label}</span>}
+      {label && <span className="text-[10px] opacity-70">{label}</span>}
     </div>
   );
 }
@@ -1194,7 +1194,7 @@ function PreviewInput({
   return (
     <div className="relative">
       {icon && (
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 opacity-70">
           {icon}
         </div>
       )}
@@ -1536,7 +1536,7 @@ export default function ButtonShowcasePage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 size={32} className="text-primary animate-spin" />
-          <p className="text-sm text-muted-foreground">設定を読み込み中...</p>
+          <p className="text-sm opacity-70">設定を読み込み中...</p>
         </div>
       </div>
     );
@@ -1554,14 +1554,14 @@ export default function ButtonShowcasePage() {
                 Design System
               </h1>
               <div className="flex items-center gap-2 mt-0.5">
-                <p className="text-sm text-muted-foreground">テーマをカスタマイズしてアプリに適用</p>
+                <p className="text-sm opacity-70">テーマをカスタマイズしてアプリに適用</p>
                 {isAuthenticated ? (
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-success/10 text-success">
                     <Cloud size={10} />
                     同期中
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-muted text-muted-foreground">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-muted opacity-70">
                     <CloudOff size={10} />
                     ローカル保存
                   </span>
@@ -1621,7 +1621,7 @@ export default function ButtonShowcasePage() {
                     "flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all",
                     activeTab === key
                       ? "bg-background shadow-sm text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "opacity-70 hover:text-foreground"
                   )}
                 >
                   <Icon size={16} />
@@ -1645,7 +1645,7 @@ export default function ButtonShowcasePage() {
                         <PalettePreviewMini palette={p} isDark={previewDark} />
                       </div>
                       <div className="font-medium text-sm">{p.name}</div>
-                      <div className="text-xs text-muted-foreground">{p.description}</div>
+                      <div className="text-xs opacity-70">{p.description}</div>
                     </OptionCard>
                   ))}
                 </div>
@@ -1670,7 +1670,7 @@ export default function ButtonShowcasePage() {
 
                   {/* Color Swatches (All Colors) */}
                   <div className="pt-3 border-t border-border/50">
-                    <div className="text-xs text-muted-foreground mb-2">全カラー ({previewDark ? "Dark Mode" : "Light Mode"})</div>
+                    <div className="text-xs opacity-70 mb-2">全カラー ({previewDark ? "Dark Mode" : "Light Mode"})</div>
                     <div className="grid grid-cols-7 gap-2">
                       {Object.entries(previewDark ? palette.dark : palette.light).map(([name, color]) => (
                         <ColorSwatch key={name} color={color} label={name} size="md" />
@@ -2012,23 +2012,23 @@ export default function ButtonShowcasePage() {
               <h3 className="text-sm font-semibold">現在の設定</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">パレット</span>
+                  <span className="opacity-70">パレット</span>
                   <span className="font-medium">{palette.name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">角の丸み</span>
+                  <span className="opacity-70">角の丸み</span>
                   <span className="font-medium">
                     {borderRadiusOptions[preferences.borderRadius as keyof typeof borderRadiusOptions]?.name || "Subtle"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">シャドウ</span>
+                  <span className="opacity-70">シャドウ</span>
                   <span className="font-medium">
                     {shadowOptions[preferences.shadowIntensity as keyof typeof shadowOptions]?.name || "Normal"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">速度</span>
+                  <span className="opacity-70">速度</span>
                   <span className="font-medium">
                     {transitionOptions[preferences.transitionSpeed as keyof typeof transitionOptions]?.name || "Fast"}
                   </span>

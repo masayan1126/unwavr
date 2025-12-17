@@ -141,7 +141,7 @@ export default function Pomodoro() {
   }, [s.completedWorkSessions, s.cyclesUntilLongBreak, s.isRunning]);
 
   return (
-    <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+    <div className="bg-background rounded-xl p-5 shadow-sm">
       {toastQueue.length > 0 && (
         <NoticeToast
           message={toastQueue[0]}

@@ -315,7 +315,7 @@ export default function TasksImportExport() {
 
     return (
         <div className="flex flex-col gap-6">
-            <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
+            <div className="bg-background rounded-xl p-5 shadow-sm flex flex-col gap-3">
                 <div className="text-sm font-medium">インポート（CSV）</div>
                 <div className="text-xs opacity-70">
                     ヘッダー行を含むCSVを選択してください。推奨フォーマット（日本語）:
@@ -368,7 +368,7 @@ export default function TasksImportExport() {
                 </div>
             </div>
 
-            <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
+            <div className="bg-background rounded-xl p-5 shadow-sm flex flex-col gap-3">
                 <div className="text-sm font-medium">エクスポート（CSV）</div>
                 <div className="flex flex-wrap items-center gap-3 text-xs" />
                 <div className="flex items-center gap-2">
@@ -376,7 +376,7 @@ export default function TasksImportExport() {
                 </div>
             </div>
 
-            <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
+            <div className="bg-background rounded-xl p-5 shadow-sm flex flex-col gap-3">
                 <div className="text-sm font-medium">サンプル投入（タスク）</div>
                 <div className="text-xs opacity-80">役割を選ぶと、毎日/積み上げ候補/特定曜日を含むリアルなサンプルをDBに投入します。</div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -430,7 +430,7 @@ export default function TasksImportExport() {
                 </div>
             </div>
 
-            <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
+            <div className="bg-background rounded-xl p-5 shadow-sm flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                     <div className="text-sm font-medium">インポート履歴</div>
                     <Button variant="ghost" size="sm" onClick={() => { clearHistory(); toast.show('履歴をすべて削除しました', 'success'); }}>履歴をすべて削除</Button>

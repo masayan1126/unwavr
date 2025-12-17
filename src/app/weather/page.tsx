@@ -387,7 +387,7 @@ export default function WeatherPage() {
               </p>
             </div>
           )}
-          <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+          <section className="bg-background rounded-xl p-5 shadow-sm">
             <div className="text-sm font-medium mb-2">現在</div>
             <div className="flex items-center gap-3 text-lg">
               {(() => {
@@ -423,7 +423,7 @@ export default function WeatherPage() {
               </div>
             )}
           </section>
-          <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+          <section className="bg-background rounded-xl p-5 shadow-sm">
             <div className="text-sm font-medium mb-3">週間</div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {daily.slice(0, 7).map((d) => {

@@ -113,7 +113,7 @@ export default function AIPromptDialog({ isOpen, onClose, onInsert }: AIPromptDi
                                 <div className="flex justify-between items-center">
                                     <button
                                         onClick={() => setResult("")}
-                                        className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+                                        className="text-sm hover:opacity-100 flex items-center gap-1"
                                     >
                                         <RefreshCw size={14} />
                                         やり直す

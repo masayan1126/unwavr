@@ -109,31 +109,31 @@ export default function MilestonesImportExport() {
     return (
         <div className="flex flex-col gap-6">
             {/* エクスポートセクション */}
-            <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
+            <div className="bg-background rounded-xl p-5 shadow-sm flex flex-col gap-3">
                 <div className="flex items-center gap-2 text-sm font-medium">
                     <Download size={16} className="text-primary" />
                     <span>エクスポート（CSV）</span>
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-xs">
                     マイルストーンをCSVファイルとして保存します。ファイル名には日時が自動で付与されます。
                 </div>
                 <div className="flex items-center gap-3">
                     <Button onClick={handleExport} iconLeft={<Download size={14} />}>
                         エクスポート
                     </Button>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs">
                         {milestones.length}件のマイルストーン
                     </span>
                 </div>
             </div>
 
             {/* インポートセクション */}
-            <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-4">
+            <div className="bg-background rounded-xl p-5 shadow-sm flex flex-col gap-4">
                 <div className="flex items-center gap-2 text-sm font-medium">
                     <Upload size={16} className="text-primary" />
                     <span>インポート（CSV/JSON）</span>
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-xs">
                     CSV推奨ヘッダー: タイトル, 目標, 現在, 期限（YYYY-MM-DD）
                 </div>
 
@@ -159,7 +159,7 @@ export default function MilestonesImportExport() {
                         ファイルを選択
                     </Button>
                     {selectedFileName && (
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
+                        <div className="flex items-center gap-1.5 text-xs bg-muted/50 px-2 py-1 rounded">
                             <FileText size={12} />
                             <span className="truncate max-w-[200px]" title={selectedFileName}>{selectedFileName}</span>
                         </div>
@@ -168,7 +168,7 @@ export default function MilestonesImportExport() {
 
                 <div className="flex items-center gap-3">
                     <div className="flex-1 h-px bg-border" />
-                    <span className="text-xs text-muted-foreground">または</span>
+                    <span className="text-xs">または</span>
                     <div className="flex-1 h-px bg-border" />
                 </div>
 
@@ -232,12 +232,12 @@ export default function MilestonesImportExport() {
             </div>
 
             {/* サンプル投入セクション */}
-            <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
+            <div className="bg-background rounded-xl p-5 shadow-sm flex flex-col gap-3">
                 <div className="flex items-center gap-2 text-sm font-medium">
                     <Database size={16} className="text-primary" />
                     <span>サンプル投入（マイルストーン）</span>
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-xs">
                     デモ用のサンプルマイルストーンをデータベースに追加します。
                 </div>
                 <div>
@@ -269,7 +269,7 @@ export default function MilestonesImportExport() {
             </div>
 
             {/* インポート履歴 */}
-            <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
+            <div className="bg-background rounded-xl p-5 shadow-sm flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm font-medium">
                         <Clock size={16} className="text-primary" />
@@ -283,7 +283,7 @@ export default function MilestonesImportExport() {
                     )}
                 </div>
                 {importHistory.length === 0 ? (
-                    <div className="text-sm text-muted-foreground py-4 text-center">履歴なし</div>
+                    <div className="text-sm py-4 text-center">履歴なし</div>
                 ) : (
                     <div className="flex flex-col divide-y divide-border">
                         {importHistory.map((h) => (
@@ -297,7 +297,7 @@ export default function MilestonesImportExport() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="font-medium text-sm truncate">{h.fileName || '貼り付けからのインポート'}</div>
-                                    <div className="text-xs text-muted-foreground">{new Date(h.timestamp).toLocaleString()}</div>
+                                    <div className="text-xs">{new Date(h.timestamp).toLocaleString()}</div>
                                 </div>
                                 <div className="flex items-center gap-3 text-xs shrink-0">
                                     <span className="text-green-600 dark:text-green-400">成功: {h.imported}</span>
@@ -310,7 +310,7 @@ export default function MilestonesImportExport() {
             </div>
 
             {/* エクスポート履歴 */}
-            <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
+            <div className="bg-background rounded-xl p-5 shadow-sm flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm font-medium">
                         <Clock size={16} className="text-primary" />
@@ -324,7 +324,7 @@ export default function MilestonesImportExport() {
                     )}
                 </div>
                 {exportHistory.length === 0 ? (
-                    <div className="text-sm text-muted-foreground py-4 text-center">履歴なし</div>
+                    <div className="text-sm py-4 text-center">履歴なし</div>
                 ) : (
                     <div className="flex flex-col divide-y divide-border">
                         {exportHistory.map((h) => (
@@ -334,9 +334,9 @@ export default function MilestonesImportExport() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="font-medium text-sm">CSVエクスポート</div>
-                                    <div className="text-xs text-muted-foreground">{new Date(h.timestamp).toLocaleString()}</div>
+                                    <div className="text-xs">{new Date(h.timestamp).toLocaleString()}</div>
                                 </div>
-                                <div className="text-xs text-muted-foreground shrink-0">
+                                <div className="text-xs shrink-0">
                                     {h.count}件
                                 </div>
                             </div>

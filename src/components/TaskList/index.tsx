@@ -552,7 +552,7 @@ export default function TaskList({
                             type="button"
                             className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-[3px] text-xs font-medium transition-colors ${selectedCount > 0
                                 ? "text-primary bg-primary/10 hover:bg-primary/20"
-                                : "text-muted-foreground opacity-50 cursor-not-allowed"
+                                : "opacity-50 cursor-not-allowed"
                                 }`}
                             onClick={() => {
                                 if (selectedCount === 0) return;
@@ -618,7 +618,7 @@ export default function TaskList({
                                     <>
                                         <div className="h-px bg-border/50 my-1" />
                                         <div className="px-2 py-1">
-                                            <div className="text-xxs font-medium text-muted-foreground mb-1.5">日付変更</div>
+                                            <div className="text-xxs font-medium mb-1.5">日付変更</div>
                                             <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-sm text-xs hover:bg-accent hover:text-accent-foreground transition-colors mb-1" onClick={bulkPostponeToTomorrow}>
                                                 <ArrowRight size={14} className="opacity-70" />
                                                 <span>明日に繰り越し</span>
@@ -650,7 +650,7 @@ export default function TaskList({
                 <div className="overflow-x-auto pb-2">
                     <div className="min-w-[600px]">
                         {/* Header */}
-                        <div className="flex items-center text-xs font-medium text-muted-foreground border-b border-border/50 py-2 px-2">
+                        <div className="flex items-center text-xs font-medium border-b border-border/50 py-2 px-2">
                             <div className="w-[24px] flex-shrink-0"></div> {/* Grip placeholder */}
                             {enableSelection && (
                                 <div className="w-[24px] flex-shrink-0 flex justify-center">

@@ -72,7 +72,7 @@ export default function AuthButtons({ collapsed = false }: { collapsed?: boolean
       </div>
       <button
         onClick={() => signOut({ callbackUrl: '/auth/signin' })}
-        className="flex-shrink-0 p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+        className="flex-shrink-0 p-1.5 rounded-md hover:bg-muted transition-colors"
         title="ログアウト"
       >
         <LogOut size={16} />

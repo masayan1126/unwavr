@@ -199,7 +199,7 @@ const CommandList = forwardRef((props: CommandListProps, ref) => {
                     </button>
                 ))
             ) : (
-                <div className="px-2 py-1.5 text-sm text-muted-foreground">No result</div>
+                <div className="px-2 py-1.5 text-sm">No result</div>
             )}
         </div>
     );

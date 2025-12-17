@@ -155,7 +155,7 @@ export default function SettingsImportExport() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-4">
+      <div className="bg-background rounded-xl p-5 shadow-sm flex flex-col gap-4">
         <div className="flex items-center gap-2">
           <Settings size={18} className="opacity-70" />
           <div className="text-sm font-medium">設定のエクスポート</div>
@@ -179,7 +179,7 @@ export default function SettingsImportExport() {
         </div>
       </div>
 
-      <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-4">
+      <div className="bg-background rounded-xl p-5 shadow-sm flex flex-col gap-4">
         <div className="flex items-center gap-2">
           <Upload size={18} className="opacity-70" />
           <div className="text-sm font-medium">設定のインポート</div>
@@ -226,7 +226,7 @@ export default function SettingsImportExport() {
         )}
       </div>
 
-      <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
+      <div className="bg-background rounded-xl p-5 shadow-sm flex flex-col gap-3">
         <div className="text-sm font-medium">設定ファイルの形式</div>
         <div className="text-xs opacity-70">
           エクスポートされるJSONファイルは以下の形式です:

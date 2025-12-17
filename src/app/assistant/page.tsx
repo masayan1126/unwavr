@@ -120,7 +120,7 @@ export default function AssistantPage() {
         {/* Chat Area */}
         <div ref={listRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-background/50">
           {messages.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-60 gap-6 p-4 text-center">
+            <div className="h-full flex flex-col items-center justify-center opacity-70 opacity-60 gap-6 p-4 text-center">
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
                 <Sparkles size={32} className="text-primary" />
               </div>

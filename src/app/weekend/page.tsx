@@ -28,7 +28,7 @@ export default function WeekendPage() {
         </div>
       </header>
       {hydrating ? (
-        <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm space-y-2">
+        <div className="bg-background rounded-xl p-5 shadow-sm space-y-2">
           <div className="text-sm font-medium mb-4">週末・連休向け</div>
           {[...Array(5)].map((_, i) => (
             <div key={i} className="h-10 bg-muted animate-pulse rounded" />

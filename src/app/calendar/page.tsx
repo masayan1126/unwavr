@@ -427,7 +427,7 @@ export default function CalendarPage() {
   return (
     <div className="flex gap-4">
       {/* 月間カレンダー */}
-      <div className={`bg-[var(--sidebar)] rounded-xl p-5 shadow-sm transition-all ${detailDate ? "flex-1" : "w-full"}`}>
+      <div className={`bg-background rounded-xl p-5 shadow-sm transition-all ${detailDate ? "flex-1" : "w-full"}`}>
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm font-semibold flex items-center gap-2">
           <Calendar size={16} />
@@ -900,7 +900,7 @@ export default function CalendarPage() {
 
       {/* 日間詳細パネル */}
       {detailDate && (
-        <div className="w-96 bg-[var(--sidebar)] rounded-xl shadow-sm overflow-hidden">
+        <div className="w-96 bg-background rounded-xl shadow-sm overflow-hidden">
           <DayDetailPanel
             date={detailDate}
             onClose={() => setDetailDate(null)}

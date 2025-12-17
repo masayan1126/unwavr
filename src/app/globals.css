@@ -155,10 +155,6 @@
   box-shadow: var(--shadow-xs);
 }
 
-@utility shadow-token-sm {
-  box-shadow: var(--shadow-sm);
-}
-
 @utility shadow-token-md {
   box-shadow: var(--shadow-md);
 }
@@ -202,7 +198,7 @@
     --sidebar: #202020;
     --muted: #2D2D2D;
     --muted-foreground: #9B9A97;
-    --border: rgba(255, 255, 255, .09);
+    --border: rgba(255, 255, 255, .15);
     --popover: #202020;
     --popover-foreground: #D4D4D4;
 

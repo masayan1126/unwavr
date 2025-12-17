@@ -34,7 +34,7 @@ export default function TasksPageSkeleton() {
       {/* 統計情報 */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-[var(--sidebar)] rounded-xl p-4 shadow-sm">
+          <div key={i} className="bg-background rounded-xl p-4 shadow-sm">
             <div className="h-4 w-20 rounded bg-black/10 dark:bg-white/10 animate-pulse mb-2" />
             <div className="h-6 w-12 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
           </div>
@@ -44,7 +44,7 @@ export default function TasksPageSkeleton() {
       {/* タスクリスト */}
       <div className="space-y-6">
         {[...Array(2)].map((_, sectionIndex) => (
-          <section key={sectionIndex} className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm">
+          <section key={sectionIndex} className="bg-background rounded-xl p-5 shadow-sm">
             {/* セクションタイトル */}
             <div className="h-5 w-32 rounded bg-black/10 dark:bg-white/10 animate-pulse mb-4" />
             {/* タスク行 */}

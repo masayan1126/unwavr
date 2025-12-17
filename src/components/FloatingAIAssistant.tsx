@@ -577,7 +577,7 @@ export default function FloatingAIAssistant() {
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className={`fixed bottom-20 right-4 bg-card border border-border shadow-2xl rounded-2xl z-[200000] flex flex-col overflow-hidden transition-all duration-200 ${
+                        className={`fixed bottom-36 md:bottom-20 right-4 bg-card border border-border shadow-2xl rounded-2xl z-[200000] flex flex-col overflow-hidden transition-all duration-200 ${
                             size === "large"
                                 ? "w-[calc(100vw-32px)] sm:w-[750px] lg:w-[850px] h-[calc(100vh-120px)] sm:h-[700px] max-h-[80vh]"
                                 : "w-[calc(100vw-32px)] sm:w-[500px] h-[500px] max-h-[60vh] sm:max-h-[550px]"
@@ -615,7 +615,7 @@ export default function FloatingAIAssistant() {
                                     </div>
                                     <div className="space-y-1">
                                         <p className="font-medium text-sm text-foreground">{pageContext.title}</p>
-                                        <p className="text-xs text-muted-foreground">{pageContext.description}</p>
+                                        <p className="text-xs">{pageContext.description}</p>
                                     </div>
                                     <div className="flex flex-wrap justify-center gap-2 mt-2">
                                         {pageContext.suggestions.map((suggestion) => (
@@ -628,7 +628,7 @@ export default function FloatingAIAssistant() {
                                             </button>
                                         ))}
                                     </div>
-                                    <p className="text-[10px] text-muted-foreground mt-2">
+                                    <p className="text-[10px] mt-2">
                                         <code className="bg-muted px-1 rounded">/</code> でコマンド一覧を表示
                                     </p>
                                 </div>
@@ -675,7 +675,7 @@ export default function FloatingAIAssistant() {
                                         className="absolute bottom-full left-3 right-3 mb-2 bg-card border border-border rounded-lg shadow-lg overflow-hidden"
                                     >
                                         <div className="p-2 border-b bg-muted/30">
-                                            <p className="text-xs font-medium text-muted-foreground">コマンド一覧</p>
+                                            <p className="text-xs font-medium opacity-70">コマンド一覧</p>
                                         </div>
                                         <div className="max-h-48 overflow-y-auto">
                                             {getCommandsForPage(pathname || "/").filter(c =>
@@ -688,7 +688,7 @@ export default function FloatingAIAssistant() {
                                                 >
                                                     <div>
                                                         <code className="text-sm font-medium text-primary">{cmd.command}</code>
-                                                        <p className="text-xs text-muted-foreground">{cmd.description}</p>
+                                                        <p className="text-xs">{cmd.description}</p>
                                                     </div>
                                                 </button>
                                             ))}
@@ -728,7 +728,7 @@ export default function FloatingAIAssistant() {
                                     {loading ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                                 </button>
                             </div>
-                            <p className="text-center text-[10px] text-muted-foreground mt-2 px-2">
+                            <p className="text-center text-[10px] mt-2 px-2">
                                 履歴は保存されません・学習に使用されません
                             </p>
                         </div>
@@ -741,7 +741,7 @@ export default function FloatingAIAssistant() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsOpen(!isOpen)}
-                className={`fixed bottom-4 right-4 z-[200000] w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-colors ${isOpen ? "bg-muted text-foreground" : "bg-primary text-primary-foreground"
+                className={`fixed bottom-18 md:bottom-10 right-[10%] md:right-8 translate-x-1/2 md:translate-x-0 z-[200000] w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-colors ${isOpen ? "bg-muted text-foreground" : "bg-primary text-primary-foreground"
                     }`}
             >
                 {isOpen ? <X size={24} /> : <Sparkles size={24} />}

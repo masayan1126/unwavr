@@ -25,7 +25,7 @@ function Thumbnail({ src, alt }: { src: string; alt: string }) {
     if (error) {
         return (
             <div className="w-16 h-12 bg-muted rounded shrink-0 flex items-center justify-center">
-                <Music size={16} className="text-muted-foreground" />
+                <Music size={16} className="opacity-70" />
             </div>
         );
     }
@@ -45,7 +45,7 @@ export default function BgmSearchResultCard({ results, onPlay }: Props) {
 
     return (
         <div className="bg-muted/50 rounded-xl p-3 space-y-2">
-            <div className="text-xs font-medium text-muted-foreground mb-2">
+            <div className="text-xs font-medium opacity-70 mb-2">
                 検索結果 ({results.length}件)
             </div>
             {results.map((result, idx) => (
@@ -53,7 +53,7 @@ export default function BgmSearchResultCard({ results, onPlay }: Props) {
                     key={result.videoId}
                     className="flex items-center gap-3 p-2 rounded-lg bg-background/80 hover:bg-background transition-colors border border-border/50"
                 >
-                    <span className="text-xs text-muted-foreground w-4 shrink-0 text-center">
+                    <span className="text-xs w-4 shrink-0 text-center">
                         {idx + 1}
                     </span>
                     <Thumbnail src={result.thumbnail} alt={result.title} />
@@ -61,7 +61,7 @@ export default function BgmSearchResultCard({ results, onPlay }: Props) {
                         <div className="text-sm font-medium truncate" title={result.title}>
                             {result.title}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs">
                             {formatDuration(result.duration)}
                         </div>
                     </div>

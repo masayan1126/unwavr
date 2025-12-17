@@ -18,7 +18,7 @@ export default function AnalysisPage() {
     return (
         <PageLayout maxWidth="lg">
             <PageHeader title="Analysis" />
-            <Text className="text-muted-foreground -mt-2">
+            <Text className="opacity-70 -mt-2">
                 毎日の積み上げとタスク完了状況の分析
             </Text>
 
@@ -52,7 +52,7 @@ export default function AnalysisPage() {
                 </H2>
                 <Card padding="md">
                     <CompletionStats tasks={tasks} range={range} />
-                    <Text className="text-xs text-muted-foreground mt-4 text-center">
+                    <Text className="text-xs opacity-70 mt-4 text-center">
                         ※ 指定期間内に完了したタスクの数（日次・特定曜日・積み上げ含む）
                     </Text>
                 </Card>

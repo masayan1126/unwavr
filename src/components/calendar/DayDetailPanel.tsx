@@ -525,7 +525,7 @@ export default function DayDetailPanel({ date, onClose, onGoogleCalendarUpdate }
           <div className="text-lg font-semibold">
             {format(date, "M月d日", { locale: ja })}
           </div>
-          <div className="text-xs text-muted-foreground flex items-center gap-2">
+          <div className="text-xs flex items-center gap-2">
             {format(date, "EEEE", { locale: ja })}
             {syncing && (
               <span className="flex items-center gap-1 text-primary">
@@ -556,7 +556,7 @@ export default function DayDetailPanel({ date, onClose, onGoogleCalendarUpdate }
         {/* 未スケジュールタスク（ドラッグ可能） */}
         {unscheduledTasks.length > 0 && (
           <div className="p-4 border-b">
-            <div className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+            <div className="text-xs font-medium opacity-70 mb-2 flex items-center gap-1">
               <Clock size={12} />
               未スケジュール ({unscheduledTasks.length})
               <span className="ml-auto text-[10px] opacity-60">ドラッグしてスケジュール</span>
@@ -588,7 +588,7 @@ export default function DayDetailPanel({ date, onClose, onGoogleCalendarUpdate }
                     setShowTimeInput(true);
                   }}
                 >
-                  <GripVertical size={14} className="text-muted-foreground shrink-0" />
+                  <GripVertical size={14} className="opacity-70 shrink-0" />
                   <TypeBadge type={task.type} />
                   <span className="flex-1 truncate">{task.title}</span>
                 </div>
@@ -642,7 +642,7 @@ export default function DayDetailPanel({ date, onClose, onGoogleCalendarUpdate }
 
         {/* タイムライン（ドロップ可能） */}
         <div className="p-4">
-          <div className="text-xs font-medium text-muted-foreground mb-3 flex items-center justify-between">
+          <div className="text-xs font-medium opacity-70 mb-3 flex items-center justify-between">
             <span>タイムライン</span>
             <div className="flex items-center gap-2">
               {itemsWithColumns.length > 0 && (

@@ -134,7 +134,7 @@ export default function AdvancedSearchDialog({
                 {milestones.length > 0 && (
                   <>
                     <div className="border-t border-black/10 dark:border-white/10 my-3" />
-                    <div className="text-xs text-muted-foreground mb-2">特定のマイルストーンで絞り込み</div>
+                    <div className="text-xs mb-2">特定のマイルストーンで絞り込み</div>
                     {milestones.map((m) => (
                       <label key={m.id} className="flex items-center gap-3 cursor-pointer">
                         <input

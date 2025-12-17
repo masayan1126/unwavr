@@ -24,7 +24,7 @@ export default function DataSettingsPage() {
                 <button
                     className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "tasks"
                             ? "border-primary text-primary"
-                            : "border-transparent text-muted-foreground hover:text-foreground"
+                            : "border-transparent opacity-70 hover:opacity-100"
                         }`}
                     onClick={() => setActiveTab("tasks")}
                 >
@@ -33,7 +33,7 @@ export default function DataSettingsPage() {
                 <button
                     className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "milestones"
                             ? "border-primary text-primary"
-                            : "border-transparent text-muted-foreground hover:text-foreground"
+                            : "border-transparent opacity-70 hover:opacity-100"
                         }`}
                     onClick={() => setActiveTab("milestones")}
                 >
@@ -42,7 +42,7 @@ export default function DataSettingsPage() {
                 <button
                     className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "bgm"
                             ? "border-primary text-primary"
-                            : "border-transparent text-muted-foreground hover:text-foreground"
+                            : "border-transparent opacity-70 hover:opacity-100"
                         }`}
                     onClick={() => setActiveTab("bgm")}
                 >
@@ -51,7 +51,7 @@ export default function DataSettingsPage() {
                 <button
                     className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "settings"
                             ? "border-primary text-primary"
-                            : "border-transparent text-muted-foreground hover:text-foreground"
+                            : "border-transparent opacity-70 hover:opacity-100"
                         }`}
                     onClick={() => setActiveTab("settings")}
                 >

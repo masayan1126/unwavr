@@ -17,7 +17,7 @@ export default function WeekendPageSkeleton() {
       {/* タスクリスト */}
       <div className="space-y-2">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="flex gap-4 items-center py-3 px-4 bg-[var(--sidebar)] rounded-xl shadow-sm">
+          <div key={i} className="flex gap-4 items-center py-3 px-4 bg-background rounded-xl shadow-sm">
             <div className="h-5 w-5 rounded border-2 border-black/20 dark:border-white/20 animate-pulse" />
             <div className="h-5 flex-1 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
             <div className="h-5 w-20 rounded bg-black/10 dark:bg-white/10 animate-pulse" />

@@ -32,19 +32,12 @@ export default function NetworkSpeedIndicator() {
     return 'Online';
   };
 
-  // 速度に応じた色を決定（テーマカラー使用）
-  const getSpeedColor = () => {
-    if (downlink >= 10) return 'text-success';
-    if (downlink >= 5) return 'text-warning';
-    return 'text-danger';
-  };
-
   return (
     <div className="flex items-center gap-2 text-sm">
       {/* 接続タイプアイコン */}
       <div className="flex items-center gap-1.5">
         <svg
-          className="w-4 h-4 text-muted-foreground"
+          className="w-4 h-4 opacity-70"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -75,12 +68,12 @@ export default function NetworkSpeedIndicator() {
 
       {/* 速度表示または測定中インジケーター */}
       {measuring ? (
-        <div className="flex items-center gap-1.5 text-muted-foreground">
+        <div className="flex items-center gap-1.5 opacity-70">
           <Loader2 className="w-4 h-4 animate-spin" />
           <span className="text-xs">測定中...</span>
         </div>
       ) : (
-        <div className={`font-semibold ${getSpeedColor()}`} title="実測値（5分ごとに自動更新）">
+        <div className="font-semibold text-primary" title="実測値（5分ごとに自動更新）">
           {downlink.toFixed(1)} Mbps
         </div>
       )}

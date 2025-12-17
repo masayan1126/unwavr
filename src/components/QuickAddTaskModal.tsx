@@ -264,7 +264,7 @@ export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: Qui
             {/* マイルストーン選択 */}
             {milestones.length > 0 && (
               <div className="mt-3 flex items-center gap-2">
-                <Target size={16} className="text-muted-foreground shrink-0" />
+                <Target size={16} className="opacity-70 shrink-0" />
                 <select
                   value={milestoneId}
                   onChange={(e) => setMilestoneId(e.target.value)}

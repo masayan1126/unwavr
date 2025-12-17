@@ -57,13 +57,13 @@ export default function TaskDialog({ open, onClose, title = "タスク", childre
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-4 py-3 shrink-0 z-20">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm">
             <span className="font-medium text-foreground">{title}</span>
           </div>
           <div className="flex items-center gap-1">
             <button
               type="button"
-              className="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-muted-foreground transition-colors"
+              className="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 opacity-70 transition-colors"
               onClick={() => setIsMaximized(!isMaximized)}
               aria-label={isMaximized ? "元に戻す" : "最大化"}
               title={isMaximized ? "元に戻す" : "最大化"}
@@ -72,7 +72,7 @@ export default function TaskDialog({ open, onClose, title = "タスク", childre
             </button>
             <button
               type="button"
-              className="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-muted-foreground transition-colors"
+              className="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 opacity-70 transition-colors"
               onClick={handleClose}
               aria-label="閉じる"
               title="閉じる"

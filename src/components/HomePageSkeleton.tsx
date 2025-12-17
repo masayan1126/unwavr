@@ -34,7 +34,7 @@ export default function HomePageSkeleton() {
       </div>
 
       {/* Content Section */}
-      <section className="relative flex flex-col min-h-[320px] bg-[var(--sidebar)] rounded-xl p-3 sm:p-5 pb-16 shadow-sm">
+      <section className="relative flex flex-col min-h-[320px] bg-background rounded-xl p-3 sm:p-5 pb-16 shadow-sm">
         <div className="mb-2 flex gap-2 items-center">
           <div className="h-5 w-24 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
           <div className="ml-auto">

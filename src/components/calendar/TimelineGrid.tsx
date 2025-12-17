@@ -50,7 +50,7 @@ export default function TimelineGrid({
             style={{ top }}
           >
             {isHour && (
-              <span className="absolute -top-2.5 left-0 text-[10px] text-muted-foreground bg-background px-1 select-none">
+              <span className="absolute -top-2.5 left-0 text-[10px] bg-background px-1 select-none">
                 {slot.label}
               </span>
             )}

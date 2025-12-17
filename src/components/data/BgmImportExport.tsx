@@ -77,12 +77,12 @@ export default function BgmImportExport() {
 
     return (
         <div className="flex flex-col gap-6">
-            <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex items-center justify-between">
+            <div className="bg-background rounded-xl p-5 shadow-sm flex items-center justify-between">
                 <div className="text-sm font-medium">エクスポート（JSON）</div>
                 <Button onClick={exportJson}>エクスポート</Button>
             </div>
 
-            <div className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm flex flex-col gap-3">
+            <div className="bg-background rounded-xl p-5 shadow-sm flex flex-col gap-3">
                 <div className="text-sm font-medium">インポート（JSON）</div>
                 <div className="text-xs opacity-70">groups, tracks を含むJSONを貼り付けてください。</div>
                 <textarea

@@ -116,7 +116,7 @@ export default function Sidebar() {
   // Drag handle component to prevent text selection
   const DragHandle = ({ controls }: { controls: ReturnType<typeof useDragControls> }) => (
     <div
-      className="p-1.5 cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/50 rounded select-none touch-none"
+      className="p-1.5 cursor-grab active:cursor-grabbing hover:bg-muted/50 rounded select-none touch-none"
       style={{ touchAction: "none", userSelect: "none" }}
       onPointerDown={(e) => {
         e.preventDefault();
@@ -199,7 +199,7 @@ export default function Sidebar() {
         >
           <button
             onClick={() => setShowBriefing(true)}
-            className="group flex items-center gap-2.5 px-3 py-2 rounded-[var(--radius-md)] text-sm transition-fast text-muted-foreground hover:bg-muted hover:text-foreground text-left flex-1"
+            className="group flex items-center gap-2.5 px-3 py-2 rounded-[var(--radius-md)] text-sm transition-fast hover:bg-muted text-left flex-1"
           >
             <span className="group-hover:scale-110 transition-fast">
               {item.icon}
@@ -224,7 +224,7 @@ export default function Sidebar() {
           href={item.href}
           className={`group flex items-center gap-2.5 px-3 py-2 rounded-[var(--radius-md)] text-sm transition-fast flex-1 ${active
             ? "bg-primary/10 text-primary font-medium"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            : "hover:bg-muted"
             }`}
         >
           <span className={`transition-fast ${active ? "scale-110" : "group-hover:scale-110"}`}>
@@ -238,7 +238,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="hidden md:flex border-r border-border h-[100svh] sticky top-0 bg-sidebar text-muted-foreground" style={{ width: open ? width : 48 }}>
+    <aside className="hidden md:flex border-r border-border h-[100svh] sticky top-0" style={{ width: open ? width : 48 }}>
       <div className="flex flex-col p-3 gap-1 flex-1 overflow-y-auto">
         <div className={`flex items-center ${open ? "justify-between px-2" : "justify-center"} pt-2 mb-4`}>
           {open && (
@@ -248,7 +248,7 @@ export default function Sidebar() {
               </div>
               <div className="flex flex-col min-w-0">
                 <div className="text-sm font-bold tracking-tight text-foreground truncate" title="unwavr">unwavr</div>
-                <div className="text-xxs text-muted-foreground truncate">Workspace</div>
+                <div className="text-xxs truncate">Workspace</div>
               </div>
             </div>
           )}
@@ -269,7 +269,7 @@ export default function Sidebar() {
               className={`flex items-center gap-2 px-3 py-1.5 mb-2 text-xs rounded-[var(--radius-md)] transition-fast ${
                 isReordering
                   ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/50"
+                  : "hover:bg-muted/50"
               }`}
             >
               <GripVertical size={12} />

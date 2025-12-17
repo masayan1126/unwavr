@@ -81,7 +81,7 @@ export default function BgmPage() {
     const title = isUngrouped ? "未分類" : group?.name ?? "グループ";
     const list = grouped.get(groupId) ?? [];
     return (
-      <div key={groupId ?? "__ungrouped"} className={`rounded-xl overflow-hidden bg-[var(--sidebar)] shadow-sm ${dragOverGroupId === (groupId ?? "__ungrouped") ? "ring-2 ring-[var(--primary)]/50" : ""}`}
+      <div key={groupId ?? "__ungrouped"} className={`rounded-xl overflow-hidden bg-background shadow-sm ${dragOverGroupId === (groupId ?? "__ungrouped") ? "ring-2 ring-[var(--primary)]/50" : ""}`}
         onDragOver={(e) => {
           e.preventDefault();
           setDragOverGroupId(groupId ?? "__ungrouped");

@@ -123,7 +123,7 @@ export default function LauncherGrid() {
         const list = groups.map.get(c.id) ?? [];
         if (list.length === 0) return null;
         return (
-          <section key={c.id} className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm mb-4">
+          <section key={c.id} className="bg-background rounded-xl p-5 shadow-sm mb-4">
             <h2 className="text-sm font-medium mb-4 flex items-center gap-2 justify-between">
               <span className="flex items-center gap-2">
                 <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: c.color ?? "#888" }} />
@@ -185,7 +185,7 @@ export default function LauncherGrid() {
                       <div className="text-sm text-center line-clamp-2">{sc.label}</div>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-2 right-2">
                         <button
-                          className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
+                          className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 hover:opacity-100 transition-colors"
                           onClick={(e) => {
                             e.preventDefault();
                             openEdit(sc.id);
@@ -195,7 +195,7 @@ export default function LauncherGrid() {
                           <Icons.Edit2 size={14} />
                         </button>
                         <button
-                          className="p-1.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                          className="p-1.5 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors"
                           onClick={(e) => {
                             e.preventDefault();
                             remove(sc.id);
@@ -249,14 +249,14 @@ export default function LauncherGrid() {
                       <div className="text-sm text-center line-clamp-2">{sc.label}</div>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-2 right-2">
                         <button
-                          className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
+                          className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 hover:opacity-100 transition-colors"
                           onClick={(e) => { e.stopPropagation(); openEdit(sc.id); }}
                           title="編集"
                         >
                           <Icons.Edit2 size={14} />
                         </button>
                         <button
-                          className="p-1.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                          className="p-1.5 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors"
                           onClick={(e) => { e.stopPropagation(); remove(sc.id); }}
                           title="削除"
                         >
@@ -272,7 +272,7 @@ export default function LauncherGrid() {
         );
       })}
 
-      <section className="bg-[var(--sidebar)] rounded-xl p-5 shadow-sm mb-2">
+      <section className="bg-background rounded-xl p-5 shadow-sm mb-2">
         <h2 className="text-sm font-medium mb-4 flex items-center justify-between">
           <span>未分類</span>
           <span className="flex items-center gap-1">
@@ -334,7 +334,7 @@ export default function LauncherGrid() {
                     <div className="text-sm text-center line-clamp-2">{sc.label}</div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-2 right-2">
                       <button
-                        className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
+                        className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 hover:opacity-100 transition-colors"
                         onClick={(e) => {
                           e.preventDefault();
                           openEdit(sc.id);
@@ -344,7 +344,7 @@ export default function LauncherGrid() {
                         <Icons.Edit2 size={14} />
                       </button>
                       <button
-                        className="p-1.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                        className="p-1.5 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors"
                         onClick={(e) => {
                           e.preventDefault();
                           remove(sc.id);
@@ -398,14 +398,14 @@ export default function LauncherGrid() {
                     <div className="text-sm text-center line-clamp-2">{sc.label}</div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-2 right-2">
                       <button
-                        className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
+                        className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 hover:opacity-100 transition-colors"
                         onClick={(e) => { e.stopPropagation(); openEdit(sc.id); }}
                         title="編集"
                       >
                         <Icons.Edit2 size={14} />
                       </button>
                       <button
-                        className="p-1.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                        className="p-1.5 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors"
                         onClick={(e) => { e.stopPropagation(); remove(sc.id); }}
                         title="削除"
                       >

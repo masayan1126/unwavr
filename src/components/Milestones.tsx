@@ -103,7 +103,7 @@ function MilestoneDialog({
       >
         {/* ヘッダー */}
         <div className="flex items-center justify-between px-4 py-3 shrink-0 border-b border-border">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm">
             <Pin size={16} />
             <span className="font-medium text-foreground">
               {isNew ? "新しいマイルストーン" : "マイルストーンを編集"}
@@ -112,7 +112,7 @@ function MilestoneDialog({
           <div className="flex items-center gap-1">
             <button
               type="button"
-              className="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-muted-foreground transition-colors"
+              className="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 opacity-70 transition-colors"
               onClick={() => setIsMaximized(!isMaximized)}
               aria-label={isMaximized ? "元に戻す" : "最大化"}
             >
@@ -120,7 +120,7 @@ function MilestoneDialog({
             </button>
             <button
               type="button"
-              className="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 text-muted-foreground transition-colors"
+              className="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/10 opacity-70 transition-colors"
               onClick={onClose}
               aria-label="閉じる"
             >
@@ -164,7 +164,7 @@ function MilestoneDialog({
               value={editing.tag}
               onChange={(e) => setEditing({ ...editing, tag: e.target.value })}
             />
-            <p className="text-xs text-muted-foreground mt-1">同じタグのマイルストーンがグループ化されます</p>
+            <p className="text-xs mt-1">同じタグのマイルストーンがグループ化されます</p>
           </div>
 
           {/* 詳細 */}
@@ -420,7 +420,7 @@ export default function Milestones() {
         <div className="flex items-center gap-2">
           <Pin size={20} className="text-primary" />
           <h2 className="text-lg font-semibold">マイルストーン</h2>
-          <span className="text-sm text-muted-foreground">({milestones.length})</span>
+          <span className="text-sm">({milestones.length})</span>
         </div>
         <div className="flex gap-2 flex-wrap">
           <Button
@@ -470,7 +470,7 @@ export default function Milestones() {
       {/* マイルストーンカード */}
       <div className="space-y-8">
         {milestones.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+          <div className="flex flex-col items-center justify-center py-12 opacity-70">
             <Pin size={48} className="mb-4 opacity-30" />
             <p className="text-lg font-medium mb-2">まだマイルストーンがありません</p>
             <p className="text-sm opacity-70 mb-4">目標を追加して、達成に向けて進捗を管理しましょう</p>
@@ -488,7 +488,7 @@ export default function Milestones() {
                 <h3 className="font-semibold text-foreground">
                   {group.tag || "未分類"}
                 </h3>
-                <span className="text-sm text-muted-foreground">({group.milestones.length})</span>
+                <span className="text-sm">({group.milestones.length})</span>
               </div>
 
               {/* カードグリッド */}
@@ -510,7 +510,7 @@ export default function Milestones() {
                   </div>
 
                   {/* カード */}
-                  <div className="bg-card rounded-[var(--radius-lg)] shadow-token-sm hover:shadow-token-md transition-base overflow-hidden border border-border">
+                  <div className="bg-card rounded-[var(--radius-lg)] hover:shadow-token-md transition-base overflow-hidden border border-border">
                     <div className="p-4 pt-5">
                       {/* タイトルとアクション */}
                       <div className="flex items-start justify-between gap-2 mb-2">
@@ -523,7 +523,7 @@ export default function Milestones() {
                             onClick={() => openEditDialog(m)}
                             title="編集"
                           >
-                            <Pencil size={12} className="text-muted-foreground" />
+                            <Pencil size={12} className="opacity-70" />
                           </button>
                           <button
                             className="p-1 rounded hover:bg-red-500/10 transition-colors"
@@ -538,7 +538,7 @@ export default function Milestones() {
                       {/* 詳細 */}
                       {m.description && (
                         <div
-                          className="text-xs text-muted-foreground mb-3 line-clamp-3 prose prose-sm dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+                          className="text-xs mb-3 line-clamp-3 prose prose-sm dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
                           dangerouslySetInnerHTML={{ __html: m.description }}
                         />
                       )}
@@ -548,11 +548,11 @@ export default function Milestones() {
                         <div className="flex items-baseline justify-between">
                           <span className="text-2xl font-bold text-foreground">
                             {m.currentUnits}
-                            <span className="text-sm font-normal text-muted-foreground">
+                            <span className="text-sm font-normal opacity-70">
                               /{m.targetUnits}
                             </span>
                           </span>
-                          <span className="text-sm font-medium text-muted-foreground">
+                          <span className="text-sm font-medium opacity-70">
                             {Math.round(progress)}%
                           </span>
                         </div>
@@ -571,14 +571,14 @@ export default function Milestones() {
                     {/* 進捗ボタン */}
                     <div className="flex border-t border-border">
                       <button
-                        className="flex-1 py-2 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
+                        className="flex-1 py-2 text-sm font-medium opacity-70 hover:bg-muted transition-colors"
                         onClick={() => updateProgress(m.id, -1)}
                       >
                         −1
                       </button>
                       <div className="w-px bg-border" />
                       <button
-                        className="flex-1 py-2 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
+                        className="flex-1 py-2 text-sm font-medium opacity-70 hover:bg-muted transition-colors"
                         onClick={() => updateProgress(m.id, 1)}
                       >
                         +1
@@ -599,14 +599,14 @@ export default function Milestones() {
                             className="w-full flex items-center justify-between px-4 py-2 border-t border-border hover:bg-muted/50 transition-colors"
                             onClick={() => toggleExpand(m.id)}
                           >
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-2 text-xs">
                               <ListTodo size={12} />
                               <span>タスク ({completedCount}/{linkedTasks.length})</span>
                             </div>
                             {isExpanded ? (
-                              <ChevronDown size={14} className="text-muted-foreground" />
+                              <ChevronDown size={14} className="opacity-70" />
                             ) : (
-                              <ChevronRight size={14} className="text-muted-foreground" />
+                              <ChevronRight size={14} className="opacity-70" />
                             )}
                           </button>
 

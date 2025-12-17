@@ -64,12 +64,12 @@ export default function StylishSelect({
                     isOpen && "border-primary ring-1 ring-[var(--ring-color)]"
                 )}
             >
-                <span className={clsx("block truncate", !selectedOption && "text-muted-foreground")}>
+                <span className={clsx("block truncate", !selectedOption && "opacity-70")}>
                     {selectedOption ? selectedOption.label : placeholder}
                 </span>
                 <ChevronDown
                     size={14}
-                    className={clsx("transition-fast text-muted-foreground", isOpen && "rotate-180")}
+                    className={clsx("transition-fast opacity-70", isOpen && "rotate-180")}
                 />
             </button>
 

@@ -42,7 +42,7 @@ export default function DraggableTaskItem({ task, onDragStart }: DraggableTaskIt
         onDragStart?.(e, task);
       }}
     >
-      <GripVertical size={14} className="text-muted-foreground shrink-0" />
+      <GripVertical size={14} className="opacity-70 shrink-0" />
       <span className={`text-[10px] px-1.5 py-0.5 rounded ${colors.text} bg-white/50 dark:bg-black/20`}>
         {typeLabels[task.type] || task.type}
       </span>
