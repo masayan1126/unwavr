@@ -503,7 +503,7 @@ input[type="submit"][disabled] {
 /* Tiptap Table Styles */
 .tiptap table {
   border-collapse: collapse;
-  width: 100%;
+  width: max-content; min-width: 100%;
   margin: 1rem 0;
   table-layout: auto;
 }
@@ -559,7 +559,7 @@ input[type="submit"][disabled] {
 /* Prose内のテーブルスタイル（読み取り専用表示用） */
 .prose table {
   border-collapse: collapse;
-  width: 100%;
+  width: max-content; min-width: 100%;
   margin: 1rem 0;
 }
 
@@ -577,4 +577,20 @@ input[type="submit"][disabled] {
 
 .prose table td {
   background: var(--card);
+}
+
+/* Table Scroll Wrapper */
+.table-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin: 1rem 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure Tiptap table wrapper allows horizontal scrolling */
+.tiptap .tableWrapper {
+  overflow-x: auto;
+  width: 100%;
+  margin: 1rem 0;
+  -webkit-overflow-scrolling: touch;
 }

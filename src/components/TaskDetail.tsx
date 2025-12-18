@@ -106,7 +106,7 @@ export default function TaskDetail({ taskId, backHref }: { taskId: string; backH
       </div>
 
       {task.description && (
-        <RichText className="prose prose-sm dark:prose-invert opacity-90" html={task.description} />
+        <div className="w-full min-w-0"><RichText className="prose prose-sm dark:prose-invert opacity-90 max-w-none w-full" html={task.description} /></div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

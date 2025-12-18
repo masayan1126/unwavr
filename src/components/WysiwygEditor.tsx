@@ -12,12 +12,23 @@ import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
-import { Extension } from "@tiptap/core";
+import { Extension, mergeAttributes } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { DOMParser as ProseMirrorDOMParser } from "@tiptap/pm/model";
 import { SlashCommand } from "./SlashCommand/extension";
 import AIPromptDialog from "./AIPromptDialog";
 import "tippy.js/dist/tippy.css";
+
+// テーブルをスクロール可能なラッパーで囲むカスタム拡張
+const ScrollableTable = Table.extend({
+  renderHTML({ HTMLAttributes }) {
+    return [
+      'div',
+      { class: 'table-scroll-wrapper' },
+      ['table', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes), ['tbody', 0]],
+    ];
+  },
+});
 
 // マークダウンテーブル記法をHTMLテーブルに変換する関数
 function parseMarkdownTable(text: string): string | null {
@@ -197,10 +208,10 @@ export default function WysiwygEditor({ value, onChange, className, onBlur }: Wy
       Heading.configure({ levels: [1, 2, 3] }),
       TaskList,
       TaskItem.configure({ nested: true }),
-      Table.configure({
+      ScrollableTable.configure({
         resizable: true,
         HTMLAttributes: {
-          class: 'table-auto border-collapse w-full',
+          class: 'table-auto border-collapse',
         },
       }),
       TableRow,
@@ -242,8 +253,8 @@ export default function WysiwygEditor({ value, onChange, className, onBlur }: Wy
   }, []);
 
   return (
-    <div className={`${className ?? ""} flex flex-col border border-black/10 dark:border-white/10 rounded-xl overflow-hidden bg-card shadow-sm focus-within:ring-2 focus-within:ring-[var(--primary)]/20 transition-all`}>
-      <div className="flex-1 min-h-0 max-h-[60vh] overflow-y-auto flex flex-col">
+    <div className={`${className ?? ""} flex flex-col border border-black/10 dark:border-white/10 rounded-xl bg-card shadow-sm focus-within:ring-2 focus-within:ring-[var(--primary)]/20 transition-all`}>
+      <div className="flex-1 min-h-0 max-h-[60vh] overflow-auto flex flex-col">
         <div className="sticky top-0 z-10 bg-muted border-b border-black/10 dark:border-white/10 flex flex-wrap gap-1 p-2 shrink-0">
           <ToolbarButton onClick={() => editor?.chain().focus().setParagraph().run()} label="P" isActive={editor?.isActive('paragraph')} />
           <ToolbarButton onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()} label="H1" isActive={editor?.isActive('heading', { level: 1 })} />
@@ -286,5 +297,3 @@ function ToolbarButton({ onClick, label, isActive }: { onClick: () => void, labe
     </button>
   );
 }
-
-
