@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
-import { RotateCcw, Trash2 } from "lucide-react";
+import { RotateCcw, Trash2, RefreshCw } from "lucide-react";
 import { useConfirm, useToast } from "@/components/Providers";
 import { useAppStore } from "@/lib/store";
 import { Task } from "@/lib/types";
@@ -8,6 +8,7 @@ import StylishSelect from "@/components/StylishSelect";
 import FilterBar from "@/components/FilterBar";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { IconButton } from "@/components/ui/IconButton";
 import { PageLayout, PageHeader } from "@/components/ui/PageLayout";
 import { TaskTable, PRESETS, mergeConfig, BulkAction } from "@/components/TaskTable";
 
@@ -17,6 +18,7 @@ export default function ArchivedTasksPage(): React.ReactElement {
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [loading, setLoading] = useState<boolean>(true);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
   const { updateTask, hydrateFromDb } = useAppStore();
   const confirm = useConfirm();
   const toast = useToast();
@@ -27,6 +29,11 @@ export default function ArchivedTasksPage(): React.ReactElement {
   const [sortKey, setSortKey] = useState<'title' | 'archivedAt'>('archivedAt');
   const [sortAsc, setSortAsc] = useState<boolean>(false);
 
+  // 再読み込み
+  const handleRefresh = () => {
+    setRefreshKey((k) => k + 1);
+  };
+
   useEffect(() => {
     setLoading(true);
     const offset = (page - 1) * pageSize;
@@ -35,7 +42,7 @@ export default function ArchivedTasksPage(): React.ReactElement {
       .then((d) => { setItems((d.items ?? []) as Task[]); setTotal(Number(d.total ?? 0)); })
       .catch(() => { setItems([]); setTotal(0); })
       .finally(() => setLoading(false));
-  }, [page, pageSize]);
+  }, [page, pageSize, refreshKey]);
 
   const handleBulkRestore = async (ids: string[]) => {
     if (ids.length === 0) return;
@@ -99,45 +106,19 @@ export default function ArchivedTasksPage(): React.ReactElement {
 
   return (
     <PageLayout>
-      <PageHeader title="アーカイブ済みタスク" />
-
-      {/* フィルターバー */}
-      <div className="mb-4 px-1">
-        <div className="flex items-center justify-between">
-          <div className="text-xs opacity-70">{loading ? "-" : `${page} / ${totalPages}（全 ${total} 件）`}</div>
-          <FilterBar>
-            <StylishSelect
-              label="ソート"
-              value={sortKey}
-              onChange={(v) => setSortKey(v as 'title' | 'archivedAt')}
-              options={[
-                { value: 'archivedAt', label: 'アーカイブ日' },
-                { value: 'title', label: 'タイトル' },
-              ]}
-            />
-            <Button variant="secondary" size="sm" onClick={() => setSortAsc((v) => !v)}>
-              {sortAsc ? "昇順" : "降順"}
-            </Button>
-            <StylishSelect
-              label="1ページあたり"
-              value={pageSize}
-              onChange={(v) => {
-                setPageSize(Number(v));
-                setPage(1);
-              }}
-              options={[10, 20, 50, 100].map((n) => ({ value: n, label: String(n) }))}
-            />
-            <div className="flex items-center gap-2 ml-auto">
-              <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-                前へ
-              </Button>
-              <Button variant="secondary" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
-                次へ
-              </Button>
-            </div>
-          </FilterBar>
-        </div>
-      </div>
+      <PageHeader
+        title="アーカイブ済みタスク"
+        actions={
+          <IconButton
+            icon={<RefreshCw size={14} className={loading ? "animate-spin" : ""} />}
+            onClick={handleRefresh}
+            disabled={loading}
+            label="再読み込み"
+            variant="outline"
+            className="rounded-full"
+          />
+        }
+      />
 
       {/* テーブル */}
       {loading ? (
@@ -157,6 +138,23 @@ export default function ArchivedTasksPage(): React.ReactElement {
           emptyMessage="アーカイブ済みのタスクはありません。"
         />
       )}
+
+      {/* ページネーション */}
+      <div className="mt-4 px-1 flex justify-end">
+        <FilterBar className="w-full sm:w-auto">
+          <div className="text-xs opacity-70">{loading ? "-" : `${page} / ${totalPages}（全 ${total} 件）`}</div>
+          <StylishSelect
+            label="1ページあたり"
+            size="sm"
+            value={pageSize}
+            onChange={(v) => {
+              setPageSize(Number(v));
+              setPage(1);
+            }}
+            options={[10, 20, 50, 100].map((n) => ({ value: n, label: String(n) }))}
+          />
+        </FilterBar>
+      </div>
     </PageLayout>
   );
 }

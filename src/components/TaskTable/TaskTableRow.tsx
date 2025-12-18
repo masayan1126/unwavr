@@ -19,6 +19,7 @@ interface TaskTableRowProps {
   config: TaskTableConfig;
   milestones: Milestone[];
   selected: boolean;
+  selectionModeActive: boolean;
   isActive: boolean;
   activeIndex: number;
   isDailyDoneToday: boolean;
@@ -41,6 +42,7 @@ export function TaskTableRow({
   config,
   milestones,
   selected,
+  selectionModeActive,
   isActive,
   activeIndex,
   isDailyDoneToday,
@@ -137,7 +139,7 @@ export function TaskTableRow({
       )}
 
       {/* 選択チェックボックス */}
-      {selectionEnabled && (
+      {selectionEnabled && selectionModeActive && (
         <div className="flex-shrink-0 w-[24px] flex justify-center">
           <button
             type="button"

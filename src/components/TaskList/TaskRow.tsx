@@ -20,6 +20,7 @@ interface TaskRowProps {
     onContext: (e: React.MouseEvent, task: Task) => void;
     onDelete: (task: Task) => void;
     enableSelection?: boolean;
+    selectionModeActive?: boolean;
     selected?: boolean;
     onSelectOne: (id: string, checked: boolean) => void;
     showCreatedColumn?: boolean;
@@ -36,7 +37,7 @@ interface TaskRowProps {
     startEditPlannedDate: (task: Task) => void;
 }
 
-export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, selected, onSelectOne, showCreatedColumn, showPlannedColumn, showScheduledColumn, showTypeColumn, showMilestoneColumn, showArchivedAtColumn, editingPlannedTaskId, tempPlannedDate, setTempPlannedDate, savePlannedDate, cancelEditPlannedDate, startEditPlannedDate }: TaskRowProps) {
+export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, selectionModeActive, selected, onSelectOne, showCreatedColumn, showPlannedColumn, showScheduledColumn, showTypeColumn, showMilestoneColumn, showArchivedAtColumn, editingPlannedTaskId, tempPlannedDate, setTempPlannedDate, savePlannedDate, cancelEditPlannedDate, startEditPlannedDate }: TaskRowProps) {
     const toggle = useAppStore((s) => s.toggleTask);
     const toggleDailyToday = useAppStore((s) => s.toggleDailyDoneForToday);
     const activeTaskIds = useAppStore((s) => s.pomodoro.activeTaskIds);
@@ -131,7 +132,7 @@ export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, se
                         <GripVertical size={16} />
                     </div>
 
-                    {enableSelection && (
+                    {enableSelection && selectionModeActive && (
                         <div className="flex-shrink-0 w-[24px] flex justify-center">
                             <button
                                 type="button"

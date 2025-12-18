@@ -2,15 +2,15 @@
 import Link from "next/link";
 import TaskList from "@/components/TaskList";
 import TaskDialog from "@/components/TaskCreateDialog";
+import AddTaskButton from "@/components/AddTaskButton";
 import TaskForm from "@/components/TaskForm";
 import { useTodayTasks } from "@/hooks/useTodayTasks";
 import NetworkSpeedIndicator from "@/components/NetworkSpeedIndicator";
-import { Plus, RefreshCw, ChevronDown } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { useConfirm } from "@/components/Providers";
 import { useAppStore } from "@/lib/store";
 import ActiveTasksQueue from "@/components/ActiveTasksQueue";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { IconButton } from "@/components/ui/IconButton";
 import { PageLayout } from "@/components/ui/PageLayout";
@@ -109,14 +109,7 @@ export default function Home() {
           <div className="mb-2 flex gap-2 items-center">
             <h2 className="text-sm font-medium">未完了 {!hydrating && `(${incompleteToday.length})`}</h2>
             <div className="ml-auto flex items-center gap-2 text-xs">
-              <Button
-                onClick={() => setOpenCreate(true)}
-                iconLeft={<Plus size={16} strokeWidth={2.5} />}
-                iconRight={<ChevronDown size={14} className="opacity-70" />}
-                size="sm"
-              >
-                <span className="hidden md:inline">新規</span>
-              </Button>
+              <AddTaskButton onClick={() => setOpenCreate(true)} />
             </div>
           </div>
           {hydrating ? (
@@ -192,11 +185,9 @@ export default function Home() {
         </Card>
       </div>
 
-      <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規タスク">
+      <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規タ">
         <TaskForm defaultType={defaultCreateType} onSubmitted={(mode) => { if (mode === 'close') setOpenCreate(false); }} />
       </TaskDialog>
     </PageLayout>
   );
 }
-
-

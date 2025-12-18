@@ -29,6 +29,7 @@ const COLUMN_ICONS: Record<ColumnId, React.ReactNode> = {
 interface TaskTableHeaderProps {
   columns: ColumnConfig[];
   selectionEnabled: boolean;
+  selectionModeActive: boolean;
   allChecked: boolean;
   onSelectAll: (checked: boolean) => void;
   sorting?: SortingConfig;
@@ -38,6 +39,7 @@ interface TaskTableHeaderProps {
 export function TaskTableHeader({
   columns,
   selectionEnabled,
+  selectionModeActive,
   allChecked,
   onSelectAll,
   sorting,
@@ -67,7 +69,7 @@ export function TaskTableHeader({
       {dragDropEnabled && <div className="w-[24px] flex-shrink-0" />}
 
       {/* 選択チェックボックス */}
-      {selectionEnabled && (
+      {selectionEnabled && selectionModeActive && (
         <div className="w-[24px] flex-shrink-0 flex justify-center">
           <button
             type="button"

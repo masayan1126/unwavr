@@ -16,6 +16,7 @@ type StylishSelectProps = {
     label?: string;
     className?: string;
     placeholder?: string;
+    size?: "sm" | "md";
 };
 
 export default function StylishSelect({
@@ -25,11 +26,17 @@ export default function StylishSelect({
     label,
     className,
     placeholder = "選択してください",
+    size = "md",
 }: StylishSelectProps) {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
     const selectedOption = options.find((opt) => String(opt.value) === String(value));
+
+    const sizeClasses = {
+        sm: "px-2 py-1 text-xs gap-1.5 rounded-[var(--radius-sm)]",
+        md: "px-3 py-1.5 text-sm gap-2 rounded-[var(--radius-md)]",
+    };
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -58,7 +65,8 @@ export default function StylishSelect({
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 className={clsx(
-                    "inline-flex items-center justify-between gap-2 px-3 py-1.5 rounded-[var(--radius-md)] border text-sm transition-fast",
+                    "inline-flex items-center justify-between border transition-fast",
+                    sizeClasses[size],
                     "bg-white/5 border-border hover:bg-black/5 dark:hover:bg-white/5",
                     "focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)]",
                     isOpen && "border-primary ring-1 ring-[var(--ring-color)]"
@@ -68,7 +76,7 @@ export default function StylishSelect({
                     {selectedOption ? selectedOption.label : placeholder}
                 </span>
                 <ChevronDown
-                    size={14}
+                    size={size === "sm" ? 12 : 14}
                     className={clsx("transition-fast opacity-70", isOpen && "rotate-180")}
                 />
             </button>

@@ -4,7 +4,8 @@ import TaskList from "@/components/TaskList";
 import AddTaskButton from "@/components/AddTaskButton";
 import TaskDialog from "@/components/TaskCreateDialog";
 import TaskForm from "@/components/TaskForm";
-import { Filter as FilterIcon } from "lucide-react";
+import { Filter as FilterIcon, RefreshCw } from "lucide-react";
+import { IconButton } from "@/components/ui/IconButton";
 import StylishSelect from "@/components/StylishSelect";
 import FilterBar from "@/components/FilterBar";
 import FilterChip from "@/components/FilterChip";
@@ -55,6 +56,13 @@ export default function BacklogPage() {
         actions={
           <>
             <AddTaskButton onClick={() => setOpenCreate(true)} />
+            <IconButton
+              icon={<RefreshCw size={14} />}
+              onClick={() => window.location.reload()}
+              label="再読み込み"
+              variant="outline"
+              className="rounded-full"
+            />
             <div className="relative">
               <Button
                 variant="secondary"
@@ -128,11 +136,11 @@ export default function BacklogPage() {
       {/* 未完了の積み上げ候補 */}
       {showIncomplete ? (
         <>
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
             <div className="text-xs opacity-70">{hydrating ? "-" : `${pageInc} / ${totalPagesInc}（全 ${totalInc} 件）`}</div>
-            <FilterBar>
+            <FilterBar className="w-full sm:w-auto">
               <StylishSelect
-                label="ソート"
+                size="sm"
                 value={sortKeyInc}
                 onChange={(v) => setSortKeyInc(v as "title" | "createdAt" | "planned" | "type" | "milestone")}
                 options={[
@@ -148,6 +156,7 @@ export default function BacklogPage() {
               </Button>
               <StylishSelect
                 label="1ページあたり"
+                size="sm"
                 value={pageSizeInc}
                 onChange={(v) => {
                   setPageSizeInc(Number(v));
@@ -191,11 +200,11 @@ export default function BacklogPage() {
       {/* 実行済みの積み上げ候補 */}
       {showCompleted && (hydrating || totalCom > 0) && (
         <>
-          <div className="flex items-center justify-between mb-2 mt-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 mt-4">
             <div className="text-xs opacity-70">{hydrating ? "-" : `${pageCom} / ${totalPagesCom}（全 ${totalCom} 件）`}</div>
-            <FilterBar>
+            <FilterBar className="w-full sm:w-auto">
               <StylishSelect
-                label="ソート"
+                size="sm"
                 value={sortKeyCom}
                 onChange={(v) => setSortKeyCom(v as "title" | "createdAt" | "planned" | "type" | "milestone")}
                 options={[
@@ -211,6 +220,7 @@ export default function BacklogPage() {
               </Button>
               <StylishSelect
                 label="1ページあたり"
+                size="sm"
                 value={pageSizeCom}
                 onChange={(v) => {
                   setPageSizeCom(Number(v));
@@ -250,7 +260,7 @@ export default function BacklogPage() {
           </Card>
         </>
       )}
-      <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規タスク">
+      <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規">
         <TaskForm onSubmitted={(mode) => { if (mode === 'close') setOpenCreate(false); }} />
       </TaskDialog>
     </PageLayout>

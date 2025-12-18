@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Plus, ChevronDown } from "lucide-react";
 import { forwardRef } from "react";
 import { Button } from "@/components/ui/Button";
 
@@ -17,9 +17,10 @@ const AddTaskButton = forwardRef<HTMLButtonElement, AddTaskButtonProps>(
                 onClick={onClick}
                 size="sm"
                 iconLeft={<Plus size={16} strokeWidth={2.5} />}
+                iconRight={<ChevronDown size={14} className="opacity-70" />}
                 className={className}
             >
-                <span className="hidden md:inline">タスク追加</span>
+                <span className="hidden md:inline">新規</span>
             </Button>
         );
     }

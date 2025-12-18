@@ -1,7 +1,8 @@
 "use client";
 
 import { Reorder } from "framer-motion";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { ListChecks } from "lucide-react";
 import { Task, Milestone } from "@/lib/types";
 import { useAppStore } from "@/lib/store";
 import { useToast } from "@/components/Providers";
@@ -99,6 +100,16 @@ export function TaskTable({
   // 編集モーダル用state
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
+  // 一括選択モード
+  const [selectionModeActive, setSelectionModeActive] = useState(false);
+
+  // 選択モード終了時に選択をクリア
+  useEffect(() => {
+    if (!selectionModeActive) {
+      clearSelection();
+    }
+  }, [selectionModeActive, clearSelection]);
+
   // 日時チェック用のヘルパー
   const isDailyDoneToday = useCallback((task: Task): boolean => {
     if (task.type !== "daily") return false;
@@ -172,8 +183,22 @@ export function TaskTable({
   return (
     <div className={`rounded-lg border border-border bg-card overflow-hidden ${className}`}>
       {/* タイトル */}
-      <div className="px-4 py-3 border-b border-border/60">
+      <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+        {resolvedConfig.selection?.enabled && (
+          <button
+            type="button"
+            onClick={() => setSelectionModeActive(!selectionModeActive)}
+            className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded transition-colors ${
+              selectionModeActive
+                ? "bg-primary text-primary-foreground"
+                : "border border-border hover:bg-muted"
+            }`}
+          >
+            <ListChecks size={14} />
+            {selectionModeActive ? "選択解除" : "選択"}
+          </button>
+        )}
       </div>
 
       {/* 一括操作メニュー */}
@@ -191,6 +216,7 @@ export function TaskTable({
       <TaskTableHeader
         columns={columns}
         selectionEnabled={resolvedConfig.selection?.enabled ?? false}
+        selectionModeActive={selectionModeActive}
         allChecked={allChecked}
         onSelectAll={selectAll}
         sorting={resolvedConfig.sorting}
@@ -216,6 +242,7 @@ export function TaskTable({
               config={resolvedConfig}
               milestones={milestones}
               selected={selected[task.id] ?? false}
+              selectionModeActive={selectionModeActive}
               isActive={activeTaskIds.includes(task.id)}
               activeIndex={activeTaskIds.indexOf(task.id)}
               isDailyDoneToday={isDailyDoneToday(task)}
@@ -243,6 +270,7 @@ export function TaskTable({
               config={resolvedConfig}
               milestones={milestones}
               selected={selected[task.id] ?? false}
+              selectionModeActive={selectionModeActive}
               isActive={activeTaskIds.includes(task.id)}
               activeIndex={activeTaskIds.indexOf(task.id)}
               isDailyDoneToday={isDailyDoneToday(task)}

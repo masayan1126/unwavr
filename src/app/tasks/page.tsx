@@ -9,7 +9,6 @@ import AdvancedSearchDialog from "@/components/AdvancedSearchDialog";
 import { useTasksPage } from "@/hooks/useTasksPage";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Card } from "@/components/ui/Card";
 import { IconButton } from "@/components/ui/IconButton";
 import { PageLayout, PageHeader } from "@/components/ui/PageLayout";
 import { TaskType } from "@/lib/types";
@@ -46,134 +45,136 @@ function TasksPageInner() {
   return (
     <PullToRefresh>
       <PageLayout className="pb-24 sm:pb-10">
-        <PageHeader title="すべてのタスク" />
+        <PageHeader
+          title={
+            <div className="flex items-baseline gap-2">
+              <span>すべてのタスク</span>
+              <span className="text-sm font-normal text-muted-foreground">
+                (全{hydrating ? "-" : taskCounts.all}件)
+              </span>
+            </div>
+          }
+          // 更新ボタンはタイトル横に配置（データの鮮度を保つ操作として、タイトルに紐づくメタ操作の位置づけ）
+          actions={
+            <IconButton
+              icon={<RefreshCw size={14} />}
+              onClick={() => window.location.reload()}
+              label="再読み込み"
+              variant="ghost"
+              className="rounded-full hover:bg-muted"
+            />
+          }
+        />
 
-        {/* フィルター・検索・アクション */}
-        <div className="flex flex-wrap gap-3 items-center">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+        <div className="space-y-4">
+          {/* 1. 検索 & アクションエリア */}
+          {/* 最も頻度の高い「検索」と「新規作成」を最上部に配置 */}
+          <div className="flex gap-2 items-center">
+            <div className="flex-1 flex gap-2">
+              <Input
+                type="text"
+                placeholder="タスクを検索..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                iconLeft={<Search size={14} />}
+                wrapperClassName="flex-1"
+              />
+              <IconButton
+                icon={<SlidersHorizontal size={14} />}
+                onClick={() => setOpenAdvancedSearch(true)}
+                label="詳細検索"
+                variant={isFilterActive ? "solid" : "outline"}
+                className={`rounded-md shrink-0 ${isFilterActive ? "bg-primary text-primary-foreground" : "border-input"}`}
+              />
+            </div>
+            
+            {/* 新規追加ボタンを目立つ位置に */}
+            <AddTaskButton 
+              onClick={() => setOpenCreate(true)} 
+              className="shrink-0"
+            />
+          </div>
+
+          {/* 2. フィルターエリア */}
+          {/* 表示内容の切り替えを行うタブ。検索の下に配置して階層構造を作る */}
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
             {(["all", "daily", "scheduled", "backlog"] as const).map(type => (
               <Button
                 key={type}
                 onClick={() => setSelectedType(type)}
                 variant={selectedType === type ? "primary" : "outline"}
                 size="sm"
-                className={`whitespace-nowrap ${selectedType === type ? "" : "border-black/10 dark:border-white/10"}`}
+                className={`whitespace-nowrap rounded-full px-4 ${selectedType === type ? "" : "border-black/10 dark:border-white/10 text-muted-foreground hover:text-foreground"}`}
               >
                 {hydrating ? typeLabels[type] : `${typeLabels[type]} (${taskCounts[type]})`}
               </Button>
             ))}
           </div>
 
-          <div className="flex-1 min-w-[200px] max-w-md flex gap-2">
-            <Input
-              type="text"
-              placeholder="タスクを検索..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              iconLeft={<Search size={14} />}
-            />
-            <IconButton
-              icon={<SlidersHorizontal size={14} />}
-              onClick={() => setOpenAdvancedSearch(true)}
-              label="詳細検索"
-              variant={isFilterActive ? "solid" : "outline"}
-              className={`rounded-full shrink-0 ${isFilterActive ? "bg-primary text-primary-foreground" : "border-black/10 dark:border-white/10"}`}
-            />
-          </div>
-
-          <div className="flex items-center gap-2 ml-auto">
-            <IconButton
-              icon={<RefreshCw size={14} />}
-              onClick={() => window.location.reload()}
-              label="再読み込み"
-              variant="outline"
-              className="rounded-full"
-            />
-            <AddTaskButton onClick={() => setOpenCreate(true)} />
-          </div>
-        </div>
-
-        {/* 統計情報 */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <Card padding="sm">
-            <div className="text-sm opacity-60">総タスク数</div>
-            <div className="text-lg font-semibold">{hydrating ? <span className="inline-block h-6 w-8 bg-muted animate-pulse rounded" /> : taskCounts.all}</div>
-          </Card>
-          <Card padding="sm">
-            <div className="text-sm opacity-60">毎日タスク</div>
-            <div className="text-lg font-semibold">{hydrating ? <span className="inline-block h-6 w-8 bg-muted animate-pulse rounded" /> : taskCounts.daily}</div>
-          </Card>
-          <Card padding="sm">
-            <div className="text-sm opacity-60">特定日タスク</div>
-            <div className="text-lg font-semibold">{hydrating ? <span className="inline-block h-6 w-8 bg-muted animate-pulse rounded" /> : taskCounts.scheduled}</div>
-          </Card>
-          <Card padding="sm">
-            <div className="text-sm opacity-60">積み上げ候補</div>
-            <div className="text-lg font-semibold">{hydrating ? <span className="inline-block h-6 w-8 bg-muted animate-pulse rounded" /> : taskCounts.backlog}</div>
-          </Card>
-        </div>
-
-        {/* タスク一覧 */}
-        <div className="space-y-6">
-          {hydrating ? (
-            <>
-              <Card padding="md">
-                <div className="text-sm font-medium mb-4">毎日タスク</div>
-                <div className="space-y-2">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="h-10 bg-muted animate-pulse rounded" />
-                  ))}
+          {/* 4. タスク一覧 */}
+          {/* 複数選択ボタンは TaskList コンポーネント内のヘッダー（テーブル直上）に配置される */}
+          <div className="space-y-6">
+            {hydrating ? (
+              <>
+                <div className="rounded-lg border border-border bg-card overflow-hidden">
+                  <div className="px-4 py-3 border-b border-border/60">
+                    <div className="text-sm font-semibold">毎日タスク</div>
+                  </div>
+                  <div className="space-y-2 p-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-10 bg-muted animate-pulse rounded" />
+                    ))}
+                  </div>
                 </div>
-              </Card>
-              <Card padding="md">
-                <div className="text-sm font-medium mb-4">特定曜日</div>
-                <div className="space-y-2">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="h-10 bg-muted animate-pulse rounded" />
-                  ))}
+                <div className="rounded-lg border border-border bg-card overflow-hidden">
+                  <div className="px-4 py-3 border-b border-border/60">
+                    <div className="text-sm font-semibold">特定曜日</div>
+                  </div>
+                  <div className="space-y-2 p-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-10 bg-muted animate-pulse rounded" />
+                    ))}
+                  </div>
                 </div>
-              </Card>
-              <Card padding="md">
-                <div className="text-sm font-medium mb-4">積み上げ候補</div>
-                <div className="space-y-2">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="h-10 bg-muted animate-pulse rounded" />
-                  ))}
+                <div className="rounded-lg border border-border bg-card overflow-hidden">
+                  <div className="px-4 py-3 border-b border-border/60">
+                    <div className="text-sm font-semibold">積み上げ候補</div>
+                  </div>
+                  <div className="space-y-2 p-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-10 bg-muted animate-pulse rounded" />
+                    ))}
+                  </div>
                 </div>
-              </Card>
-            </>
-          ) : selectedType === "all" ? (
-            <>
-              <Card padding="md">
+              </>
+            ) : selectedType === "all" ? (
+              <>
                 <TaskList
                   title={`毎日タスク (${taskCounts.daily})`}
                   tasks={baseFiltered.filter(t => t.type === "daily")}
                   showPlannedColumn={false}
                   showTypeColumn
                   showMilestoneColumn={false}
+                  enableSelection
                 />
-              </Card>
-              <Card padding="md">
                 <TaskList
                   title={`特定曜日 (${taskCounts.scheduled})`}
                   tasks={baseFiltered.filter(t => t.type === "scheduled")}
                   showScheduledColumn
                   showTypeColumn
                   showMilestoneColumn={false}
+                  enableSelection
                 />
-              </Card>
-              <Card padding="md">
                 <TaskList
                   title={`積み上げ候補 (${taskCounts.backlog})`}
                   tasks={baseFiltered.filter(t => t.type === "backlog" && !t.completed)}
                   showPlannedColumn
                   showTypeColumn
                   showMilestoneColumn={false}
+                  enableSelection
                 />
-              </Card>
-            </>
-          ) : (
-            <Card padding="md">
+              </>
+            ) : (
               <TaskList
                 title={`${typeLabels[selectedType]} (${filteredTasks.length})`}
                 tasks={filteredTasks}
@@ -181,12 +182,13 @@ function TasksPageInner() {
                 showScheduledColumn={selectedType === "scheduled"}
                 showTypeColumn
                 showMilestoneColumn={false}
+                enableSelection
               />
-            </Card>
-          )}
+            )}
+          </div>
         </div>
 
-        <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規タスク">
+        <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規">
           <TaskForm onSubmitted={(mode) => { if (mode === 'close') setOpenCreate(false); }} />
         </TaskDialog>
 

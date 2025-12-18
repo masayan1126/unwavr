@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Reorder } from "framer-motion";
-import { ChevronDown, CheckCircle2, Circle, Archive, Trash2, ArrowRight, Calendar, Copy, Edit, Play, Pause, RotateCcw, Type, CalendarPlus, CalendarCheck, CalendarRange, Tag, Flag, ArrowUpDown, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
+import { ChevronDown, CheckCircle2, Circle, Archive, Trash2, ArrowRight, Calendar, Copy, Edit, Play, Pause, RotateCcw, Type, CalendarPlus, CalendarCheck, CalendarRange, Tag, Flag, ArrowUpDown, ArrowUp, ArrowDown, Loader2, ListChecks } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Task } from "@/lib/types";
 import { useAppStore } from "@/lib/store";
@@ -132,11 +132,20 @@ export default function TaskList({
     const [bulkDateInput, setBulkDateInput] = useState<string>(() => getTodayDateInput());
     const [showBulkMenu, setShowBulkMenu] = useState(false);
     const bulkMenuRef = useRef<HTMLDivElement | null>(null);
+    const [selectionModeActive, setSelectionModeActive] = useState(false);
     const onSelectAll = (checked: boolean) => {
         if (!enableSelection) return;
         setSelected(Object.fromEntries(filteredSorted.map((t) => [t.id, checked])));
     };
     const onSelectOne = (id: string, checked: boolean) => setSelected((s) => ({ ...s, [id]: checked }));
+
+    // 選択モード終了時に選択をクリア
+    useEffect(() => {
+        if (!selectionModeActive) {
+            setSelected({});
+            setShowBulkMenu(false);
+        }
+    }, [selectionModeActive]);
 
     const handleReorder = (newOrder: Task[]) => {
         if (sortKey) return;
@@ -537,33 +546,52 @@ export default function TaskList({
     }
 
     return (
-        <div className="rounded-md">
-            <div className="flex items-center justify-between mb-2">
-                <button
-                    onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="flex items-center gap-2 text-xs uppercase tracking-wide opacity-70 hover:opacity-100 transition-opacity"
-                >
-                    <ChevronDown size={14} className={`transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`} />
-                    {title}
-                </button>
+        <div className="rounded-lg border border-border bg-card overflow-hidden">
+            <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                    <button
+                        onClick={() => setIsCollapsed(!isCollapsed)}
+                        className="flex items-center justify-center w-5 h-5 rounded hover:bg-muted transition-colors"
+                        aria-label={isCollapsed ? "展開" : "折り畳み"}
+                    >
+                        <ChevronDown size={14} className={`transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`} />
+                    </button>
+                    <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+                </div>
                 {enableSelection && !isCollapsed && (
-                    <div ref={bulkMenuRef} className="relative">
+                    <div className="flex items-center gap-2">
+                        {/* 選択モードトグルボタン */}
                         <button
                             type="button"
-                            className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-[3px] text-xs font-medium transition-colors ${selectedCount > 0
-                                ? "text-primary bg-primary/10 hover:bg-primary/20"
-                                : "opacity-50 cursor-not-allowed"
-                                }`}
-                            onClick={() => {
-                                if (selectedCount === 0) return;
-                                setShowBulkMenu((prev) => !prev);
-                            }}
-                            aria-haspopup="true"
-                            aria-expanded={showBulkMenu}
+                            onClick={() => setSelectionModeActive(!selectionModeActive)}
+                            className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded transition-colors ${
+                                selectionModeActive
+                                    ? "bg-primary text-primary-foreground"
+                                    : "border border-border hover:bg-muted"
+                            }`}
                         >
-                            <span>{selectedCount} 選択</span>
-                            <ChevronDown size={12} className={`transition-transform ${showBulkMenu ? "rotate-180" : ""}`} />
+                            <ListChecks size={14} />
+                            {selectionModeActive ? "選択解除" : "選択"}
                         </button>
+                        {/* バルクメニュー */}
+                        {selectionModeActive && (
+                            <div ref={bulkMenuRef} className="relative">
+                                <button
+                                    type="button"
+                                    className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-[3px] text-xs font-medium transition-colors ${selectedCount > 0
+                                        ? "text-primary bg-primary/10 hover:bg-primary/20"
+                                        : "opacity-50 cursor-not-allowed"
+                                        }`}
+                                    onClick={() => {
+                                        if (selectedCount === 0) return;
+                                        setShowBulkMenu((prev) => !prev);
+                                    }}
+                                    aria-haspopup="true"
+                                    aria-expanded={showBulkMenu}
+                                >
+                                    <span>{selectedCount} 選択</span>
+                                    <ChevronDown size={12} className={`transition-transform ${showBulkMenu ? "rotate-180" : ""}`} />
+                                </button>
                         {showBulkMenu && (
                             <div className="absolute right-0 mt-1 w-48 bg-popover text-popover-foreground border border-border rounded-md shadow-lg p-1 z-50 animate-in fade-in zoom-in-95 duration-100">
                                 <div className="flex flex-col gap-0.5">
@@ -642,6 +670,8 @@ export default function TaskList({
                                 )}
                             </div>
                         )}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -650,16 +680,16 @@ export default function TaskList({
                 <div className="overflow-x-auto pb-2">
                     <div className="min-w-[600px]">
                         {/* Header */}
-                        <div className="flex items-center text-xs font-medium border-b border-border/50 py-2 px-2">
+                        <div className="flex items-center text-xs font-medium border-b border-border/60 py-2 px-2 text-foreground/60">
                             <div className="w-[24px] flex-shrink-0"></div> {/* Grip placeholder */}
-                            {enableSelection && (
+                            {enableSelection && selectionModeActive && (
                                 <div className="w-[24px] flex-shrink-0 flex justify-center">
                                     <button
                                         type="button"
                                         onClick={() => onSelectAll(!allChecked)}
                                         className={`w-4 h-4 rounded-[4px] border transition-all flex items-center justify-center ${allChecked
                                             ? "bg-primary border-primary text-primary-foreground"
-                                            : "border-muted-foreground/40 hover:border-primary/60 bg-transparent"
+                                            : "border-muted-foreground/30 hover:border-primary/60 bg-transparent"
                                             }`}
                                     >
                                         {allChecked && <CheckCircle2 size={10} strokeWidth={3} />}
@@ -678,7 +708,7 @@ export default function TaskList({
                         {/* Body */}
                         <div className="relative">
                             {(orderedTasks.length === 0) ? (
-                                <div className="px-2 py-4 text-sm opacity-60 text-center">タスクなし</div>
+                                <div className="py-8 text-center text-sm text-foreground/50">タスクがありません</div>
                             ) : (
                                 <Reorder.Group axis="y" values={orderedTasks} onReorder={handleReorder} className="flex flex-col">
                                     {orderedTasks.map((t) => (
@@ -689,6 +719,7 @@ export default function TaskList({
                                             onContext={(e: React.MouseEvent, task: Task) => { e.preventDefault(); e.stopPropagation(); setCtxTask(task); setCtxPos({ x: e.clientX, y: e.clientY }); }}
                                             onDelete={handleDeleteTask}
                                             enableSelection={enableSelection}
+                                            selectionModeActive={selectionModeActive}
                                             selected={selected[t.id]}
                                             onSelectOne={(id: string, checked: boolean) => onSelectOne(id, checked)}
                                             showCreatedColumn={showCreatedColumn}

@@ -1,4 +1,5 @@
 "use client";
+import { RefreshCw } from "lucide-react";
 import AddTaskButton from "@/components/AddTaskButton";
 import TaskList from "@/components/TaskList";
 import TaskDialog from "@/components/TaskCreateDialog";
@@ -9,6 +10,7 @@ import StylishSelect from "@/components/StylishSelect";
 import FilterBar from "@/components/FilterBar";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { IconButton } from "@/components/ui/IconButton";
 import { PageLayout, PageHeader } from "@/components/ui/PageLayout";
 
 export default function ScheduledTasksPage() {
@@ -32,15 +34,29 @@ export default function ScheduledTasksPage() {
 
   return (
     <PageLayout>
-      <PageHeader title="特定曜日" actions={<AddTaskButton onClick={() => setOpenCreate(true)} />} />
+      <PageHeader
+        title="特定曜日"
+        actions={
+          <>
+            <AddTaskButton onClick={() => setOpenCreate(true)} />
+            <IconButton
+              icon={<RefreshCw size={14} />}
+              onClick={() => window.location.reload()}
+              label="再読み込み"
+              variant="outline"
+              className="rounded-full"
+            />
+          </>
+        }
+      />
       {(
         <>
           <div className="mb-4 px-1">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="text-xs opacity-70">{hydrating ? "-" : `${page} / ${totalPages}（全 ${total} 件）`}</div>
-              <FilterBar>
+              <FilterBar className="w-full sm:w-auto">
                 <StylishSelect
-                  label="ソート"
+                  size="sm"
                   value={sortKey}
                   onChange={(v) => setSortKey(v as "title" | "createdAt" | "scheduled" | "type" | "milestone")}
                   options={[
@@ -56,6 +72,7 @@ export default function ScheduledTasksPage() {
                 </Button>
                 <StylishSelect
                   label="ステータス"
+                  size="sm"
                   value={filterStatus}
                   onChange={(v) => {
                     setFilterStatus(v as "all" | "completed" | "incomplete");
@@ -69,6 +86,7 @@ export default function ScheduledTasksPage() {
                 />
                 <StylishSelect
                   label="1ページあたり"
+                  size="sm"
                   value={pageSize}
                   onChange={(v) => {
                     setPageSize(Number(v));
@@ -101,7 +119,7 @@ export default function ScheduledTasksPage() {
           </Card>
         </>
       )}
-      <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規タスク">
+      <TaskDialog open={openCreate} onClose={() => setOpenCreate(false)} title="新規">
         <TaskForm defaultType="scheduled" onSubmitted={(mode) => { if (mode === 'close') setOpenCreate(false); }} />
       </TaskDialog>
     </PageLayout>

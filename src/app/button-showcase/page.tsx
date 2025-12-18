@@ -1546,40 +1546,40 @@ export default function ButtonShowcasePage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
                 <Palette size={20} className="text-primary" />
                 Design System
               </h1>
-              <div className="flex items-center gap-2 mt-0.5">
+              <div className="flex flex-wrap items-center gap-2 mt-0.5">
                 <p className="text-sm opacity-70">テーマをカスタマイズしてアプリに適用</p>
                 {isAuthenticated ? (
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-success/10 text-success">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-success/10 text-success whitespace-nowrap">
                     <Cloud size={10} />
                     同期中
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-muted opacity-70">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-muted opacity-70 whitespace-nowrap">
                     <CloudOff size={10} />
                     ローカル保存
                   </span>
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
               <button
                 onClick={resetTheme}
                 disabled={isSyncing}
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border border-border hover:bg-muted transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border border-border hover:bg-muted transition-colors disabled:opacity-50 whitespace-nowrap"
               >
                 {isSyncing ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
                 リセット
               </button>
               <button
                 onClick={copyCSS}
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border border-border hover:bg-muted transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border border-border hover:bg-muted transition-colors whitespace-nowrap"
               >
                 {copied ? <Check size={14} className="text-success" /> : <Copy size={14} />}
                 {copied ? "コピー済み" : "CSSをコピー"}
@@ -1587,7 +1587,7 @@ export default function ButtonShowcasePage() {
               <button
                 onClick={applyTheme}
                 disabled={isSyncing}
-                className="inline-flex items-center gap-2 px-4 py-1.5 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-4 py-1.5 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover transition-colors disabled:opacity-50 whitespace-nowrap ml-auto sm:ml-0"
               >
                 {isSyncing ? (
                   <Loader2 size={14} className="animate-spin" />
@@ -1603,7 +1603,7 @@ export default function ButtonShowcasePage() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-8">
           {/* Left: Controls */}
           <div className="space-y-8">
@@ -1618,14 +1618,14 @@ export default function ButtonShowcasePage() {
                   key={key}
                   onClick={() => setActiveTab(key as typeof activeTab)}
                   className={clsx(
-                    "flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all",
+                    "flex-1 inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium rounded-lg transition-all",
                     activeTab === key
                       ? "bg-background shadow-sm text-foreground"
                       : "opacity-70 hover:text-foreground"
                   )}
                 >
                   <Icon size={16} />
-                  {label}
+                  <span className="hidden sm:inline">{label}</span>
                 </button>
               ))}
             </div>
@@ -1634,7 +1634,7 @@ export default function ButtonShowcasePage() {
             {activeTab === "palette" && (
               <div className="space-y-6">
                 <SectionHeader icon={Palette} title="カラーパレット" description="アプリ全体のカラーテーマを選択" />
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {Object.entries(colorPalettes).map(([key, p]) => (
                     <OptionCard
                       key={key}
