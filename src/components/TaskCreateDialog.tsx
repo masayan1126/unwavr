@@ -47,7 +47,7 @@ export default function TaskDialog({ open, onClose, title = "タスク", childre
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={handleClose}>
+    <div className="fixed inset-0 z-[110] flex items-center justify-center" onClick={handleClose}>
       <div className="absolute inset-0 bg-black/50" />
       <div
         className={`z-10 bg-card text-foreground shadow-2xl flex flex-col overflow-hidden ${isMaximized
