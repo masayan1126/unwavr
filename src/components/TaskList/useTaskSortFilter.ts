@@ -92,7 +92,13 @@ export function useTaskSortFilter({
                 if (aIsActive && !bIsActive) return -1;
                 if (!aIsActive && bIsActive) return 1;
 
-                // 次にオーダー順
+                // 次に種別順：毎日 > 特定曜日 > 積み上げ候補
+                const typeOrder: Record<string, number> = { daily: 0, scheduled: 1, backlog: 2 };
+                const aTypeOrder = typeOrder[a.type] ?? 9;
+                const bTypeOrder = typeOrder[b.type] ?? 9;
+                if (aTypeOrder !== bTypeOrder) return aTypeOrder - bTypeOrder;
+
+                // 最後にオーダー順
                 return (a.order ?? 0) - (b.order ?? 0);
             });
             setOrderedTasks(sorted);
