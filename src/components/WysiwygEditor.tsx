@@ -254,7 +254,7 @@ export default function WysiwygEditor({ value, onChange, className, onBlur }: Wy
 
   return (
     <div className={`${className ?? ""} flex flex-col border border-black/10 dark:border-white/10 rounded-xl bg-card shadow-sm focus-within:ring-2 focus-within:ring-[var(--primary)]/20 transition-all`}>
-      <div className="flex-1 min-h-0 max-h-[60vh] overflow-auto flex flex-col">
+      <div className="flex-1 min-h-0 overflow-auto flex flex-col">
         <div className="sticky top-0 z-10 bg-muted border-b border-black/10 dark:border-white/10 flex flex-wrap gap-1 p-2 shrink-0">
           <ToolbarButton onClick={() => editor?.chain().focus().setParagraph().run()} label="P" isActive={editor?.isActive('paragraph')} />
           <ToolbarButton onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()} label="H1" isActive={editor?.isActive('heading', { level: 1 })} />

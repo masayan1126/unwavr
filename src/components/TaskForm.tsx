@@ -346,7 +346,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
 
   return (
     <>
-      <form ref={formRef} onSubmit={onSubmit} onBlur={handleFormBlur} className="flex flex-col gap-6 w-full">
+      <form ref={formRef} onSubmit={onSubmit} onBlur={handleFormBlur} className="flex flex-col gap-6 w-full h-full">
         <div className="flex flex-col gap-2">
           <div className="flex gap-2 items-center">
             <input
@@ -382,165 +382,64 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
             </div>
           </div>
         </div>
-        <div className="flex flex-col gap-1 text-sm">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
           {/* Type Property */}
-          <div className="flex items-center min-h-[32px]">
-            <div className="w-[140px] flex items-center gap-2">タイプ</div>
-            <div className="flex-1">
-              <select
-                className="bg-transparent border-none hover:bg-black/5 dark:hover:bg-white/10 rounded px-2 py-1 cursor-pointer w-full md:w-auto focus:ring-0"
-                value={type}
-                onChange={(e) => {
-                  const v = e.target.value as TaskType;
-                  setType(v);
-                  if (v === "scheduled") setScheduled({ daysOfWeek: [] });
-                  else setScheduled(undefined);
-                  if (v !== "backlog") setPlannedDates([]);
-                }}
-                onBlur={performSave}
-              >
-                <option value="daily">毎日</option>
-                <option value="backlog">積み上げ候補</option>
-                <option value="scheduled">特定曜日</option>
-              </select>
-            </div>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground whitespace-nowrap">タイプ</span>
+            <select
+              className="bg-transparent border-none hover:bg-black/5 dark:hover:bg-white/10 rounded px-2 py-1 cursor-pointer focus:ring-0"
+              value={type}
+              onChange={(e) => {
+                const v = e.target.value as TaskType;
+                setType(v);
+                if (v === "scheduled") setScheduled({ daysOfWeek: [] });
+                else setScheduled(undefined);
+                if (v !== "backlog") setPlannedDates([]);
+              }}
+              onBlur={performSave}
+            >
+              <option value="daily">毎日</option>
+              <option value="backlog">積み上げ候補</option>
+              <option value="scheduled">特定曜日</option>
+            </select>
           </div>
 
           {/* Estimate Property */}
-          <div className="flex items-center min-h-[32px]">
-            <div className="w-[140px] flex items-center gap-2">見積ポモドーロ</div>
-            <div className="flex-1">
-              <input
-                type="number"
-                min={0}
-                className="bg-transparent border-none hover:bg-black/5 dark:hover:bg-white/10 rounded px-2 py-1 w-20 focus:ring-0"
-                value={Number.isFinite(est) ? est : 0}
-                onChange={(e) => setEst(Number(e.target.value))}
-                onBlur={performSave}
-              />
-            </div>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground whitespace-nowrap">見積ポモドーロ</span>
+            <input
+              type="number"
+              min={0}
+              className="bg-transparent border-none hover:bg-black/5 dark:hover:bg-white/10 rounded px-2 py-1 w-16 focus:ring-0"
+              value={Number.isFinite(est) ? est : 0}
+              onChange={(e) => setEst(Number(e.target.value))}
+              onBlur={performSave}
+            />
           </div>
 
           {/* Milestone Property */}
-          <div className="flex items-center min-h-[32px]">
-            <div className="w-[140px] flex items-center gap-2">マイルストーン</div>
-            <div className="flex-1">
-              <select
-                className="bg-transparent border-none hover:bg-black/5 dark:hover:bg-white/10 rounded px-2 py-1 cursor-pointer w-full md:w-auto focus:ring-0"
-                value={milestoneId}
-                onChange={(e) => setMilestoneId(e.target.value)}
-                onBlur={performSave}
-              >
-                <option value="">未選択</option>
-                {milestones.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.title} ({m.currentUnits}/{m.targetUnits})
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground whitespace-nowrap">マイルストーン</span>
+            <select
+              className="bg-transparent border-none hover:bg-black/5 dark:hover:bg-white/10 rounded px-2 py-1 cursor-pointer max-w-[200px] truncate focus:ring-0"
+              value={milestoneId}
+              onChange={(e) => setMilestoneId(e.target.value)}
+              onBlur={performSave}
+            >
+              <option value="">未選択</option>
+              {milestones.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.title} ({m.currentUnits}/{m.targetUnits})
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Scheduled Specifics */}
-          {type === "scheduled" && (
-            <div className="flex items-start min-h-[32px] mt-1">
-              <div className="w-[140px] flex items-center gap-2 pt-1">曜日・期間</div>
-              <div className="flex-1 flex flex-col gap-2">
-                <div className="flex gap-1 flex-wrap">
-                  {["日", "月", "火", "水", "木", "金", "土"].map((label, idx) => {
-                    const selected = scheduled?.daysOfWeek?.includes(idx) ?? false;
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => {
-                          const setD = new Set(scheduled?.daysOfWeek ?? []);
-                          if (setD.has(idx)) setD.delete(idx); else setD.add(idx);
-                          setScheduled({ daysOfWeek: Array.from(setD).sort((a, b) => a - b), dateRanges: scheduled?.dateRanges });
-                        }}
-                        className={`px-2 py-1 rounded text-xs border ${selected ? "bg-foreground text-background border-foreground" : "bg-transparent border-border"}`}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-                <button type="button" onClick={toggleWeekend} className="text-xs underline opacity-80 self-start">
-                  土日トグル
-                </button>
-                {/* Date Ranges */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex gap-2 items-center flex-wrap">
-                    <input
-                      type="date"
-                      className="border border-border rounded px-2 py-1 bg-transparent text-xs"
-                      value={rangeStart}
-                      onChange={(e) => setRangeStart(e.target.value)}
-                      onBlur={performSave}
-                    />
-                    <span className="text-xs">〜</span>
-                    <input
-                      type="date"
-                      className="border border-border rounded px-2 py-1 bg-transparent text-xs"
-                      value={rangeEnd}
-                      onChange={(e) => setRangeEnd(e.target.value)}
-                      onBlur={performSave}
-                    />
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => {
-                        if (!rangeStart || !rangeEnd) return;
-                        const startDate = new Date(rangeStart);
-                        const endDate = new Date(rangeEnd);
-                        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return;
-                        const sNum = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()).getTime();
-                        const eNum = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()).getTime();
-                        const currentRanges = scheduled?.dateRanges ? [...scheduled.dateRanges] : [];
-                        const nextRanges = [
-                          ...currentRanges,
-                          { start: Math.min(sNum, eNum), end: Math.max(sNum, eNum) },
-                        ];
-                        setScheduled({ daysOfWeek: scheduled?.daysOfWeek ?? [], dateRanges: nextRanges });
-                        setRangeStart("");
-                        setRangeEnd("");
-                      }}
-                    >
-                      期間追加
-                    </Button>
-                  </div>
-                  {(scheduled?.dateRanges?.length ?? 0) > 0 && (
-                    <div className="flex flex-col gap-1 text-xs">
-                      {(scheduled?.dateRanges ?? []).map((r, idx) => (
-                        <div key={`${r.start}-${r.end}-${idx}`} className="flex items-center gap-2">
-                          <span>
-                            {new Date(r.start).toLocaleDateString()} 〜 {new Date(r.end).toLocaleDateString()}
-                          </span>
-                          <button
-                            type="button"
-                            className="underline opacity-70"
-                            onClick={() => {
-                              const ranges = (scheduled?.dateRanges ?? []).filter((_, i) => i !== idx);
-                              setScheduled({ daysOfWeek: scheduled?.daysOfWeek ?? [], dateRanges: ranges });
-                            }}
-                          >
-                            削除
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Backlog Specifics */}
+          {/* Backlog Specifics - Inline */}
           {type === "backlog" && (
-            <div className="flex items-center min-h-[32px]">
-              <div className="w-[140px] flex items-center gap-2">実行日</div>
-              <div className="flex-1 flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground whitespace-nowrap">実行日</span>
+              <div className="flex items-center gap-2">
                 <input
                   type="date"
                   className="bg-transparent border-none hover:bg-black/5 dark:hover:bg-white/10 rounded px-2 py-1 text-sm focus:ring-0"
@@ -584,11 +483,109 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
               </div>
             </div>
           )}
+
+          {/* Scheduled Specifics - Might need a new line or fit in if space permits */}
+          {type === "scheduled" && (
+            <div className="w-full flex items-start gap-4 mt-2 pt-2 border-t border-border/50">
+               {/* This part is complex, maybe keep it full width but compact */}
+              <div className="flex items-center gap-2 pt-1 whitespace-nowrap text-muted-foreground">曜日・期間</div>
+              <div className="flex-1 flex flex-col gap-2">
+                 {/* Days of week */}
+                 <div className="flex gap-1 flex-wrap items-center">
+                    {["日", "月", "火", "水", "木", "金", "土"].map((label, idx) => {
+                       const selected = scheduled?.daysOfWeek?.includes(idx) ?? false;
+                       return (
+                         <button
+                           key={idx}
+                           type="button"
+                           onClick={() => {
+                             const setD = new Set(scheduled?.daysOfWeek ?? []);
+                             if (setD.has(idx)) setD.delete(idx); else setD.add(idx);
+                             setScheduled({ daysOfWeek: Array.from(setD).sort((a, b) => a - b), dateRanges: scheduled?.dateRanges });
+                           }}
+                           className={`px-2 py-1 rounded text-xs border ${selected ? "bg-foreground text-background border-foreground" : "bg-transparent border-border"}`}
+                         >
+                           {label}
+                         </button>
+                       );
+                    })}
+                     <button type="button" onClick={toggleWeekend} className="text-xs underline opacity-80 ml-2">
+                      土日トグル
+                    </button>
+                 </div>
+
+                 {/* Date Ranges */}
+                 <div className="flex flex-col gap-2">
+                    <div className="flex gap-2 items-center flex-wrap">
+                        <input
+                          type="date"
+                          className="border border-border rounded px-2 py-1 bg-transparent text-xs"
+                          value={rangeStart}
+                          onChange={(e) => setRangeStart(e.target.value)}
+                          onBlur={performSave}
+                        />
+                        <span className="text-xs">〜</span>
+                        <input
+                          type="date"
+                          className="border border-border rounded px-2 py-1 bg-transparent text-xs"
+                          value={rangeEnd}
+                          onChange={(e) => setRangeEnd(e.target.value)}
+                          onBlur={performSave}
+                        />
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                              if (!rangeStart || !rangeEnd) return;
+                              const startDate = new Date(rangeStart);
+                              const endDate = new Date(rangeEnd);
+                              if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return;
+                              const sNum = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()).getTime();
+                              const eNum = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()).getTime();
+                              const currentRanges = scheduled?.dateRanges ? [...scheduled.dateRanges] : [];
+                              const nextRanges = [
+                                ...currentRanges,
+                                { start: Math.min(sNum, eNum), end: Math.max(sNum, eNum) },
+                              ];
+                              setScheduled({ daysOfWeek: scheduled?.daysOfWeek ?? [], dateRanges: nextRanges });
+                              setRangeStart("");
+                              setRangeEnd("");
+                          }}
+                        >
+                          期間追加
+                        </Button>
+                    </div>
+                    {(scheduled?.dateRanges?.length ?? 0) > 0 && (
+                        <div className="flex flex-col gap-1 text-xs">
+                          {(scheduled?.dateRanges ?? []).map((r, idx) => (
+                            <div key={`${r.start}-${r.end}-${idx}`} className="flex items-center gap-2">
+                              <span>
+                                {new Date(r.start).toLocaleDateString()} 〜 {new Date(r.end).toLocaleDateString()}
+                              </span>
+                              <button
+                                type="button"
+                                className="underline opacity-70"
+                                onClick={() => {
+                                  const ranges = (scheduled?.dateRanges ?? []).filter((_, i) => i !== idx);
+                                  setScheduled({ daysOfWeek: scheduled?.daysOfWeek ?? [], dateRanges: ranges });
+                                }}
+                              >
+                                削除
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                    )}
+                 </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <hr className="border-border opacity-50" />
 
-        <div className="flex flex-col gap-2 min-h-[200px]">
+        <div className="flex flex-col gap-2 min-h-[200px] flex-1">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium">説明</label>
             <div className="flex items-center gap-2">
@@ -613,6 +610,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
             value={desc}
             onChange={(html) => { setDesc(html); }}
             onBlur={(latest) => { setDesc(latest); performSave(); }}
+            className="h-full"
           />
         </div>
         {!task && (
