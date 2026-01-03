@@ -13,6 +13,7 @@ import { copyDescriptionWithFormat, type CopyFormat } from "@/lib/taskUtils";
 import { Copy, ChevronDown, ArrowLeft } from "lucide-react";
 import { useToast } from "@/components/Providers";
 import { SubtaskList } from "@/components/SubtaskList";
+import { ParentTaskSelector } from "@/components/ParentTaskSelector";
 import Link from "next/link";
 
 export type TaskFormProps = {
@@ -42,6 +43,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
   const [rangeEnd, setRangeEnd] = useState<string>("");
   const [milestoneIds, setMilestoneIds] = useState<string[]>([]);
   const [milestoneDropdownOpen, setMilestoneDropdownOpen] = useState(false);
+  const [parentTaskId, setParentTaskId] = useState<string | undefined>(task?.parentTaskId);
   const [est, setEst] = useState<number>(0);
   const [plannedDateInput, setPlannedDateInput] = useState<string>(() => {
     if ((defaultType ?? "backlog") !== "backlog") return "";
@@ -81,6 +83,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
     setType(task.type);
     setScheduled(task.scheduled);
     setMilestoneIds(task.milestoneIds ?? []);
+    setParentTaskId(task.parentTaskId);
     if (task.type === "backlog") {
       const first = (task.plannedDates ?? [])[0];
       if (first != null) {
@@ -136,7 +139,9 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
       };
       const isScheduledChanged = JSON.stringify(normScheduled(currentScheduled)) !== JSON.stringify(normScheduled(task.scheduled));
 
-      if (!isTitleChanged && !isDescChanged && !isTypeChanged && !isMilestoneChanged && !isEstChanged && !isPlannedDatesChanged && !isScheduledChanged) {
+      const isParentChanged = (parentTaskId ?? null) !== (task.parentTaskId ?? null);
+
+      if (!isTitleChanged && !isDescChanged && !isTypeChanged && !isMilestoneChanged && !isEstChanged && !isPlannedDatesChanged && !isScheduledChanged && !isParentChanged) {
         return;
       }
     }
@@ -203,6 +208,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
           milestoneIds: milestoneIds,
           plannedDates: type === "backlog" ? plannedDates : [],
           estimatedPomodoros: Number.isFinite(est) ? est : 0,
+          parentTaskId: parentTaskId,
         };
         updatePayload.title = trimmed || undefined;
         useAppStore.getState().updateTask(draftTaskId, updatePayload);
@@ -212,7 +218,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
       setTimeout(() => { isSubmittingRef.current = false; }, 0);
       setTimeout(() => setIsSaving(false), 150);
     }
-  }, [addTask, updateTask, desc, milestoneIds, plannedDates, scheduled, title, type, draftTaskId, est, task, session]);
+  }, [addTask, updateTask, desc, milestoneIds, plannedDates, scheduled, title, type, draftTaskId, est, task, session, parentTaskId]);
 
   useImperativeHandle(ref, () => ({ save: performSave }), [performSave]);
 
@@ -222,6 +228,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
     setDesc("");
     setScheduled(undefined);
     setMilestoneIds([]);
+    setParentTaskId(undefined);
     setEst(0);
     setPlannedDates([(() => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); return d.getTime(); })()]);
     setPlannedDateInput(() => {
@@ -483,6 +490,23 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
               )}
             </div>
           </div>
+
+          {/* Parent Task Property - 既存タスク編集時のみ表示 */}
+          {draftTaskId && (
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground whitespace-nowrap">親タスク</span>
+              <ParentTaskSelector
+                taskId={draftTaskId}
+                currentParentId={parentTaskId}
+                onChange={(newParentId) => {
+                  setParentTaskId(newParentId);
+                  // state更新は非同期なので、直接updateTaskを呼び出す
+                  useAppStore.getState().updateTask(draftTaskId, { parentTaskId: newParentId });
+                  setLastSavedAt(Date.now());
+                }}
+              />
+            </div>
+          )}
 
           {/* Backlog Specifics - Inline */}
           {type === "backlog" && (
