@@ -1,5 +1,5 @@
 import { Reorder, useDragControls, useMotionValue, useTransform, motion } from "framer-motion";
-import { GripVertical, CheckCircle2, Trash2, Check, ChevronRight, ChevronDown } from "lucide-react";
+import { GripVertical, CheckCircle2, Trash2, Check, ChevronRight, ChevronDown, ArrowRight, CornerDownRight } from "lucide-react";
 import { Task } from "@/lib/types";
 import { useAppStore } from "@/lib/store";
 import { useToast } from "@/components/Providers";
@@ -90,16 +90,9 @@ export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, se
     const opacityRight = useTransform(x, [0, 50], [0, 1]);
     const opacityLeft = useTransform(x, [-50, 0], [1, 0]);
 
-    return (
-        <Reorder.Item
-            value={task}
-            id={task.id}
-            className="relative overflow-hidden"
-            dragListener={false}
-            dragControls={controls}
-            initial={false}
-            transition={{ duration: 0 }}
-        >
+    // サブタスクの場合はReorder.Itemでラップしない（Reorder.Groupのvaluesに含まれていないため）
+    const rowContent = (
+        <>
             {/* Swipe Background Layer */}
             <div className="absolute inset-0 flex justify-between items-center px-4 pointer-events-none z-0">
                 <motion.div style={{ opacity: opacityRight }} className="flex items-center justify-start w-full h-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
@@ -136,22 +129,10 @@ export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, se
                 }}
             >
                 <div
-                    className={`flex items-center gap-2 py-2 px-2 min-w-0 transition-colors border-b border-border/40 hover:bg-black/5 dark:hover:bg-white/5 group ${isActive ? "bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20" : ""} ${isSubtask ? "pl-8" : ""} ${dragOverTaskId === task.id && draggingTaskId !== task.id ? "ring-2 ring-primary ring-inset bg-primary/10" : ""}`}
+                    className={`flex items-center gap-2 py-2 px-2 min-w-0 transition-colors border-b border-border/40 hover:bg-black/5 dark:hover:bg-white/5 group ${isActive ? "bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20" : ""} ${isSubtask ? "pl-14 bg-muted/30" : ""} ${dragOverTaskId === task.id && draggingTaskId !== task.id ? "ring-2 ring-primary ring-inset bg-primary/10" : ""}`}
                     onContextMenu={(e) => { e.preventDefault(); onContext(e, task); }}
-                    draggable={!hasSubtasks && !isSubtask}
-                    onDragStart={(e) => {
-                        if (hasSubtasks || isSubtask) {
-                            e.preventDefault();
-                            return;
-                        }
-                        e.dataTransfer.setData("text/plain", task.id);
-                        e.dataTransfer.effectAllowed = "move";
-                        onParentDragStart?.(task.id);
-                    }}
-                    onDragEnd={() => {
-                        onParentDragEnd?.();
-                    }}
                     onDragOver={(e) => {
+                        // ドロップターゲットとして機能（サブタスク以外）
                         if (draggingTaskId && draggingTaskId !== task.id && !isSubtask) {
                             e.preventDefault();
                             e.dataTransfer.dropEffect = "move";
@@ -180,13 +161,32 @@ export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, se
                         onDragOverTask?.(null);
                     }}
                 >
-                    {/* ドラッグハンドル（サブタスク以外） */}
+                    {/* 並び替え用ドラッグハンドル（サブタスク以外） */}
                     {!isSubtask && (
                         <div
                             className="flex-shrink-0 w-[24px] flex justify-center items-center cursor-grab active:cursor-grabbing text-foreground/50 hover:text-foreground transition-colors touch-none select-none"
                             onPointerDown={(e) => controls.start(e)}
                         >
                             <GripVertical size={16} />
+                        </div>
+                    )}
+                    {/* 親タスク設定用ドラッグハンドル（サブタスクを持たない、かつサブタスクでないタスクのみ） */}
+                    {!isSubtask && !hasSubtasks && (
+                        <div
+                            className="flex-shrink-0 w-[20px] flex justify-center items-center cursor-move text-foreground/30 hover:text-primary transition-colors"
+                            draggable
+                            onDragStart={(e) => {
+                                e.stopPropagation();
+                                e.dataTransfer.setData("text/plain", task.id);
+                                e.dataTransfer.effectAllowed = "move";
+                                onParentDragStart?.(task.id);
+                            }}
+                            onDragEnd={() => {
+                                onParentDragEnd?.();
+                            }}
+                            title="別のタスクにドロップしてサブタスクに設定"
+                        >
+                            <ArrowRight size={14} />
                         </div>
                     )}
                     {/* サブタスク展開/折りたたみボタン or スペーサー */}
@@ -200,7 +200,7 @@ export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, se
                                 {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                             </button>
                         ) : (
-                            <div className="flex-shrink-0 w-[24px]" />
+                            <div className="flex-shrink-0 w-[4px]" />
                         )
                     )}
 
@@ -220,6 +220,12 @@ export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, se
                     )}
 
                     <div className="flex-1 min-w-0 flex items-center gap-2 overflow-hidden">
+                        {/* サブタスクインジケータ */}
+                        {isSubtask && (
+                            <div className="flex-shrink-0 text-muted-foreground/50">
+                                <CornerDownRight size={14} />
+                            </div>
+                        )}
                         <div className="flex-shrink-0">
                             {task.type === "daily" ? (
                                 <button
@@ -270,8 +276,14 @@ export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, se
                                     </span>
                                 )}
                                 {hasSubtasks && subtaskCount !== undefined && subtaskCount > 0 && (
-                                    <span className="inline-flex items-center text-xxs font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-muted text-muted-foreground border-border">
-                                        {subtaskCount}件
+                                    <span className="inline-flex items-center gap-1 text-xxs font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30">
+                                        <ChevronDown size={10} />
+                                        サブ {subtaskCount}件
+                                    </span>
+                                )}
+                                {isSubtask && (
+                                    <span className="inline-flex items-center gap-1 text-xxs font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/30">
+                                        サブタスク
                                     </span>
                                 )}
                             </div>
@@ -369,6 +381,29 @@ export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, se
 
                 </div>
             </motion.div>
+        </>
+    );
+
+    // サブタスクの場合は直接divでラップ、それ以外はReorder.Itemでラップ
+    if (isSubtask) {
+        return (
+            <div className="relative overflow-hidden">
+                {rowContent}
+            </div>
+        );
+    }
+
+    return (
+        <Reorder.Item
+            value={task}
+            id={task.id}
+            className="relative overflow-hidden"
+            dragListener={false}
+            dragControls={controls}
+            initial={false}
+            transition={{ duration: 0 }}
+        >
+            {rowContent}
         </Reorder.Item>
     );
 }

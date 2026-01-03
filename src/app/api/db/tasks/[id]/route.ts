@@ -29,8 +29,13 @@ export async function PATCH(req: Request, ctx: unknown) {
   const { params } = ctx as { params: Promise<{ id: string }> };
   const { id } = await params;
   const body = await req.json();
-  const { data, error } = await supabaseAdmin.from('tasks').update(body).eq('id', id).eq('user_id', userId).select('*').single();
+  // undefinedをnullに変換（parentTaskIdなどの明示的なクリアに対応）
+  const sanitizedBody = Object.fromEntries(
+    Object.entries(body).map(([k, v]) => [k, v === undefined ? null : v])
+  );
+  const { data, error } = await supabaseAdmin.from('tasks').update(sanitizedBody).eq('id', id).eq('user_id', userId).select('*').maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!data) return NextResponse.json({ error: 'task not found' }, { status: 404 });
   return NextResponse.json({ item: data });
 }
 

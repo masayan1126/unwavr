@@ -103,16 +103,17 @@ export default function TaskList({
     }, []);
 
     // タスクごとのサブタスクをマップ化
+    // NOTE: storeTasksを使用することで、フィルタに関係なく全サブタスクを表示
     const subtasksMap = useMemo(() => {
         const map: Record<string, Task[]> = {};
-        for (const t of tasks) {
+        for (const t of storeTasks) {
             if (t.parentTaskId && t.archived !== true) {
                 if (!map[t.parentTaskId]) map[t.parentTaskId] = [];
                 map[t.parentTaskId].push(t);
             }
         }
         return map;
-    }, [tasks]);
+    }, [storeTasks]);
 
     // タスクごとのサブタスク数を計算
     const subtaskCounts = useMemo(() => {

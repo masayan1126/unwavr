@@ -149,9 +149,14 @@ export default function TasksImportExport() {
             // 旧フォーマット互換（期間/見積）
             dateRanges: headerIndex("期間", "dateRanges"),
             estimatedPomodoros: headerIndex("見積ポモ", "estimatedPomodoros"),
+            // 親タスク（タイトルで指定）
+            parentTask: headerIndex("親タスク", "parentTask"),
         };
         const errors: string[] = [];
         let ok = 0;
+        // 親タスクのリンク用: { インポートしたタスクタイトル → 親タスクタイトル }
+        const parentLinks: { taskTitle: string; parentTitle: string }[] = [];
+
         for (let i = 1; i < rows.length; i++) {
             const cells = rows[i];
             if (!cells || cells.every((c) => c.trim() === "")) continue;
@@ -173,6 +178,7 @@ export default function TasksImportExport() {
                 const plannedRaw = (idx.plannedDates !== -1 ? (cells[idx.plannedDates] ?? "").trim() : "");
                 const rangesRaw = (idx.dateRanges !== -1 ? (cells[idx.dateRanges] ?? "").trim() : "");
                 const estRaw = (idx.estimatedPomodoros !== -1 ? (cells[idx.estimatedPomodoros] ?? "0").trim() : "0");
+                const parentTaskTitle = (idx.parentTask !== -1 ? (cells[idx.parentTask] ?? "").trim() : "");
 
                 const estimated = parseInt(estRaw || "0", 10);
                 let scheduled: Scheduled | undefined = undefined;
@@ -199,11 +205,35 @@ export default function TasksImportExport() {
                     milestoneIds: [],
                 });
                 ok++;
+
+                // 親タスクが指定されている場合、後でリンク
+                if (parentTaskTitle && parentTaskTitle !== "-") {
+                    parentLinks.push({ taskTitle: title, parentTitle: parentTaskTitle });
+                }
             } catch (e) {
                 const msg = e instanceof Error ? e.message : String(e);
                 errors.push(`行${i + 1}: ${msg}`);
             }
         }
+
+        // 親タスクのリンク処理（タイトルでマッチング）
+        if (parentLinks.length > 0) {
+            // 少し待ってからストアの状態を取得（addTaskが反映されるのを待つ）
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            const currentTasks = useAppStore.getState().tasks;
+            const updateTask = useAppStore.getState().updateTask;
+
+            for (const link of parentLinks) {
+                const childTask = currentTasks.find((t) => t.title === link.taskTitle);
+                const parentTask = currentTasks.find((t) => t.title === link.parentTitle);
+                if (childTask && parentTask && childTask.id !== parentTask.id) {
+                    updateTask(childTask.id, { parentTaskId: parentTask.id });
+                } else if (childTask && !parentTask) {
+                    errors.push(`親タスク「${link.parentTitle}」が見つかりません（${link.taskTitle}）`);
+                }
+            }
+        }
+
         const summary = { imported: ok, failed: errors.length, errors };
         setResult(summary);
         addHistory({ fileName: file.name, ...summary, timestamp: Date.now() });
@@ -238,7 +268,7 @@ export default function TasksImportExport() {
             return parts.join("\r\n");
         };
 
-        const header: string[] = ["タイトル", "詳細", "タイプ", "設定されている曜日", "設定されている実行日"];
+        const header: string[] = ["タイトル", "詳細", "タイプ", "設定されている曜日", "設定されている実行日", "親タスク"];
 
         const rows = tasksList.map((t) => {
             const cells: string[] = [];
@@ -259,6 +289,12 @@ export default function TasksImportExport() {
                 : "-";
             const planned = wrap(plannedRaw || "-", 20);
             cells.push(esc(planned));
+
+            // 親タスクのタイトルを取得
+            const parentTask = t.parentTaskId ? tasksList.find((p) => p.id === t.parentTaskId) : null;
+            const parentTitle = parentTask ? wrap(parentTask.title ?? "", 30) : "-";
+            cells.push(esc(parentTitle));
+
             return cells.join(",");
         });
         const EOL = "\r\n";
@@ -320,7 +356,7 @@ export default function TasksImportExport() {
                 <div className="text-sm font-medium">インポート（CSV）</div>
                 <div className="text-xs opacity-70">
                     ヘッダー行を含むCSVを選択してください。推奨フォーマット（日本語）:
-                    タイトル, 詳細, タイプ(毎日/積み上げ候補/特定曜日), 設定されている曜日(例: 日;火;木), 設定されている実行日(例: 2025-05-10;2025-05-12)
+                    タイトル, 詳細, タイプ(毎日/積み上げ候補/特定曜日), 設定されている曜日(例: 日;火;木), 設定されている実行日(例: 2025-05-10;2025-05-12), 親タスク（タイトルで指定）
                     <br />
                     後方互換として旧フォーマット（英語列名: title, description, type, daysOfWeek, dateRanges など）も受け付けます。
                 </div>

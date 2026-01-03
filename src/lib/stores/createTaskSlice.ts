@@ -183,7 +183,11 @@ export const createTaskSlice: StateCreator<AppState, [], [], TaskSlice> = (set, 
     updateTask: (taskId, update) =>
         set((state) => {
             const tasks = state.tasks.map((t) => (t.id === taskId ? { ...t, ...update } : t));
-            fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(update) }).catch(() => { });
+            // undefinedをnullに変換してから送信（parentTaskIdのクリアなどに対応）
+            const sanitizedUpdate = Object.fromEntries(
+                Object.entries(update).map(([k, v]) => [k, v === undefined ? null : v])
+            );
+            fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sanitizedUpdate) }).catch(() => { });
             return { tasks };
         }),
     duplicateTask: (taskId) => {
