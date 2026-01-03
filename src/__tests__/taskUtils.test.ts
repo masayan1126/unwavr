@@ -15,7 +15,7 @@ function makeTask(partial: Partial<Task>): Task {
     description: partial.description,
     estimatedPomodoros: partial.estimatedPomodoros,
     completedPomodoros: partial.completedPomodoros,
-    milestoneId: partial.milestoneId,
+    milestoneIds: partial.milestoneIds ?? [],
   };
 }
 

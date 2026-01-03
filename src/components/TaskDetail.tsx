@@ -43,7 +43,9 @@ export default function TaskDetail({ taskId, backHref }: { taskId: string; backH
     );
   }
 
-  const milestone = task.milestoneId ? milestones.find((m) => m.id === task.milestoneId) : undefined;
+  const taskMilestones = (task.milestoneIds ?? [])
+    .map(id => milestones.find(m => m.id === id))
+    .filter((m): m is typeof milestones[number] => m !== undefined);
   const today = isTaskForToday(task);
 
   return (
@@ -164,9 +166,13 @@ export default function TaskDetail({ taskId, backHref }: { taskId: string; backH
 
       <div className="border rounded-[var(--radius-md)] p-3 border-border">
         <div className="text-xs uppercase opacity-60 mb-2">マイルストーン</div>
-        {milestone ? (
-          <div className="text-sm">
-            {milestone.title}: {milestone.currentUnits}/{milestone.targetUnits}
+        {taskMilestones.length > 0 ? (
+          <div className="space-y-1">
+            {taskMilestones.map(m => (
+              <div key={m.id} className="text-sm">
+                {m.title}: {m.currentUnits}/{m.targetUnits}
+              </div>
+            ))}
           </div>
         ) : (
           <div className="text-sm opacity-70">未設定</div>

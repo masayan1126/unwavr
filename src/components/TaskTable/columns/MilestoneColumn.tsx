@@ -17,17 +17,19 @@ interface MilestoneColumnProps {
 }
 
 export function MilestoneColumn({ task, milestones }: MilestoneColumnProps) {
-  const milestone = task.milestoneId
-    ? milestones.find((m) => m.id === task.milestoneId)
-    : undefined;
+  const taskMilestones = (task.milestoneIds ?? [])
+    .map(id => milestones.find(m => m.id === id))
+    .filter((m): m is Milestone => m !== undefined);
 
   return (
     <div
       className="hidden sm:block w-[160px] text-xs opacity-80 truncate flex-shrink-0 px-2"
-      title={milestone?.title}
+      title={taskMilestones.map(m => m.title).join(", ")}
     >
-      {milestone ? (
-        truncateText(milestone.title, 20)
+      {taskMilestones.length > 0 ? (
+        taskMilestones.length === 1
+          ? truncateText(taskMilestones[0].title, 20)
+          : `${taskMilestones.length}件`
       ) : (
         <span className="opacity-40">-</span>
       )}

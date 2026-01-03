@@ -39,7 +39,7 @@ export const TaskSchema = z.object({
   scheduled: ScheduledSchema.optional(),
   estimatedPomodoros: z.number().int().min(0).default(0).optional(),
   completedPomodoros: z.number().int().min(0).default(0).optional(),
-  milestoneId: z.string().optional(),
+  milestoneIds: z.array(z.string()).optional().default([]),
   pomodoroSetting: TaskPomodoroSettingSchema.optional(),
   // 毎日タスクの「今日実行」状態を日単位で保持（UTC 0時のタイムスタンプ）
   // Scheduledタスクも同様に、完了した日をここに記録することで履歴を追跡する

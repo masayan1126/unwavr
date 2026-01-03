@@ -4,9 +4,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useAppStore } from "@/lib/store";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
-import { Mic, X, Target } from "lucide-react";
+import { Mic, X, Target, ChevronDown } from "lucide-react";
 import { useToast } from "@/components/Providers";
-import { Select } from "@/components/ui/Select";
 
 interface QuickAddTaskModalProps {
   isOpen: boolean;
@@ -17,7 +16,8 @@ interface QuickAddTaskModalProps {
 export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: QuickAddTaskModalProps) {
   const { data: session } = useSession();
   const [title, setTitle] = useState("");
-  const [milestoneId, setMilestoneId] = useState("");
+  const [milestoneIds, setMilestoneIds] = useState<string[]>([]);
+  const [milestoneDropdownOpen, setMilestoneDropdownOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -70,7 +70,8 @@ export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: Qui
     }
 
     setTitle("");
-    setMilestoneId("");
+    setMilestoneIds([]);
+    setMilestoneDropdownOpen(false);
     setError(null);
     onClose();
   }, [isSubmitting, listening, toggleSpeech, onClose]);
@@ -112,7 +113,7 @@ export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: Qui
         plannedDates: [todayUtc],
         estimatedPomodoros: 0,
         order: 0,
-        milestoneId: milestoneId || undefined,
+        milestoneIds: milestoneIds,
       });
 
       // Googleカレンダーに同期
@@ -154,7 +155,8 @@ export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: Qui
 
       // フォームをリセットして連続追加可能に
       setTitle("");
-      setMilestoneId("");
+      setMilestoneIds([]);
+      setMilestoneDropdownOpen(false);
 
       // フォーカスを保持
       if (inputRef.current) {
@@ -266,21 +268,44 @@ export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: Qui
             {milestones.length > 0 && (
               <div className="mt-3 flex items-center gap-2">
                 <Target size={16} className="opacity-70 shrink-0" />
-                <Select
-                  value={milestoneId}
-                  onChange={setMilestoneId}
-                  disabled={isSubmitting}
-                  placeholder="マイルストーン: 未選択"
-                  options={[
-                    { value: "", label: "マイルストーン: 未選択" },
-                    ...milestones.map((m) => ({
-                      value: m.id,
-                      label: `${m.title} (${m.currentUnits}/${m.targetUnits})`,
-                    })),
-                  ]}
-                  fullWidth
-                  size="md"
-                />
+                <div className="relative flex-1">
+                  <button
+                    type="button"
+                    onClick={() => !isSubmitting && setMilestoneDropdownOpen(!milestoneDropdownOpen)}
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-[var(--border)] hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-between disabled:opacity-50"
+                  >
+                    <span>
+                      {milestoneIds.length === 0
+                        ? "マイルストーン: 未選択"
+                        : milestoneIds.length === 1
+                          ? milestones.find(m => m.id === milestoneIds[0])?.title ?? "1件選択"
+                          : `${milestoneIds.length}件選択`}
+                    </span>
+                    <ChevronDown size={14} />
+                  </button>
+                  {milestoneDropdownOpen && (
+                    <div className="absolute z-50 mt-1 w-full bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-auto">
+                      {milestones.map((m) => (
+                        <label key={m.id} className="flex items-center gap-2 px-3 py-2 hover:bg-muted cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={milestoneIds.includes(m.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setMilestoneIds([...milestoneIds, m.id]);
+                              } else {
+                                setMilestoneIds(milestoneIds.filter(id => id !== m.id));
+                              }
+                            }}
+                            className="rounded border-border"
+                          />
+                          <span className="text-sm truncate">{m.title} ({m.currentUnits}/{m.targetUnits})</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

@@ -85,9 +85,9 @@ export function useTaskTableSort({
 
         case "milestone": {
           const ma =
-            milestones.find((m) => m.id === a.milestoneId)?.title ?? "";
+            milestones.find((m) => m.id === (a.milestoneIds ?? [])[0])?.title ?? "";
           const mb =
-            milestones.find((m) => m.id === b.milestoneId)?.title ?? "";
+            milestones.find((m) => m.id === (b.milestoneIds ?? [])[0])?.title ?? "";
           return dir * ma.localeCompare(mb);
         }
 

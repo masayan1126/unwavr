@@ -219,7 +219,7 @@ export default function Milestones() {
 
   // マイルストーンに紐付いたタスクを取得
   const getTasksForMilestone = (milestoneId: string): Task[] => {
-    return tasks.filter((t) => t.milestoneId === milestoneId);
+    return tasks.filter((t) => (t.milestoneIds ?? []).includes(milestoneId));
   };
 
   // 展開/折りたたみを切り替え

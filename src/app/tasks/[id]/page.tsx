@@ -24,7 +24,8 @@ import {
   CheckCircle2,
   Repeat,
   CalendarDays,
-  Layers
+  Layers,
+  ChevronDown
 } from "lucide-react";
 
 export default function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -45,7 +46,8 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   const [type, setType] = useState<TaskType>("daily");
   const [estimatedPomodoros, setEstimatedPomodoros] = useState(0);
   const [pomodoroWorkMinutes, setPomodoroWorkMinutes] = useState<number | "">("");
-  const [milestoneId, setMilestoneId] = useState("");
+  const [milestoneIds, setMilestoneIds] = useState<string[]>([]);
+  const [milestoneDropdownOpen, setMilestoneDropdownOpen] = useState(false);
   const [plannedDates, setPlannedDates] = useState<number[]>([]);
   const [plannedDateGoogleEvents, setPlannedDateGoogleEvents] = useState<Record<string, string>>({});
   const [isEditing, setIsEditing] = useState(false);
@@ -68,7 +70,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
     setType(task.type);
     setEstimatedPomodoros(task.estimatedPomodoros || 0);
     setPomodoroWorkMinutes(task.pomodoroSetting?.workDurationSec ? Math.floor(task.pomodoroSetting.workDurationSec / 60) : "");
-    setMilestoneId(task.milestoneId || "");
+    setMilestoneIds(task.milestoneIds ?? []);
     setPlannedDates(task.plannedDates || []);
     setPlannedDateGoogleEvents(task.plannedDateGoogleEvents || {});
 
@@ -125,7 +127,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
       scheduled: newScheduled,
       estimatedPomodoros: estimatedPomodoros || 0,
       pomodoroSetting: pomodoroWorkMinutes ? { workDurationSec: Number(pomodoroWorkMinutes) * 60 } : undefined,
-      milestoneId: milestoneId || undefined,
+      milestoneIds: milestoneIds,
       plannedDates: type === "backlog" ? plannedDates : [],
       plannedDateGoogleEvents: type === "backlog" ? plannedDateGoogleEvents : {},
     });
@@ -437,15 +439,20 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               </div>
 
               {/* マイルストーン */}
-              {task.milestoneId && (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-[var(--border)]">
+              {(task.milestoneIds ?? []).length > 0 && (
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-white/5 border border-[var(--border)]">
                   <div className="p-2 rounded-lg bg-[var(--warning)]/10">
                     <Target size={16} className="text-[var(--warning)]" />
                   </div>
                   <div className="min-w-0">
                     <div className="text-xs opacity-60">マイルストーン</div>
-                    <div className="font-medium truncate">
-                      {milestones.find(m => m.id === task.milestoneId)?.title || "未設定"}
+                    <div className="space-y-1">
+                      {(task.milestoneIds ?? []).map(id => {
+                        const m = milestones.find(m => m.id === id);
+                        return m ? (
+                          <div key={id} className="font-medium truncate">{m.title}</div>
+                        ) : null;
+                      })}
                     </div>
                   </div>
                 </div>
@@ -587,22 +594,48 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
               <div>
                 <label className="block text-sm font-medium mb-2 opacity-80">マイルストーン</label>
-                <Select
-                  value={milestoneId}
-                  onChange={(v) => {
-                    setMilestoneId(v);
-                    handleSave(true);
-                  }}
-                  options={[
-                    { value: "", label: "未選択" },
-                    ...milestones.map((m) => ({
-                      value: m.id,
-                      label: `${m.title} (${m.currentUnits}/${m.targetUnits})`,
-                    })),
-                  ]}
-                  fullWidth
-                  size="lg"
-                />
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setMilestoneDropdownOpen(!milestoneDropdownOpen)}
+                    className="w-full px-4 py-2.5 text-sm rounded-lg border border-[var(--border)] hover:bg-white/5 flex items-center justify-between"
+                  >
+                    <span>
+                      {milestoneIds.length === 0
+                        ? "未選択"
+                        : milestoneIds.length === 1
+                          ? milestones.find(m => m.id === milestoneIds[0])?.title ?? "1件選択"
+                          : `${milestoneIds.length}件選択`}
+                    </span>
+                    <ChevronDown size={16} />
+                  </button>
+                  {milestoneDropdownOpen && (
+                    <div className="absolute z-50 mt-1 w-full bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-auto">
+                      {milestones.length === 0 ? (
+                        <div className="px-3 py-2 text-sm text-muted-foreground">マイルストーンがありません</div>
+                      ) : (
+                        milestones.map((m) => (
+                          <label key={m.id} className="flex items-center gap-2 px-3 py-2 hover:bg-muted cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={milestoneIds.includes(m.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setMilestoneIds([...milestoneIds, m.id]);
+                                } else {
+                                  setMilestoneIds(milestoneIds.filter(id => id !== m.id));
+                                }
+                                setTimeout(() => handleSave(true), 0);
+                              }}
+                              className="rounded border-border"
+                            />
+                            <span className="text-sm truncate">{m.title} ({m.currentUnits}/{m.targetUnits})</span>
+                          </label>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {type === "scheduled" && (

@@ -287,7 +287,7 @@ export default function FloatingAIAssistant() {
             // Extract task title and create
             const taskTitle = content.slice(6).trim();
             if (taskTitle) {
-                addTask({ title: taskTitle, type: "backlog", order: 0 });
+                addTask({ title: taskTitle, type: "backlog", order: 0, milestoneIds: [] });
                 setMessages((m) => [
                     ...m,
                     { role: "user" as const, content },
@@ -353,7 +353,7 @@ export default function FloatingAIAssistant() {
                 ]);
             } else {
                 const summary = milestones.map(m => {
-                    const linkedTasks = tasks.filter(t => t.milestoneId === m.id);
+                    const linkedTasks = tasks.filter(t => (t.milestoneIds ?? []).includes(m.id));
                     const completedCount = linkedTasks.filter(t => t.completed).length;
                     const progress = linkedTasks.length > 0 ? Math.round((completedCount / linkedTasks.length) * 100) : 0;
                     return `• **${m.title}**: ${progress}% (${completedCount}/${linkedTasks.length}タスク)`;

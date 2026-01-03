@@ -34,7 +34,17 @@ export async function GET(req: NextRequest) {
   }
   const { data, error, count } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ items: data ?? [], total: count ?? undefined });
+
+  // 後方互換性: milestoneId → milestoneIds への変換
+  const normalizedData = (data ?? []).map((task: Record<string, unknown>) => {
+    // milestoneIdsが未設定で、旧milestoneIdがある場合は変換
+    if ((!task.milestoneIds || (Array.isArray(task.milestoneIds) && task.milestoneIds.length === 0)) && task.milestoneId) {
+      return { ...task, milestoneIds: [task.milestoneId], milestoneId: undefined };
+    }
+    return task;
+  });
+
+  return NextResponse.json({ items: normalizedData, total: count ?? undefined });
 }
 
 export async function POST(req: NextRequest) {
@@ -60,7 +70,7 @@ export async function POST(req: NextRequest) {
   const payload: Record<string, unknown> = {};
   const allow = [
     'id', 'title', 'type', 'createdAt', 'completed', 'completedPomodoros',
-    'description', 'estimatedPomodoros', 'milestoneId',
+    'description', 'estimatedPomodoros', 'milestoneIds',
     'plannedDates', 'dailyDoneDates', 'scheduled', 'timeSlots',
     'plannedDateGoogleEvents',
   ];

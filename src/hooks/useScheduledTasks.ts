@@ -103,8 +103,8 @@ export function useScheduledTasks() {
                 return 0;
             }
             if (sortKey === "milestone") {
-                const ma = milestones.find((m) => m.id === a.milestoneId)?.title ?? "";
-                const mb = milestones.find((m) => m.id === b.milestoneId)?.title ?? "";
+                const ma = milestones.find((m) => m.id === (a.milestoneIds ?? [])[0])?.title ?? "";
+                const mb = milestones.find((m) => m.id === (b.milestoneIds ?? [])[0])?.title ?? "";
                 return dir * ma.localeCompare(mb);
             }
             return 0;

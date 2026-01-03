@@ -44,7 +44,9 @@ export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, se
     const toast = useToast();
 
     const milestones = useAppStore((s) => s.milestones);
-    const milestone = task.milestoneId ? milestones.find((m) => m.id === task.milestoneId) : undefined;
+    const taskMilestones = (task.milestoneIds ?? [])
+        .map(id => milestones.find(m => m.id === id))
+        .filter((m): m is typeof milestones[number] => m !== undefined);
     const dowShort = ["日", "月", "火", "水", "木", "金", "土"] as const;
     const scheduledDaysLabel = task.type === "scheduled" && (task.scheduled?.daysOfWeek?.length ?? 0) > 0
         ? task.scheduled!.daysOfWeek.map((d: number) => dowShort[d]).join("・")
@@ -278,8 +280,10 @@ export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, se
                         </div>
                     )}
                     {showMilestoneColumn && (
-                        <div className="hidden sm:block w-[160px] text-xs opacity-80 truncate flex-shrink-0 px-2" title={milestone?.title}>
-                            {milestone ? truncateText(milestone.title, 20) : <span className="opacity-40">-</span>}
+                        <div className="hidden sm:block w-[160px] text-xs opacity-80 truncate flex-shrink-0 px-2" title={taskMilestones.map(m => m.title).join(", ")}>
+                            {taskMilestones.length > 0
+                                ? (taskMilestones.length === 1 ? truncateText(taskMilestones[0].title, 20) : `${taskMilestones.length}件`)
+                                : <span className="opacity-40">-</span>}
                         </div>
                     )}
                     {showArchivedAtColumn && (

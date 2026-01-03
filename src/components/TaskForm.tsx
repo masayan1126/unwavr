@@ -33,7 +33,8 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
   const [scheduled, setScheduled] = useState<Scheduled | undefined>(undefined);
   const [rangeStart, setRangeStart] = useState<string>("");
   const [rangeEnd, setRangeEnd] = useState<string>("");
-  const [milestoneId, setMilestoneId] = useState<string>("");
+  const [milestoneIds, setMilestoneIds] = useState<string[]>([]);
+  const [milestoneDropdownOpen, setMilestoneDropdownOpen] = useState(false);
   const [est, setEst] = useState<number>(0);
   const [plannedDateInput, setPlannedDateInput] = useState<string>(() => {
     if ((defaultType ?? "backlog") !== "backlog") return "";
@@ -72,7 +73,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
     setDesc(task.description ?? "");
     setType(task.type);
     setScheduled(task.scheduled);
-    setMilestoneId(task.milestoneId ?? "");
+    setMilestoneIds(task.milestoneIds ?? []);
     if (task.type === "backlog") {
       const first = (task.plannedDates ?? [])[0];
       if (first != null) {
@@ -105,14 +106,14 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
 
       const currentPlannedDates = type === "backlog" ? plannedDates : [];
       const currentScheduled = type === "scheduled" ? scheduled : undefined;
-      const currentMilestoneId = milestoneId || undefined;
+      const currentMilestoneIds = milestoneIds;
       const currentDesc = desc || undefined;
       const currentEst = Number.isFinite(est) ? est : 0;
 
       const isTitleChanged = trimmed !== normStr(task.title);
       const isDescChanged = normStr(currentDesc) !== normStr(task.description);
       const isTypeChanged = type !== task.type;
-      const isMilestoneChanged = normStr(currentMilestoneId) !== normStr(task.milestoneId);
+      const isMilestoneChanged = JSON.stringify(currentMilestoneIds.slice().sort()) !== JSON.stringify((task.milestoneIds ?? []).slice().sort());
       const isEstChanged = currentEst !== normNum(task.estimatedPomodoros);
 
       // Safe array comparison: slice() before sort() to avoid mutating original state
@@ -145,7 +146,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
           description: desc || undefined,
           type,
           scheduled,
-          milestoneId: milestoneId || undefined,
+          milestoneIds: milestoneIds,
           dailyDoneDates: [],
           plannedDates: taskPlannedDates,
           estimatedPomodoros: Number.isFinite(est) ? est : 0,
@@ -192,7 +193,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
           description: desc || undefined,
           type,
           scheduled,
-          milestoneId: milestoneId || undefined,
+          milestoneIds: milestoneIds,
           plannedDates: type === "backlog" ? plannedDates : [],
           estimatedPomodoros: Number.isFinite(est) ? est : 0,
         };
@@ -204,7 +205,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
       setTimeout(() => { isSubmittingRef.current = false; }, 0);
       setTimeout(() => setIsSaving(false), 150);
     }
-  }, [addTask, updateTask, desc, milestoneId, plannedDates, scheduled, title, type, draftTaskId, est, task, session]);
+  }, [addTask, updateTask, desc, milestoneIds, plannedDates, scheduled, title, type, draftTaskId, est, task, session]);
 
   useImperativeHandle(ref, () => ({ save: performSave }), [performSave]);
 
@@ -213,7 +214,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
     setTitle("");
     setDesc("");
     setScheduled(undefined);
-    setMilestoneId("");
+    setMilestoneIds([]);
     setEst(0);
     setPlannedDates([(() => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); return d.getTime(); })()]);
     setPlannedDateInput(() => {
@@ -423,23 +424,46 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
           {/* Milestone Property */}
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground whitespace-nowrap">マイルストーン</span>
-            <Select
-              value={milestoneId}
-              onChange={(v) => {
-                setMilestoneId(v);
-                performSave();
-              }}
-              options={[
-                { value: "", label: "未選択" },
-                ...milestones.map((m) => ({
-                  value: m.id,
-                  label: `${m.title} (${m.currentUnits}/${m.targetUnits})`,
-                })),
-              ]}
-              size="sm"
-              variant="ghost"
-              className="max-w-[200px]"
-            />
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setMilestoneDropdownOpen(!milestoneDropdownOpen)}
+                className="px-2 py-1 text-sm rounded hover:bg-black/5 dark:hover:bg-white/10 flex items-center gap-1"
+              >
+                {milestoneIds.length === 0
+                  ? "未選択"
+                  : milestoneIds.length === 1
+                    ? milestones.find(m => m.id === milestoneIds[0])?.title ?? "1件選択"
+                    : `${milestoneIds.length}件選択`}
+                <ChevronDown size={14} />
+              </button>
+              {milestoneDropdownOpen && (
+                <div className="absolute z-50 mt-1 w-64 bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-auto">
+                  {milestones.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">マイルストーンがありません</div>
+                  ) : (
+                    milestones.map((m) => (
+                      <label key={m.id} className="flex items-center gap-2 px-3 py-2 hover:bg-muted cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={milestoneIds.includes(m.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setMilestoneIds([...milestoneIds, m.id]);
+                            } else {
+                              setMilestoneIds(milestoneIds.filter(id => id !== m.id));
+                            }
+                            setTimeout(() => performSave(), 0);
+                          }}
+                          className="rounded border-border"
+                        />
+                        <span className="text-sm truncate">{m.title} ({m.currentUnits}/{m.targetUnits})</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Backlog Specifics - Inline */}

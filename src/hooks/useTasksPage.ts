@@ -64,12 +64,12 @@ export const useTasksPage = () => {
         // マイルストーンフィルター適用
         if (milestoneFilter !== "all") {
             if (milestoneFilter === "with") {
-                filtered = filtered.filter((task) => !!task.milestoneId);
+                filtered = filtered.filter((task) => (task.milestoneIds ?? []).length > 0);
             } else if (milestoneFilter === "without") {
-                filtered = filtered.filter((task) => !task.milestoneId);
+                filtered = filtered.filter((task) => (task.milestoneIds ?? []).length === 0);
             } else {
                 // 特定のマイルストーンIDでフィルター
-                filtered = filtered.filter((task) => task.milestoneId === milestoneFilter);
+                filtered = filtered.filter((task) => (task.milestoneIds ?? []).includes(milestoneFilter));
             }
         }
 
