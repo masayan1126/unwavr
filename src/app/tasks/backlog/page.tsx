@@ -6,7 +6,7 @@ import TaskDialog from "@/components/TaskCreateDialog";
 import TaskForm from "@/components/TaskForm";
 import { Filter as FilterIcon, RefreshCw } from "lucide-react";
 import { IconButton } from "@/components/ui/IconButton";
-import StylishSelect from "@/components/StylishSelect";
+import { Select } from "@/components/ui/Select";
 import FilterBar from "@/components/FilterBar";
 import FilterChip from "@/components/FilterChip";
 import { useBacklogTasks } from "@/hooks/useBacklogTasks";
@@ -139,7 +139,7 @@ export default function BacklogPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
             <div className="text-xs opacity-70">{hydrating ? "-" : `${pageInc} / ${totalPagesInc}（全 ${totalInc} 件）`}</div>
             <FilterBar className="w-full sm:w-auto">
-              <StylishSelect
+              <Select
                 size="sm"
                 value={sortKeyInc}
                 onChange={(v) => setSortKeyInc(v as "title" | "createdAt" | "planned" | "type" | "milestone")}
@@ -154,7 +154,7 @@ export default function BacklogPage() {
               <Button variant="secondary" size="sm" onClick={() => setSortAscInc((v) => !v)}>
                 {sortAscInc ? "昇順" : "降順"}
               </Button>
-              <StylishSelect
+              <Select
                 label="1ページあたり"
                 size="sm"
                 value={pageSizeInc}
@@ -203,7 +203,7 @@ export default function BacklogPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 mt-4">
             <div className="text-xs opacity-70">{hydrating ? "-" : `${pageCom} / ${totalPagesCom}（全 ${totalCom} 件）`}</div>
             <FilterBar className="w-full sm:w-auto">
-              <StylishSelect
+              <Select
                 size="sm"
                 value={sortKeyCom}
                 onChange={(v) => setSortKeyCom(v as "title" | "createdAt" | "planned" | "type" | "milestone")}
@@ -218,7 +218,7 @@ export default function BacklogPage() {
               <Button variant="secondary" size="sm" onClick={() => setSortAscCom((v) => !v)}>
                 {sortAscCom ? "昇順" : "降順"}
               </Button>
-              <StylishSelect
+              <Select
                 label="1ページあたり"
                 size="sm"
                 value={pageSizeCom}

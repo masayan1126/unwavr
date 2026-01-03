@@ -6,6 +6,7 @@ import { useAppStore } from "@/lib/store";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { Mic, X, Target } from "lucide-react";
 import { useToast } from "@/components/Providers";
+import { Select } from "@/components/ui/Select";
 
 interface QuickAddTaskModalProps {
   isOpen: boolean;
@@ -265,19 +266,21 @@ export default function QuickAddTaskModal({ isOpen, onClose, onOpenDetail }: Qui
             {milestones.length > 0 && (
               <div className="mt-3 flex items-center gap-2">
                 <Target size={16} className="opacity-70 shrink-0" />
-                <select
+                <Select
                   value={milestoneId}
-                  onChange={(e) => setMilestoneId(e.target.value)}
+                  onChange={setMilestoneId}
                   disabled={isSubmitting}
-                  className="flex-1 px-3 py-2 border border-[var(--border)] rounded-lg bg-transparent text-sm disabled:opacity-50 focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
-                >
-                  <option value="">マイルストーン: 未選択</option>
-                  {milestones.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.title} ({m.currentUnits}/{m.targetUnits})
-                    </option>
-                  ))}
-                </select>
+                  placeholder="マイルストーン: 未選択"
+                  options={[
+                    { value: "", label: "マイルストーン: 未選択" },
+                    ...milestones.map((m) => ({
+                      value: m.id,
+                      label: `${m.title} (${m.currentUnits}/${m.targetUnits})`,
+                    })),
+                  ]}
+                  fullWidth
+                  size="md"
+                />
               </div>
             )}
 

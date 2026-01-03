@@ -4,7 +4,7 @@ import { RotateCcw, Trash2, RefreshCw } from "lucide-react";
 import { useConfirm, useToast } from "@/components/Providers";
 import { useAppStore } from "@/lib/store";
 import { Task } from "@/lib/types";
-import StylishSelect from "@/components/StylishSelect";
+import { Select } from "@/components/ui/Select";
 import FilterBar from "@/components/FilterBar";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -143,7 +143,7 @@ export default function ArchivedTasksPage(): React.ReactElement {
       <div className="mt-4 px-1 flex justify-end">
         <FilterBar className="w-full sm:w-auto">
           <div className="text-xs opacity-70">{loading ? "-" : `${page} / ${totalPages}（全 ${total} 件）`}</div>
-          <StylishSelect
+          <Select
             label="1ページあたり"
             size="sm"
             value={pageSize}

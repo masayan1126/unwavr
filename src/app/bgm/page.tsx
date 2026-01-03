@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useAppStore } from "@/lib/store";
 import { Play, Trash2, ChevronUp, ChevronDown, Plus, RefreshCw, Download } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 import { PageLayout, PageHeader } from "@/components/ui/PageLayout";
 import { IconButton } from "@/components/ui/IconButton";
 import { Card } from "@/components/ui/Card";
@@ -95,18 +96,17 @@ export default function BgmPage() {
           {!isUngrouped && (
             <span className="ml-auto flex items-center gap-2">
               <label className="text-[10px] opacity-60">親</label>
-              <select
-                className="px-2 py-1 border rounded text-[11px] bg-transparent"
+              <Select
                 value={group?.parentId ?? ""}
-                onChange={(e) => updateGroup(group!.id, { parentId: e.target.value || undefined })}
-              >
-                <option value="">なし</option>
-                {groups
-                  .filter((g) => g.id !== group!.id)
-                  .map((g) => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
-                  ))}
-              </select>
+                onChange={(v) => updateGroup(group!.id, { parentId: v || undefined })}
+                options={[
+                  { value: "", label: "なし" },
+                  ...groups
+                    .filter((g) => g.id !== group!.id)
+                    .map((g) => ({ value: g.id, label: g.name })),
+                ]}
+                size="sm"
+              />
             </span>
           )}
         </div>

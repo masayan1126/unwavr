@@ -8,6 +8,7 @@ import { Loader2, Mic, Sparkles } from "lucide-react";
 import { parseTaskInput } from "@/lib/gemini";
 import WysiwygEditor from "@/components/WysiwygEditor";
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 import { copyDescriptionWithFormat, type CopyFormat } from "@/lib/taskUtils";
 import { Copy, ChevronDown } from "lucide-react";
 import { useToast } from "@/components/Providers";
@@ -386,22 +387,24 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
           {/* Type Property */}
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground whitespace-nowrap">タイプ</span>
-            <select
-              className="bg-transparent border-none hover:bg-black/5 dark:hover:bg-white/10 rounded px-2 py-1 cursor-pointer focus:ring-0"
+            <Select
               value={type}
-              onChange={(e) => {
-                const v = e.target.value as TaskType;
-                setType(v);
-                if (v === "scheduled") setScheduled({ daysOfWeek: [] });
+              onChange={(v) => {
+                const newType = v as TaskType;
+                setType(newType);
+                if (newType === "scheduled") setScheduled({ daysOfWeek: [] });
                 else setScheduled(undefined);
-                if (v !== "backlog") setPlannedDates([]);
+                if (newType !== "backlog") setPlannedDates([]);
+                performSave();
               }}
-              onBlur={performSave}
-            >
-              <option value="daily">毎日</option>
-              <option value="backlog">積み上げ候補</option>
-              <option value="scheduled">特定曜日</option>
-            </select>
+              options={[
+                { value: "daily", label: "毎日" },
+                { value: "backlog", label: "積み上げ候補" },
+                { value: "scheduled", label: "特定曜日" },
+              ]}
+              size="sm"
+              variant="ghost"
+            />
           </div>
 
           {/* Estimate Property */}
@@ -420,19 +423,23 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
           {/* Milestone Property */}
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground whitespace-nowrap">マイルストーン</span>
-            <select
-              className="bg-transparent border-none hover:bg-black/5 dark:hover:bg-white/10 rounded px-2 py-1 cursor-pointer max-w-[200px] truncate focus:ring-0"
+            <Select
               value={milestoneId}
-              onChange={(e) => setMilestoneId(e.target.value)}
-              onBlur={performSave}
-            >
-              <option value="">未選択</option>
-              {milestones.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.title} ({m.currentUnits}/{m.targetUnits})
-                </option>
-              ))}
-            </select>
+              onChange={(v) => {
+                setMilestoneId(v);
+                performSave();
+              }}
+              options={[
+                { value: "", label: "未選択" },
+                ...milestones.map((m) => ({
+                  value: m.id,
+                  label: `${m.title} (${m.currentUnits}/${m.targetUnits})`,
+                })),
+              ]}
+              size="sm"
+              variant="ghost"
+              className="max-w-[200px]"
+            />
           </div>
 
           {/* Backlog Specifics - Inline */}

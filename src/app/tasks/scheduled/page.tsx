@@ -6,7 +6,7 @@ import TaskDialog from "@/components/TaskCreateDialog";
 import TaskForm from "@/components/TaskForm";
 import { useState } from "react";
 import { useScheduledTasks } from "@/hooks/useScheduledTasks";
-import StylishSelect from "@/components/StylishSelect";
+import { Select } from "@/components/ui/Select";
 import FilterBar from "@/components/FilterBar";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -55,7 +55,7 @@ export default function ScheduledTasksPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="text-xs opacity-70">{hydrating ? "-" : `${page} / ${totalPages}（全 ${total} 件）`}</div>
               <FilterBar className="w-full sm:w-auto">
-                <StylishSelect
+                <Select
                   size="sm"
                   value={sortKey}
                   onChange={(v) => setSortKey(v as "title" | "createdAt" | "scheduled" | "type" | "milestone")}
@@ -70,7 +70,7 @@ export default function ScheduledTasksPage() {
                 <Button variant="secondary" size="sm" onClick={() => setSortAsc((v) => !v)}>
                   {sortAsc ? "昇順" : "降順"}
                 </Button>
-                <StylishSelect
+                <Select
                   label="ステータス"
                   size="sm"
                   value={filterStatus}
@@ -84,7 +84,7 @@ export default function ScheduledTasksPage() {
                     { value: "completed", label: "完了" },
                   ]}
                 />
-                <StylishSelect
+                <Select
                   label="1ページあたり"
                   size="sm"
                   value={pageSize}

@@ -10,6 +10,7 @@ import { TaskType, Scheduled } from "@/lib/types";
 import RichText from "@/components/RichText";
 import { copyDescriptionWithFormat } from "@/lib/taskUtils";
 import WysiwygEditor from "@/components/WysiwygEditor";
+import { Select } from "@/components/ui/Select";
 import {
   ArrowLeft,
   Calendar,
@@ -530,10 +531,10 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2 opacity-80">タイプ</label>
-                  <select
+                  <Select
                     value={type}
-                    onChange={(e) => {
-                      const newType = e.target.value as TaskType;
+                    onChange={(v) => {
+                      const newType = v as TaskType;
                       setType(newType);
                       if (newType === "scheduled") {
                         setSelectedDays([]);
@@ -543,14 +544,16 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                       if (newType !== "backlog") {
                         setPlannedDates([]);
                       }
+                      handleSave(true);
                     }}
-                    onBlur={() => handleSave(true)}
-                    className="w-full border border-[var(--border)] rounded-lg px-4 py-2.5 bg-transparent focus:ring-2 focus:ring-[var(--primary)]/50 focus:border-[var(--primary)] transition-all"
-                  >
-                    <option value="daily">毎日</option>
-                    <option value="backlog">積み上げ候補</option>
-                    <option value="scheduled">特定曜日</option>
-                  </select>
+                    options={[
+                      { value: "daily", label: "毎日" },
+                      { value: "backlog", label: "積み上げ候補" },
+                      { value: "scheduled", label: "特定曜日" },
+                    ]}
+                    fullWidth
+                    size="lg"
+                  />
                 </div>
 
                 <div>
@@ -584,19 +587,22 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
               <div>
                 <label className="block text-sm font-medium mb-2 opacity-80">マイルストーン</label>
-                <select
+                <Select
                   value={milestoneId}
-                  onChange={(e) => setMilestoneId(e.target.value)}
-                  onBlur={() => handleSave(true)}
-                  className="w-full border border-[var(--border)] rounded-lg px-4 py-2.5 bg-transparent focus:ring-2 focus:ring-[var(--primary)]/50 focus:border-[var(--primary)] transition-all"
-                >
-                  <option value="">未選択</option>
-                  {milestones.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.title} ({m.currentUnits}/{m.targetUnits})
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => {
+                    setMilestoneId(v);
+                    handleSave(true);
+                  }}
+                  options={[
+                    { value: "", label: "未選択" },
+                    ...milestones.map((m) => ({
+                      value: m.id,
+                      label: `${m.title} (${m.currentUnits}/${m.targetUnits})`,
+                    })),
+                  ]}
+                  fullWidth
+                  size="lg"
+                />
               </div>
 
               {type === "scheduled" && (

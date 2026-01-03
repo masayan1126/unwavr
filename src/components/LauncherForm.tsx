@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useLauncherForm } from "@/hooks/useLauncher";
 import IconPicker from "@/components/IconPicker";
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 import { Plus } from "lucide-react";
 
 export default function LauncherForm() {
@@ -20,14 +21,15 @@ export default function LauncherForm() {
     <form onSubmit={submit} className="flex flex-col gap-3 bg-background rounded-xl p-5 shadow-sm">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <label className="text-sm">種類</label>
-        <select
-          className="bg-background/50 hover:bg-background transition-colors rounded-lg px-3 py-2 text-sm w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-primary/20"
+        <Select
           value={linkType}
-          onChange={(e) => setLinkType((e.target.value as "web" | "app"))}
-        >
-          <option value="web">Web URL</option>
-          <option value="app">アプリ（カスタムスキーム）</option>
-        </select>
+          onChange={(v) => setLinkType(v as "web" | "app")}
+          options={[
+            { value: "web", label: "Web URL" },
+            { value: "app", label: "アプリ（カスタムスキーム）" },
+          ]}
+          size="md"
+        />
         {linkType === "app" && (
           <button type="button" className="text-xs underline opacity-80" onClick={() => setShowHelp(true)}>
             アプリ登録のヘルプ
@@ -74,18 +76,18 @@ export default function LauncherForm() {
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
           <label className="text-sm">カテゴリ</label>
-          <select
-            className="bg-background/50 hover:bg-background transition-colors rounded-lg px-3 py-2 text-sm w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-primary/20"
+          <Select
             value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-          >
-            <option value="">未分類</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+            onChange={setCategoryId}
+            options={[
+              { value: "", label: "未分類" },
+              ...categories.map((c) => ({
+                value: c.id,
+                label: c.name,
+              })),
+            ]}
+            size="md"
+          />
           <input
             className="bg-background/50 hover:bg-background transition-colors rounded-lg px-3 py-2 text-sm w-full sm:flex-1 focus:outline-none focus:ring-2 focus:ring-primary/20"
             placeholder="新規カテゴリ名 (任意)"
