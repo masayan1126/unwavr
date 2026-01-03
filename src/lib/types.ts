@@ -56,6 +56,8 @@ export const TaskSchema = z.object({
   order: z.number().default(0),
   // 時間スロット（カレンダーでの時間指定スケジュール）
   timeSlots: z.array(TimeSlotSchema).optional(),
+  // サブタスク機能: 親タスクのID（ルートタスクはundefined）
+  parentTaskId: z.string().optional(),
 });
 export type Task = z.infer<typeof TaskSchema>;
 

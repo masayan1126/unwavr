@@ -1,5 +1,5 @@
 import { Reorder, useDragControls, useMotionValue, useTransform, motion } from "framer-motion";
-import { GripVertical, CheckCircle2, Trash2, Check } from "lucide-react";
+import { GripVertical, CheckCircle2, Trash2, Check, ChevronRight, ChevronDown } from "lucide-react";
 import { Task } from "@/lib/types";
 import { useAppStore } from "@/lib/store";
 import { useToast } from "@/components/Providers";
@@ -35,9 +35,15 @@ interface TaskRowProps {
     savePlannedDate: (taskId: string) => void;
     cancelEditPlannedDate: () => void;
     startEditPlannedDate: (task: Task) => void;
+    // サブタスク対応
+    hasSubtasks?: boolean;
+    subtaskCount?: number;
+    isExpanded?: boolean;
+    onToggleExpand?: () => void;
+    isSubtask?: boolean;
 }
 
-export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, selectionModeActive, selected, onSelectOne, showCreatedColumn, showPlannedColumn, showScheduledColumn, showTypeColumn, showMilestoneColumn, showArchivedAtColumn, editingPlannedTaskId, tempPlannedDate, setTempPlannedDate, savePlannedDate, cancelEditPlannedDate, startEditPlannedDate }: TaskRowProps) {
+export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, selectionModeActive, selected, onSelectOne, showCreatedColumn, showPlannedColumn, showScheduledColumn, showTypeColumn, showMilestoneColumn, showArchivedAtColumn, editingPlannedTaskId, tempPlannedDate, setTempPlannedDate, savePlannedDate, cancelEditPlannedDate, startEditPlannedDate, hasSubtasks, subtaskCount, isExpanded, onToggleExpand, isSubtask }: TaskRowProps) {
     const toggle = useAppStore((s) => s.toggleTask);
     const toggleDailyToday = useAppStore((s) => s.toggleDailyDoneForToday);
     const activeTaskIds = useAppStore((s) => s.pomodoro.activeTaskIds);
@@ -123,16 +129,26 @@ export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, se
                 }}
             >
                 <div
-                    className={`flex items-center gap-2 py-2 px-2 min-w-0 transition-colors border-b border-border/40 hover:bg-black/5 dark:hover:bg-white/5 group ${isActive ? "bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20" : ""
-                        }`}
+                    className={`flex items-center gap-2 py-2 px-2 min-w-0 transition-colors border-b border-border/40 hover:bg-black/5 dark:hover:bg-white/5 group ${isActive ? "bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20" : ""} ${isSubtask ? "pl-8" : ""}`}
                     onContextMenu={(e) => { e.preventDefault(); onContext(e, task); }}
                 >
-                    <div
-                        className="flex-shrink-0 w-[24px] flex justify-center items-center cursor-grab active:cursor-grabbing text-foreground/50 hover:text-foreground transition-colors touch-none select-none"
-                        onPointerDown={(e) => controls.start(e)}
-                    >
-                        <GripVertical size={16} />
-                    </div>
+                    {/* サブタスク展開/折りたたみボタン */}
+                    {hasSubtasks ? (
+                        <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); onToggleExpand?.(); }}
+                            className="flex-shrink-0 w-[24px] flex justify-center items-center text-foreground/50 hover:text-foreground transition-colors"
+                        >
+                            {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                        </button>
+                    ) : (
+                        <div
+                            className="flex-shrink-0 w-[24px] flex justify-center items-center cursor-grab active:cursor-grabbing text-foreground/50 hover:text-foreground transition-colors touch-none select-none"
+                            onPointerDown={(e) => controls.start(e)}
+                        >
+                            <GripVertical size={16} />
+                        </div>
+                    )}
 
                     {enableSelection && selectionModeActive && (
                         <div className="flex-shrink-0 w-[24px] flex justify-center">
@@ -197,6 +213,11 @@ export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, se
                                 {isActive && (
                                     <span className="inline-flex items-center gap-1.5 text-xxs font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/30">
                                         着手中 #{activeIndex + 1}
+                                    </span>
+                                )}
+                                {hasSubtasks && subtaskCount !== undefined && subtaskCount > 0 && (
+                                    <span className="inline-flex items-center text-xxs font-medium border rounded-full px-2 py-0.5 whitespace-nowrap bg-muted text-muted-foreground border-border">
+                                        {subtaskCount}件
                                     </span>
                                 )}
                             </div>

@@ -158,8 +158,27 @@ export const createTaskSlice: StateCreator<AppState, [], [], TaskSlice> = (set, 
         })),
     removeTask: (taskId) =>
         set((state) => {
+            // サブタスクをルートに昇格（parentTaskIdをundefinedに）
+            const subtasks = state.tasks.filter(t => t.parentTaskId === taskId);
+            subtasks.forEach(subtask => {
+                fetch(`/api/db/tasks/${encodeURIComponent(subtask.id)}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ parentTaskId: null })
+                }).catch(() => { });
+            });
+
             fetch(`/api/db/tasks/${encodeURIComponent(taskId)}`, { method: 'DELETE' }).catch(() => { });
-            return { tasks: state.tasks.filter((t) => t.id !== taskId) };
+
+            // サブタスクのparentTaskIdをundefinedに更新し、親タスクを削除
+            const updatedTasks = state.tasks.map(t => {
+                if (t.parentTaskId === taskId) {
+                    return { ...t, parentTaskId: undefined };
+                }
+                return t;
+            }).filter((t) => t.id !== taskId);
+
+            return { tasks: updatedTasks };
         }),
     updateTask: (taskId, update) =>
         set((state) => {
@@ -390,5 +409,17 @@ export const createTaskSlice: StateCreator<AppState, [], [], TaskSlice> = (set, 
             if (t.type === 'backlog' && t.plannedDates?.includes(date)) return true;
             return false;
         });
+    },
+    // サブタスク関連
+    getSubtasks: (parentId) => {
+        return get().tasks.filter(t => t.parentTaskId === parentId && t.archived !== true);
+    },
+    getParentTask: (taskId) => {
+        const task = get().tasks.find(t => t.id === taskId);
+        if (!task?.parentTaskId) return undefined;
+        return get().tasks.find(t => t.id === task.parentTaskId);
+    },
+    getRootTasks: () => {
+        return get().tasks.filter(t => !t.parentTaskId && t.archived !== true);
     },
 });

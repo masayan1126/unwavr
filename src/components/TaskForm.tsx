@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from "react";
+import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { Scheduled, TaskType, type Task } from "@/lib/types";
@@ -10,8 +10,10 @@ import WysiwygEditor from "@/components/WysiwygEditor";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { copyDescriptionWithFormat, type CopyFormat } from "@/lib/taskUtils";
-import { Copy, ChevronDown } from "lucide-react";
+import { Copy, ChevronDown, ArrowLeft } from "lucide-react";
 import { useToast } from "@/components/Providers";
+import { SubtaskList } from "@/components/SubtaskList";
+import Link from "next/link";
 
 export type TaskFormProps = {
   onSubmitted?: (mode: 'close' | 'keep') => void;
@@ -27,6 +29,11 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
   const addTask = useAppStore((s) => s.addTask);
   const updateTask = useAppStore((s) => s.updateTask);
   const milestones = useAppStore((s) => s.milestones);
+  const tasks = useAppStore((s) => s.tasks);
+  const parentTask = useMemo(() => {
+    if (!task?.parentTaskId) return undefined;
+    return tasks.find(t => t.id === task.parentTaskId);
+  }, [task?.parentTaskId, tasks]);
   const [title, setTitle] = useState("");
   const [type, setType] = useState<TaskType>(defaultType ?? "backlog");
   const [desc, setDesc] = useState("");
@@ -349,6 +356,17 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
   return (
     <>
       <form ref={formRef} onSubmit={onSubmit} onBlur={handleFormBlur} className="flex flex-col gap-6 w-full h-full">
+        {/* 親タスクへのリンク */}
+        {parentTask && (
+          <Link
+            href={`/tasks/${parentTask.id}`}
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft size={14} />
+            <span>親タスク: {parentTask.title}</span>
+          </Link>
+        )}
+
         <div className="flex flex-col gap-2">
           <div className="flex gap-2 items-center">
             <input
@@ -644,6 +662,14 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
             className="h-full"
           />
         </div>
+
+        {/* サブタスクセクション（編集時かつ親タスクでない場合のみ） */}
+        {task && !task.parentTaskId && (
+          <div className="border rounded-[var(--radius-md)] p-3 border-border">
+            <SubtaskList parentTaskId={task.id} parentTaskType={task.type} />
+          </div>
+        )}
+
         {!task && (
           <div className="flex justify-end mt-4 pt-4 border-t border-border">
             <Button

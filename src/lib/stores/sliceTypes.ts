@@ -25,6 +25,10 @@ export interface TaskSlice {
     updateTimeSlot: (taskId: string, slotIndex: number, update: Partial<TimeSlot>) => void;
     removeTimeSlot: (taskId: string, slotIndex: number) => void;
     getTasksForDate: (date: number) => Task[];
+    // サブタスク関連
+    getSubtasks: (parentId: string) => Task[];
+    getParentTask: (taskId: string) => Task | undefined;
+    getRootTasks: () => Task[];
 }
 
 export interface MilestoneSlice {

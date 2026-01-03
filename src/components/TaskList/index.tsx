@@ -90,6 +90,39 @@ export default function TaskList({
     const [tempPlannedDate, setTempPlannedDate] = useState<string>("");
     const formRef = useRef<TaskFormHandle | null>(null);
 
+    // サブタスク対応
+    const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
+
+    const toggleExpand = useCallback((taskId: string) => {
+        setExpandedTasks(prev => {
+            const next = new Set(prev);
+            if (next.has(taskId)) next.delete(taskId);
+            else next.add(taskId);
+            return next;
+        });
+    }, []);
+
+    // タスクごとのサブタスクをマップ化
+    const subtasksMap = useMemo(() => {
+        const map: Record<string, Task[]> = {};
+        for (const t of tasks) {
+            if (t.parentTaskId && t.archived !== true) {
+                if (!map[t.parentTaskId]) map[t.parentTaskId] = [];
+                map[t.parentTaskId].push(t);
+            }
+        }
+        return map;
+    }, [tasks]);
+
+    // タスクごとのサブタスク数を計算
+    const subtaskCounts = useMemo(() => {
+        const counts: Record<string, number> = {};
+        for (const id in subtasksMap) {
+            counts[id] = subtasksMap[id].length;
+        }
+        return counts;
+    }, [subtasksMap]);
+
     const { orderedTasks, setOrderedTasks, filteredSorted } = useTaskSortFilter({
         tasks,
         milestones,
@@ -711,31 +744,69 @@ export default function TaskList({
                                 <div className="py-8 text-center text-sm text-foreground/50">タスクがありません</div>
                             ) : (
                                 <Reorder.Group axis="y" values={orderedTasks} onReorder={handleReorder} className="flex flex-col">
-                                    {orderedTasks.map((t) => (
-                                        <TaskRow
-                                            key={t.id}
-                                            task={t}
-                                            onEdit={(task: Task) => openEdit(task)}
-                                            onContext={(e: React.MouseEvent, task: Task) => { e.preventDefault(); e.stopPropagation(); setCtxTask(task); setCtxPos({ x: e.clientX, y: e.clientY }); }}
-                                            onDelete={handleDeleteTask}
-                                            enableSelection={enableSelection}
-                                            selectionModeActive={selectionModeActive}
-                                            selected={selected[t.id]}
-                                            onSelectOne={(id: string, checked: boolean) => onSelectOne(id, checked)}
-                                            showCreatedColumn={showCreatedColumn}
-                                            showPlannedColumn={showPlannedColumn}
-                                            showScheduledColumn={showScheduledColumn}
-                                            showTypeColumn={showTypeColumn}
-                                            showMilestoneColumn={showMilestoneColumn}
-                                            showArchivedAtColumn={showArchivedAtColumn}
-                                            editingPlannedTaskId={editingPlannedTaskId}
-                                            tempPlannedDate={tempPlannedDate}
-                                            setTempPlannedDate={setTempPlannedDate}
-                                            savePlannedDate={savePlannedDate}
-                                            cancelEditPlannedDate={cancelEditPlannedDate}
-                                            startEditPlannedDate={startEditPlannedDate}
-                                        />
-                                    ))}
+                                    {orderedTasks
+                                        .filter(t => !t.parentTaskId) // ルートタスクのみ表示
+                                        .map((t) => {
+                                            const hasSubtasks = (subtaskCounts[t.id] ?? 0) > 0;
+                                            const subtasks = hasSubtasks && expandedTasks.has(t.id) ? (subtasksMap[t.id] ?? []) : [];
+                                            return (
+                                                <div key={t.id}>
+                                                    <TaskRow
+                                                        task={t}
+                                                        onEdit={(task: Task) => openEdit(task)}
+                                                        onContext={(e: React.MouseEvent, task: Task) => { e.preventDefault(); e.stopPropagation(); setCtxTask(task); setCtxPos({ x: e.clientX, y: e.clientY }); }}
+                                                        onDelete={handleDeleteTask}
+                                                        enableSelection={enableSelection}
+                                                        selectionModeActive={selectionModeActive}
+                                                        selected={selected[t.id]}
+                                                        onSelectOne={(id: string, checked: boolean) => onSelectOne(id, checked)}
+                                                        showCreatedColumn={showCreatedColumn}
+                                                        showPlannedColumn={showPlannedColumn}
+                                                        showScheduledColumn={showScheduledColumn}
+                                                        showTypeColumn={showTypeColumn}
+                                                        showMilestoneColumn={showMilestoneColumn}
+                                                        showArchivedAtColumn={showArchivedAtColumn}
+                                                        editingPlannedTaskId={editingPlannedTaskId}
+                                                        tempPlannedDate={tempPlannedDate}
+                                                        setTempPlannedDate={setTempPlannedDate}
+                                                        savePlannedDate={savePlannedDate}
+                                                        cancelEditPlannedDate={cancelEditPlannedDate}
+                                                        startEditPlannedDate={startEditPlannedDate}
+                                                        hasSubtasks={hasSubtasks}
+                                                        subtaskCount={subtaskCounts[t.id]}
+                                                        isExpanded={expandedTasks.has(t.id)}
+                                                        onToggleExpand={() => toggleExpand(t.id)}
+                                                    />
+                                                    {/* サブタスク表示 */}
+                                                    {subtasks.map((st) => (
+                                                        <TaskRow
+                                                            key={st.id}
+                                                            task={st}
+                                                            onEdit={(task: Task) => openEdit(task)}
+                                                            onContext={(e: React.MouseEvent, task: Task) => { e.preventDefault(); e.stopPropagation(); setCtxTask(task); setCtxPos({ x: e.clientX, y: e.clientY }); }}
+                                                            onDelete={handleDeleteTask}
+                                                            enableSelection={enableSelection}
+                                                            selectionModeActive={selectionModeActive}
+                                                            selected={selected[st.id]}
+                                                            onSelectOne={(id: string, checked: boolean) => onSelectOne(id, checked)}
+                                                            showCreatedColumn={showCreatedColumn}
+                                                            showPlannedColumn={showPlannedColumn}
+                                                            showScheduledColumn={showScheduledColumn}
+                                                            showTypeColumn={showTypeColumn}
+                                                            showMilestoneColumn={showMilestoneColumn}
+                                                            showArchivedAtColumn={showArchivedAtColumn}
+                                                            editingPlannedTaskId={editingPlannedTaskId}
+                                                            tempPlannedDate={tempPlannedDate}
+                                                            setTempPlannedDate={setTempPlannedDate}
+                                                            savePlannedDate={savePlannedDate}
+                                                            cancelEditPlannedDate={cancelEditPlannedDate}
+                                                            startEditPlannedDate={startEditPlannedDate}
+                                                            isSubtask={true}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            );
+                                        })}
                                 </Reorder.Group>
                             )}
                         </div>

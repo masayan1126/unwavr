@@ -6,10 +6,11 @@ import { copyDescriptionWithFormat } from "@/lib/taskUtils";
 import { useAppStore } from "@/lib/store";
 import { isTaskForToday } from "@/lib/types";
 import RichText from "@/components/RichText";
-import { Split, Loader2 } from "lucide-react";
+import { Split, Loader2, ArrowLeft } from "lucide-react";
 import { breakdownTask } from "@/lib/gemini";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/Button";
+import { SubtaskList } from "@/components/SubtaskList";
 
 function formatDow(days?: number[]): string {
   if (!days || days.length === 0) return "-";
@@ -30,6 +31,13 @@ export default function TaskDetail({ taskId, backHref }: { taskId: string; backH
   const updateTask = useAppStore((s) => s.updateTask);
   const language = useAppStore((s) => s.language);
   const task = tasks.find((t) => t.id === taskId);
+  const parentTask = useMemo(() => {
+    if (!task?.parentTaskId) return undefined;
+    return tasks.find(t => t.id === task.parentTaskId);
+  }, [task?.parentTaskId, tasks]);
+  const subtasks = useMemo(() => {
+    return tasks.filter(t => t.parentTaskId === taskId && t.archived !== true);
+  }, [tasks, taskId]);
   const [isBreakingDown, setIsBreakingDown] = useState(false);
 
   if (!task) {
@@ -50,6 +58,17 @@ export default function TaskDetail({ taskId, backHref }: { taskId: string; backH
 
   return (
     <div className="flex flex-col gap-4">
+      {/* 親タスクへのリンク */}
+      {parentTask && (
+        <Link
+          href={`/tasks/${parentTask.id}`}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft size={14} />
+          <span>親タスク: {parentTask.title}</span>
+        </Link>
+      )}
+
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           {task.title}
@@ -178,6 +197,13 @@ export default function TaskDetail({ taskId, backHref }: { taskId: string; backH
           <div className="text-sm opacity-70">未設定</div>
         )}
       </div>
+
+      {/* サブタスクセクション（親タスクでない場合は非表示） */}
+      {!task.parentTaskId && (
+        <div className="border rounded-[var(--radius-md)] p-3 border-border">
+          <SubtaskList parentTaskId={task.id} parentTaskType={task.type} />
+        </div>
+      )}
 
       <div className="flex justify-end">
         <Button

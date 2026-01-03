@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
     'id', 'title', 'type', 'createdAt', 'completed', 'completedPomodoros',
     'description', 'estimatedPomodoros', 'milestoneIds',
     'plannedDates', 'dailyDoneDates', 'scheduled', 'timeSlots',
-    'plannedDateGoogleEvents',
+    'plannedDateGoogleEvents', 'parentTaskId',
   ];
   for (const k of allow) {
     if (raw[k] !== undefined) payload[k] = raw[k];
