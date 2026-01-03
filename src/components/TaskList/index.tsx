@@ -190,6 +190,56 @@ export default function TaskList({
         });
     };
 
+    // 親タスクドラッグ&ドロップ状態
+    const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
+    const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
+
+    const handleParentDragStart = useCallback((taskId: string) => {
+        setDraggingTaskId(taskId);
+    }, []);
+
+    const handleParentDragEnd = useCallback(() => {
+        setDraggingTaskId(null);
+        setDragOverTaskId(null);
+    }, []);
+
+    const handleParentDrop = useCallback((targetTaskId: string) => {
+        if (!draggingTaskId || draggingTaskId === targetTaskId) return;
+
+        // 循環参照チェック: targetTaskがdraggingTaskの子孫でないことを確認
+        const isDescendant = (parentId: string, childId: string): boolean => {
+            const children = tasks.filter(t => t.parentTaskId === parentId);
+            for (const child of children) {
+                if (child.id === childId) return true;
+                if (isDescendant(child.id, childId)) return true;
+            }
+            return false;
+        };
+
+        if (isDescendant(draggingTaskId, targetTaskId)) {
+            toast.show("循環参照になるため設定できません", "error");
+            return;
+        }
+
+        // 親タスクを設定
+        updateTask(draggingTaskId, { parentTaskId: targetTaskId });
+        toast.show("サブタスクとして設定しました", "success");
+
+        // 展開状態を更新して新しいサブタスクを表示
+        setExpandedTasks(prev => {
+            const next = new Set(prev);
+            next.add(targetTaskId);
+            return next;
+        });
+
+        setDraggingTaskId(null);
+        setDragOverTaskId(null);
+    }, [draggingTaskId, tasks, updateTask, toast]);
+
+    const handleDragOverTask = useCallback((taskId: string | null) => {
+        setDragOverTaskId(taskId);
+    }, []);
+
     const allChecked = enableSelection && filteredSorted.length > 0 && filteredSorted.every((t) => selected[t.id]);
     const selectedCount = Object.values(selected).filter(Boolean).length;
 
@@ -776,6 +826,12 @@ export default function TaskList({
                                                         subtaskCount={subtaskCounts[t.id]}
                                                         isExpanded={expandedTasks.has(t.id)}
                                                         onToggleExpand={() => toggleExpand(t.id)}
+                                                        onParentDragStart={handleParentDragStart}
+                                                        onParentDragEnd={handleParentDragEnd}
+                                                        onParentDrop={handleParentDrop}
+                                                        draggingTaskId={draggingTaskId}
+                                                        dragOverTaskId={dragOverTaskId}
+                                                        onDragOverTask={handleDragOverTask}
                                                     />
                                                     {/* サブタスク表示 */}
                                                     {subtasks.map((st) => (
@@ -802,6 +858,8 @@ export default function TaskList({
                                                             cancelEditPlannedDate={cancelEditPlannedDate}
                                                             startEditPlannedDate={startEditPlannedDate}
                                                             isSubtask={true}
+                                                            draggingTaskId={draggingTaskId}
+                                                            dragOverTaskId={dragOverTaskId}
                                                         />
                                                     ))}
                                                 </div>

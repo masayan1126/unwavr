@@ -41,9 +41,16 @@ interface TaskRowProps {
     isExpanded?: boolean;
     onToggleExpand?: () => void;
     isSubtask?: boolean;
+    // 親タスクドラッグ&ドロップ
+    onParentDragStart?: (taskId: string) => void;
+    onParentDragEnd?: () => void;
+    onParentDrop?: (targetTaskId: string) => void;
+    draggingTaskId?: string | null;
+    dragOverTaskId?: string | null;
+    onDragOverTask?: (taskId: string | null) => void;
 }
 
-export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, selectionModeActive, selected, onSelectOne, showCreatedColumn, showPlannedColumn, showScheduledColumn, showTypeColumn, showMilestoneColumn, showArchivedAtColumn, editingPlannedTaskId, tempPlannedDate, setTempPlannedDate, savePlannedDate, cancelEditPlannedDate, startEditPlannedDate, hasSubtasks, subtaskCount, isExpanded, onToggleExpand, isSubtask }: TaskRowProps) {
+export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, selectionModeActive, selected, onSelectOne, showCreatedColumn, showPlannedColumn, showScheduledColumn, showTypeColumn, showMilestoneColumn, showArchivedAtColumn, editingPlannedTaskId, tempPlannedDate, setTempPlannedDate, savePlannedDate, cancelEditPlannedDate, startEditPlannedDate, hasSubtasks, subtaskCount, isExpanded, onToggleExpand, isSubtask, onParentDragStart, onParentDragEnd, onParentDrop, draggingTaskId, dragOverTaskId, onDragOverTask }: TaskRowProps) {
     const toggle = useAppStore((s) => s.toggleTask);
     const toggleDailyToday = useAppStore((s) => s.toggleDailyDoneForToday);
     const activeTaskIds = useAppStore((s) => s.pomodoro.activeTaskIds);
@@ -129,25 +136,72 @@ export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, se
                 }}
             >
                 <div
-                    className={`flex items-center gap-2 py-2 px-2 min-w-0 transition-colors border-b border-border/40 hover:bg-black/5 dark:hover:bg-white/5 group ${isActive ? "bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20" : ""} ${isSubtask ? "pl-8" : ""}`}
+                    className={`flex items-center gap-2 py-2 px-2 min-w-0 transition-colors border-b border-border/40 hover:bg-black/5 dark:hover:bg-white/5 group ${isActive ? "bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20" : ""} ${isSubtask ? "pl-8" : ""} ${dragOverTaskId === task.id && draggingTaskId !== task.id ? "ring-2 ring-primary ring-inset bg-primary/10" : ""}`}
                     onContextMenu={(e) => { e.preventDefault(); onContext(e, task); }}
+                    draggable={!hasSubtasks && !isSubtask}
+                    onDragStart={(e) => {
+                        if (hasSubtasks || isSubtask) {
+                            e.preventDefault();
+                            return;
+                        }
+                        e.dataTransfer.setData("text/plain", task.id);
+                        e.dataTransfer.effectAllowed = "move";
+                        onParentDragStart?.(task.id);
+                    }}
+                    onDragEnd={() => {
+                        onParentDragEnd?.();
+                    }}
+                    onDragOver={(e) => {
+                        if (draggingTaskId && draggingTaskId !== task.id && !isSubtask) {
+                            e.preventDefault();
+                            e.dataTransfer.dropEffect = "move";
+                            onDragOverTask?.(task.id);
+                        }
+                    }}
+                    onDragEnter={(e) => {
+                        if (draggingTaskId && draggingTaskId !== task.id && !isSubtask) {
+                            e.preventDefault();
+                            onDragOverTask?.(task.id);
+                        }
+                    }}
+                    onDragLeave={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const x = e.clientX;
+                        const y = e.clientY;
+                        if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+                            onDragOverTask?.(null);
+                        }
+                    }}
+                    onDrop={(e) => {
+                        e.preventDefault();
+                        if (draggingTaskId && draggingTaskId !== task.id && !isSubtask) {
+                            onParentDrop?.(task.id);
+                        }
+                        onDragOverTask?.(null);
+                    }}
                 >
-                    {/* サブタスク展開/折りたたみボタン */}
-                    {hasSubtasks ? (
-                        <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); onToggleExpand?.(); }}
-                            className="flex-shrink-0 w-[24px] flex justify-center items-center text-foreground/50 hover:text-foreground transition-colors"
-                        >
-                            {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                        </button>
-                    ) : (
+                    {/* ドラッグハンドル（サブタスク以外） */}
+                    {!isSubtask && (
                         <div
                             className="flex-shrink-0 w-[24px] flex justify-center items-center cursor-grab active:cursor-grabbing text-foreground/50 hover:text-foreground transition-colors touch-none select-none"
                             onPointerDown={(e) => controls.start(e)}
                         >
                             <GripVertical size={16} />
                         </div>
+                    )}
+                    {/* サブタスク展開/折りたたみボタン or スペーサー */}
+                    {!isSubtask && (
+                        hasSubtasks ? (
+                            <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); onToggleExpand?.(); }}
+                                className="flex-shrink-0 w-[24px] flex justify-center items-center text-foreground/50 hover:text-foreground transition-colors"
+                            >
+                                {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                            </button>
+                        ) : (
+                            <div className="flex-shrink-0 w-[24px]" />
+                        )
                     )}
 
                     {enableSelection && selectionModeActive && (
