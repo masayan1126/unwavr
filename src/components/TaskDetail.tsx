@@ -138,7 +138,11 @@ export default function TaskDetail({ taskId, backHref }: { taskId: string; backH
             <div className="text-sm opacity-70">スケジュール指定なし</div>
           ) : (
             <div className="text-sm space-y-1">
-              <div>曜日: {formatDow(task.scheduled?.daysOfWeek)}</div>
+              <div>曜日: {(task.scheduled?.daysOfWeek?.length ?? 0) > 0 ? (
+                formatDow(task.scheduled?.daysOfWeek)
+              ) : (
+                <span className="text-amber-600 dark:text-amber-400 font-medium">曜日未指定</span>
+              )}</div>
               <div className="space-y-1">
                 <div>期間:</div>
                 <ul className="list-disc pl-5">

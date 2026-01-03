@@ -470,8 +470,10 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                   <div className="flex-1">
                     <div className="text-xs opacity-60">スケジュール</div>
                     <div className="font-medium">
-                      {task.scheduled.daysOfWeek && task.scheduled.daysOfWeek.length > 0 && (
+                      {task.scheduled.daysOfWeek && task.scheduled.daysOfWeek.length > 0 ? (
                         <span>曜日: {task.scheduled.daysOfWeek.map(d => weekdayLabels[d]).join(", ")}</span>
+                      ) : (
+                        <span className="text-amber-600 dark:text-amber-400">曜日未指定</span>
                       )}
                       {task.scheduled.dateRanges && task.scheduled.dateRanges.length > 0 && (
                         <span className="ml-3">

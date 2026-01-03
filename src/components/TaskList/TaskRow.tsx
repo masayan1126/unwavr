@@ -258,7 +258,7 @@ export function TaskRow({ task, onEdit, onContext, onDelete, enableSelection, se
                                         </span>
                                     ))
                                 ) : scheduledDays.length === 0 ? (
-                                    <span className="opacity-40">-</span>
+                                    <span className="text-amber-600 dark:text-amber-400 font-medium">曜日未指定</span>
                                 ) : null}
                             </div>
                         </div>
