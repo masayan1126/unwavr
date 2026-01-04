@@ -16,6 +16,7 @@ export default function AssistantPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const listRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const apiKey = useAppStore((s) => s.geminiApiKey);
   const tasks = useAppStore((s) => s.tasks);
@@ -37,6 +38,15 @@ export default function AssistantPage() {
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
   }, [messages, loading]);
+
+  // Auto-adjust textarea height when input changes
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = Math.min(textarea.scrollHeight, 120) + "px";
+    }
+  }, [input]);
 
   const send = async (textOverride?: string) => {
     const content = textOverride || input.trim();
@@ -196,11 +206,13 @@ export default function AssistantPage() {
 
         {/* Input Area */}
         <div className="p-4 bg-background border-t">
-          <div className="relative flex items-center max-w-4xl mx-auto">
-            <input
-              className="w-full bg-muted/50 border-none rounded-full pl-5 pr-12 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-              placeholder={apiKey ? "AIに指示する..." : "設定画面でAPIキーを設定してください"}
+          <div className="relative flex items-end max-w-4xl mx-auto">
+            <textarea
+              ref={textareaRef}
+              className="w-full bg-muted/50 border-none rounded-2xl pl-5 pr-12 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none min-h-[48px] max-h-[120px] overflow-y-auto"
+              placeholder={apiKey ? "AIに指示する... (Shift+Enterで改行)" : "設定画面でAPIキーを設定してください"}
               value={input}
+              rows={1}
               onChange={(e) => setInput(e.target.value)}
               disabled={!apiKey || loading}
               onKeyDown={(e) => {
@@ -211,7 +223,7 @@ export default function AssistantPage() {
               }}
             />
             <button
-              className="absolute right-2 p-2 rounded-full bg-primary text-primary-foreground disabled:opacity-50 hover:opacity-90 transition-all shadow-sm"
+              className="absolute right-2 bottom-2 p-2 rounded-full bg-primary text-primary-foreground disabled:opacity-50 hover:opacity-90 transition-all shadow-sm"
               onClick={() => send()}
               disabled={loading || !input.trim() || !apiKey}
             >

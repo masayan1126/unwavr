@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { isBgmRelatedMessage } from "@/lib/gemini";
@@ -7,12 +7,39 @@ import { useToast } from "@/components/Providers";
 import { Loader2, Sparkles, X, Send, ChevronDown, Maximize2, Minimize2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import BgmSearchResultCard from "./BgmSearchResultCard";
-import { BgmSearchResult } from "@/lib/types";
+import TaskConfirmCard, { TaskConfirmOptions } from "./TaskConfirmCard";
+import BulkTaskConfirmCard, { BulkTaskConfirmOptions } from "./BulkTaskConfirmCard";
+import { BgmSearchResult, TaskType } from "@/lib/types";
 
 // Server API response types
 type AIActionResponse =
     | { type: "chat"; message: string }
     | { type: "create_task"; task: Record<string, unknown>; message: string }
+    | {
+        type: "create_task_confirm";
+        task: {
+            title: string;
+            recommendedType: TaskType;
+            recommendedMilestoneIds: string[];
+            recommendedParentTaskId: string | null;
+        };
+        options: {
+            types: { value: TaskType; label: string }[];
+            milestones: { id: string; title: string; targetUnits: number; currentUnits: number }[];
+            parentTasks: { id: string; title: string }[];
+        };
+        message: string;
+    }
+    | {
+        type: "create_tasks_confirm";
+        tasks: { title: string }[];
+        recommendedType: TaskType;
+        options: {
+            types: { value: TaskType; label: string }[];
+            milestones: { id: string; title: string; targetUnits: number; currentUnits: number }[];
+        };
+        message: string;
+    }
     | { type: "update_task"; taskId: string; updates: Record<string, unknown>; message: string }
     | { type: "delete_task"; taskId: string; message: string }
     | { type: "complete_task"; taskId: string; message: string };
@@ -22,7 +49,20 @@ type BGMActionResponse =
     | { type: "play_existing"; groupName?: string; message: string }
     | { type: "bgm_chat"; message: string };
 
-type Msg = { role: "user" | "model"; content: string; searchResults?: BgmSearchResult[] };
+type Msg = {
+    role: "user" | "model";
+    content: string;
+    searchResults?: BgmSearchResult[];
+    taskConfirm?: {
+        task: TaskConfirmOptions["task"];
+        options: TaskConfirmOptions["options"];
+    };
+    bulkTaskConfirm?: {
+        tasks: { title: string }[];
+        recommendedType: TaskType;
+        options: BulkTaskConfirmOptions["options"];
+    };
+};
 
 type Size = "normal" | "large";
 
@@ -140,6 +180,7 @@ export default function FloatingAIAssistant() {
     const [showCommands, setShowCommands] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const listRef = useRef<HTMLDivElement | null>(null);
+    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const pathname = usePathname();
 
     // Mobile: use store state, Desktop: use local state
@@ -164,6 +205,16 @@ export default function FloatingAIAssistant() {
     const removeTask = useAppStore((s) => s.removeTask);
     const completeTasks = useAppStore((s) => s.completeTasks);
 
+    // Milestones for AI context
+    const milestones = useAppStore((s) => s.milestones);
+
+    // Parent task candidates (root tasks only - tasks without parentTaskId)
+    const parentTaskCandidates = useMemo(() => {
+        return tasks
+            .filter((t) => !t.parentTaskId && !t.archived && !t.completed)
+            .map((t) => ({ id: t.id, title: t.title }));
+    }, [tasks]);
+
     // BGM related
     const addBgmTrack = useAppStore((s) => s.addBgmTrack);
     const playBgmTrack = useAppStore((s) => s.playBgmTrack);
@@ -182,6 +233,15 @@ export default function FloatingAIAssistant() {
             listRef.current.scrollTop = listRef.current.scrollHeight;
         }
     }, [messages, loading, isOpen]);
+
+    // Auto-adjust textarea height when input changes
+    useEffect(() => {
+        const textarea = textareaRef.current;
+        if (textarea) {
+            textarea.style.height = "auto";
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + "px";
+        }
+    }, [input]);
 
     const handlePlayBgmResult = (result: BgmSearchResult) => {
         // Add to playlist
@@ -514,6 +574,14 @@ export default function FloatingAIAssistant() {
                     plannedDates: t.plannedDates,
                 }));
 
+                // Milestones for AI context
+                const currentMilestones = milestones.map((m) => ({
+                    id: m.id,
+                    title: m.title,
+                    targetUnits: m.targetUnits,
+                    currentUnits: m.currentUnits,
+                }));
+
                 const history = messages.map((m) => ({
                     role: m.role,
                     parts: [{ text: m.content }],
@@ -527,6 +595,8 @@ export default function FloatingAIAssistant() {
                         message: content,
                         history,
                         tasks: currentTasks,
+                        milestones: currentMilestones,
+                        parentTasks: parentTaskCandidates,
                     }),
                 });
 
@@ -550,22 +620,57 @@ export default function FloatingAIAssistant() {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         addTask(result.task as any);
                         toast.show("タスクを作成しました", "success");
+                        setMessages((m) => [...m, { role: "model", content: result.message }]);
+                        break;
+                    case "create_task_confirm":
+                        // 選択肢確認が必要な場合 - taskConfirmフィールド付きでメッセージを追加
+                        setMessages((m) => [
+                            ...m,
+                            {
+                                role: "model",
+                                content: result.message,
+                                taskConfirm: {
+                                    task: result.task,
+                                    options: result.options,
+                                },
+                            },
+                        ]);
+                        break;
+                    case "create_tasks_confirm":
+                        // 複数タスク一括確認が必要な場合 - bulkTaskConfirmフィールド付きでメッセージを追加
+                        setMessages((m) => [
+                            ...m,
+                            {
+                                role: "model",
+                                content: result.message,
+                                bulkTaskConfirm: {
+                                    tasks: result.tasks,
+                                    recommendedType: result.recommendedType,
+                                    options: result.options,
+                                },
+                            },
+                        ]);
                         break;
                     case "update_task":
                         updateTask(result.taskId, result.updates);
                         toast.show("タスクを更新しました", "success");
+                        setMessages((m) => [...m, { role: "model", content: result.message }]);
                         break;
                     case "delete_task":
                         removeTask(result.taskId);
                         toast.show("タスクを削除しました", "success");
+                        setMessages((m) => [...m, { role: "model", content: result.message }]);
                         break;
                     case "complete_task":
                         completeTasks([result.taskId]);
                         toast.show("タスクを完了しました", "success");
+                        setMessages((m) => [...m, { role: "model", content: result.message }]);
+                        break;
+                    default:
+                        // chat type
+                        setMessages((m) => [...m, { role: "model", content: result.message }]);
                         break;
                 }
-
-                setMessages((m) => [...m, { role: "model", content: result.message }]);
             }
         } catch (e) {
             console.error(e);
@@ -670,6 +775,83 @@ export default function FloatingAIAssistant() {
                                             />
                                         </div>
                                     )}
+                                    {m.taskConfirm && (
+                                        <div className="mt-2 w-full max-w-[95%]">
+                                            <TaskConfirmCard
+                                                task={m.taskConfirm.task}
+                                                options={m.taskConfirm.options}
+                                                onConfirm={(confirmedTask) => {
+                                                    // タスクを作成
+                                                    addTask({
+                                                        title: confirmedTask.title,
+                                                        type: confirmedTask.type,
+                                                        milestoneIds: confirmedTask.milestoneIds,
+                                                        parentTaskId: confirmedTask.parentTaskId ?? undefined,
+                                                        order: 0,
+                                                    });
+                                                    toast.show("タスクを作成しました", "success");
+                                                    // 確認カードを非表示にする（メッセージからtaskConfirmを削除）
+                                                    setMessages((msgs) =>
+                                                        msgs.map((msg, i) =>
+                                                            i === idx
+                                                                ? { ...msg, content: `「${confirmedTask.title}」を${confirmedTask.type === "daily" ? "毎日タスク" : confirmedTask.type === "scheduled" ? "特定曜日タスク" : "積み上げ候補"}として作成しました。`, taskConfirm: undefined }
+                                                                : msg
+                                                        )
+                                                    );
+                                                }}
+                                                onCancel={() => {
+                                                    // 確認カードを非表示にする（キャンセルメッセージに変更）
+                                                    setMessages((msgs) =>
+                                                        msgs.map((msg, i) =>
+                                                            i === idx
+                                                                ? { ...msg, content: "タスク作成をキャンセルしました。", taskConfirm: undefined }
+                                                                : msg
+                                                        )
+                                                    );
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                    {m.bulkTaskConfirm && (
+                                        <div className="mt-2 w-full max-w-[95%]">
+                                            <BulkTaskConfirmCard
+                                                tasks={m.bulkTaskConfirm.tasks}
+                                                recommendedType={m.bulkTaskConfirm.recommendedType}
+                                                options={m.bulkTaskConfirm.options}
+                                                onConfirm={(confirmed) => {
+                                                    // 複数タスクを一括作成
+                                                    confirmed.tasks.forEach((task) => {
+                                                        addTask({
+                                                            title: task.title,
+                                                            type: confirmed.type,
+                                                            milestoneIds: confirmed.milestoneIds,
+                                                            order: 0,
+                                                        });
+                                                    });
+                                                    toast.show(`${confirmed.tasks.length}件のタスクを作成しました`, "success");
+                                                    // 確認カードを非表示にする
+                                                    const typeLabel = confirmed.type === "daily" ? "毎日タスク" : confirmed.type === "scheduled" ? "特定曜日タスク" : "積み上げ候補";
+                                                    setMessages((msgs) =>
+                                                        msgs.map((msg, i) =>
+                                                            i === idx
+                                                                ? { ...msg, content: `${confirmed.tasks.length}件のタスクを${typeLabel}として作成しました。`, bulkTaskConfirm: undefined }
+                                                                : msg
+                                                        )
+                                                    );
+                                                }}
+                                                onCancel={() => {
+                                                    // 確認カードを非表示にする（キャンセルメッセージに変更）
+                                                    setMessages((msgs) =>
+                                                        msgs.map((msg, i) =>
+                                                            i === idx
+                                                                ? { ...msg, content: "タスク作成をキャンセルしました。", bulkTaskConfirm: undefined }
+                                                                : msg
+                                                        )
+                                                    );
+                                                }}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                             {loading && (
@@ -716,11 +898,13 @@ export default function FloatingAIAssistant() {
                                 )}
                             </AnimatePresence>
 
-                            <div className="relative flex items-center">
-                                <input
-                                    className="w-full bg-muted/50 border-none rounded-full pl-4 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                    placeholder="メッセージを入力... ( / でコマンド)"
+                            <div className="relative flex items-end">
+                                <textarea
+                                    ref={textareaRef}
+                                    className="w-full bg-muted/50 border-none rounded-2xl pl-4 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none min-h-[42px] max-h-[120px] overflow-y-auto"
+                                    placeholder="メッセージを入力... (Shift+Enterで改行)"
                                     value={input}
+                                    rows={1}
                                     onChange={(e) => handleInputChange(e.target.value)}
                                     onFocus={() => {
                                         if (input === "/") setShowCommands(true);
@@ -740,7 +924,7 @@ export default function FloatingAIAssistant() {
                                     }}
                                 />
                                 <button
-                                    className="absolute right-1.5 p-1.5 rounded-full bg-primary text-primary-foreground disabled:opacity-50 hover:opacity-90 transition-all shadow-sm"
+                                    className="absolute right-1.5 bottom-1.5 p-1.5 rounded-full bg-primary text-primary-foreground disabled:opacity-50 hover:opacity-90 transition-all shadow-sm"
                                     onClick={send}
                                     disabled={loading || !input.trim()}
                                 >

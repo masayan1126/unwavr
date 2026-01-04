@@ -87,10 +87,35 @@ export async function processUserRequest(
     const responseText = await result.response.text();
 
     try {
-        const jsonMatch = responseText.match(/```json\n([\s\S]*)\n```/) || responseText.match(/{[\s\S]*}/);
+        // Try to extract JSON from markdown code block first
+        const codeBlockMatch = responseText.match(/```json\s*([\s\S]*?)\s*```/);
+        let jsonStr: string | null = null;
 
-        if (jsonMatch) {
-            const jsonStr = jsonMatch[0].replace(/```json|```/g, "");
+        if (codeBlockMatch) {
+            jsonStr = codeBlockMatch[1].trim();
+        } else {
+            // Try to find a balanced JSON object
+            const startIndex = responseText.indexOf('{');
+            if (startIndex !== -1) {
+                let depth = 0;
+                let endIndex = -1;
+                for (let i = startIndex; i < responseText.length; i++) {
+                    if (responseText[i] === '{') depth++;
+                    else if (responseText[i] === '}') {
+                        depth--;
+                        if (depth === 0) {
+                            endIndex = i;
+                            break;
+                        }
+                    }
+                }
+                if (endIndex !== -1) {
+                    jsonStr = responseText.substring(startIndex, endIndex + 1);
+                }
+            }
+        }
+
+        if (jsonStr) {
             const parsed = JSON.parse(jsonStr);
 
             switch (parsed.tool) {
@@ -177,9 +202,36 @@ export async function parseTaskInput(apiKey: string, input: string, language: 'j
     const text = response.text();
 
     try {
-        const jsonMatch = text.match(/```json\n([\s\S]*)\n```/) || text.match(/{[\s\S]*}/);
-        if (jsonMatch) {
-            return JSON.parse(jsonMatch[0].replace(/```json|```/g, ""));
+        // Try to extract JSON from markdown code block first (non-greedy)
+        const codeBlockMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
+        let jsonStr: string | null = null;
+
+        if (codeBlockMatch) {
+            jsonStr = codeBlockMatch[1].trim();
+        } else {
+            // Try to find a balanced JSON object
+            const startIndex = text.indexOf('{');
+            if (startIndex !== -1) {
+                let depth = 0;
+                let endIndex = -1;
+                for (let i = startIndex; i < text.length; i++) {
+                    if (text[i] === '{') depth++;
+                    else if (text[i] === '}') {
+                        depth--;
+                        if (depth === 0) {
+                            endIndex = i;
+                            break;
+                        }
+                    }
+                }
+                if (endIndex !== -1) {
+                    jsonStr = text.substring(startIndex, endIndex + 1);
+                }
+            }
+        }
+
+        if (jsonStr) {
+            return JSON.parse(jsonStr);
         }
     } catch (e) {
         console.error("Failed to parse task input", e);
@@ -207,9 +259,36 @@ export async function breakdownTask(apiKey: string, taskTitle: string, taskDescr
     const text = response.text();
 
     try {
-        const jsonMatch = text.match(/```json\n([\s\S]*)\n```/) || text.match(/\[[\s\S]*\]/);
-        if (jsonMatch) {
-            return JSON.parse(jsonMatch[0].replace(/```json|```/g, ""));
+        // Try to extract JSON from markdown code block first (non-greedy)
+        const codeBlockMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
+        let jsonStr: string | null = null;
+
+        if (codeBlockMatch) {
+            jsonStr = codeBlockMatch[1].trim();
+        } else {
+            // Try to find a balanced JSON array
+            const startIndex = text.indexOf('[');
+            if (startIndex !== -1) {
+                let depth = 0;
+                let endIndex = -1;
+                for (let i = startIndex; i < text.length; i++) {
+                    if (text[i] === '[') depth++;
+                    else if (text[i] === ']') {
+                        depth--;
+                        if (depth === 0) {
+                            endIndex = i;
+                            break;
+                        }
+                    }
+                }
+                if (endIndex !== -1) {
+                    jsonStr = text.substring(startIndex, endIndex + 1);
+                }
+            }
+        }
+
+        if (jsonStr) {
+            return JSON.parse(jsonStr);
         }
     } catch (e) {
         console.error("Failed to parse breakdown", e);
@@ -309,10 +388,35 @@ export async function processBgmRequest(
     const responseText = await result.response.text();
 
     try {
-        const jsonMatch = responseText.match(/```json\n([\s\S]*)\n```/) || responseText.match(/{[\s\S]*}/);
+        // Try to extract JSON from markdown code block first
+        const codeBlockMatch = responseText.match(/```json\s*([\s\S]*?)\s*```/);
+        let jsonStr: string | null = null;
 
-        if (jsonMatch) {
-            const jsonStr = jsonMatch[0].replace(/```json|```/g, "");
+        if (codeBlockMatch) {
+            jsonStr = codeBlockMatch[1].trim();
+        } else {
+            // Try to find a balanced JSON object
+            const startIndex = responseText.indexOf('{');
+            if (startIndex !== -1) {
+                let depth = 0;
+                let endIndex = -1;
+                for (let i = startIndex; i < responseText.length; i++) {
+                    if (responseText[i] === '{') depth++;
+                    else if (responseText[i] === '}') {
+                        depth--;
+                        if (depth === 0) {
+                            endIndex = i;
+                            break;
+                        }
+                    }
+                }
+                if (endIndex !== -1) {
+                    jsonStr = responseText.substring(startIndex, endIndex + 1);
+                }
+            }
+        }
+
+        if (jsonStr) {
             const parsed = JSON.parse(jsonStr);
 
             switch (parsed.tool) {

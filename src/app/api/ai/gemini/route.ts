@@ -22,6 +22,9 @@ type GeminiRequest = {
   message?: string;
   history?: { role: "user" | "model"; parts: { text: string }[] }[];
   tasks?: { id: string; title: string; type: string; completed: boolean; scheduled?: unknown; plannedDates?: unknown }[];
+  // task_request用: 選択肢提示のためのコンテキスト
+  milestones?: { id: string; title: string; targetUnits: number; currentUnits: number }[];
+  parentTasks?: { id: string; title: string }[];
   // parse_task用
   input?: string;
   language?: "ja" | "en";
@@ -114,7 +117,7 @@ export async function POST(req: NextRequest) {
 // タスクリクエスト処理
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleTaskRequest(model: any, body: GeminiRequest) {
-  const { message, history = [], tasks = [] } = body;
+  const { message, history = [], tasks = [], milestones = [], parentTasks = [] } = body;
 
   if (!message) {
     return NextResponse.json({ error: "message is required" }, { status: 400 });
@@ -124,6 +127,14 @@ async function handleTaskRequest(model: any, body: GeminiRequest) {
     `- ID: ${t.id}, Title: ${t.title}, Type: ${t.type}, Completed: ${t.completed}, Scheduled: ${JSON.stringify(t.scheduled)}, Planned: ${JSON.stringify(t.plannedDates)}`
   ).join("\n");
 
+  const milestoneContext = milestones.length > 0
+    ? milestones.map(m => `- ID: ${m.id}, Title: ${m.title}, Progress: ${m.currentUnits}/${m.targetUnits}`).join("\n")
+    : "(なし)";
+
+  const parentTaskContext = parentTasks.length > 0
+    ? parentTasks.map(t => `- ID: ${t.id}, Title: ${t.title}`).join("\n")
+    : "(なし)";
+
   const systemPrompt = `
   You are an intelligent task management assistant. You can manage tasks based on user requests.
 
@@ -132,17 +143,75 @@ async function handleTaskRequest(model: any, body: GeminiRequest) {
   Current Tasks:
   ${taskContext}
 
+  Available Milestones (マイルストーン):
+  ${milestoneContext}
+
+  Parent Task Candidates (親タスク候補 - ルートタスクのみ):
+  ${parentTaskContext}
+
   Available Tools (return as JSON):
-  1. create_task: Create a new task.
-     Format: { "tool": "create_task", "parameters": { "title": "...", "type": "daily"|"scheduled"|"backlog", ... }, "reply": "..." }
-  2. update_task: Update an existing task. Find the Task ID from the Current Tasks list based on the user's description.
+  1. create_task: Create a new task immediately when user explicitly specifies type or says "毎日タスク", "毎日やる", etc.
+     Format: { "tool": "create_task", "parameters": { "title": "...", "type": "daily"|"scheduled"|"backlog", "milestoneIds": [...], "parentTaskId": "..." }, "reply": "..." }
+  2. create_task_confirm: Request user confirmation when task type, milestone, or parent task is ambiguous (for SINGLE task).
+     Use this when user says things like "タスクを追加して", "〇〇を登録して" without specifying type.
+     Format: {
+       "tool": "create_task_confirm",
+       "parameters": {
+         "title": "...",
+         "recommendedType": "daily"|"scheduled"|"backlog",
+         "recommendedMilestoneIds": ["..."] or [],
+         "recommendedParentTaskId": "..." or null
+       },
+       "reply": "確認メッセージ（選択肢を提示する旨を伝える）"
+     }
+  3. create_tasks_confirm: Request user confirmation for MULTIPLE tasks at once (bulk creation).
+     Use this when user provides a list of tasks (bullet points, numbered list, comma-separated, newline-separated, etc.).
+     Format: {
+       "tool": "create_tasks_confirm",
+       "parameters": {
+         "tasks": [
+           { "title": "タスク1" },
+           { "title": "タスク2" },
+           { "title": "タスク3" }
+         ],
+         "recommendedType": "daily"|"scheduled"|"backlog"
+       },
+       "reply": "複数タスクの確認メッセージ（例：「3件のタスクを追加します。タイプを選択してください。」）"
+     }
+  4. update_task: Update an existing task. Find the Task ID from the Current Tasks list based on the user's description.
      Format: { "tool": "update_task", "parameters": { "taskId": "...", "updates": { ... } }, "reply": "..." }
-  3. delete_task: Delete a task. Find the Task ID from the Current Tasks list.
+  5. delete_task: Delete a task. Find the Task ID from the Current Tasks list.
      Format: { "tool": "delete_task", "parameters": { "taskId": "..." }, "reply": "..." }
-  4. complete_task: Mark a task as completed. Find the Task ID from the Current Tasks list.
+  6. complete_task: Mark a task as completed. Find the Task ID from the Current Tasks list.
      Format: { "tool": "complete_task", "parameters": { "taskId": "..." }, "reply": "..." }
-  5. chat: General conversation or if the user's request is unclear or if no tool is needed.
+  7. chat: General conversation or if the user's request is unclear or if no tool is needed.
      Format: { "tool": "chat", "parameters": {}, "reply": "..." }
+
+  When to use create_tasks_confirm (複数タスク一括確認):
+  - User provides multiple tasks in a list format:
+    - Bullet points: "- タスク1\n- タスク2\n- タスク3"
+    - Numbered list: "1. タスク1\n2. タスク2\n3. タスク3"
+    - Comma-separated: "タスク1、タスク2、タスク3"
+    - Newline-separated: "タスク1\nタスク2\nタスク3"
+    - With phrases like: "以下のタスクを追加して", "これらを登録して"
+  - Extract each task title from the list
+  - Recommend a common type based on the overall context
+
+  When to use create_task_confirm (単一タスク確認):
+  - User does NOT explicitly specify task type (e.g., "タスクを追加して", "〇〇を登録して")
+  - Task title suggests it might belong to a specific milestone (e.g., "英語学習" might relate to "TOEIC 800点")
+  - Task title suggests it might be a subtask of an existing parent task
+  - You want to confirm the categorization before creating
+
+  When to use create_task (即座に作成):
+  - User explicitly specifies type: "毎日タスクとして追加", "積み上げ候補に追加", "月水金にやる"
+  - User explicitly specifies milestone: "〇〇マイルストーンに追加"
+  - Very simple, unambiguous request
+
+  Recommendation logic:
+  - recommendedType: Infer from context (e.g., "毎日やる系" → "daily", "勉強系" → could be "daily" or "backlog", "いつかやりたい" → "backlog")
+  - recommendedMilestoneIds: If title contains keywords matching a milestone, recommend it (e.g., "英語" + "TOEIC 800点" milestone)
+  - recommendedParentTaskId: If title suggests it's a subtask (e.g., "リスニング練習" might belong to "英語学習プロジェクト")
 
   Rules:
   - Return ONLY valid JSON.
@@ -173,15 +242,79 @@ async function handleTaskRequest(model: any, body: GeminiRequest) {
   const responseText = await result.response.text();
 
   try {
-    const jsonMatch = responseText.match(/```json\n([\s\S]*)\n```/) || responseText.match(/{[\s\S]*}/);
+    // Try to extract JSON from markdown code block first
+    const codeBlockMatch = responseText.match(/```json\s*([\s\S]*?)\s*```/);
+    let jsonStr: string | null = null;
 
-    if (jsonMatch) {
-      const jsonStr = jsonMatch[0].replace(/```json|```/g, "");
+    if (codeBlockMatch) {
+      jsonStr = codeBlockMatch[1].trim();
+    } else {
+      // Try to find a balanced JSON object
+      const startIndex = responseText.indexOf('{');
+      if (startIndex !== -1) {
+        let depth = 0;
+        let endIndex = -1;
+        for (let i = startIndex; i < responseText.length; i++) {
+          if (responseText[i] === '{') depth++;
+          else if (responseText[i] === '}') {
+            depth--;
+            if (depth === 0) {
+              endIndex = i;
+              break;
+            }
+          }
+        }
+        if (endIndex !== -1) {
+          jsonStr = responseText.substring(startIndex, endIndex + 1);
+        }
+      }
+    }
+
+    if (jsonStr) {
       const parsed = JSON.parse(jsonStr);
 
       switch (parsed.tool) {
         case "create_task":
           return NextResponse.json({ type: "create_task", task: parsed.parameters, message: parsed.reply });
+        case "create_task_confirm":
+          // 選択肢確認が必要な場合（単一タスク）
+          return NextResponse.json({
+            type: "create_task_confirm",
+            task: {
+              title: parsed.parameters.title,
+              recommendedType: parsed.parameters.recommendedType || "backlog",
+              recommendedMilestoneIds: parsed.parameters.recommendedMilestoneIds || [],
+              recommendedParentTaskId: parsed.parameters.recommendedParentTaskId || null,
+            },
+            options: {
+              types: [
+                { value: "daily", label: "毎日" },
+                { value: "backlog", label: "積み上げ候補" },
+                { value: "scheduled", label: "特定曜日" },
+              ],
+              milestones: milestones,
+              parentTasks: parentTasks,
+            },
+            message: parsed.reply,
+          });
+        case "create_tasks_confirm":
+          // 複数タスク一括確認が必要な場合
+          return NextResponse.json({
+            type: "create_tasks_confirm",
+            tasks: (parsed.parameters.tasks || []).map((t: { title: string }) => ({
+              title: t.title,
+            })),
+            recommendedType: parsed.parameters.recommendedType || "backlog",
+            options: {
+              types: [
+                { value: "daily", label: "毎日" },
+                { value: "backlog", label: "積み上げ候補" },
+                { value: "scheduled", label: "特定曜日" },
+              ],
+              milestones: milestones,
+            },
+            message: parsed.reply,
+          });
         case "update_task":
           return NextResponse.json({ type: "update_task", taskId: parsed.parameters.taskId, updates: parsed.parameters.updates, message: parsed.reply });
         case "delete_task":
@@ -247,10 +380,35 @@ async function handleBgmRequest(model: any, body: GeminiRequest) {
   const responseText = await result.response.text();
 
   try {
-    const jsonMatch = responseText.match(/```json\n([\s\S]*)\n```/) || responseText.match(/{[\s\S]*}/);
+    // Try to extract JSON from markdown code block first
+    const codeBlockMatch = responseText.match(/```json\s*([\s\S]*?)\s*```/);
+    let jsonStr: string | null = null;
 
-    if (jsonMatch) {
-      const jsonStr = jsonMatch[0].replace(/```json|```/g, "");
+    if (codeBlockMatch) {
+      jsonStr = codeBlockMatch[1].trim();
+    } else {
+      // Try to find a balanced JSON object
+      const startIndex = responseText.indexOf('{');
+      if (startIndex !== -1) {
+        let depth = 0;
+        let endIndex = -1;
+        for (let i = startIndex; i < responseText.length; i++) {
+          if (responseText[i] === '{') depth++;
+          else if (responseText[i] === '}') {
+            depth--;
+            if (depth === 0) {
+              endIndex = i;
+              break;
+            }
+          }
+        }
+        if (endIndex !== -1) {
+          jsonStr = responseText.substring(startIndex, endIndex + 1);
+        }
+      }
+    }
+
+    if (jsonStr) {
       const parsed = JSON.parse(jsonStr);
 
       switch (parsed.tool) {
@@ -318,9 +476,36 @@ async function handleParseTask(model: any, body: GeminiRequest) {
   const text = response.text();
 
   try {
-    const jsonMatch = text.match(/```json\n([\s\S]*)\n```/) || text.match(/{[\s\S]*}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0].replace(/```json|```/g, ""));
+    // Try to extract JSON from markdown code block first (non-greedy)
+    const codeBlockMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
+    let jsonStr: string | null = null;
+
+    if (codeBlockMatch) {
+      jsonStr = codeBlockMatch[1].trim();
+    } else {
+      // Try to find a balanced JSON object
+      const startIndex = text.indexOf('{');
+      if (startIndex !== -1) {
+        let depth = 0;
+        let endIndex = -1;
+        for (let i = startIndex; i < text.length; i++) {
+          if (text[i] === '{') depth++;
+          else if (text[i] === '}') {
+            depth--;
+            if (depth === 0) {
+              endIndex = i;
+              break;
+            }
+          }
+        }
+        if (endIndex !== -1) {
+          jsonStr = text.substring(startIndex, endIndex + 1);
+        }
+      }
+    }
+
+    if (jsonStr) {
+      const parsed = JSON.parse(jsonStr);
       return NextResponse.json({ task: parsed });
     }
   } catch {
@@ -354,9 +539,36 @@ async function handleBreakdownTask(model: any, body: GeminiRequest) {
   const text = response.text();
 
   try {
-    const jsonMatch = text.match(/```json\n([\s\S]*)\n```/) || text.match(/\[[\s\S]*\]/);
-    if (jsonMatch) {
-      const subtasks = JSON.parse(jsonMatch[0].replace(/```json|```/g, ""));
+    // Try to extract JSON from markdown code block first (non-greedy)
+    const codeBlockMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
+    let jsonStr: string | null = null;
+
+    if (codeBlockMatch) {
+      jsonStr = codeBlockMatch[1].trim();
+    } else {
+      // Try to find a balanced JSON array
+      const startIndex = text.indexOf('[');
+      if (startIndex !== -1) {
+        let depth = 0;
+        let endIndex = -1;
+        for (let i = startIndex; i < text.length; i++) {
+          if (text[i] === '[') depth++;
+          else if (text[i] === ']') {
+            depth--;
+            if (depth === 0) {
+              endIndex = i;
+              break;
+            }
+          }
+        }
+        if (endIndex !== -1) {
+          jsonStr = text.substring(startIndex, endIndex + 1);
+        }
+      }
+    }
+
+    if (jsonStr) {
+      const subtasks = JSON.parse(jsonStr);
       return NextResponse.json({ subtasks });
     }
   } catch {
