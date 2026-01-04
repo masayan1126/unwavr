@@ -796,7 +796,13 @@ export default function TaskList({
                             ) : (
                                 <Reorder.Group axis="y" values={orderedTasks} onReorder={handleReorder} className="flex flex-col">
                                     {orderedTasks
-                                        .filter(t => !t.parentTaskId) // ルートタスクのみ表示
+                                        .filter(t => {
+                                            // ルートタスクは表示
+                                            if (!t.parentTaskId) return true;
+                                            // サブタスクで、親がリストに含まれていない場合も表示（孤立サブタスク）
+                                            const parentInList = orderedTasks.some(ot => ot.id === t.parentTaskId);
+                                            return !parentInList;
+                                        })
                                         .map((t) => {
                                             const hasSubtasks = (subtaskCounts[t.id] ?? 0) > 0;
                                             const subtasks = hasSubtasks && expandedTasks.has(t.id) ? (subtasksMap[t.id] ?? []) : [];

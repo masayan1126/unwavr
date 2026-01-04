@@ -362,7 +362,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
 
   return (
     <>
-      <form ref={formRef} onSubmit={onSubmit} onBlur={handleFormBlur} className="flex flex-col gap-6 w-full h-full">
+      <form ref={formRef} onSubmit={onSubmit} onBlur={handleFormBlur} className="flex flex-col gap-6 w-full">
         {/* 親タスクへのリンク */}
         {parentTask && (
           <Link
@@ -658,7 +658,7 @@ function TaskFormInner({ onSubmitted, defaultType, task }: TaskFormProps, ref: R
 
         <hr className="border-border opacity-50" />
 
-        <div className="flex flex-col gap-2 min-h-[200px] flex-1">
+        <div className="flex flex-col gap-2 min-h-[200px]">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium">説明</label>
             <div className="flex items-center gap-2">
